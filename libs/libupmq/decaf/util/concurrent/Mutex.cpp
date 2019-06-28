@@ -1,0 +1,185 @@
+/*
+ * Copyright 2014-present IVK JSC. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+ 
+#include <decaf/util/concurrent/Mutex.h>
+
+#include <decaf/internal/util/concurrent/Threading.h>
+#include <decaf/lang/Integer.h>
+#include <decaf/lang/Exception.h>
+
+#include <list>
+
+using namespace decaf;
+using namespace decaf::internal;
+using namespace decaf::internal::util;
+using namespace decaf::internal::util::concurrent;
+using namespace decaf::util;
+using namespace decaf::util::concurrent;
+using namespace decaf::lang;
+using namespace decaf::lang::exceptions;
+
+////////////////////////////////////////////////////////////////////////////////
+namespace decaf {
+namespace util {
+namespace concurrent {
+
+class MutexProperties {
+ private:
+  MutexProperties(const MutexProperties &);
+  MutexProperties &operator=(const MutexProperties &);
+
+ public:
+  MutexProperties() : monitor(nullptr), name() {
+    std::string idStr = Integer::toString(++id);
+    this->name.reserve(DEFAULT_NAME_PREFIX.length() + idStr.length());
+    this->name.append(DEFAULT_NAME_PREFIX);
+    this->name.append(idStr);
+  }
+
+  MutexProperties(const std::string &name) : monitor(nullptr), name(name) {
+    if (this->name.empty()) {
+      std::string idStr = Integer::toString(++id);
+      this->name.reserve(DEFAULT_NAME_PREFIX.length() + idStr.length());
+      this->name.append(DEFAULT_NAME_PREFIX);
+      this->name.append(idStr);
+    }
+  }
+
+  MonitorHandle *monitor;
+  std::string name;
+
+  static unsigned int id;
+  static std::string DEFAULT_NAME_PREFIX;
+};
+
+unsigned int MutexProperties::id = 0;
+std::string MutexProperties::DEFAULT_NAME_PREFIX = "Mutex-";
+}  // namespace concurrent
+}  // namespace util
+}  // namespace decaf
+
+////////////////////////////////////////////////////////////////////////////////
+Mutex::Mutex() : Synchronizable(), properties(nullptr) { this->properties = new MutexProperties(); }
+
+////////////////////////////////////////////////////////////////////////////////
+Mutex::Mutex(const std::string &name) : Synchronizable(), properties(nullptr) { this->properties = new MutexProperties(name); }
+
+////////////////////////////////////////////////////////////////////////////////
+Mutex::~Mutex() {
+  try {
+    if (this->properties->monitor != nullptr) {
+      Threading::returnMonitor(this->properties->monitor);
+    }
+
+    delete this->properties;
+  }
+  DECAF_CATCH_NOTHROW(lang::Exception)
+}
+
+////////////////////////////////////////////////////////////////////////////////
+std::string Mutex::getName() const { return this->properties->name; }
+
+////////////////////////////////////////////////////////////////////////////////
+std::string Mutex::toString() const { return this->properties->name; }
+
+////////////////////////////////////////////////////////////////////////////////
+bool Mutex::isLocked() const {
+  if (this->properties->monitor != nullptr) {
+    Threading::isMonitorLocked(this->properties->monitor);
+  }
+
+  return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void Mutex::lock() {
+  if (this->properties->monitor == nullptr) {
+    Threading::lockThreadsLib();
+
+    if (this->properties->monitor == nullptr) {
+      this->properties->monitor = Threading::takeMonitor(true);
+    }
+
+    Threading::unlockThreadsLib();
+  }
+
+  Threading::enterMonitor(this->properties->monitor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+bool Mutex::tryLock() {
+  if (this->properties->monitor == nullptr) {
+    Threading::lockThreadsLib();
+
+    if (this->properties->monitor == nullptr) {
+      this->properties->monitor = Threading::takeMonitor(true);
+    }
+
+    Threading::unlockThreadsLib();
+  }
+
+  return Threading::tryEnterMonitor(this->properties->monitor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void Mutex::unlock() {
+  if (this->properties->monitor == nullptr) {
+    throw IllegalMonitorStateException(__FILE__, __LINE__, "Call to unlock without prior call to lock or tryLock");
+  }
+
+  Threading::exitMonitor(this->properties->monitor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void Mutex::wait() { wait(0, 0); }
+
+////////////////////////////////////////////////////////////////////////////////
+void Mutex::wait(long long millisecs) { wait(millisecs, 0); }
+
+////////////////////////////////////////////////////////////////////////////////
+void Mutex::wait(long long millisecs, int nanos) {
+  if (millisecs < 0) {
+    throw IllegalArgumentException(__FILE__, __LINE__, "Milliseconds value cannot be negative.");
+  }
+
+  if (nanos < 0 || nanos > 999999) {
+    throw IllegalArgumentException(__FILE__, __LINE__, "Nanoseconds value must be in the range [0..999999].");
+  }
+
+  if (this->properties->monitor == nullptr) {
+    throw IllegalMonitorStateException(__FILE__, __LINE__, "Call to wait without prior call to lock or tryLock");
+  }
+
+  Threading::waitOnMonitor(this->properties->monitor, millisecs, nanos);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void Mutex::notify() {
+  if (this->properties->monitor == nullptr) {
+    throw IllegalMonitorStateException(__FILE__, __LINE__, "Call to notify without prior call to lock or tryLock");
+  }
+
+  Threading::notifyWaiter(this->properties->monitor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void Mutex::notifyAll() {
+  if (this->properties->monitor == nullptr) {
+    throw IllegalMonitorStateException(__FILE__, __LINE__, "Call to notifyAll without prior call to lock or tryLock");
+  }
+
+  Threading::notifyAllWaiters(this->properties->monitor);
+}

@@ -1,0 +1,50 @@
+<config>
+    <broker>
+        <port>12345</port>
+        <name>broker</name>
+        <http>
+            <port>9090</port>
+            <site>../share/upmq/www</site>
+        </http>
+        <heartbeat>
+            <send>0</send>
+            <recv>0</recv>
+        </heartbeat>
+        <net>
+            <max-connections>1024</max-connections>
+        </net>
+        <threads>
+            <accepter>8</accepter>
+            <reader>8</reader>
+            <writer>8</writer>
+            <subscriber>8</subscriber>
+        </threads>
+        <log>
+            <level>8</level><!-- уровень журналирования -->
+            <!--log=1 - A fatal error. The application will most likely terminate. This is the highest priority.-->
+            <!--log=2 - A critical error. The application might not be able to continue running successfully.-->
+            <!--log=3 - An error. An operation did not complete successfully, but the application as a whole is not affected.-->
+            <!--log=4 - A warning. An operation completed with an unexpected result.-->
+            <!--log=5 - A notice, which is an information with just a higher priority.-->
+            <!--log=6 - An informational message, usually denoting the successful completion of an operation.-->
+            <!--log=7 - A debugging message.-->
+            <!--log=8 - A tracing message. This is the lowest priority.-->
+            <path windows="C:/ProgramData" _nix="/var/log">upmq/log</path>
+            <interactive>true</interactive><!-- если выставить 0, то в консоль ничего выводиться не будет, только в файл -->
+        </log>
+
+        <destinations>
+            <autocreate>true</autocreate>
+            <forward by-property="false"/>
+        </destinations>
+        <storage>
+            <!--file::memory:?cache=shared-->
+            <!--:memory:-->
+            <connection dbms="sqlite-native" pool="64" sync="false" journal-mode="WAL">
+                <value use-path="true">upmq.db</value>
+                <path windows="C:/ProgramData" _nix="../share">upmq/db</path>
+            </connection>
+            <data windows="C:/ProgramData" _nix="../share">upmq/data</data>
+        </storage>
+    </broker>
+</config>

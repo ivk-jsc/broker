@@ -1,0 +1,7 @@
+/target/
+/.idea/
+/simplestress.iml
+/.settings/
+.project
+.classpath
+dependency-reduced-pom.xml

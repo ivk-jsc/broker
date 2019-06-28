@@ -1,0 +1,13 @@
+<tr class="data-row destinations">
+    <form action="" method="post">
+        <td class="destination"><input type="hidden" name="destination" value="{destination}"/>{destination}</td>
+        <td class="type"><input type="hidden" name="type" value="{type}"/>{type}</td>
+        <td class="subscriptions"><input type="hidden" name="subscriptions" value="{subscriptions}"/><a href='/destinations/{destination}/{type}.html'>{subscriptions}</a></td>
+        <td class="creationTime">{creationTime}</td>
+        <td class="dataPath"><input type="hidden" name="dataPath" value="{dataPath}"/>{dataPath}</td>
+        <td class="connectionString"><input type="hidden" name="connectionString" value="{connectionString}"/>{connectionString}</td>
+        <td class="messages"><input type="hidden" name="messages" value="{messages}"/>{messages}</td>
+<!--        <td class="ref-to-destination"><a href="/messages/{destination}/{type}.html">messages</a></td>-->
+        <!--<td class="do"><input name="del" value="del-destination" type="submit"/></td>-->
+    </form>
+</tr>

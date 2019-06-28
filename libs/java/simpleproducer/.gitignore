@@ -1,0 +1,7 @@
+/target/
+/.idea/
+/simpleproducer.iml
+/.settings/
+.project
+.classpath
+dependency-reduced-pom.xml

@@ -1,0 +1,16 @@
+{
+    "Broker Name": "{brokerName}",
+    "Version": "{brokerVersion}",
+    "Log Priority" :"{brokerLogP}",
+    "TCP Port" : {brokerPort},
+    "TCP Readers": {brokerReaders},
+    "TCP Writers": {brokerWriters},
+    "TCP Acceptors": {brokerAcceptors},
+    "Subscription-Workers": {brokerSubscriptions},
+    "Autocreate Destinations": "{brokerDestinationAutocreate}",
+    "Storage DBMS": "{brokerSDBMS}",
+    "DBMS Connection Pool": {brokerSDBMSPool},
+    "DBMS Connection String": "{brokerSConnection}",
+    "DBMS Journal":{brokerJournal},
+    "Persistent Payload Path": "{brokerSData}"
+}

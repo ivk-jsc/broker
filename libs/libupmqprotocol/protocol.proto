@@ -1,0 +1,356 @@
+/* Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+syntax = "proto2";
+
+package Proto;
+
+option optimize_for = SPEED;
+option java_package = "com.broker.protocol";
+option java_outer_classname = "Protocol";
+option go_package = "upmq";
+
+//ProtocolVersion - client&server
+message ProtocolVersion {
+    optional int32 protocol_major_version = 1;
+    optional int32 protocol_minor_version = 2;
+}
+
+//ServerVersion - from server
+message ServerVersion {
+    optional string server_vendor_id = 1 [default = "upmq"];
+    optional int32 server_major_version = 2 [default = 3];
+    optional int32 server_minor_version = 3 [default = 4];
+    optional int32 server_revision_version = 4;
+}
+
+//ClientVersion - from client
+message ClientVersion {
+    optional string vendor_id = 1;
+    optional int32 client_major_version = 2 [default = 1];
+    optional int32 client_minor_version = 3 [default = 2];
+    optional int32 client_revision_version = 4;
+}
+
+//Heartbeat - client&server
+message Heartbeat {
+    required int32 send_timeout = 1;
+    required int32 recv_timeout = 2;
+}
+
+//Acknowledge - from client
+enum Acknowledge {
+    SESSION_TRANSACTED = 0;
+    AUTO_ACKNOWLEDGE = 1;
+    CLIENT_ACKNOWLEDGE = 2;
+    DUPS_OK_ACKNOWLEDGE = 3;
+}
+
+//Connect - from client
+message Connect {
+    required string client_id = 1;
+    optional string username = 2;
+    optional string password = 3;
+    optional Heartbeat heartbeat = 4;
+    optional ClientVersion client_version = 5;
+    optional ProtocolVersion protocol_version = 6;
+    optional int32 max_not_acknowledged_messages = 8 [default = 100];
+}
+
+//SetClientId - from client
+message ClientInfo {
+    required string old_client_id = 1;
+    required string new_client_id = 2;
+    optional string receipt_id = 3;
+}
+
+//Connected - from server
+message Connected {
+    optional ServerVersion server_version = 1;
+    optional ProtocolVersion protocol_version = 2;
+    optional Heartbeat heartbeat = 3;
+}
+
+//Disconnect - from client
+message Disconnect {
+    required string client_id = 1;
+    optional string receipt_id = 2;
+}
+
+//Session - from client
+message Session {
+    required string session_id = 1;
+    required Acknowledge acknowledge_type = 2 [default = AUTO_ACKNOWLEDGE];
+    optional string receipt_id = 3;
+    required string connection_id = 4;
+}
+
+//Unsession - from client
+message Unsession {
+    required string session_id = 1;
+    optional string receipt_id = 2;
+}
+
+//Destination - from client
+message Destination {
+    required string destination_uri = 1;
+    optional string receipt_id = 2;
+}
+
+//Undestination - from client
+message Undestination {
+    required string destination_uri = 1;
+    optional string receipt_id = 2;
+}
+
+//Ack - from client
+message Ack {
+    required string destination_uri = 1;
+    required string message_id = 2;
+    required string subscription_name = 3;
+    optional string session_id = 4;
+    optional string receipt_id = 5;
+}
+
+//Sender
+message Sender {
+    required string sender_id = 1;
+    required string destination_uri = 2;
+    required string session_id = 3;
+    optional string receipt_id = 4;
+}
+
+//Unsender
+message Unsender {
+    required string sender_id = 1;
+    required string destination_uri = 2;
+    required string session_id = 3;
+    optional string receipt_id = 4;
+}
+
+//Subscription - from client
+message Subscription {
+    required string destination_uri = 1;
+    required string session_id = 2;
+    optional string subscription_name = 3;
+    optional string receipt_id = 4;
+    optional string selector = 5;
+    optional bool durable = 6;
+    optional bool browse = 7;
+    optional bool no_local = 8;
+}
+
+//Subscribe - from client
+message Subscribe {
+    required string destination_uri = 1;
+    required string subscription_name = 2;
+    required string session_id = 3;
+    optional bool browse = 4;
+    optional string receipt_id = 5;
+}
+
+message Browser {
+    required string destination_uri = 1;
+    optional string subscription_name = 2;
+}
+
+message BrowserInfo {
+    required int64 message_count = 1;
+}
+
+//Unsubscribe - from client
+message Unsubscribe {
+    required string destination_uri = 1;
+    required string subscription_name = 2;
+    required string session_id = 3;
+    optional string receipt_id = 4;
+    optional bool durable = 5;
+    optional bool browse = 6;
+}
+
+//Unsubscription - from client
+message Unsubscription {
+    required string destination_uri = 1;
+    required string session_id = 2;
+    optional string subscription_name = 3;
+    optional string receipt_id = 4;
+    optional bool durable = 5;
+    optional bool browse = 6;
+}
+
+//Begin - from client
+message Begin {
+    required string session_id = 1;
+    optional string receipt_id = 2;
+}
+
+//Commit - from client
+message Commit {
+    required string session_id = 1;
+    optional string receipt_id = 2;
+}
+
+//Abort - from client
+message Abort {
+    required string session_id = 1;
+    optional string receipt_id = 2;
+}
+
+//Receipt - from server
+message Receipt {
+    required string receipt_id = 1;
+}
+
+enum ErrorCode {
+    NOT_ERROR = 0;
+    ERROR_UNKNOWN = 1;
+    ERROR_ON_SAVE_MESSAGE = 2;
+    ERROR_ON_GET_MESSAGE = 3;
+    ERROR_ON_ACK_MESSAGE = 4;
+    ERROR_CLIENT_ID_EXISTS = 5;
+    ERROR_ON_SUBSCRIPTION = 6;
+    ERROR_ON_SUBSCRIBE = 7;
+    ERROR_ON_UNSUBSCRIBE = 8;
+    ERROR_ON_UNSUBSCRIPTION = 9;
+    ERROR_ON_BEGIN = 10;
+    ERROR_ON_COMMIT = 11;
+    ERROR_ON_ABORT = 12;
+    ERROR_CONNECTION = 13;
+    ERROR_ON_SESSION = 14;
+    ERROR_ON_UNSESSION = 15;
+    ERROR_DESTINATION = 16;
+    ERROR_STORAGE = 17;
+    ERROR_INVALID_SELECTOR = 18;
+    ERROR_ON_BROWSER = 19;
+    ERROR_ON_SENDER = 20;
+    ERROR_ON_UNSENDER = 21;
+    ERROR_ON_DESTINATION = 22;
+    ERROR_ON_UNDESTINATION = 23;
+}
+
+//Error - from server
+message Error {
+    optional string receipt_id = 1;
+    required ErrorCode error_code = 2;
+    optional string error_message = 3;
+}
+
+//Ping - to server
+message Ping {
+}
+
+//Pong - from server
+message Pong {
+}
+
+//Property - client&server
+message Property {
+    oneof PropertyValue {
+        string value_string = 1;
+        int32 value_char = 2;
+        bool value_bool = 3;
+        int32 value_byte = 4;
+        int32 value_short = 5;
+        int32 value_int = 6;
+        int64 value_long = 7;
+        float value_float = 8;
+        double value_double = 9;
+        bytes value_bytes = 10;
+        string value_object = 11;
+    }
+    required bool is_null = 12;
+}
+
+//Body - client&server
+message Body {
+    oneof BodyType {
+        TextBody text_body = 1;
+        MapBody map_body = 2;
+        ObjectBody object_body = 3;
+        BytesBody bytes_body = 4;
+        StreamBody stream_body = 5;
+    }
+    message TextBody {
+        optional string value = 1;
+    }
+    message MapBody {
+        map<string, Property> value = 1;
+    }
+    message ObjectBody {
+        optional string value = 1;
+    }
+    message BytesBody {
+        optional bytes value = 1;
+    }
+    message StreamBody {
+        optional bytes value = 1;
+    }
+}
+//Message - client&server
+message Message {
+    required string message_id = 1;
+    required string destination_uri = 2;
+    required int32 priority = 3;
+    required bool persistent = 4;
+    optional string correlation_id = 5;
+    optional string reply_to = 6;
+    optional string type = 7;
+    required int64 timestamp = 8;
+    optional int64 timetolive = 9;
+    optional int64 expiration = 10;
+    optional bool redelivered = 11;
+    map<string, Property> property = 12;
+    required int32 body_type = 13 [default = 0];
+    required string session_id = 14;
+    optional int32 delivery_count = 15 [default = 1];
+    optional string group_id = 16;
+    optional int32 group_seq = 17;
+    required string sender_id = 18;
+    optional string receipt_id = 19;
+}
+
+//ProtoMessage - client&server
+message ProtoMessage {
+    oneof ProtoMessageType {
+        Connect connect = 1;
+        Connected connected = 2;
+        Disconnect disconnect = 3;
+        ClientInfo client_info = 4;
+        Session session = 5;
+        Unsession unsession = 6;
+        Subscription subscription = 7;
+        Subscribe subscribe = 8;
+        Unsubscribe unsubscribe = 9;
+        Unsubscription unsubscription = 10;
+        Begin begin = 11;
+        Commit commit = 12;
+        Abort abort = 13;
+        Ack ack = 14;
+        Message message = 15;
+        Receipt receipt = 16;
+        Error error = 17;
+        Browser browser = 18;
+        BrowserInfo browser_info = 19;
+        Sender sender = 20;
+        Unsender unsender = 21;
+        Ping ping = 22;
+        Pong pong = 23;
+        Destination destination = 24;
+        Undestination undestination = 25;
+    }
+    required string object_id = 100;
+    required int32 request_reply_id = 101;
+}

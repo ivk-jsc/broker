@@ -1,0 +1,3 @@
+add_subdirectory(libupmqprotocol)
+add_subdirectory(libupmq)
+add_dependencies(libupmq_objlib libupmqprotocol)

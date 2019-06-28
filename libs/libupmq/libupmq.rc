@@ -1,0 +1,62 @@
+#include "afxres.h"
+
+#ifndef _DEBUG
+#define VER_DEBUG                   0
+#else
+#define VER_DEBUG                   VS_FF_DEBUG
+#endif
+
+#define APACHE_LICENSE \
+  "Licensed to the Apache Software Foundation (ASF) under one or more " \
+  "contributor license agreements.  See the NOTICE file distributed with " \
+  "this work for additional information regarding copyright ownership.  " \
+  "The ASF licenses this file to You under the Apache License, Version 2.0 " \
+  "(the ""License""); you may not use this file except in compliance with " \
+  "the License.  You may obtain a copy of the License at\r\n\r\n" \
+  "http://www.apache.org/licenses/LICENSE-2.0\r\n\r\n" \
+  "Unless required by applicable law or agreed to in writing, software " \
+  "distributed under the License is distributed on an ""AS IS"" BASIS, " \
+  "WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  " \
+  "See the License for the specific language governing permissions and " \
+  "limitations under the License."
+
+#define APACHE_COPYRIGHT "Copyright (c) 2000-2019 The Apache Software " \
+                         "Foundation or its licensors, as applicable."
+
+#ifndef VER_PRIVATEBUILD
+#define VER_PRIVATEBUILD 0
+#endif
+
+#ifndef VER_PRERELEASE
+#define VER_PRERELEASE 0
+#endif
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION    	VER_FILEVERSION
+PRODUCTVERSION 	VER_PRODUCTVERSION
+FILEFLAGSMASK  	VS_FFI_FILEFLAGSMASK
+FILEFLAGS      	(VER_PRIVATEBUILD|VER_PRERELEASE|VER_DEBUG)
+FILEOS         	VOS__WINDOWS32
+FILETYPE       	VFT_DLL
+FILESUBTYPE    	VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904E4"
+        BEGIN
+            VALUE "CompanyName",      "JSC IVK"
+            VALUE "FileDescription",  "Client API for JMS Message Broker (c++)"
+            VALUE "FileVersion",      VER_FILEVERSION_STR
+            VALUE "InternalName",     "libupmq"
+            VALUE "LegalCopyright",   APACHE_COPYRIGHT
+            VALUE "OriginalFilename", "libupmq"
+            VALUE "ProductName",      "message broker"
+            VALUE "ProductVersion",   VER_PRODUCTVERSION_STR
+            VALUE "Comments",         APACHE_LICENSE
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x419, 1252
+    END
+END

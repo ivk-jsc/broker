@@ -1,0 +1,59 @@
+<config>
+    <s2s>
+        <port>12346</port>
+        <name>broker</name>
+        <heartbeat>
+            <send>0</send>
+            <recv>0</recv>
+        </heartbeat>
+        <local>
+            <broker>
+                <uri>tcp://localhost:12345?transport.trace=false</uri>
+                <http>
+                    <host>127.0.0.1</host>
+                    <port>9090</port>
+                </http>
+            </broker>
+        </local>
+        <log>8</log>
+        <!--log=1 - A fatal error. The application will most likely terminate. This is the highest priority.-->
+        <!--log=2 - A critical error. The application might not be able to continue running successfully.-->
+        <!--log=3 - An error. An operation did not complete successfully, but the application as a whole is not affected.-->
+        <!--log=4 - A warning. An operation completed with an unexpected result.-->
+        <!--log=5 - A notice, which is an information with just a higher priority.-->
+        <!--log=6 - An informational message, usually denoting the successful completion of an operation.-->
+        <!--log=7 - A debugging message.-->
+        <!--log=8 - A tracing message. This is the lowest priority.-->
+        <storage default-part-size="1M">
+            <connection dbms="sqlite-native" pool="64" sync="false" journal-mode="WAL">
+                s2s.db
+            </connection>
+            <data>s2s-data</data>
+        </storage>
+        <directions>
+            <direction name="O2$$" ip="127.0.0.1" port="22346" timeout="1000"/>
+        </directions>
+        <rules>
+            <local>
+                <rule name="default" subscriber="default">
+                    <from>
+                        <destination name="*" type="*" selector=""/>
+                    </from>
+                    <to>
+                        <broker name="*"/>
+                    </to>
+                </rule>
+            </local>
+            <remote>
+                <rule name="default" publisher="default">
+                    <from>
+                        <destination name="*" type="*"/>
+                    </from>
+                    <to>
+                        <destination name="*" type="*"/>
+                    </to>
+                </rule>
+            </remote>
+        </rules>
+    </s2s>
+</config>

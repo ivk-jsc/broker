@@ -1,0 +1,62 @@
+/*
+ * Copyright 2014-present IVK JSC. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#ifndef _DECAF_UTIL_CONCURRENT_CALLABLE_H_
+#define _DECAF_UTIL_CONCURRENT_CALLABLE_H_
+
+#include <decaf/lang/Exception.h>
+#include <decaf/util/Config.h>
+
+namespace decaf {
+namespace util {
+namespace concurrent {
+
+/**
+ * Base class of all Callable<T> objects, used to allow identification via type casting.
+ */
+class CallableType {
+ public:
+  virtual ~CallableType() {}
+};
+
+/**
+ * A task that returns a result and may throw an exception. Implementors define a single method with no
+ * arguments called call.  This interface differs from the Runnable interface in that a Callable object
+ * can return a result and is allowed to throw an exceptions from its call method.
+ *
+ * The Executors class contains utility methods to convert from other common forms to Callable classes.
+ *
+ * @since 1.0
+ */
+template <typename V>
+class Callable : public CallableType {
+ public:
+  virtual ~Callable() {}
+
+  /**
+   * Computes a result, or throws an exception if unable to do so.
+   * @return
+   *      Computed Result.
+   * @throws Exception
+   *      If unable to compute a result.
+   */
+  virtual V call() = 0;
+};
+}  // namespace concurrent
+}  // namespace util
+}  // namespace decaf
+
+#endif /*_DECAF_UTIL_CONCURRENT_CALLABLE_H_*/
