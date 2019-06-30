@@ -1,28 +1,28 @@
-# UpMQ
+# UPMQ
 
 ## Binaries
-* UpMQ broker [bins/broker] - c++ message broker
+* UPMQ broker [bins/broker] - c++ message broker
 
-## Client libraries
+## Libraries
 * libupmqprotocol [libs/libupmqprotocol] - wire protocol using protobuf-3 notation
 * libupmq [libs/libupmq] - c++ client library, JMS 1.1-like implementation
 * libupmq [libs/java/libupmq] - java client library, JMS 1.1 implementation
 
 ## Build Requirements
 
-UpMQ dependencies :
+UPMQ dependencies :
 * Main 
   * [poco-libraries](https://github.com/pocoproject/poco)
   * [protobuf-library](https://github.com/protocolbuffers/protobuf)
 * Tests
   * [google-test](https://github.com/google/googletest) 
 
-**!** Please check odbc installation on your system if you want to use UpMQ broker with database over ODBC  
-**!** Please check PostgreSQL installation on your system if you want to use UpMQ broker with POCO-2.0 library and PostgreSQL database   
+**!** Please check odbc installation on your system if you want to use UPMQ broker with database over ODBC  
+**!** Please check PostgreSQL installation on your system if you want to use UPMQ broker with POCO-2.0 library and PostgreSQL database   
 
 ## Build
 
-Build UpMQ with [cmake](https://cmake.org)
+Build UPMQ with [cmake](https://cmake.org)
 
 ```shell
 git clone https://github.com/ivk-jsc/broker
@@ -36,7 +36,7 @@ cmake --build . --target install
 
 ## Configuration
 
-UpMQ broker [bins/broker] is configured by the broker.xml file (can be found in ```configs``` directory or in ```<install-dir>/etc``` directory, if you already installed UpMQ.
+UPMQ broker [bins/broker] is configured by the broker.xml file (can be found in ```configs``` directory or in ```<install-dir>/etc``` directory, if you already installed UPMQ.
 
 ```xml
 <config>
@@ -109,7 +109,7 @@ UpMQ broker [bins/broker] is configured by the broker.xml file (can be found in 
 
 ## Examples
 
-```examples``` directory contains ```consumer``` and ```producer``` example applications.
+```examples``` directory contains ```consumer``` and ```producer``` imlpementations.
 
 In general, you should follow these rules:
 
