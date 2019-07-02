@@ -232,7 +232,7 @@ int Storage::deleteMessageHeader(storage::DBMSSession &dbSession, const std::str
   std::stringstream sql;
   int persistent = -1;
   sql << "select "
-      << " msgs.persistent, "
+      << " msgs.persistent "
       << " FROM " << _messageTableID << " as msgs"
       << " where message_id = \'" << messageID << "\'"
       << ";" << non_std_endl;
