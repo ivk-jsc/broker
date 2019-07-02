@@ -197,7 +197,7 @@ void Exchange::removeSender(const upmq::broker::Session &session, const MessageD
     try {
       Destination &dest = destination(unsender.destination_uri(), DestinationCreationMode::NO_CREATE);
       dest.removeSender(session, sMessage);
-    } catch (Exception &) {  // do nothing
+    } catch (Exception &) {  // do nothing -V565
     }
   }
 }

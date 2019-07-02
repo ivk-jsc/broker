@@ -35,7 +35,8 @@ Destination::Destination(const Exchange &exchange, const std::string &uri, Type 
       _storage(_id),
       _type(type),
       _exchange(exchange),
-      _subscriptionsT("\"" + _id + "_subscriptions\"") {
+      _subscriptionsT("\"" + _id + "_subscriptions\""),
+      _consumerMode(makeConsumerMode(_uri)) {
   _storage.setParent(this);
   storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
   dbSession.beginTX(_id);
@@ -176,6 +177,7 @@ void Destination::unsubscribeFromNotify(Subscription &subscription) const {
     }
   }
 }
+Subscription::ConsumerMode Destination::consumerMode() const { return _consumerMode; }
 void Destination::eraseSubscription(SubscriptionsList::iterator &it) {
   if (it != _subscriptions.end()) {
     _subscriptions.erase(it);
@@ -220,7 +222,6 @@ Subscription &Destination::subscription(const Session &session, const MessageDat
     std::string routingK = routingKey(uri);
 
     auto item = _subscriptions.emplace(name, createSubscription(name, routingK, type));
-    item.first->second.setConsumerMode(getConsumerMode(uri));
     subscribeOnNotify(item.first->second);
     addSendersFromCache(session, sMessage, item.first->second);
 
@@ -237,7 +238,7 @@ Subscription &Destination::subscription(const Session &session, const MessageDat
   it->second.addClient(session, sMessage.handlerNum, sMessage.objectID(), subscription.selector(), localMode);
   return it->second;
 }
-Subscription::ConsumerMode Destination::getConsumerMode(const std::string &uri) {
+Subscription::ConsumerMode Destination::makeConsumerMode(const std::string &uri) {
   Poco::URI tURI(uri);
   Poco::URI::QueryParameters parameters = tURI.getQueryParameters();
   if (!parameters.empty()) {
@@ -352,7 +353,7 @@ void Destination::doAck(const Session &session, const MessageDataContainer &sMes
       }
     }
 
-    if (!session.isClientAcknowledge()) {
+    if (!session.isClientAcknowledge() && _consumerMode == Subscription::ConsumerMode::EXCLUSIVE) {
       increaseNotAcknowledged(sMessage.objectID());
     } else {
       increaseNotAcknowledgedAll();
@@ -445,10 +446,8 @@ bool Destination::removeConsumer(const std::string &sessionID, const std::string
 }
 Storage &Destination::storage() const { return _storage; }
 int64_t Destination::initBrowser(const std::string &subscriptionName) {
-  auto it = _subscriptions.end();
-
   upmq::ScopedReadRWLock readRWLock(_subscriptionsLock);
-  it = _subscriptions.find(subscriptionName);
+  auto it = _subscriptions.find(subscriptionName);
   if (it == _subscriptions.end()) {
     throw EXCEPTION("subscription not found", subscriptionName, ERROR_ON_BROWSER);
   }
@@ -457,7 +456,7 @@ int64_t Destination::initBrowser(const std::string &subscriptionName) {
     copyMessagesTo(it->second);
     it->second.setHasSnapshot(true);
   }
-  int64_t result = it->second.storage().size();
+  const int64_t result = it->second.storage().size();
   it->second.start();
   it->second.postNewMessageEvent();
   return result;

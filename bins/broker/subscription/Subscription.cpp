@@ -189,7 +189,7 @@ void Subscription::addClient(const Session &session, size_t tcpConnectionNum, co
   dbSession.commitTX();
 
   std::shared_ptr<std::deque<Consumer::Msg>> selectCache;
-  if (_consumerMode == ConsumerMode::ROUND_ROBIN) {
+  if (_destination.consumerMode() == ConsumerMode::ROUND_ROBIN) {
     selectCache = _roundRobinCache;
   } else {
     selectCache = std::make_shared<std::deque<Consumer::Msg>>();
@@ -353,7 +353,7 @@ bool Subscription::getNextMessage() {
         storage.setMessageToWasSent(messageID, *consumer);
         _destination.decreesNotAcknowledged(consumer->objectID);
 
-        if (_consumerMode == ConsumerMode::ROUND_ROBIN) {
+        if (_destination.consumerMode() == ConsumerMode::ROUND_ROBIN) {
           for (const auto &cn : _consumers) {
             if (cn.second.objectID != consumer->objectID) {
               _destination.decreesNotAcknowledged(cn.second.objectID);
@@ -559,8 +559,6 @@ void Subscription::resetConsumersCache() {
     consumer.second.abort = true;
   }
 }
-Subscription::ConsumerMode Subscription::consumerMode() const { return _consumerMode; }
-void Subscription::setConsumerMode(Subscription::ConsumerMode consumerMode) { _consumerMode = consumerMode; }
 
 }  // namespace broker
 }  // namespace upmq

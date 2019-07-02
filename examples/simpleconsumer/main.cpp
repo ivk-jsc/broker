@@ -248,4 +248,5 @@ int main(int argc, char *argv[]) {
   std::cout << "=====================================================\n";
   std::cout << "SimpleConsumer end" << std::endl;
   std::cout << "=====================================================\n";
+  return 0;
 }

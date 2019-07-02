@@ -61,7 +61,7 @@ SendFile::SendFile(Poco::Net::Socket &socket, std::fstream &stream, size_t partS
 #ifdef _WIN32
 bool SendFile::operator()() {
   clearError();
-  if (TransmitFile(_sd, _fd, 0, static_cast<DWORD>(_partSize), NULL, 0, 0) == TRUE) {
+  if (TransmitFile(_sd, _fd, 0, static_cast<DWORD>(_partSize), nullptr, nullptr, 0) == TRUE) {
     _offset = _fileSize;
     return true;
   }

@@ -422,7 +422,8 @@ bool tokenise(std::string::const_iterator &s, std::string::const_iterator &e, To
         }
         continue;
       case ACCEPT_INC:
-        ++t;
+        ++t;  //-V796
+        // Fallthru
       case ACCEPT_NOINC:
         tok = Token(tokType, s, t);
         s = t;

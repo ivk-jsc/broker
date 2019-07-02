@@ -87,7 +87,6 @@ class Subscription {
   mutable bool _isDestroyed;
   mutable bool _isInited;
   mutable bool _hasSnapshot;
-  ConsumerMode _consumerMode = ConsumerMode::EXCLUSIVE;
   std::shared_ptr<std::deque<Consumer::Msg>> _roundRobinCache;
 
  public:
@@ -99,7 +98,7 @@ class Subscription {
   void save(const Session &session, const MessageDataContainer &sMessage);
   void commit(const Session &session);
   void abort(const Session &session);
-  // std::shared_ptr<MessageDataContainer> get(const std::string &clientID);
+
   void addClient(const Session &session, size_t tcpConnectionNum, const std::string &objectID, const std::string &selector, Subscription::LocalMode localMode);
   bool removeClient(size_t tcpConnectionNum, const std::string &sessionID);
   void removeClients();
@@ -136,8 +135,6 @@ class Subscription {
   bool getNextMessage();
   Info info() const;
   void resetConsumersCache();
-  ConsumerMode consumerMode() const;
-  void setConsumerMode(ConsumerMode consumerMode);
 
  private:
   Subscription::ConsumersListType::iterator eraseConsumer(ConsumersListType::iterator it);

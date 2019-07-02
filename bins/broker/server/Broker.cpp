@@ -426,7 +426,7 @@ void Broker::onUndestination(const AsyncTCPHandler &tcpHandler, const MessageDat
       ASYNCLOG_INFORMATION(tcpHandler.logStream, std::string(" delete destination (").append(undestination.destination_uri()).append(")"));
       ASYNCLOG_INFORMATION(tcpHandler.logStream, std::string(" | owner (").append(sMessage.clientID).append(" : ").append(std::to_string(tcpHandler.num)).append(")"));
     }
-  } catch (Exception &) {
+  } catch (Exception &) {  // -V565
     // NOTE : if destination not exists then do nothing
   }
   ASYNCLOG_INFORMATION(tcpHandler.logStream, non_std_endl);
@@ -504,7 +504,7 @@ bool Broker::write(size_t num) {
               } else {
                 if (status == AsyncTCPHandler::DataStatus::AS_ERROR) {
                   ahandler->onWritableLock.unlock();
-                  return status == AsyncTCPHandler::DataStatus::AS_ERROR;
+                  return true;
                 }
                 Poco::Thread::yield();
               }

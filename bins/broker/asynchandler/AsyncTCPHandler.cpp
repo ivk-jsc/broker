@@ -93,7 +93,7 @@ void AsyncTCPHandler::removeConsumers() {
     for (const auto &subs : dest.second) {
       try {
         BROKER::Instance().removeConsumers(dest.first, subs, num);
-      } catch (...) {
+      } catch (...) {  // -V565
       }
     }
   }
@@ -246,7 +246,7 @@ void AsyncTCPHandler::emitCloseEvent(bool withError) {
         AHRegestry::Instance().notify();
         return;
       }
-    } catch (...) {
+    } catch (...) {  // -V565
     }
     _closeEventLock.unlock();
   }
@@ -308,7 +308,7 @@ AsyncTCPHandler::DataStatus AsyncTCPHandler::fillHeaderBodyLens() {
   do {
     errno = 0;
     do {
-      n = ::recv(_socket.impl()->sockfd(), &hbLens[tmpDtSize], static_cast<send_size_t>(sizeof(hbLens)) - tmpDtSize, MSG_NOSIGNAL);
+      n = ::recv(_socket.impl()->sockfd(), &hbLens[tmpDtSize], static_cast<send_size_t>(sizeof(hbLens)) - tmpDtSize, MSG_NOSIGNAL);  // -V781
     } while (n < 0 && Poco::Error::last() == POCO_EINTR);
     if ((n < 0) || (n == 0 && (tmpDtSize != sizeof(hbLens)))) {
       int error = Poco::Error::last();

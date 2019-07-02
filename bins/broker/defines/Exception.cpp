@@ -28,6 +28,10 @@ Exception::Exception(const Exception&) = default;
 
 Exception::Exception(Exception&&) noexcept = default;
 
+Exception& Exception::operator=(const Exception&) = default;
+
+Exception& Exception::operator=(Exception&&) noexcept = default;
+
 const char* Exception::what() const noexcept { return std::runtime_error::what(); }
 
 std::string Exception::message() const { return std::runtime_error::what(); }

@@ -58,9 +58,7 @@ bool MessagePropertyInfo::valueNull() const { return tuple.get<message::field_is
 bool MessagePropertyInfo::isNull() const {
   switch (static_cast<MessagePropertyInfo::Field>(propertyType())) {
     case Field::message_id:
-      return false;
     case Field::property_name:
-      return false;
     case Field::property_type:
       return false;
     case Field::value_string:

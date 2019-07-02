@@ -58,7 +58,7 @@ Session::~Session() {
 void Session::removeSenders() const {
   try {
     EXCHANGE::Instance().removeSenders(*this);
-  } catch (...) {
+  } catch (...) {  // -V565
   }
 }
 void Session::dropTemporaryDestination() const {
@@ -68,7 +68,7 @@ void Session::dropTemporaryDestination() const {
         DestinationOwner destinationOwner(_connection.clientID(), 0);
         EXCHANGE::Instance().dropDestination(destination, &destinationOwner);
       }
-    } catch (...) {
+    } catch (...) {  // -V565
     }
   }
 }

@@ -45,6 +45,10 @@ class Exception : public std::runtime_error {
 
   Exception(Exception&&) noexcept;
 
+  Exception& operator=(const Exception&);
+
+  Exception& operator=(Exception&&) noexcept;
+
   const char* what() const noexcept override;
 
   std::string message() const;

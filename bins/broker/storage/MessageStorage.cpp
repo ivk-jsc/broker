@@ -935,8 +935,9 @@ void Storage::copyTo(Storage &storage, const Consumer &consumer) {
       Poco::Nullable<std::string> groupID;
       int groupSeq;
 
-      Poco::Data::Statement select(dbSession());
-      Poco::Data::Statement insert(dbSession());
+      auto &session = dbSession();
+      Poco::Data::Statement select(session);
+      Poco::Data::Statement insert(session);
       select << sql.str(), Poco::Data::Keywords::into(messageID), Poco::Data::Keywords::into(priority), Poco::Data::Keywords::into(persistent), Poco::Data::Keywords::into(correlationID),
           Poco::Data::Keywords::into(replyTo), Poco::Data::Keywords::into(type), Poco::Data::Keywords::into(clientTimestamp), Poco::Data::Keywords::into(ttl), Poco::Data::Keywords::into(expiration),
           Poco::Data::Keywords::into(bodyType), Poco::Data::Keywords::into(clientID), Poco::Data::Keywords::into(groupID), Poco::Data::Keywords::into(groupSeq), Poco::Data::Keywords::range(0, 1);

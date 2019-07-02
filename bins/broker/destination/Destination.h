@@ -91,6 +91,7 @@ class Destination {
   mutable upmq::MRWLock _predefPublishersLock;
   std::unique_ptr<DestinationOwner> _owner;
   std::unique_ptr<Poco::Timestamp> _created{new Poco::Timestamp};
+  Subscription::ConsumerMode _consumerMode{Subscription::ConsumerMode::EXCLUSIVE};
 
  private:
   void eraseSubscription(SubscriptionsList::iterator &it);
@@ -117,7 +118,8 @@ class Destination {
   bool isSubscriptionExists(const std::string &name) const;
   bool isSubscriptionBrowser(const std::string &name) const;
   virtual Subscription &subscription(const Session &session, const MessageDataContainer &sMessage);
-  Subscription::ConsumerMode getConsumerMode(const std::string &uri);
+  static Subscription::ConsumerMode makeConsumerMode(const std::string &uri);
+  Subscription::ConsumerMode consumerMode() const;
   void subscribe(const MessageDataContainer &sMessage);
   void unsubscribe(const MessageDataContainer &sMessage);
   virtual void begin(const Session &session);
