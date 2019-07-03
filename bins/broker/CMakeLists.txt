@@ -35,7 +35,7 @@ set(SOURCE_FILES
     defines/MiscDefines.h
     defines/Defines.h
     defines/Exception.h
-	defines/Exception.cpp
+    defines/Exception.cpp
     defines/MessageDefines.h
     defines/StorageDefines.h
     defines/Errors.h

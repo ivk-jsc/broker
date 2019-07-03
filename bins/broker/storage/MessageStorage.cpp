@@ -178,7 +178,6 @@ void Storage::resetMessagesBySession(const upmq::broker::Session &session) {
       << " where consumer_id like \'%" << session.id() << "%\'";
   if (session.isTransactAcknowledge()) {
     sql << " and transaction_id = \'" << session.txName() << "\'";
-    transactionExclusion.clear();
   }
   sql << " and (delivery_status = " << message::DELIVERED << transactionExclusion << ")"
       << ";" << non_std_endl;
