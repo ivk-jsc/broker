@@ -14,26 +14,21 @@
  * limitations under the License.
  */
 
-#ifndef BROKER_FAKE_CPP14_H
-#define BROKER_FAKE_CPP14_H
+#ifndef BROKER_POCO_POINTERS_HELPER_H
+#define BROKER_POCO_POINTERS_HELPER_H
 
-#include <memory>
+#include <Poco/AutoPtr.h>
+#include <Poco/SharedPtr.h>
 
-#ifdef _WIN32
-#define COMPILER_HAS_NOT_CPP14 (_MSC_VER < 1800)
-#else
-#define COMPILER_HAS_NOT_CPP14 (__cplusplus < 201402L)
-#endif
-
-#if COMPILER_HAS_NOT_CPP14
-
-namespace std {
+namespace Poco {
 template <typename T, typename... Args>
-std::unique_ptr<T> make_unique(Args &&... args) {
-  return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+Poco::AutoPtr<T> MakeAuto(Args &&... args) {
+  return Poco::AutoPtr<T>(new T(std::forward<Args>(args)...));
 }
-}  // namespace std
+template <typename T, typename... Args>
+Poco::SharedPtr<T> MakeShared(Args &&... args) {
+  return Poco::SharedPtr<T>(new T(std::forward<Args>(args)...));
+}
+}  // namespace Poco
 
-#endif  // c++ std < 14
-
-#endif  // BROKER_FAKE_CPP14_H
+#endif // BROKER_POCO_POINTERS_HELPER_H

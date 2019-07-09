@@ -19,7 +19,7 @@
 #include <Poco/File.h>
 #include "Defines.h"
 #include <Poco/Util/Application.h>
-#include <fake_cpp14.h>
+#include <poco_pointers_helper.h>
 namespace upmq {
 namespace broker {
 

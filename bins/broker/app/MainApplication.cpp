@@ -23,6 +23,7 @@
 #include <Poco/Util/PropertyFileConfiguration.h>
 #include <cstdlib>
 #include <fake_cpp14.h>
+#include <poco_pointers_helper.h>
 #include <Poco/File.h>
 #include "About.h"
 #include "Broker.h"
