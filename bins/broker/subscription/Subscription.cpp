@@ -27,6 +27,7 @@
 #include "MessageStorage.h"
 #include "MiscDefines.h"
 #include "TopicSender.h"
+#include <fake_cpp14.h>
 
 namespace upmq {
 namespace broker {
@@ -517,7 +518,7 @@ void Subscription::setInited(bool inited) { _isInited = inited; }
 bool Subscription::isInited() const { return _isInited; }
 void Subscription::addSender(const Session &session, const MessageDataContainer &sMessage) {
   const Proto::Sender &sender = sMessage.sender();
-  std::unique_ptr<Sender> pSender(new TopicSender(sender.sender_id(), session, *this));
+  std::unique_ptr<Sender> pSender = std::make_unique<TopicSender>(sender.sender_id(), session, *this);
   _senders.addSender(std::move(pSender));
 }
 void Subscription::removeSender(const Session &session, const MessageDataContainer &sMessage) {

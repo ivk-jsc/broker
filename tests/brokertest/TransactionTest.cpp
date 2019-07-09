@@ -122,17 +122,11 @@ TEST_F(TransactionTest, testSendRollbackCommitRollback) {
   // sends them and then rolls back.
   producer->send(outbound1.get());
   producer->send(outbound2.get());
-  cmsSleep(1000);
   session->rollback();
-
-  cmsSleep(3000);
 
   // Send one and commit.
   producer->send(outbound1.get());
-  cmsSleep(1000);
   session->commit();
-
-  cmsSleep(3000);
 
   // receives the first message
   std::unique_ptr<TextMessage> inbound1(dynamic_cast<TextMessage *>(consumer->receive(5000)));
@@ -143,8 +137,6 @@ TEST_F(TransactionTest, testSendRollbackCommitRollback) {
   EXPECT_EQ(outbound1->getText(), inbound1->getText());
 
   session->rollback();
-
-  cmsSleep(5000);
 
   inbound1.reset(dynamic_cast<TextMessage *>(consumer->receive(5000)));
   inboundEmpty.reset(dynamic_cast<TextMessage *>(consumer->receive(5000)));

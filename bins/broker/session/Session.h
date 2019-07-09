@@ -114,7 +114,7 @@ class Session {
  public:
   Session(const Connection &connection, std::string id, Proto::Acknowledge acknowledgeType);
   virtual ~Session();
-  //  mutable std::unique_ptr<storage::DBMSSession> currentDBSession;
+
   mutable CurrentDBSession currentDBSession;
   void begin() const;
   void commit() const;
@@ -124,7 +124,7 @@ class Session {
   void addSender(const MessageDataContainer &sMessage);
   void removeSender(const MessageDataContainer &sMessage);
   void addSubscription(const MessageDataContainer &sMessage);
-  //  void removeSubscription(const MessageDataContainer &sMessage);
+
   void removeConsumer(const MessageDataContainer &sMessage, size_t tcpNum);
   void removeConsumers(const std::string &destinationID, const std::string &subscriptionID, size_t tcpNum);
   void processAcknowledge(const MessageDataContainer &sMessage);

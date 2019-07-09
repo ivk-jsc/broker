@@ -19,7 +19,7 @@
 #include <Poco/File.h>
 #include "Defines.h"
 #include <Poco/Util/Application.h>
-
+#include <fake_cpp14.h>
 namespace upmq {
 namespace broker {
 
@@ -27,17 +27,17 @@ constexpr char DEFAULT_PATTERN[] = "%Y-%m-%d %H:%M:%S:%i %t";
 
 AutoPtr<FormattingChannel> AsyncLogger::createFormatter(const std::string &name, bool interactive) {
 #if !defined(WIN32) && !defined(WIN32)
-  AutoPtr<ColorConsoleChannel> colorChannel = nullptr;
+  AutoPtr<ColorConsoleChannel> colorChannel;
 #else
-  AutoPtr<WindowsColorConsoleChannel> colorChannel = nullptr;
+  AutoPtr<WindowsColorConsoleChannel> colorChannel;
 #endif
 
-  AutoPtr<SplitterChannel> splitter = new SplitterChannel;
+  AutoPtr<SplitterChannel> splitter = Poco::MakeAuto<SplitterChannel>();
   if (interactive) {
 #if defined(POCO_OS_FAMILY_UNIX)  // POCO_OS == POCO_OS_LINUX
-    colorChannel = new Poco::ColorConsoleChannel();
+    colorChannel = Poco::MakeAuto<Poco::ColorConsoleChannel>();
 #elif defined(POCO_OS_FAMILY_WINDOWS)  // POCO_OS == POCO_OS POCO_OS_WINDOWS_NT
-    colorChannel = new Poco::WindowsColorConsoleChannel();
+    colorChannel = Poco::MakeAuto<Poco::WindowsColorConsoleChannel>();
 #endif
     colorChannel->setProperty("traceColor", "gray");
     colorChannel->setProperty("debugColor", "brown");
@@ -47,21 +47,21 @@ AutoPtr<FormattingChannel> AsyncLogger::createFormatter(const std::string &name,
     colorChannel->setProperty("errorColor", "magenta");
     colorChannel->setProperty("criticalColor", "lightRed");
     colorChannel->setProperty("fatalColor", "red");
-    AutoPtr<Poco::AsyncChannel> colorAsyncChannel(new Poco::AsyncChannel(colorChannel));
+    AutoPtr<Poco::AsyncChannel> colorAsyncChannel = Poco::MakeAuto<Poco::AsyncChannel>(colorChannel);
     colorAsyncChannel->setProperty("priority", "lowest");
     splitter->addChannel(colorAsyncChannel);
   }
-  AutoPtr<FileChannel> fileChannel = new FileChannel(name + ".log");
-  AutoPtr<Poco::AsyncChannel> fileAsyncChannel(new Poco::AsyncChannel(fileChannel));
+  AutoPtr<FileChannel> fileChannel = Poco::MakeAuto<FileChannel>(name + ".log");
+  AutoPtr<Poco::AsyncChannel> fileAsyncChannel = Poco::MakeAuto<Poco::AsyncChannel>(fileChannel);
 
   fileChannel->setProperty("rotation", "10 M");
   fileChannel->setProperty("times", "local");
   fileAsyncChannel->setProperty("priority", "lowest");
   splitter->addChannel(fileAsyncChannel);
 
-  AutoPtr<PatternFormatter> patternFormatter(new PatternFormatter(DEFAULT_PATTERN));
+  AutoPtr<PatternFormatter> patternFormatter = Poco::MakeAuto<PatternFormatter>(DEFAULT_PATTERN);
 
-  AutoPtr<FormattingChannel> formattingChannel(new FormattingChannel(patternFormatter));
+  AutoPtr<FormattingChannel> formattingChannel = Poco::MakeAuto<FormattingChannel>(patternFormatter);
   formattingChannel->setChannel(splitter);
   return formattingChannel;
 }

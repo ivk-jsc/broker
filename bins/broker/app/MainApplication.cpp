@@ -106,7 +106,8 @@ int MainApplication::main(const std::vector<std::string> &args) {
   }
 
 #ifdef ENABLE_WEB_ADMIN
-  Poco::Net::HTTPServer s(new WebAdminRequestHandlerFactory, ServerSocket(static_cast<Poco::UInt16>(CONFIGURATION::Instance().http().port)), new Poco::Net::HTTPServerParams);
+  Poco::Net::HTTPServer s(
+      Poco::MakeShared<WebAdminRequestHandlerFactory>(), ServerSocket(static_cast<Poco::UInt16>(CONFIGURATION::Instance().http().port)), Poco::MakeAuto<Poco::Net::HTTPServerParams>());
   Poco::File wwwDir(CONFIGURATION::Instance().http().site);
   if (wwwDir.exists()) {
     s.start();

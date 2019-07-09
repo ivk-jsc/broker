@@ -290,7 +290,7 @@ void Storage::removeMessage(const std::string &messageID, storage::DBMSSession &
   bool externConnection = extDBSession.isValid();
   std::unique_ptr<storage::DBMSSession> tempDBMSSession;
   if (!externConnection) {
-    tempDBMSSession = std::make_unique<storage::DBMSSession>(dbms::Instance().dbmsSession());
+    tempDBMSSession = dbms::Instance().dbmsSessionPtr();
   }
   storage::DBMSSession &dbSession = externConnection ? extDBSession : *tempDBMSSession;
   if (!externConnection) {
@@ -742,7 +742,7 @@ void Storage::commit(const Session &session) {
          "type, client_timestamp, ttl, "
          "expiration, body_type, client_id, consumer_id, group_id, group_seq from "
       << mainTXTable << " order by num asc;";
-  std::unique_ptr<storage::DBMSSession> dbSession(new storage::DBMSSession(dbms::Instance().dbmsSession()));
+  std::unique_ptr<storage::DBMSSession> dbSession = dbms::Instance().dbmsSessionPtr();
   dbSession->beginTX(session.id());
 
   TRY_POCO_DATA_EXCEPTION { *dbSession << sql.str(), Poco::Data::Keywords::now; }

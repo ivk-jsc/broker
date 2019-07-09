@@ -18,6 +18,8 @@
 #define BROKER_FAKE_CPP14_H
 
 #include <memory>
+#include <Poco/AutoPtr.h>
+#include <Poco/SharedPtr.h>
 
 #ifdef _WIN32
 #define COMPILER_HAS_NOT_CPP14 (_MSC_VER < 1800)
@@ -35,5 +37,16 @@ std::unique_ptr<T> make_unique(Args &&... args) {
 }  // namespace std
 
 #endif  // c++ std < 14
+
+namespace Poco {
+template <typename T, typename... Args>
+Poco::AutoPtr<T> MakeAuto(Args &&... args) {
+  return Poco::AutoPtr<T>(new T(std::forward<Args>(args)...));
+}
+template <typename T, typename... Args>
+Poco::SharedPtr<T> MakeShared(Args &&... args) {
+  return Poco::SharedPtr<T>(new T(std::forward<Args>(args)...));
+}
+}  // namespace Poco
 
 #endif  // BROKER_FAKE_CPP14_H

@@ -296,7 +296,7 @@ void DBMSConnectionPool::initDB(Poco::Data::Session &dbSession) {
 }
 
 std::shared_ptr<Poco::Data::Session> DBMSConnectionPool::makeSession(DBMSType dbmsType, const std::string &connector) const {
-  std::shared_ptr<Poco::Data::Session> session(new Poco::Data::Session(connector, _dbmsString));
+  std::shared_ptr<Poco::Data::Session> session = std::make_shared<Poco::Data::Session>(connector, _dbmsString);
   if (dbmsType == storage::SQLiteNative || dbmsType == storage::SQLite) {
     if (dbmsType == storage::SQLite) {
       session->setTransactionIsolation(Poco::Data::Session::TRANSACTION_SERIALIZABLE);

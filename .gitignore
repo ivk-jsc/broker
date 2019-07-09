@@ -42,3 +42,4 @@ COMMIT.txt
 /cmake-build-relwithdebinfo-system/
 /cmake-build-debug-wsl/
 /cmake-build-release-wsl/
+/cmake-build-debug-msvc/
