@@ -187,8 +187,8 @@ int MainApplication::main(const std::vector<std::string> &args) {
   reactor.stop();
   thread.join();
   BROKER::Instance().stop();
-  EXCHANGE::Instance().stop();
   AHRegestry::Instance().stop();
+  EXCHANGE::Instance().stop();
 
   ASYNCLOG_CRITICAL(logStream, (std::string("-").append(" * ").append(">>========= stop =========<<") += non_std_endl));
   logStream.reset(nullptr);

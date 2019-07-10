@@ -52,7 +52,7 @@ Exchange::Exchange()
   TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
   CATCH_POCO_DATA_EXCEPTION_PURE("can't init exchange", sql.str(), ERROR_STORAGE);
 }
-Exchange::~Exchange() = default;
+Exchange::~Exchange() { _destinations.clear(); };
 Destination &Exchange::destination(const std::string &uri, Exchange::DestinationCreationMode creationMode) const {
   std::string mainDP;
   if (uri.find("://") != std::string::npos) {

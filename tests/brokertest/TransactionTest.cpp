@@ -61,6 +61,7 @@ TEST_F(TransactionTest, testSendReceiveTransactedBatches) {
 TEST_F(TransactionTest, testSendRollback) {
   // Create CMS Object for Comms
   cms::Session *session = cmsProvider->getSession();
+  cms::MessageConsumer *consumer = cmsProvider->getConsumer();
   cms::MessageProducer *producer = cmsProvider->getProducer();
 
   producer->setDeliveryMode(DeliveryMode::NON_PERSISTENT);
@@ -71,18 +72,16 @@ TEST_F(TransactionTest, testSendRollback) {
   // sends a message
   EXPECT_NO_THROW(producer->send(outbound1.get()));
   EXPECT_NO_THROW(session->commit());
-  
+
   // sends a message that gets rollbacked
   std::unique_ptr<Message> rollback(session->createTextMessage("I'm going to get rolled back."));
   EXPECT_NO_THROW(producer->send(rollback.get()));
-  
+
   EXPECT_NO_THROW(session->rollback());
-  
+
   // sends a message
   EXPECT_NO_THROW(producer->send(outbound2.get()));
   EXPECT_NO_THROW(session->commit());
-
-  cms::MessageConsumer *consumer = cmsProvider->getConsumer();
 
   // receives the first messag
 
