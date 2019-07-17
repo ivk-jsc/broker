@@ -28,9 +28,6 @@ COMMIT.txt
 /cmake-build-debug-llvm/
 /cmake-vs-build/
 /cmake-vs-x64-build/
-/cmake-build-debug-81/
-/make_solution_gcc_8.1.sh
-/make_solution_debug_gcc_8.1.sh
 /.vs/
 /cmake-build/
 /cmake-Debug-build/
