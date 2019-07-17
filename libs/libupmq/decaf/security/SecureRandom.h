@@ -55,7 +55,7 @@ class DECAF_API SecureRandom : public decaf::util::Random {
    * @param seed
    *      The seed bytes to use to seed this secure random number generator.
    */
-  SecureRandom(const std::vector<unsigned char> &seed);
+  explicit SecureRandom(const std::vector<unsigned char> &seed);
 
   /**
    * Creates a new instance of a secure random number generator that implements the
@@ -74,14 +74,14 @@ class DECAF_API SecureRandom : public decaf::util::Random {
    */
   SecureRandom(const unsigned char *seed, int size);
 
-  virtual ~SecureRandom();
+  ~SecureRandom() override;
 
  public:  // Virtual Methods
-  virtual void nextBytes(std::vector<unsigned char> &buf);
+  void nextBytes(std::vector<unsigned char> &buf) override;
 
-  virtual void nextBytes(unsigned char *buf, int size);
+  void nextBytes(unsigned char *buf, int size) override;
 
-  virtual void setSeed(unsigned long long newSeed);
+  void setSeed(unsigned long long newSeed) override;
 
   /**
    * Supplements or sets the seed of this secure random number generator, calls to this
@@ -107,7 +107,7 @@ class DECAF_API SecureRandom : public decaf::util::Random {
   virtual void setSeed(const unsigned char *newSeed, int size);
 
  protected:  // Virtual method used by all non-virtual methods in Random.
-  virtual int next(int numBits);
+  int next(int numBits) override;
 };
 }  // namespace security
 }  // namespace decaf

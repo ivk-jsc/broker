@@ -178,6 +178,19 @@ void Destination::unsubscribeFromNotify(Subscription &subscription) const {
   }
 }
 Subscription::ConsumerMode Destination::consumerMode() const { return _consumerMode; }
+
+std::string Destination::consumerModeName(Subscription::ConsumerMode mode) {
+  std::string modeName;
+  switch (mode) {
+    case Subscription::ConsumerMode::EXCLUSIVE:
+      modeName = MakeStringify(EXCLUSIVE);
+      break;
+    case Subscription::ConsumerMode::ROUND_ROBIN:
+      modeName = MakeStringify(ROUND_ROBIN);
+      break;
+  }
+  return modeName;
+}
 void Destination::eraseSubscription(SubscriptionsList::iterator &it) {
   if (it != _subscriptions.end()) {
     _subscriptions.erase(it);

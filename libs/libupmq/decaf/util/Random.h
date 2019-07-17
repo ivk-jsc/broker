@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #ifndef _DECAF_UTIL_RANDOM_H_
 #define _DECAF_UTIL_RANDOM_H_
 
@@ -70,7 +70,7 @@ class DECAF_API Random {
    *
    * @see #setSeed
    */
-  Random(unsigned long long seed);
+  explicit Random(unsigned long long seed);
 
   virtual ~Random();
 

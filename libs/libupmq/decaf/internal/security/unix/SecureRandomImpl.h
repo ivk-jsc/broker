@@ -46,13 +46,13 @@ class DECAF_API SecureRandomImpl : public decaf::security::SecureRandomSpi {
  public:
   SecureRandomImpl();
 
-  virtual ~SecureRandomImpl();
+  ~SecureRandomImpl() override;
 
-  virtual void providerSetSeed(const unsigned char *seed, int size);
+  void providerSetSeed(const unsigned char *seed, int size) override;
 
-  virtual void providerNextBytes(unsigned char *bytes, int numBytes);
+  void providerNextBytes(unsigned char *bytes, int numBytes) override;
 
-  virtual unsigned char *providerGenerateSeed(int numBytes);
+  unsigned char *providerGenerateSeed(int numBytes) override;
 };
 }  // namespace security
 }  // namespace internal

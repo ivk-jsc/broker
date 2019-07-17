@@ -70,6 +70,11 @@ Destination &Exchange::destination(const std::string &uri, Exchange::Destination
         upmq::ScopedReadRWLock readRWLock(_destinationsLock);
         auto it = _destinations.find(mainDP);
         if (it != _destinations.end()) {
+          if (it->second->consumerMode() != Destination::makeConsumerMode(uri)) {
+            std::string err = "current consumer mode is ";
+            err.append(Destination::consumerModeName(it->second->consumerMode()));
+            throw EXCEPTION("destination was initiated with another consumer mode", err, ERROR_DESTINATION);
+          }
           return *it->second;
         }
       }
@@ -117,7 +122,7 @@ void Exchange::saveMessage(const Session &session, const MessageDataContainer &s
       << " values "
       << "("
       << " \'" << message.message_id() << "\'"
-      << ",\'" << message.destination_uri() << "\'"
+      << ",\'" << dest.name() << "\'"
       << "," << message.body_type() << "," << dest.subscriptionsCount() << ")"
       << ";";
   session.currentDBSession = dbms::Instance().dbmsSessionPtr();
@@ -138,7 +143,6 @@ void Exchange::removeConsumer(const MessageDataContainer &sMessage, size_t tcpNu
   removeConsumer(unsubscription.session_id(), destinationID, unsubscription.subscription_name(), tcpNum);
 }
 void Exchange::begin(const upmq::broker::Session &session, const std::string &destinationID) {
-  //  upmq::ScopedReadRWLock readRWLock(_destinationsLock);
   Destination &dest = destination(destinationID, DestinationCreationMode::NO_CREATE);
   dest.begin(session);
 }

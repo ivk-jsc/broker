@@ -224,7 +224,7 @@ int UUID::version() { return this->uuid->version; }
 ////////////////////////////////////////////////////////////////////////////////
 UUID UUID::randomUUID() {
   unsigned char data[16];
-  SecureRandom secRand;
+  static SecureRandom secRand;
   secRand.nextBytes(data, 16);
 
   long long msb = 0;

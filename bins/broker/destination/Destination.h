@@ -120,6 +120,7 @@ class Destination {
   virtual Subscription &subscription(const Session &session, const MessageDataContainer &sMessage);
   static Subscription::ConsumerMode makeConsumerMode(const std::string &uri);
   Subscription::ConsumerMode consumerMode() const;
+  static std::string consumerModeName(Subscription::ConsumerMode mode);
   void subscribe(const MessageDataContainer &sMessage);
   void unsubscribe(const MessageDataContainer &sMessage);
   virtual void begin(const Session &session);

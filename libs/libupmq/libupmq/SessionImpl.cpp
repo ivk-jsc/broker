@@ -411,6 +411,10 @@ void SessionImpl::rollback() {
       throw cms::CMSException("request not initialized");
     }
 
+    for (std::map<std::string, ConsumerImpl *>::iterator it = _consumersMap.begin(); it != _consumersMap.end(); ++it) {
+      it->second->purge();
+    }
+
     _connection->syncRequest(request.dynamicCast<Command>())->processReceipt();
   }
   CATCH_ALL_THROW_CMSEXCEPTION
