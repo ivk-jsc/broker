@@ -160,6 +160,7 @@ class SimpleConsumer : public cms::ExceptionListener {
 ////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char *argv[]) {
   (void)argc;
+  //std::string brokerURI = "failover:(tcp://localhost:12345?transport.trace=false)";
   std::string brokerURI = "tcp://localhost:12345?transport.trace=false";
   std::string destURI = "defaultDestination";
   std::string destType = "queue";
