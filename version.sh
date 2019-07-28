@@ -11,7 +11,7 @@ if [[ ${RETVAL} -ne 0 ]]; then
     exit 0;
 fi
 
-PROTO_FILE="$(dirname $0)/libs/libupmqprotocol/protocol.proto"
+PROTO_FILE="$(dirname "$0")/libs/libupmqprotocol/protocol.proto"
 
 SERVER_NAME=""
 SERVER_MAJOR=""
@@ -26,27 +26,37 @@ get_versions()
 
     echo "protofile path ${1}"
 
-    for line in $(cat ${1})
+    # shellcheck disable=SC2013
+    for line in $(cat "${1}")
     do
         case ${line} in
             *"server_vendor_id"*)
+                # shellcheck disable=SC2001
                 SERVER_NAME=$(sed -e 's#.*=\(\)#\1#' <<< "${line}")
                 SERVER_NAME=$(sed -e 's/^[^"]*"//; s/".*//' <<< "${SERVER_NAME}")
             ;;
             *"server_major_version"*)
+                # shellcheck disable=SC2001
                 SERVER_MAJOR=$(sed -e 's#.*=\(\)#\1#' <<< "${line}")
+                # shellcheck disable=SC2001
                 SERVER_MAJOR=$(sed -e 's/[^0-9]*//g' <<< "${SERVER_MAJOR}")
             ;;
             *"server_minor_version"*)
+                # shellcheck disable=SC2001
                 SERVER_MINOR=$(sed -e 's#.*=\(\)#\1#' <<< "${line}")
+                # shellcheck disable=SC2001
                 SERVER_MINOR=$(sed -e 's/[^0-9]*//g' <<< "${SERVER_MINOR}")
             ;;
             *"client_major_version"*)
+                # shellcheck disable=SC2001
                 CLIENT_MAJOR=$(sed -e 's#.*=\(\)#\1#' <<< "${line}")
+                # shellcheck disable=SC2001
                 CLIENT_MAJOR=$(sed -e 's/[^0-9]*//g' <<< "${CLIENT_MAJOR}")
             ;;
             *"client_minor_version"*)
+                # shellcheck disable=SC2001
                 CLIENT_MINOR=$(sed -e 's#.*=\(\)#\1#' <<< "${line}")
+                # shellcheck disable=SC2001
                 CLIENT_MINOR=$(sed -e 's/[^0-9]*//g' <<< "${CLIENT_MINOR}")
             ;;
         esac
@@ -71,15 +81,17 @@ get_versions()
     IFS=${OLD_IFS}     # restore default field separator
 }
 
-get_versions ${PROTO_FILE}
+get_versions "${PROTO_FILE}"
 
+# shellcheck disable=SC2230
 if which git >/dev/null; then
-    FILE_NAME_VER_PROP="$(dirname $0)/VERSION.txt"
-    FILE_NAME_COMMIT_PROP="$(dirname $0)/COMMIT.txt"
-    FILE_NAME="$(dirname $0)/share/Version.hpp"
-    rm -f ${FILE_NAME}
+    FILE_NAME_VER_PROP="$(dirname "$0")/VERSION.txt"
+    FILE_NAME_COMMIT_PROP="$(dirname "$0")/COMMIT.txt"
+    FILE_NAME="$(dirname "$0")/share/Version.hpp"
+    rm -f "${FILE_NAME}"
     BUILD_VER=$(git log --oneline | wc -l)
-    BUILD_VER=$(echo -e ${BUILD_VER} | tr -d '[[:space:]]')
+    # shellcheck disable=SC2021
+    BUILD_VER=$(echo -e "${BUILD_VER}" | tr -d '[[:space:]]')
     COMMITTER_FULLSHA=$(git log -n 1 "--pretty=format:%H")
     COMMITTER_SHORTSHA=$(git log -n 1 "--pretty=format:%h")
     COMMITTER_NAME=$(git log -n 1 "--pretty=format:%cn")
@@ -92,26 +104,33 @@ if which git >/dev/null; then
 
     echo "CLIENT VERSION : ${CLIENT_MAJOR}.${CLIENT_MINOR}.${BUILD_VER}"
 
-    echo "#ifndef VERSION_H" >> ${FILE_NAME}
-    echo "#define VERSION_H" >> ${FILE_NAME}
-    echo "" >> ${FILE_NAME}
-    echo "#include <string>" >> ${FILE_NAME}
+    # shellcheck disable=SC2129
+    echo "#ifndef VERSION_H" >> "${FILE_NAME}"
+    echo "#define VERSION_H" >> "${FILE_NAME}"
+    echo "" >> "${FILE_NAME}"
+    # shellcheck disable=SC2129
+    echo "#include <string>" >> "${FILE_NAME}"
+    # shellcheck disable=SC2086
+    # shellcheck disable=SC2129
     echo "#include <sstream>" >> ${FILE_NAME}
-    echo "" >> ${FILE_NAME}
-    echo "" >> ${FILE_NAME}
-    echo "#define MQ_VERSION_MAJOR      ${SERVER_MAJOR}" >> ${FILE_NAME}
-    echo "#define MQ_VERSION_MINOR      ${SERVER_MINOR}" >> ${FILE_NAME}
-    echo "#define MQ_VERSION_REVISION   ${BUILD_VER}" >> ${FILE_NAME}
-    echo "" >> ${FILE_NAME}
-    echo "#define MQ_COMMITTER_NAME     \"$COMMITTER_NAME\"" >> ${FILE_NAME}
-    echo "#define MQ_COMMITTER_EMAIL    \"$COMMITTER_EMAIL\"" >> ${FILE_NAME}
-    echo "" >> ${FILE_NAME}
-    echo "#define MQ_COMMITTER_FULLSHA	\"$COMMITTER_FULLSHA\"" >> ${FILE_NAME}
-    echo "#define MQ_COMMITTER_SHORTSHA	\"$COMMITTER_SHORTSHA\"" >> ${FILE_NAME}
-    echo "#define MQ_COMMITTER_DATE		\"$COMMITTER_DATE\"" >> ${FILE_NAME}
-    echo "#define MQ_COMMITTER_NOTE		\"$COMMITTER_NOTE\"" >> ${FILE_NAME}
-    echo "" >> ${FILE_NAME}
-    echo "#endif // VERSION_H" >> ${FILE_NAME}
+    # shellcheck disable=SC2129
+    echo "" >> "${FILE_NAME}"
+    echo "" >> "${FILE_NAME}"
+    # shellcheck disable=SC2129
+    echo "#define MQ_VERSION_MAJOR      ${SERVER_MAJOR}" >> "${FILE_NAME}"
+    echo "#define MQ_VERSION_MINOR      ${SERVER_MINOR}" >> "${FILE_NAME}"
+    echo "#define MQ_VERSION_REVISION   ${BUILD_VER}" >> "${FILE_NAME}"
+    echo "" >> "${FILE_NAME}"
+    echo "#define MQ_COMMITTER_NAME     \"$COMMITTER_NAME\"" >> "${FILE_NAME}"
+    echo "#define MQ_COMMITTER_EMAIL    \"$COMMITTER_EMAIL\"" >> "${FILE_NAME}"
+    echo "" >> "${FILE_NAME}"
+    # shellcheck disable=SC2129
+    echo "#define MQ_COMMITTER_FULLSHA	\"$COMMITTER_FULLSHA\"" >> "${FILE_NAME}"
+    echo "#define MQ_COMMITTER_SHORTSHA	\"$COMMITTER_SHORTSHA\"" >> "${FILE_NAME}"
+    echo "#define MQ_COMMITTER_DATE		\"$COMMITTER_DATE\"" >> "${FILE_NAME}"
+    echo "#define MQ_COMMITTER_NOTE		\"$COMMITTER_NOTE\"" >> "${FILE_NAME}"
+    echo "" >> "${FILE_NAME}"
+    echo "#endif // VERSION_H" >> "${FILE_NAME}"
     echo "Version file  : ${FILE_NAME}"
     echo "Version number: ${BUILD_VER}"
     echo "COMMITTER SHA  : $COMMITTER_FULLSHA"
@@ -120,11 +139,11 @@ if which git >/dev/null; then
     echo "COMMITTER email: $COMMITTER_EMAIL"
     echo "COMMITTER date : $COMMITTER_DATE"
 
-    rm -f ${FILE_NAME_VER_PROP}
-    echo "${SERVER_MAJOR}.${SERVER_MINOR}.${BUILD_VER}" >> ${FILE_NAME_VER_PROP}
+    rm -f "${FILE_NAME_VER_PROP}"
+    echo "${SERVER_MAJOR}.${SERVER_MINOR}.${BUILD_VER}" >> "${FILE_NAME_VER_PROP}"
 
-    rm -f ${FILE_NAME_COMMIT_PROP}
-    echo "${COMMITTER_SHORTSHA}" >> ${FILE_NAME_COMMIT_PROP}
+    rm -f "${FILE_NAME_COMMIT_PROP}"
+    echo "${COMMITTER_SHORTSHA}" >> "${FILE_NAME_COMMIT_PROP}"
 
 else
 	echo "{--------------------------------------------------}"
