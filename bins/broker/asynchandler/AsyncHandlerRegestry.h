@@ -32,7 +32,7 @@ class AsyncHandlerRegestry : public Poco::Runnable {
  public:
   typedef std::vector<std::shared_ptr<AsyncTCPHandler>> ConnectionsListType;
   AsyncHandlerRegestry();
-  ~AsyncHandlerRegestry() override = default;
+  ~AsyncHandlerRegestry() override;
   void addAHandler(std::shared_ptr<AsyncTCPHandler> ahandler);
   std::shared_ptr<AsyncTCPHandler> aHandler(size_t num) const;
   void deleteAHandler(size_t num);

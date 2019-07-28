@@ -59,7 +59,10 @@ Connection::Connection(const std::string &clientID)
   dbSession.commitTX();
 }
 Connection::~Connection() {
-  _sessions.clear();
+  {
+    upmq::ScopedWriteRWLock writeLock(_sessionsLock);
+    _sessions.clear();
+  }
   std::stringstream sql;
   sql << "delete from \"" << BROKER::Instance().id() << "\" where client_id = \'" << _clientID << "\';";
   TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }

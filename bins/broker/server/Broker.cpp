@@ -54,7 +54,13 @@ Broker::Broker(std::string id)
   TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
   CATCH_POCO_DATA_EXCEPTION_PURE("broker initialization error", sql.str(), ERROR_STORAGE);
 }
-Broker::~Broker() = default;
+Broker::~Broker() {
+  try {
+    upmq::ScopedWriteRWLock writeLock(_connectionsLock);
+    _connections.clear();
+  } catch (...) {
+  }
+}
 const std::string &Broker::id() const { return _id; }
 void Broker::onEvent(const AsyncTCPHandler &ahandler, MessageDataContainer &sMessage) {
   ASYNCLOG_INFORMATION(ahandler.logStream, (std::to_string(sMessage.handlerNum).append(" # => ").append(sMessage.typeName())));

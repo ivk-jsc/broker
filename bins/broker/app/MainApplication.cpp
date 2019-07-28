@@ -187,11 +187,16 @@ int MainApplication::main(const std::vector<std::string> &args) {
   reactor.stop();
   thread.join();
   BROKER::Instance().stop();
-  AHRegestry::Instance().stop();
   EXCHANGE::Instance().stop();
+  AHRegestry::Instance().stop();
+
+  AHRegestry::destroyInstance();
+  BROKER::destroyInstance();
+  EXCHANGE::destroyInstance();
 
   ASYNCLOG_CRITICAL(logStream, (std::string("-").append(" * ").append(">>========= stop =========<<") += non_std_endl));
   logStream.reset(nullptr);
+  ASYNCLOGGER::Instance().destroy(CONFIGURATION::Instance().log().name);
   return Application::EXIT_OK;
 }
 

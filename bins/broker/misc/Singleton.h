@@ -21,9 +21,37 @@ template <typename T>
 class Singleton {
  public:
   static T &Instance() {
-    static T _instance;
-    return _instance;
+    if (Singleton::_instance == nullptr) {
+      Singleton<T>::_instance = CreateInstance();
+    }
+    return *(Singleton<T>::_instance);
   }
+
+  static void destroyInstance() {
+    if (Singleton<T>::_instance != nullptr) {
+      delete Singleton<T>::_instance;
+    }
+    Singleton::_instance = nullptr;
+  }
+
+ protected:
+  virtual ~Singleton() {
+    try {
+      destroyInstance();
+    } catch (...) {
+    }
+  }
+  inline explicit Singleton() {
+    static_assert(Singleton<T>::_instance == 0, "empty instance");
+    Singleton::_instance = static_cast<T *>(this);
+  }
+
+ private:
+  static T *_instance;
+  static T *CreateInstance() { return new T(); }
 };
+
+template <typename T>
+T *Singleton<T>::_instance = 0;
 
 #endif  // BROKER_SINGLETON_H

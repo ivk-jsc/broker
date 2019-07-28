@@ -411,5 +411,6 @@ AsyncTCPHandler::DataStatus AsyncTCPHandler::tryMoveBodyByLink(MessageDataContai
 void AsyncTCPHandler::allowPutReadEvent() { _allowPutEvent = true; }
 size_t AsyncTCPHandler::queueReadNum() const { return _queueReadNum; }
 size_t AsyncTCPHandler::queueWriteNum() const { return _queueWriteNum; }
+void AsyncTCPHandler::setReadComplete(bool readComplete) { _readComplete = readComplete; }
 }  // namespace broker
 }  // namespace upmq

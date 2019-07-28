@@ -102,5 +102,17 @@ int AsyncHandlerRegestry::freeNum() const {
   }
   return num;
 }
+AsyncHandlerRegestry::~AsyncHandlerRegestry() {
+  try {
+    for (auto &_connection : _connections) {
+      if (_connection) {
+        _connection->setReadComplete(true);
+        _connection = nullptr;
+      }
+    }
+    _connections.clear();
+  } catch (...) {
+  }
+}
 }  // namespace broker
 }  // namespace upmq
