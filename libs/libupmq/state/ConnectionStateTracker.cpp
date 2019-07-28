@@ -48,6 +48,8 @@ class StateTrackerImpl {
 
   StateTrackerImpl(ConnectionStateTracker *parent) : parent(parent) {}
 
+  Pointer<Command> markerAsCommand() const { return (TRACKED_RESPONSE_MARKER != nullptr ? TRACKED_RESPONSE_MARKER.dynamicCast<Command>() : Pointer<Command>()); }
+
   ~StateTrackerImpl() {}
 };
 }  // namespace state
@@ -129,7 +131,7 @@ Pointer<Command> ConnectionStateTracker::processConnect(Pointer<Command> info) {
       Pointer<Command> infoCopy(info->duplicate());
       this->impl->connectionState = Pointer<ConnectionState>(new ConnectionState(infoCopy));
     }
-    return this->impl->TRACKED_RESPONSE_MARKER.dynamicCast<Command>();
+    return this->impl->markerAsCommand();
   }
   AMQ_CATCH_RETHROW(UPMQException)
   AMQ_CATCH_EXCEPTION_CONVERT(Exception, UPMQException)
@@ -145,7 +147,7 @@ Pointer<Command> ConnectionStateTracker::processDisconnect(Pointer<Command> info
         this->impl->connectionState.reset(nullptr);
       }
     }
-    return this->impl->TRACKED_RESPONSE_MARKER.dynamicCast<Command>();
+    return this->impl->markerAsCommand();
   }
   AMQ_CATCH_RETHROW(UPMQException)
   AMQ_CATCH_EXCEPTION_CONVERT(Exception, UPMQException)
@@ -161,7 +163,7 @@ Pointer<Command> ConnectionStateTracker::processSession(Pointer<Command> info) {
         cs->addSession(Pointer<Command>(info->duplicate()));
       }
     }
-    return this->impl->TRACKED_RESPONSE_MARKER.dynamicCast<Command>();
+    return this->impl->markerAsCommand();
   }
   AMQ_CATCH_RETHROW(UPMQException)
   AMQ_CATCH_EXCEPTION_CONVERT(Exception, UPMQException)
@@ -177,7 +179,7 @@ Pointer<Command> ConnectionStateTracker::processUnsession(Pointer<Command> info)
         cs->removeSession(info->getCurrId());
       }
     }
-    return this->impl->TRACKED_RESPONSE_MARKER.dynamicCast<Command>();
+    return this->impl->markerAsCommand();
   }
   AMQ_CATCH_RETHROW(UPMQException)
   AMQ_CATCH_EXCEPTION_CONVERT(Exception, UPMQException)
@@ -196,7 +198,7 @@ decaf::lang::Pointer<Command> ConnectionStateTracker::processSender(Pointer<Comm
         }
       }
     }
-    return this->impl->TRACKED_RESPONSE_MARKER.dynamicCast<Command>();
+    return this->impl->markerAsCommand();
   }
   AMQ_CATCH_RETHROW(UPMQException)
   AMQ_CATCH_EXCEPTION_CONVERT(Exception, UPMQException)
@@ -215,7 +217,7 @@ Pointer<Command> ConnectionStateTracker::processUnsender(Pointer<Command> info) 
         }
       }
     }
-    return this->impl->TRACKED_RESPONSE_MARKER.dynamicCast<Command>();
+    return this->impl->markerAsCommand();
   }
   AMQ_CATCH_RETHROW(UPMQException)
   AMQ_CATCH_EXCEPTION_CONVERT(Exception, UPMQException)
@@ -234,7 +236,7 @@ Pointer<Command> ConnectionStateTracker::processSubscription(Pointer<Command> in
         }
       }
     }
-    return this->impl->TRACKED_RESPONSE_MARKER.dynamicCast<Command>();
+    return this->impl->markerAsCommand();
   }
   AMQ_CATCH_RETHROW(UPMQException)
   AMQ_CATCH_EXCEPTION_CONVERT(Exception, UPMQException)
@@ -253,7 +255,7 @@ Pointer<Command> ConnectionStateTracker::processUnsubscription(Pointer<Command> 
         }
       }
     }
-    return this->impl->TRACKED_RESPONSE_MARKER.dynamicCast<Command>();
+    return this->impl->markerAsCommand();
   }
   AMQ_CATCH_RETHROW(UPMQException)
   AMQ_CATCH_EXCEPTION_CONVERT(Exception, UPMQException)
@@ -275,7 +277,7 @@ Pointer<Command> ConnectionStateTracker::processSubscribe(Pointer<Command> info)
         }
       }
     }
-    return this->impl->TRACKED_RESPONSE_MARKER.dynamicCast<Command>();
+    return this->impl->markerAsCommand();
   }
   AMQ_CATCH_RETHROW(UPMQException)
   AMQ_CATCH_EXCEPTION_CONVERT(Exception, UPMQException)
@@ -297,7 +299,7 @@ Pointer<Command> ConnectionStateTracker::processUnsubscribe(Pointer<Command> inf
         }
       }
     }
-    return this->impl->TRACKED_RESPONSE_MARKER.dynamicCast<Command>();
+    return this->impl->markerAsCommand();
   }
   AMQ_CATCH_RETHROW(UPMQException)
   AMQ_CATCH_EXCEPTION_CONVERT(Exception, UPMQException)
