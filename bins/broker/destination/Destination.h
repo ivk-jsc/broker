@@ -91,7 +91,7 @@ class Destination {
   mutable upmq::MRWLock _predefPublishersLock;
   std::unique_ptr<DestinationOwner> _owner;
   std::unique_ptr<Poco::Timestamp> _created{new Poco::Timestamp};
-  Subscription::ConsumerMode _consumerMode{Subscription::ConsumerMode::EXCLUSIVE};
+  Subscription::ConsumerMode _consumerMode{Subscription::ConsumerMode::ROUND_ROBIN};
 
  private:
   void eraseSubscription(SubscriptionsList::iterator &it);

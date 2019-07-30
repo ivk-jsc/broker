@@ -255,12 +255,12 @@ Subscription::ConsumerMode Destination::makeConsumerMode(const std::string &uri)
   Poco::URI tURI(uri);
   Poco::URI::QueryParameters parameters = tURI.getQueryParameters();
   if (!parameters.empty()) {
-    auto it = std::find_if(parameters.begin(), parameters.end(), [](const Poco::URI::QueryParameters::value_type &pair) { return (pair.first == "subs-mode" && pair.second == "round-robin"); });
+    auto it = std::find_if(parameters.begin(), parameters.end(), [](const Poco::URI::QueryParameters::value_type &pair) { return (pair.first == "subs-mode" && pair.second == "exclusive"); });
     if (it != parameters.end()) {
-      return Subscription::ConsumerMode::ROUND_ROBIN;
+      return Subscription::ConsumerMode::EXCLUSIVE;
     }
   }
-  return Subscription::ConsumerMode::EXCLUSIVE;
+  return Subscription::ConsumerMode::ROUND_ROBIN;
 }
 bool Destination::isTemporary() const { return (_type == Type::TEMPORARY_QUEUE) || (_type == Type::TEMPORARY_TOPIC); }
 bool Destination::isTopic() const { return _type == Type::TOPIC; }
