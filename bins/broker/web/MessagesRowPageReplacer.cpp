@@ -94,10 +94,7 @@ std::string MessagesRowPageReplacer::consumerIdReplacer() { return _consumerId; 
 
 std::string MessagesRowPageReplacer::errorReplacer() { return std::to_string((long long)_error); }
 
-std::string MessagesRowPageReplacer::numReplacer() {
-  return std::to_string((long long)_num);
-  ;
-}
+std::string MessagesRowPageReplacer::numReplacer() { return std::to_string((long long)_num); }
 
 std::string MessagesRowPageReplacer::deliveredReplacer() { return _delivered; }
 
