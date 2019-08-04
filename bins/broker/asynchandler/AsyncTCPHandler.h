@@ -91,7 +91,7 @@ class AsyncTCPHandler {
   void setConnection(Connection *connection) const;
   Connection *connection() const;
   bool needErase() const;
-  void setNeedErase(bool flag);
+  void setNeedErase();
 
   const std::string &peerAddress() const;
 
@@ -100,9 +100,9 @@ class AsyncTCPHandler {
   std::string toString() const;
 
   int maxNotAcknowledgedMessages() const;
-  HeartBeat heartbeat;
+  HeartBeat heartbeat{};
   ClientVersion clientVersion;
-  ProtocolVersion protocolVersion;
+  ProtocolVersion protocolVersion{};
 
   void emitCloseEvent(bool withError = false);
 
@@ -126,8 +126,8 @@ class AsyncTCPHandler {
   moodycamel::ConcurrentQueue<std::shared_ptr<MessageDataContainer> > outputQueue;
   Poco::FastMutex onWritableLock;
   Poco::FastMutex onReadableLock;
-  char pBuffer[BUFFER_SIZE];
-  char hbLens[sizeof(uint32_t) + sizeof(uint64_t)];
+  char pBuffer[BUFFER_SIZE]{};
+  char hbLens[sizeof(uint32_t) + sizeof(uint64_t)]{};
   struct HeaderBodyLens {
     uint32_t headerLen = 0;
     uint64_t bodyLen = 0;
@@ -138,7 +138,7 @@ class AsyncTCPHandler {
   Poco::NObserver<AsyncTCPHandler, Poco::Net::ErrorNotification> _errorCallBack;
   Poco::NObserver<AsyncTCPHandler, Poco::Net::ShutdownNotification> _shutdownCallBack;
 
-  size_t num;
+  size_t num{};
 
  private:
   bool _wasError;

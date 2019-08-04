@@ -32,14 +32,14 @@
 namespace upmq {
 namespace broker {
 // NOTE: for queues id must be same as in destination
-Subscription::Subscription(const Destination &destination, const std::string &id, const std::string &name, const std::string &routingKey, Subscription::Type type)
+Subscription::Subscription(const Destination &destination, const std::string &id, std::string name, std::string routingKey, Subscription::Type type)
     : _id(id.empty() ? Poco::UUIDGenerator::defaultGenerator().createRandom().toString() : id),
-      _name(name),
+      _name(std::move(name)),
       _type(type),
-      _routingKey(routingKey),
+      _routingKey(std::move(routingKey)),
       _storage(_id),
       _destination(destination),
-      _isRunning(false),
+      _isRunning(new std::atomic_bool(false)),
       _currentConsumerNumber(0),
       _consumersT("\"" + _id + "_subscription\""),
       _messageCounter(0),
@@ -230,14 +230,14 @@ void Subscription::onEvent(const void *pSender, const MessageDataContainer *&sMe
 bool Subscription::isDurable() const { return _type == Type::DURABLE; }
 bool Subscription::isBrowser() const { return _type == Type::BROWSER; }
 void Subscription::start() {
-  if (_isRunning) {
+  if (*_isRunning) {
     return;
   }
-  _isRunning = true;
+  *_isRunning = true;
 }
 void Subscription::stop() {
-  if (_isRunning) {
-    _isRunning = false;
+  if (*_isRunning) {
+    *_isRunning = false;
   }
 }
 void Subscription::stop(const Consumer &consumer) {
@@ -261,7 +261,7 @@ void Subscription::start(const Consumer &consumer) {
       const Consumer &cons = byClientAndHandlerAndSessionIDs(consumer.clientID, consumer.tcpNum, consumer.session.id);
       cons.start();
     }
-    if (!_isRunning) {
+    if (!*_isRunning) {
       start();
     } else {
       postNewMessageEvent();
@@ -310,7 +310,7 @@ bool Subscription::getNextMessage() {
       sMessage = storage.get(*consumer, useFileLink);
     } catch (Exception &ex) {
       consumer->select->clear();
-      ASYNCLOG_ERROR(logStream, (std::string(consumer->clientID).append(" ! <= [").append(std::string(__FUNCTION__)).append("] ").append(ex.message()) += non_std_endl));
+      ASYNCLOG_ERROR(logStream, (std::string(consumer->clientID).append(" ! <= [").append(std::string(__FUNCTION__)).append("] ").append(ex.message())));
       _consumersLock.unlockWrite();
       return false;
     }
@@ -349,7 +349,7 @@ bool Subscription::getNextMessage() {
                                   .append(messageID)
                                   .append("] (")
                                   .append(std::to_string(_messageCounter))
-                                  .append(")") += non_std_endl));
+                                  .append(")")));
 
         storage.setMessageToWasSent(messageID, *consumer);
         _destination.decreesNotAcknowledged(consumer->objectID);
@@ -364,12 +364,12 @@ bool Subscription::getNextMessage() {
         }
 
       } catch (Exception &ex) {
-        ASYNCLOG_ERROR(logStream, (std::to_string(consumer->tcpNum).append(" ! <= [").append(__FUNCTION__).append("] ").append(ex.message()) += non_std_endl));
+        ASYNCLOG_ERROR(logStream, (std::to_string(consumer->tcpNum).append(" ! <= [").append(__FUNCTION__).append("] ").append(ex.message())));
         if (ex.error() == ERROR_CONNECTION) {
           messageID.clear();
           removeConsumers(consumer->tcpNum);
           if (_consumers.empty()) {
-            _isRunning = false;
+            *_isRunning = false;
           }
         }
         _consumersLock.unlockWrite();
@@ -488,7 +488,7 @@ void Subscription::removeClients() {
   }
   stop();
 }
-bool Subscription::isRunning() const { return _isRunning; }
+bool Subscription::isRunning() const { return *_isRunning; }
 void Subscription::setHasNotify(bool hasNotify) { _isSubsNotify = hasNotify; }
 void Subscription::destroy() {
   removeClients();
@@ -551,7 +551,7 @@ bool Subscription::hasSnapshot() const { return _hasSnapshot; }
 void Subscription::setHasSnapshot(bool hasSnapshot) { _hasSnapshot = hasSnapshot; }
 Subscription::Info Subscription::info() const {
   upmq::ScopedReadRWLock readRWLock(_consumersLock);
-  return Subscription::Info(_id, _name, _type, static_cast<int>(_consumers.size()), _messageCounter, _isRunning);
+  return Subscription::Info(_id, _name, _type, static_cast<int>(_consumers.size()), _messageCounter, *_isRunning);
 }
 
 void Subscription::resetConsumersCache() {

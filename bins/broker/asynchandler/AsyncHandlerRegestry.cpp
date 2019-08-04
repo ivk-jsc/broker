@@ -53,11 +53,19 @@ void AsyncHandlerRegestry::put(size_t num, std::shared_ptr<MessageDataContainer>
 }
 void AsyncHandlerRegestry::run() {
   _isRunning = true;
+  int num;
   while (_isRunning) {
-    if (erasedConnections() == 0) {
-      Poco::ScopedLock<Poco::FastMutex> lock(_mutex);
-      _condition.tryWait(_mutex, 2000);
+    if (_needToErase.wait_dequeue_timed(num, 2000000)) {
+      auto &connection = _connections[num];
+      if (connection && connection->needErase()) {
+        connection = nullptr;
+      }
     }
+
+    //    if (erasedConnections() == 0) {
+    //      Poco::ScopedLock<Poco::FastMutex> lock(_mutex);
+    //      _condition.tryWait(_mutex, 2000);
+    //    }
   }
 }
 int AsyncHandlerRegestry::erasedConnections() {
@@ -106,7 +114,7 @@ AsyncHandlerRegestry::~AsyncHandlerRegestry() {
   try {
     for (auto &_connection : _connections) {
       if (_connection) {
-        _connection->setNeedErase(true);
+        _connection->setNeedErase();
         _connection->setReadComplete(true);
         _connection = nullptr;
       }
@@ -115,5 +123,6 @@ AsyncHandlerRegestry::~AsyncHandlerRegestry() {
   } catch (...) {
   }
 }
+void AsyncHandlerRegestry::needToErase(size_t num) { _needToErase.enqueue(static_cast<int>(num)); }
 }  // namespace broker
 }  // namespace upmq

@@ -102,7 +102,7 @@ int MainApplication::main(const std::vector<std::string> &args) {
     EXCHANGE::Instance().start();
     BROKER::Instance().start();
   } catch (Exception &ex) {
-    ASYNCLOG_CRITICAL(logStream, (ex.message() += non_std_endl));
+    ASYNCLOG_CRITICAL(logStream, (ex.message()));
     return Application::EXIT_CANTCREAT;
   }
 
@@ -116,9 +116,9 @@ int MainApplication::main(const std::vector<std::string> &args) {
 
 #endif
 
-  ASYNCLOG_CRITICAL(logStream, (std::string("-").append(" * ").append("<<========= start =========>>") += non_std_endl));
-  ASYNCLOG_CRITICAL(logStream, (std::string("-").append(" * ").append("version\t\t\t: ").append(About::version()) += non_std_endl));
-  ASYNCLOG_CRITICAL(logStream, (std::string("-").append(" * ").append("configuration\t\t=> ").append(CONFIGURATION::Instance().toString()) += non_std_endl));
+  ASYNCLOG_CRITICAL(logStream, (std::string("-").append(" * ").append("<<========= start =========>>")));
+  ASYNCLOG_CRITICAL(logStream, (std::string("-").append(" * ").append("version\t\t\t: ").append(About::version())));
+  ASYNCLOG_CRITICAL(logStream, (std::string("-").append(" * ").append("configuration\t\t=> ").append(CONFIGURATION::Instance().toString())));
 
   std::string webuiStatus = "disabled";
 #ifdef ENABLE_WEB_ADMIN
@@ -126,7 +126,7 @@ int MainApplication::main(const std::vector<std::string> &args) {
     webuiStatus = "enabled";
   }
 #endif
-  ASYNCLOG_CRITICAL(logStream, (std::string("-").append(" * ").append("webui\t\t: ").append(webuiStatus) += non_std_endl));
+  ASYNCLOG_CRITICAL(logStream, (std::string("-").append(" * ").append("webui\t\t: ").append(webuiStatus)));
   // TODO(bas) : refactor this
   Poco::Util::AbstractConfiguration::Keys destinationsKeys;
   std::string destinationsSection = "broker.destinations";
@@ -194,7 +194,7 @@ int MainApplication::main(const std::vector<std::string> &args) {
   BROKER::destroyInstance();
   EXCHANGE::destroyInstance();
 
-  ASYNCLOG_CRITICAL(logStream, (std::string("-").append(" * ").append(">>========= stop =========<<") += non_std_endl));
+  ASYNCLOG_CRITICAL(logStream, (std::string("-").append(" * ").append(">>========= stop =========<<")));
   logStream.reset(nullptr);
   ASYNCLOGGER::Instance().destroy(CONFIGURATION::Instance().log().name);
   return Application::EXIT_OK;

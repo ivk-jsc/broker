@@ -44,6 +44,8 @@ class AsyncHandlerRegestry : public Poco::Runnable {
   void notify();
   size_t size() const;
 
+  void needToErase(size_t num);
+
  private:
   size_t _size{0};
   Poco::Thread _thread;
@@ -51,7 +53,8 @@ class AsyncHandlerRegestry : public Poco::Runnable {
   Poco::Condition _condition;
   ConnectionsListType _connections;
   mutable moodycamel::BlockingConcurrentQueue<int> _freeNums{};
-  bool _isRunning;
+  moodycamel::BlockingConcurrentQueue<int> _needToErase{};
+  std::atomic_bool _isRunning;
   std::atomic_size_t _current_size;
   int erasedConnections();
   int freeNum() const;

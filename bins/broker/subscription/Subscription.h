@@ -77,7 +77,7 @@ class Subscription {
   const std::string _routingKey;
   mutable Storage _storage;
   const Destination &_destination;
-  bool _isRunning;
+  std::unique_ptr<std::atomic_bool> _isRunning;
   mutable int _currentConsumerNumber;
   std::string _consumersT;
 
@@ -90,7 +90,7 @@ class Subscription {
   std::shared_ptr<std::deque<Consumer::Msg>> _roundRobinCache;
 
  public:
-  Subscription(const upmq::broker::Destination &destination, const std::string &id, const std::string &name, const std::string &routingKey, Subscription::Type type = Subscription::Type::SIMPLE);
+  Subscription(const upmq::broker::Destination &destination, const std::string &id, std::string name, std::string routingKey, Subscription::Type type = Subscription::Type::SIMPLE);
   virtual ~Subscription() noexcept;
 
   Subscription(Subscription &&) = default;

@@ -389,20 +389,20 @@ void Destination::increaseNotAcknowledged(const std::string &objectID) {
   upmq::ScopedReadRWLock readRWLock(_notAckLock);
   auto it = _notAckList.find(objectID);
   if (it != _notAckList.end()) {
-    ++(it->second);
+    ++(*it->second);
   }
 }
 void Destination::increaseNotAcknowledgedAll() {
   upmq::ScopedReadRWLock readRWLock(_notAckLock);
   for (auto &it : _notAckList) {
-    ++(it.second);
+    ++(*it.second);
   }
 }
 bool Destination::canSendNextMessages(const std::string &objectID) const {
   upmq::ScopedReadRWLock readRWLock(_notAckLock);
   const auto it = _notAckList.find(objectID);
   if (it != _notAckList.end()) {
-    return (it->second > 0);
+    return (*(it->second) > 0);
   }
   return false;
 }
@@ -410,12 +410,12 @@ void Destination::decreesNotAcknowledged(const std::string &objectID) const {
   upmq::ScopedReadRWLock readRWLock(_notAckLock);
   auto it = _notAckList.find(objectID);
   if (it != _notAckList.end()) {
-    --(it->second);
+    --(*it->second);
   }
 }
 void Destination::addToNotAckList(const std::string &objectID, int count) const {
   upmq::ScopedWriteRWLock writeRWLock(_notAckLock);
-  _notAckList.insert(std::make_pair(objectID, count));
+  _notAckList.insert(std::make_pair(objectID, std::make_unique<std::atomic_int>(count)));
 }
 void Destination::remFromNotAck(const std::string &objectID) const {
   upmq::ScopedWriteRWLock writeRWLock(_notAckLock);

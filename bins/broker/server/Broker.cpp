@@ -131,7 +131,7 @@ void Broker::onEvent(const AsyncTCPHandler &ahandler, MessageDataContainer &sMes
     outMessage->protoMessage().Clear();
     outMessage->protoMessage().mutable_error()->set_error_code(static_cast<Proto::ErrorCode>(ex.error()));
     outMessage->protoMessage().mutable_error()->set_error_message(ex.message());
-    ASYNCLOG_ERROR(ahandler.logStream, (std::to_string(sMessage.handlerNum).append(" ! => ").append(std::string(ex.what())) += non_std_endl));
+    ASYNCLOG_ERROR(ahandler.logStream, (std::to_string(sMessage.handlerNum).append(" ! => ").append(std::string(ex.what()))));
     if (sMessage.isMessage()) {
       sMessage.removeLinkedFile();
     }
@@ -146,7 +146,7 @@ void Broker::onEvent(const AsyncTCPHandler &ahandler, MessageDataContainer &sMes
     outMessage->setRRID(sMessage.rrID());
     outMessage->serialize();
     const_cast<AsyncTCPHandler &>(ahandler).put(std::move(outMessage));
-    ASYNCLOG_INFORMATION(ahandler.logStream, (std::to_string(sMessage.handlerNum).append(" * <= ").append("send reply on ").append(sMessage.typeName()) += non_std_endl));
+    ASYNCLOG_INFORMATION(ahandler.logStream, (std::to_string(sMessage.handlerNum).append(" * <= ").append("send reply on ").append(sMessage.typeName())));
   }
 }
 void Broker::onConnect(const AsyncTCPHandler &tcpHandler, const MessageDataContainer &sMessage, MessageDataContainer &outMessage) {
@@ -179,7 +179,6 @@ void Broker::onConnect(const AsyncTCPHandler &tcpHandler, const MessageDataConta
   Proto::ServerVersion serverVersion;
   connected.mutable_protocol_version()->set_protocol_major_version(serverVersion.server_major_version());
   connected.mutable_protocol_version()->set_protocol_minor_version(serverVersion.server_minor_version());
-  ASYNCLOG_INFORMATION(tcpHandler.logStream, non_std_endl);
 }
 void Broker::removeTcpConnection(const std::string &clientID, size_t tcpConnectionNum) {
   auto it = _connections.end();
@@ -192,14 +191,14 @@ void Broker::removeTcpConnection(const std::string &clientID, size_t tcpConnecti
   }
   if (it != _connections.end() && it->second->tcpConnectionsCount() == 0) {
     eraseConnection(clientID);
-    ASYNCLOG_INFORMATION(logStream, (std::to_string(tcpConnectionNum).append(" # => ").append("erase connection ").append(clientID) += non_std_endl));
+    ASYNCLOG_INFORMATION(logStream, (std::to_string(tcpConnectionNum).append(" # => ").append("erase connection ").append(clientID)));
   }
 }
 void Broker::removeTcpConnection(Connection &connection, size_t tcpConnectionNum) {
   connection.removeTcpConnection(tcpConnectionNum);
   if (connection.tcpConnectionsCount() == 0) {
     eraseConnection(connection.clientID());
-    ASYNCLOG_INFORMATION(logStream, (std::to_string(tcpConnectionNum).append(" # => ").append("erase connection ").append(connection.clientID()) += non_std_endl));
+    ASYNCLOG_INFORMATION(logStream, (std::to_string(tcpConnectionNum).append(" # => ").append("erase connection ").append(connection.clientID())));
   }
 }
 void Broker::removeConsumers(const std::string &destinationID, const std::string &subscriptionID, size_t tcpNum) {
@@ -212,7 +211,8 @@ void Broker::onSetClientId(const AsyncTCPHandler &tcpHandler, const MessageDataC
   UNUSED_VAR(tcpHandler);
   UNUSED_VAR(outMessage);
   const Proto::ClientInfo &clientInfo = sMessage.clientInfo();
-  ASYNCLOG_INFORMATION(tcpHandler.logStream, (std::string(" : from ").append(clientInfo.old_client_id()).append(" to ").append(clientInfo.new_client_id()) += non_std_endl));
+  ASYNCLOG_INFORMATION(tcpHandler.logStream,
+                       (std::to_string(sMessage.handlerNum).append(" # => ").append(" : from ").append(clientInfo.old_client_id()).append(" to ").append(clientInfo.new_client_id())));
 
   if (isConnectionExists(clientInfo.new_client_id())) {
     throw EXCEPTION("connection already exists", clientInfo.new_client_id(), ERROR_CLIENT_ID_EXISTS);
@@ -237,17 +237,19 @@ void Broker::eraseConnection(const std::string &connectionID) {
     upmq::ScopedWriteRWLock wlock(_connectionsLock);
     _connections.erase(connectionID);
   }
-  ASYNCLOG_INFORMATION(logStream, (std::string("-").append(" # => ").append(" erased ").append(connectionID) += non_std_endl));
+  ASYNCLOG_INFORMATION(logStream, (std::string("-").append(" # => ").append(" erased ").append(connectionID)));
 }
 void Broker::onDisconnect(const AsyncTCPHandler &tcpHandler, const MessageDataContainer &sMessage, MessageDataContainer &outMessage) {
   const Proto::Disconnect &disconnect = sMessage.disconnect();
-  ASYNCLOG_INFORMATION(tcpHandler.logStream, (std::string(" id : ").append(disconnect.client_id()) += non_std_endl));
+  ASYNCLOG_INFORMATION(tcpHandler.logStream, (std::to_string(sMessage.handlerNum).append(" # => ").append(" id : ").append(disconnect.client_id())));
   outMessage.toDisconnect = true;
 }
 void Broker::onCreateSession(const AsyncTCPHandler &tcpHandler, const MessageDataContainer &sMessage, MessageDataContainer &outMessage) {
   UNUSED_VAR(outMessage);
   const Proto::Session &session = sMessage.session();
-  ASYNCLOG_INFORMATION(tcpHandler.logStream, (std::string(" id : ").append(session.session_id()).append(" ack : ").append(Session::acknowlegeName(session.acknowledge_type())) += non_std_endl));
+  ASYNCLOG_INFORMATION(
+      tcpHandler.logStream,
+      (std::to_string(sMessage.handlerNum).append(" # => ").append(" id : ").append(session.session_id()).append(" ack : ").append(Session::acknowlegeName(session.acknowledge_type()))));
   if (tcpHandler.connection() == nullptr) {
     throw EXCEPTION("connection not found", sMessage.clientID, ERROR_ON_SESSION);
   }
@@ -256,7 +258,7 @@ void Broker::onCreateSession(const AsyncTCPHandler &tcpHandler, const MessageDat
 void Broker::onCloseSession(const AsyncTCPHandler &tcpHandler, const MessageDataContainer &sMessage, MessageDataContainer &outMessage) {
   UNUSED_VAR(outMessage);
   const Proto::Unsession &unsession = sMessage.unsession();
-  ASYNCLOG_INFORMATION(tcpHandler.logStream, (std::string(" id : ").append(unsession.session_id()) += non_std_endl));
+  ASYNCLOG_INFORMATION(tcpHandler.logStream, (std::to_string(sMessage.handlerNum).append(" # => ").append(" id : ").append(unsession.session_id())));
   if (tcpHandler.connection() == nullptr) {
     throw EXCEPTION("connection not found", sMessage.clientID, ERROR_ON_UNSESSION);
   }
@@ -265,7 +267,7 @@ void Broker::onCloseSession(const AsyncTCPHandler &tcpHandler, const MessageData
 void Broker::onBegin(const AsyncTCPHandler &tcpHandler, const MessageDataContainer &sMessage, MessageDataContainer &outMessage) {
   UNUSED_VAR(outMessage);
   const Proto::Begin &begin = sMessage.begin();
-  ASYNCLOG_INFORMATION(tcpHandler.logStream, (std::string(" : on session : ").append(begin.session_id()) += non_std_endl));
+  ASYNCLOG_INFORMATION(tcpHandler.logStream, (std::to_string(sMessage.handlerNum).append(" # => ").append(" : on session : ").append(begin.session_id())));
   if (tcpHandler.connection() == nullptr) {
     throw EXCEPTION("connection not found", sMessage.clientID, ERROR_ON_BEGIN);
   }
@@ -274,7 +276,7 @@ void Broker::onBegin(const AsyncTCPHandler &tcpHandler, const MessageDataContain
 void Broker::onCommit(const AsyncTCPHandler &tcpHandler, const MessageDataContainer &sMessage, MessageDataContainer &outMessage) {
   UNUSED_VAR(outMessage);
   const Proto::Commit &commit = sMessage.commit();
-  ASYNCLOG_INFORMATION(tcpHandler.logStream, (std::string(" : on session : ").append(commit.session_id()) += non_std_endl));
+  ASYNCLOG_INFORMATION(tcpHandler.logStream, (std::to_string(sMessage.handlerNum).append(" # => ").append(" : on session : ").append(commit.session_id())));
 
   if (tcpHandler.connection() == nullptr) {
     throw EXCEPTION("connection not found", sMessage.clientID, ERROR_ON_COMMIT);
@@ -284,7 +286,7 @@ void Broker::onCommit(const AsyncTCPHandler &tcpHandler, const MessageDataContai
 void Broker::onAbort(const AsyncTCPHandler &tcpHandler, const MessageDataContainer &sMessage, MessageDataContainer &outMessage) {
   UNUSED_VAR(outMessage);
   const Proto::Abort &abort = sMessage.abort();
-  ASYNCLOG_INFORMATION(tcpHandler.logStream, (std::string(" : on session : ").append(abort.session_id()) += non_std_endl));
+  ASYNCLOG_INFORMATION(tcpHandler.logStream, (std::to_string(sMessage.handlerNum).append(" # => ").append(" : on session : ").append(abort.session_id())));
   if (tcpHandler.connection() == nullptr) {
     throw EXCEPTION("connection not found", sMessage.clientID, ERROR_ON_COMMIT);
   }
@@ -325,7 +327,9 @@ void Broker::onMessage(const AsyncTCPHandler &tcpHandler, const MessageDataConta
       }
     }
   }
-  ASYNCLOG_INFORMATION(tcpHandler.logStream, (std::string("id [").append(constMessage.message_id()).append("] : into destination : ").append(constMessage.destination_uri()) += non_std_endl));
+  ASYNCLOG_INFORMATION(
+      tcpHandler.logStream,
+      (std::to_string(sMessage.handlerNum).append(" # => ").append("id [").append(constMessage.message_id()).append("] : into destination : ").append(constMessage.destination_uri())));
   tcpHandler.connection()->saveMessage(sMessage);
   EXCHANGE::Instance().postNewMessageEvent(constMessage.destination_uri());
 }
@@ -335,7 +339,6 @@ void Broker::onSender(const AsyncTCPHandler &tcpHandler, const MessageDataContai
   if (tcpHandler.connection() == nullptr) {
     throw EXCEPTION("connection not found", sMessage.clientID, ERROR_ON_SENDER);
   }
-  ASYNCLOG_INFORMATION(tcpHandler.logStream, non_std_endl);
   Destination &dest = EXCHANGE::Instance().destination(sMessage.sender().destination_uri());  // NOTE: !NEED for pre-creation of destination, try to mitigate deadlock
   UNUSED_VAR(dest);
   tcpHandler.connection()->addSender(sMessage);
@@ -346,7 +349,6 @@ void Broker::onUnsender(const AsyncTCPHandler &tcpHandler, const MessageDataCont
   if (tcpHandler.connection() == nullptr) {
     throw EXCEPTION("connection not found", sMessage.clientID, ERROR_ON_UNSENDER);
   }
-  ASYNCLOG_INFORMATION(tcpHandler.logStream, non_std_endl);
   tcpHandler.connection()->removeSender(sMessage);
 }
 void Broker::onSubscription(const AsyncTCPHandler &tcpHandler, const MessageDataContainer &sMessage, MessageDataContainer &outMessage) {
@@ -354,7 +356,7 @@ void Broker::onSubscription(const AsyncTCPHandler &tcpHandler, const MessageData
   if (tcpHandler.connection() == nullptr) {
     throw EXCEPTION("connection not found", sMessage.clientID, ERROR_ON_SUBSCRIPTION);
   }
-  ASYNCLOG_INFORMATION(tcpHandler.logStream, (std::string(" : on destination [").append(sMessage.subscription().destination_uri()).append("]") += non_std_endl));
+  ASYNCLOG_INFORMATION(tcpHandler.logStream, (std::to_string(sMessage.handlerNum).append(" # => ").append(" : on destination [").append(sMessage.subscription().destination_uri()).append("]")));
   Destination &dest = EXCHANGE::Instance().destination(sMessage.subscription().destination_uri());  // NOTE: !NEED for pre-creation of destination, try to mitigate deadlock
   UNUSED_VAR(dest);
   tcpHandler.connection()->addSubscription(sMessage);
@@ -366,12 +368,10 @@ void Broker::onSubscribe(const AsyncTCPHandler &tcpHandler, const MessageDataCon
   if (name.empty()) {
     throw EXCEPTION("subscription name is empty", "subscribe", ERROR_ON_SUBSCRIBE);
   }
-  ASYNCLOG_INFORMATION(tcpHandler.logStream, non_std_endl);
   EXCHANGE::Instance().destination(subscribe.destination_uri(), Exchange::DestinationCreationMode::NO_CREATE).subscribe(sMessage);
 }
 void Broker::onUnsubscribe(const AsyncTCPHandler &tcpHandler, const MessageDataContainer &sMessage, MessageDataContainer &outMessage) {
   UNUSED_VAR(outMessage);
-  ASYNCLOG_INFORMATION(tcpHandler.logStream, non_std_endl);
   try {
     EXCHANGE::Instance().destination(sMessage.unsubscribe().destination_uri(), Exchange::DestinationCreationMode::NO_CREATE).unsubscribe(sMessage);
   } catch (Exception &ex) {
@@ -392,7 +392,7 @@ void Broker::onUnsubscription(const AsyncTCPHandler &tcpHandler, const MessageDa
       throw Exception(ex);
     }
   }
-  ASYNCLOG_INFORMATION(tcpHandler.logStream, (std::string(" : from destination [").append(sMessage.unsubscription().destination_uri()).append("]") += non_std_endl));
+  ASYNCLOG_INFORMATION(tcpHandler.logStream, (std::to_string(sMessage.handlerNum).append(" # => ").append(" : from destination [").append(sMessage.unsubscription().destination_uri()).append("]")));
   tcpHandler.eraseSubscription(sMessage);
 }
 void Broker::onAcknowledge(const AsyncTCPHandler &tcpHandler, const MessageDataContainer &sMessage, MessageDataContainer &outMessage) {
@@ -400,13 +400,12 @@ void Broker::onAcknowledge(const AsyncTCPHandler &tcpHandler, const MessageDataC
   if (tcpHandler.connection() == nullptr) {
     throw EXCEPTION("connection not found", sMessage.clientID, ERROR_ON_ACK_MESSAGE);
   }
-  ASYNCLOG_INFORMATION(tcpHandler.logStream, (std::string(" on message id [").append(sMessage.ack().message_id()).append("]") += non_std_endl));
+  ASYNCLOG_INFORMATION(tcpHandler.logStream, (std::to_string(sMessage.handlerNum).append(" # => ").append(" on message id [").append(sMessage.ack().message_id()).append("]")));
   tcpHandler.connection()->processAcknowledge(sMessage);
 }
 void Broker::onBrowser(const AsyncTCPHandler &tcpHandler, const MessageDataContainer &sMessage, MessageDataContainer &outMessage) {
   const Proto::Browser &browser = sMessage.browser();
   const std::string &name = browser.subscription_name();
-  ASYNCLOG_INFORMATION(tcpHandler.logStream, non_std_endl);
   // NOTE: do subscribe into initBrowser
   int64_t count = EXCHANGE::Instance().destination(sMessage.browser().destination_uri(), Exchange::DestinationCreationMode::NO_CREATE).initBrowser(name);
   outMessage.protoMessage().mutable_browser_info()->set_message_count(count);
@@ -415,12 +414,12 @@ void Broker::onDestination(const AsyncTCPHandler &tcpHandler, const MessageDataC
   UNUSED_VAR(outMessage);
   const Proto::Destination &destination = sMessage.destination();
   auto &dest = EXCHANGE::Instance().destination(destination.destination_uri());
-  ASYNCLOG_INFORMATION(tcpHandler.logStream, std::string(" create destination (").append(destination.destination_uri()).append(")"));
+  ASYNCLOG_INFORMATION(tcpHandler.logStream, std::to_string(sMessage.handlerNum).append(" # => ").append(" create destination (").append(destination.destination_uri()).append(")"));
   if (!dest.hasOwner()) {
-    ASYNCLOG_INFORMATION(tcpHandler.logStream, std::string(" | set owner (").append(sMessage.clientID).append(" : ").append(std::to_string(tcpHandler.num)).append(")"));
+    ASYNCLOG_INFORMATION(tcpHandler.logStream,
+                         std::to_string(sMessage.handlerNum).append(" # => ").append(" | set owner (").append(sMessage.clientID).append(" : ").append(std::to_string(tcpHandler.num)).append(")"));
     dest.setOwner(sMessage.clientID, tcpHandler.num);
   }
-  ASYNCLOG_INFORMATION(tcpHandler.logStream, non_std_endl);
 }
 void Broker::onUndestination(const AsyncTCPHandler &tcpHandler, const MessageDataContainer &sMessage, MessageDataContainer &outMessage) {
   UNUSED_VAR(outMessage);
@@ -429,13 +428,21 @@ void Broker::onUndestination(const AsyncTCPHandler &tcpHandler, const MessageDat
     auto &dest = EXCHANGE::Instance().destination(undestination.destination_uri(), Exchange::DestinationCreationMode::NO_CREATE);
     if (dest.hasOwner() && (dest.owner().clientID == sMessage.clientID) && (dest.owner().tcpID == tcpHandler.num)) {
       EXCHANGE::Instance().deleteDestination(undestination.destination_uri());
-      ASYNCLOG_INFORMATION(tcpHandler.logStream, std::string(" delete destination (").append(undestination.destination_uri()).append(")"));
-      ASYNCLOG_INFORMATION(tcpHandler.logStream, std::string(" | owner (").append(sMessage.clientID).append(" : ").append(std::to_string(tcpHandler.num)).append(")"));
+      ASYNCLOG_INFORMATION(tcpHandler.logStream,
+                           std::to_string(sMessage.handlerNum)
+                               .append(" # => ")
+                               .append(" delete destination (")
+                               .append(undestination.destination_uri())
+                               .append(")")
+                               .append(" | owner (")
+                               .append(sMessage.clientID)
+                               .append(" : ")
+                               .append(std::to_string(tcpHandler.num))
+                               .append(")"));
     }
   } catch (Exception &) {  // -V565
     // NOTE : if destination not exists then do nothing
   }
-  ASYNCLOG_INFORMATION(tcpHandler.logStream, non_std_endl);
 }
 bool Broker::isConnectionExists(const std::string &clientID) {
   upmq::ScopedReadRWLock readRWLock(_connectionsLock);
@@ -464,7 +471,7 @@ void Broker::onWritable() {
         }
       }
     } catch (std::exception &ex) {
-      ASYNCLOG_ERROR(logStream, (std::string("-").append(" ! => write error : ").append(std::string(ex.what())) += non_std_endl));
+      ASYNCLOG_ERROR(logStream, (std::string("-").append(" ! => write error : ").append(std::string(ex.what()))));
     }
   } while (_isWritable);
 }
@@ -501,7 +508,7 @@ bool Broker::write(size_t num) {
                                           .append(sMessage->objectID())
                                           .append("/")
                                           .append(ahandler->peerAddress())
-                                          .append(")") += non_std_endl));
+                                          .append(")")));
                 if (sMessage->toDisconnect) {
                   ahandler->onWritableLock.unlock();
                   ahandler->emitCloseEvent();
@@ -517,12 +524,11 @@ bool Broker::write(size_t num) {
             } while (status == AsyncTCPHandler::DataStatus::TRYAGAIN && _isWritable);
           }
         } catch (Exception &ex) {
-          ASYNCLOG_ERROR(ahandler->logStream,
-                         (std::to_string(num).append(" ! <= AsyncTCPHandler::sendHeaderAndData : (").append(std::to_string(ex.error())).append(") ").append(ex.message()) += non_std_endl));
+          ASYNCLOG_ERROR(ahandler->logStream, (std::to_string(num).append(" ! <= AsyncTCPHandler::sendHeaderAndData : (").append(std::to_string(ex.error())).append(") ").append(ex.message())));
         } catch (Poco::Exception &ex) {
-          ASYNCLOG_ERROR(ahandler->logStream, (std::to_string(num).append(" ! <= AsyncTCPHandler::sendHeaderAndData : (").append(ex.className()).append(") ").append(ex.message()) += non_std_endl));
+          ASYNCLOG_ERROR(ahandler->logStream, (std::to_string(num).append(" ! <= AsyncTCPHandler::sendHeaderAndData : (").append(ex.className()).append(") ").append(ex.message())));
         } catch (...) {
-          ASYNCLOG_ERROR(ahandler->logStream, (std::to_string(num).append(" ! <= AsyncTCPHandler::sendHeaderAndData : (").append("unknown error").append(") ") += non_std_endl));
+          ASYNCLOG_ERROR(ahandler->logStream, (std::to_string(num).append(" ! <= AsyncTCPHandler::sendHeaderAndData : (").append("unknown error").append(") ")));
         }
       } while (sMessage != nullptr && !ahandler->needErase());
       ahandler->onWritableLock.unlock();
@@ -544,7 +550,7 @@ void Broker::onReadable() {
         read(num);
       }
     } catch (std::exception &ex) {
-      ASYNCLOG_ERROR(logStream, (std::string("-").append(" ! => read error : ").append(std::string(ex.what())) += non_std_endl));
+      ASYNCLOG_ERROR(logStream, (std::string("-").append(" ! => read error : ").append(std::string(ex.what()))));
     }
   } while (_isReadable);
 }
@@ -573,13 +579,12 @@ bool Broker::read(size_t num) {
       } catch (Poco::Exception &ex) {
         ASYNCLOG_ERROR(
             ahandler->logStream,
-            (std::to_string(num).append(" ! => AsyncTCPHandler::read::fillHeaderBodyLens => (").append(ex.className()).append(") ").append(ex.message()).append(" : ").append(std::string(ex.what())) +=
-             non_std_endl));
+            (std::to_string(num).append(" ! => AsyncTCPHandler::read::fillHeaderBodyLens => (").append(ex.className()).append(") ").append(ex.message()).append(" : ").append(std::string(ex.what()))));
         ahandler->onReadableLock.unlock();
         ahandler->emitCloseEvent(true);
         return true;
       } catch (...) {
-        ASYNCLOG_ERROR(ahandler->logStream, (std::to_string(num).append(" ! => AsyncTCPHandler::read::fillHeaderBodyLens => (unknown error) ") += non_std_endl));
+        ASYNCLOG_ERROR(ahandler->logStream, (std::to_string(num).append(" ! => AsyncTCPHandler::read::fillHeaderBodyLens => (unknown error) ")));
         ahandler->onReadableLock.unlock();
         ahandler->emitCloseEvent(true);
         return true;
@@ -594,13 +599,12 @@ bool Broker::read(size_t num) {
       } catch (Poco::Exception &ex) {
         ASYNCLOG_ERROR(
             ahandler->logStream,
-            (std::to_string(num).append(" ! => AsyncTCPHandler::read::fillHeader => (").append(ex.className()).append(") ").append(ex.message()).append(" : ").append(std::string(ex.what())) +=
-             non_std_endl));
+            (std::to_string(num).append(" ! => AsyncTCPHandler::read::fillHeader => (").append(ex.className()).append(") ").append(ex.message()).append(" : ").append(std::string(ex.what()))));
         ahandler->onReadableLock.unlock();
         ahandler->emitCloseEvent(true);
         return true;
       } catch (...) {
-        ASYNCLOG_ERROR(ahandler->logStream, (std::to_string(num).append(" ! => AsyncTCPHandler::read::fillHeader => (unknown error) ") += non_std_endl));
+        ASYNCLOG_ERROR(ahandler->logStream, (std::to_string(num).append(" ! => AsyncTCPHandler::read::fillHeader => (unknown error) ")));
         ahandler->onReadableLock.unlock();
         ahandler->emitCloseEvent(true);
         return true;
@@ -616,18 +620,17 @@ bool Broker::read(size_t num) {
         } catch (Poco::Exception &ex) {
           ASYNCLOG_ERROR(
               ahandler->logStream,
-              (std::to_string(num).append(" ! => AsyncTCPHandler::read::fillBody => (").append(ex.className()).append(") ").append(ex.message()).append(" : ").append(std::string(ex.what())) +=
-               non_std_endl));
+              (std::to_string(num).append(" ! => AsyncTCPHandler::read::fillBody => (").append(ex.className()).append(") ").append(ex.message()).append(" : ").append(std::string(ex.what()))));
           ahandler->onReadableLock.unlock();
           ahandler->emitCloseEvent(true);
           return true;
         } catch (std::exception &ex) {
-          ASYNCLOG_ERROR(ahandler->logStream, (std::to_string(num).append(" ! => AsyncTCPHandler::read::fillBody => ").append(ex.what()) += non_std_endl));
+          ASYNCLOG_ERROR(ahandler->logStream, (std::to_string(num).append(" ! => AsyncTCPHandler::read::fillBody => ").append(ex.what())));
           ahandler->onReadableLock.unlock();
           ahandler->emitCloseEvent(true);
           return true;
         } catch (...) {
-          ASYNCLOG_ERROR(ahandler->logStream, (std::to_string(num).append(" ! => AsyncTCPHandler::read::fillBody => (unknown error) ") += non_std_endl));
+          ASYNCLOG_ERROR(ahandler->logStream, (std::to_string(num).append(" ! => AsyncTCPHandler::read::fillBody => (unknown error) ")));
           ahandler->onReadableLock.unlock();
           ahandler->emitCloseEvent(true);
           return true;
@@ -639,13 +642,12 @@ bool Broker::read(size_t num) {
           } catch (Poco::Exception &ex) {
             ASYNCLOG_ERROR(
                 ahandler->logStream,
-                (std::to_string(num).append(" ! => AsyncTCPHandler::read::tryMoveBodyByLink => (").append(ex.className()).append(") ").append(ex.message()).append(" : ").append(ex.what()) +=
-                 non_std_endl));
+                (std::to_string(num).append(" ! => AsyncTCPHandler::read::tryMoveBodyByLink => (").append(ex.className()).append(") ").append(ex.message()).append(" : ").append(ex.what())));
             ahandler->onReadableLock.unlock();
             ahandler->emitCloseEvent(true);
             return true;
           } catch (...) {
-            ASYNCLOG_ERROR(ahandler->logStream, (std::to_string(num).append(" ! => AsyncTCPHandler::read::tryMoveBodyByLink => (unknown error) ") += non_std_endl));
+            ASYNCLOG_ERROR(ahandler->logStream, (std::to_string(num).append(" ! => AsyncTCPHandler::read::tryMoveBodyByLink => (unknown error) ")));
             ahandler->onReadableLock.unlock();
             ahandler->emitCloseEvent(true);
             return true;
@@ -655,7 +657,7 @@ bool Broker::read(size_t num) {
 
       try {
         if (sMessage.isNotForServer()) {
-          ASYNCLOG_ERROR(ahandler->logStream, (std::to_string(num).append(" ! => message is not for server ( type is ").append(sMessage.typeName()).append(" )") += non_std_endl));
+          ASYNCLOG_ERROR(ahandler->logStream, (std::to_string(num).append(" ! => message is not for server ( type is ").append(sMessage.typeName()).append(" )")));
           ahandler->onReadableLock.unlock();
           ahandler->emitCloseEvent();
           return true;
@@ -676,16 +678,16 @@ bool Broker::read(size_t num) {
           }
             return true;
           case ProtoMessage::kConnect: {
-            ASYNCLOG_INFORMATION(ahandler->logStream, (std::to_string(num).append(" * ").append("=> get connect frame") += non_std_endl));
+            ASYNCLOG_INFORMATION(ahandler->logStream, (std::to_string(num).append(" * ").append("=> get connect frame")));
             ahandler->storeClientInfo(sMessage);
-            ASYNCLOG_INFORMATION(ahandler->logStream, (std::to_string(num).append(" # => ").append(ahandler->toString()) += non_std_endl));
+            ASYNCLOG_INFORMATION(ahandler->logStream, (std::to_string(num).append(" # => ").append(ahandler->toString())));
           } break;
           case ProtoMessage::kSubscription: {
-            ASYNCLOG_INFORMATION(ahandler->logStream, (std::to_string(num).append(" * ").append("=> get subscription frame") += non_std_endl));
+            ASYNCLOG_INFORMATION(ahandler->logStream, (std::to_string(num).append(" * ").append("=> get subscription frame")));
             ahandler->initSubscription(sMessage);
           } break;
           default: {
-            ASYNCLOG_INFORMATION(ahandler->logStream, (std::to_string(num).append(" * ").append("=> get ").append(sMessage.typeName()).append(" frame") += non_std_endl));
+            ASYNCLOG_INFORMATION(ahandler->logStream, (std::to_string(num).append(" * ").append("=> get ").append(sMessage.typeName()).append(" frame")));
             break;
           }
         }
@@ -693,12 +695,12 @@ bool Broker::read(size_t num) {
         onEvent(*ahandler, sMessage);
         ahandler->allowPutReadEvent();
       } catch (Exception &ex) {
-        ASYNCLOG_ERROR(ahandler->logStream, (std::to_string(num).append(" ! => internal error : ").append(ex.message()) += non_std_endl));
+        ASYNCLOG_ERROR(ahandler->logStream, (std::to_string(num).append(" ! => internal error : ").append(ex.message())));
         ahandler->onReadableLock.unlock();
         ahandler->emitCloseEvent();
         return true;
       } catch (std::exception &pbex) {
-        ASYNCLOG_ERROR(ahandler->logStream, (std::to_string(num).append(" ! => message parsing error : ").append(std::string(pbex.what())) += non_std_endl));
+        ASYNCLOG_ERROR(ahandler->logStream, (std::to_string(num).append(" ! => message parsing error : ").append(std::string(pbex.what()))));
         ahandler->onReadableLock.unlock();
         ahandler->emitCloseEvent();
         return true;

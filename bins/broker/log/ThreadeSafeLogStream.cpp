@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #include "ThreadeSafeLogStream.h"
 
 #include <Poco/Logger.h>
@@ -246,32 +246,32 @@ ThreadSafeLogStream &ThreadSafeLogStream::priority(Poco::Message::Priority prior
 
 void ASYNCLOG_FATAL(std::unique_ptr<upmq::broker::ThreadSafeLogStream> &__logger__, const std::string &__msg__) {
   if (Poco::Message::PRIO_FATAL < ASYNCLOGGER::Instance().logPriority) {
-    (__logger__)->fatal() << (__msg__);
+    (__logger__)->fatal(__msg__);
   }
 }
 void ASYNCLOG_CRITICAL(std::unique_ptr<upmq::broker::ThreadSafeLogStream> &__logger__, const std::string &__msg__) {
   if (Poco::Message::PRIO_CRITICAL < ASYNCLOGGER::Instance().logPriority) {
-    (__logger__)->critical() << (__msg__);
+    (__logger__)->critical(__msg__);
   }
 }
 void ASYNCLOG_ERROR(std::unique_ptr<upmq::broker::ThreadSafeLogStream> &__logger__, const std::string &__msg__) {
   if (Poco::Message::PRIO_ERROR < ASYNCLOGGER::Instance().logPriority) {
-    (__logger__)->error() << (__msg__);
+    (__logger__)->error(__msg__);
   }
 }
 void ASYNCLOG_WARNING(std::unique_ptr<upmq::broker::ThreadSafeLogStream> &__logger__, const std::string &__msg__) {
   if (Poco::Message::PRIO_WARNING < ASYNCLOGGER::Instance().logPriority) {
-    (__logger__)->warning() << (__msg__);
+    (__logger__)->warning(__msg__);
   }
 }
 void ASYNCLOG_NOTICE(std::unique_ptr<upmq::broker::ThreadSafeLogStream> &__logger__, const std::string &__msg__) {
   if (Poco::Message::PRIO_NOTICE < ASYNCLOGGER::Instance().logPriority) {
-    (__logger__)->notice() << (__msg__);
+    (__logger__)->notice(__msg__);
   }
 }
 void ASYNCLOG_INFORMATION(std::unique_ptr<upmq::broker::ThreadSafeLogStream> &__logger__, const std::string &__msg__) {
   if (Poco::Message::PRIO_INFORMATION < ASYNCLOGGER::Instance().logPriority) {
-    (__logger__)->information() << (__msg__);
+    (__logger__)->information(__msg__);
   }
 }
 void ASYNCLOG_INFORMATION(std::unique_ptr<upmq::broker::ThreadSafeLogStream> &__logger__, const char &__msg__) {
@@ -281,11 +281,11 @@ void ASYNCLOG_INFORMATION(std::unique_ptr<upmq::broker::ThreadSafeLogStream> &__
 }
 void ASYNCLOG_DEBUG(std::unique_ptr<upmq::broker::ThreadSafeLogStream> &__logger__, const std::string &__msg__) {
   if (Poco::Message::PRIO_DEBUG < ASYNCLOGGER::Instance().logPriority) {
-    (__logger__)->debug() << (__msg__);
+    (__logger__)->debug(__msg__);
   }
 }
 void ASYNCLOG_TRACE(std::unique_ptr<upmq::broker::ThreadSafeLogStream> &__logger__, const std::string &__msg__) {
   if (Poco::Message::PRIO_TRACE < ASYNCLOGGER::Instance().logPriority) {
-    (__logger__)->trace() << (__msg__);
+    (__logger__)->trace(__msg__);
   }
 }

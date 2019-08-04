@@ -39,7 +39,7 @@ class Exchange {
   mutable DestinationsList _destinations;
   mutable upmq::MRWLock _destinationsLock;
   const std::string _destinationsT;
-  bool _isRunning = false;
+  std::atomic_bool _isRunning{false};
   mutable std::vector<Poco::FastMutex> _mutexDestinations;
   mutable std::vector<Poco::Condition> _conditionDestinations;
   Poco::ThreadPool _threadPool;

@@ -40,9 +40,9 @@ class Destination {
   /// @brief SubscriptionsList - map<subs-name, subs>
   using SubscriptionsList = std::unordered_map<std::string, Subscription>;
   /// @brief RoutingList - map<routingKey, message>
-  using RoutingList = std::unordered_map<std::string, std::unique_ptr<Poco::FIFOEvent<const MessageDataContainer *> > >;
+  using RoutingList = std::unordered_map<std::string, std::unique_ptr<Poco::FIFOEvent<const MessageDataContainer *>>>;
   /// @brief NotAckConsumersInfoList - map<object_id, message_count>
-  using NotAckConsumersInfoList = std::unordered_map<std::string, int>;
+  using NotAckConsumersInfoList = std::unordered_map<std::string, std::unique_ptr<std::atomic_int>>;
   /// @brief Session2SubscriptionMap - map<session_id, {subs-name}>
   /// ** used for binding destinations to clients
   using Session2SubsList = std::unordered_multimap<std::string, std::string>;

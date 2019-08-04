@@ -73,7 +73,7 @@ AsyncTCPHandler::AsyncTCPHandler(Poco::Net::StreamSocket &socket, Poco::Net::Soc
                             .append(std::to_string(queueNum))
                             .append(" ( ")
                             .append(std::to_string(AHRegestry::Instance().size()))
-                            .append(" asynchandlers now )") += non_std_endl));
+                            .append(" asynchandlers now )")));
 
   _reactor.addEventHandler(_socket, _readableCallBack);
   _reactor.addEventHandler(_socket, _shutdownCallBack);
@@ -114,10 +114,10 @@ AsyncTCPHandler::~AsyncTCPHandler() {
     BROKER::Instance().removeTcpConnection(_clientID, num);
 
   } catch (std::exception &ex) {
-    ASYNCLOG_ERROR(logStream, (std::to_string(num).append(" ! => ").append(std::string(ex.what())) += non_std_endl));
+    ASYNCLOG_ERROR(logStream, (std::to_string(num).append(" ! => ").append(std::string(ex.what()))));
   }
 
-  ASYNCLOG_INFORMATION(logStream, (std::to_string(num).append(" * => destruct asynchandler from ").append(_peerAddress) += non_std_endl));
+  ASYNCLOG_INFORMATION(logStream, (std::to_string(num).append(" * => destruct asynchandler from ").append(_peerAddress)));
 }
 
 void AsyncTCPHandler::onReadable(const AutoPtr<Poco::Net::ReadableNotification> &pNf) {
@@ -144,14 +144,14 @@ void AsyncTCPHandler::put(std::shared_ptr<MessageDataContainer> sMessage) {
 
 void AsyncTCPHandler::onShutdown(const AutoPtr<Poco::Net::ShutdownNotification> &pNf) {
   UNUSED_VAR(pNf);
-  ASYNCLOG_NOTICE(logStream, (std::to_string(num).append(" ! => shutdown : ").append(_peerAddress) += non_std_endl));
+  ASYNCLOG_NOTICE(logStream, (std::to_string(num).append(" ! => shutdown : ").append(_peerAddress)));
   _readComplete = true;
   emitCloseEvent();
 }
 
 void AsyncTCPHandler::onError(const AutoPtr<Poco::Net::ErrorNotification> &pNf) {
   UNUSED_VAR(pNf);
-  ASYNCLOG_ERROR(logStream, (std::to_string(num).append(" ! => network error : ").append(_peerAddress) += non_std_endl));
+  ASYNCLOG_ERROR(logStream, (std::to_string(num).append(" ! => network error : ").append(_peerAddress)));
   _readComplete = true;
   emitCloseEvent(true);
 }
@@ -240,7 +240,7 @@ void AsyncTCPHandler::emitCloseEvent(bool withError) {
         return;
       }
       if (AHRegestry::Instance().aHandler(num) != nullptr) {
-        setNeedErase(true);
+        setNeedErase();
         _wasError = withError;
         _closeEventLock.unlock();
         AHRegestry::Instance().notify();
@@ -256,7 +256,7 @@ std::string AsyncTCPHandler::toString() const {
   std::stringstream out;
   out << "tcp connection id : " << num << " : "
       << "client id : " << _clientID << " : " << clientVersion.toString() << " : " << heartbeat.toString() << " : " << protocolVersion.toString()
-      << " max_not_acknowledged_messages = " << std::to_string(_maxNotAcknowledgedMessages) << non_std_endl;
+      << " max_not_acknowledged_messages = " << std::to_string(_maxNotAcknowledgedMessages);
   return out.str();
 }
 void AsyncTCPHandler::setClientID(const std::string &clientID) { _clientID = clientID; }
@@ -297,7 +297,10 @@ void AsyncTCPHandler::eraseSubscription(const MessageDataContainer &sMessage) co
   }
 }
 bool AsyncTCPHandler::needErase() const { return _needErase; }
-void AsyncTCPHandler::setNeedErase(bool flag) { _needErase = flag; }
+void AsyncTCPHandler::setNeedErase() {
+  _needErase = true;
+  AHRegestry::Instance().needToErase(num);
+}
 AsyncTCPHandler::DataStatus AsyncTCPHandler::fillHeaderBodyLens() {
   headerBodyLens.headerLen = 0;
   headerBodyLens.bodyLen = 0;
@@ -313,6 +316,9 @@ AsyncTCPHandler::DataStatus AsyncTCPHandler::fillHeaderBodyLens() {
     if ((n < 0) || (n == 0 && (tmpDtSize != sizeof(hbLens)))) {
       int error = Poco::Error::last();
       if ((error == POCO_EWOULDBLOCK) || (error == POCO_EAGAIN)) {
+        if (tmpDtSize == 0) {
+          return DataStatus::TRYAGAIN;
+        }
         Poco::Thread::yield();
         continue;
       }
