@@ -61,11 +61,6 @@ void AsyncHandlerRegestry::run() {
         connection = nullptr;
       }
     }
-
-    //    if (erasedConnections() == 0) {
-    //      Poco::ScopedLock<Poco::FastMutex> lock(_mutex);
-    //      _condition.tryWait(_mutex, 2000);
-    //    }
   }
 }
 int AsyncHandlerRegestry::erasedConnections() {
