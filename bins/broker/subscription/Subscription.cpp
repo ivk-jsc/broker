@@ -392,7 +392,7 @@ void Subscription::changeCurrentConsumerNumber() const {
   if (_consumers.empty()) {
     _currentConsumerNumber = 0;
   } else {
-    _currentConsumerNumber = (++_currentConsumerNumber) % _consumers.size();
+    _currentConsumerNumber = ((++_currentConsumerNumber) % _consumers.size());
   }
 }
 const Consumer *Subscription::at(int index) const {

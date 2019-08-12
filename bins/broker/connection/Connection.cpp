@@ -27,7 +27,7 @@ namespace upmq {
 namespace broker {
 
 Connection::Connection(const std::string &clientID)
-    : _clientID(clientID), _clientIDWasSet(!clientID.empty()), _sessionsT("\"" + clientID + "_sessions\""), _tcpT("\"" + clientID + "_tcp_connections\"") {
+    : _clientID(clientID), _clientIDWasSet(!clientID.empty()), _sessions(1024), _sessionsT("\"" + clientID + "_sessions\""), _tcpT("\"" + clientID + "_tcp_connections\"") {
   std::stringstream sql;
   storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
   dbSession.beginTX(_clientID);
@@ -59,9 +59,9 @@ Connection::Connection(const std::string &clientID)
   dbSession.commitTX();
 }
 Connection::~Connection() {
-  {
-    upmq::ScopedWriteRWLock writeLock(_sessionsLock);
+  try {
     _sessions.clear();
+  } catch (...) {
   }
   std::stringstream sql;
   sql << "delete from \"" << BROKER::Instance().id() << "\" where client_id = \'" << _clientID << "\';";
@@ -130,21 +130,19 @@ bool Connection::isTcpConnectionExists(size_t tcpConnectionNum) const {
   return (it != _tcpConnections.end());
 }
 void Connection::addSession(const std::string &sessionID, Proto::Acknowledge acknowledgeType) {
-  upmq::ScopedWriteRWLock writeRWLock(_sessionsLock);
   auto it = _sessions.find(sessionID);
-  if (it != _sessions.end()) {
+  if (it.has_value()) {
     throw EXCEPTION("session already exists", sessionID, ERROR_ON_SESSION);
   }
   _sessions.insert(std::make_pair(sessionID, std::make_unique<upmq::broker::Session>(*this, sessionID, acknowledgeType)));
 }
 void Connection::removeSession(const std::string &sessionID, size_t tcpNum) {
   {
-    upmq::ScopedReadRWLock readRWLock(_sessionsLock);
     auto it = _sessions.find(sessionID);
-    if (it != _sessions.end()) {
+    if (it.has_value()) {
       try {
-        it->second->removeSenders();
-        it->second->closeSubscriptions(tcpNum);
+        (*it.value())->removeSenders();
+        (*it.value())->closeSubscriptions(tcpNum);
       } catch (Exception &ex) {
         if (ex.error() != ERROR_UNKNOWN) {
           throw Exception(ex);
@@ -152,78 +150,65 @@ void Connection::removeSession(const std::string &sessionID, size_t tcpNum) {
       }
     }
   }
-  upmq::ScopedWriteRWLock writeRWLock(_sessionsLock);
-  auto it = _sessions.find(sessionID);
-  if (it != _sessions.end()) {
-    _sessions.erase(it);
-  }
+
+  _sessions.erase(sessionID);
 }
 void Connection::beginTX(const std::string &sessionID) {
-  upmq::ScopedReadRWLock readRWLock(_sessionsLock);
   auto it = _sessions.find(sessionID);
-  if (it == _sessions.end()) {
+  if (!it.has_value()) {
     throw EXCEPTION("session not found", sessionID, ERROR_ON_BEGIN);
   }
-  it->second->begin();
+  (*it.value())->begin();
 }
 void Connection::commitTX(const std::string &sessionID) {
-  upmq::ScopedReadRWLock readRWLock(_sessionsLock);
   auto it = _sessions.find(sessionID);
-  if (it == _sessions.end()) {
+  if (!it.has_value()) {
     throw EXCEPTION("session not found", sessionID, ERROR_ON_COMMIT);
   }
-  it->second->commit();
+  (*it.value())->commit();
 }
 void Connection::abortTX(const std::string &sessionID) {
-  upmq::ScopedReadRWLock readRWLock(_sessionsLock);
   auto it = _sessions.find(sessionID);
-  if (it == _sessions.end()) {
+  if (!it.has_value()) {
     throw EXCEPTION("session not found", sessionID, ERROR_ON_ABORT);
   }
-  it->second->abort();
+  (*it.value())->abort();
 }
 void Connection::saveMessage(const MessageDataContainer &sMessage) {
-  upmq::ScopedReadRWLock readRWLock(_sessionsLock);
   auto it = _sessions.find(sMessage.message().session_id());
-  if (it == _sessions.end()) {
+  if (!it.has_value()) {
     throw EXCEPTION("session not found", sMessage.message().session_id(), ERROR_ON_SAVE_MESSAGE);
   }
-  it->second->saveMessage(sMessage);
+  (*it.value())->saveMessage(sMessage);
 }
 const std::string &Connection::sessionsT() const { return _sessionsT; }
 const std::string &Connection::tcpT() const { return _tcpT; }
 void Connection::addSender(const MessageDataContainer &sMessage) {
-  upmq::ScopedReadRWLock readRWLock(_sessionsLock);
   const Proto::Sender &sender = sMessage.sender();
   auto it = _sessions.find(sender.session_id());
-  if (it == _sessions.end()) {
+  if (!it.has_value()) {
     throw EXCEPTION("session not found", sender.session_id(), ERROR_ON_SENDER);
   }
-  it->second->addSender(sMessage);
+  (*it.value())->addSender(sMessage);
 }
 void Connection::removeSender(const MessageDataContainer &sMessage) {
-  upmq::ScopedReadRWLock readRWLock(_sessionsLock);
   auto it = _sessions.find(sMessage.unsender().session_id());
-  if (it != _sessions.end()) {
-    it->second->removeSender(sMessage);
+  if (it.has_value()) {
+    (*it.value())->removeSender(sMessage);
   }
 }
 void Connection::addSubscription(const MessageDataContainer &sMessage) {
-  SessionsList::iterator it;
-  {
-    upmq::ScopedReadRWLock readRWLock(_sessionsLock);
-    it = _sessions.find(sMessage.subscription().session_id());
-    if (it == _sessions.end()) {
-      throw EXCEPTION("session not found", sMessage.subscription().session_id(), ERROR_ON_SUBSCRIPTION);
-    }
+  auto it = _sessions.find(sMessage.subscription().session_id());
+  if (!it.has_value()) {
+    throw EXCEPTION("session not found", sMessage.subscription().session_id(), ERROR_ON_SUBSCRIPTION);
   }
-  it->second->addSubscription(sMessage);
+
+  (*it.value())->addSubscription(sMessage);
 }
 void Connection::removeConsumer(const MessageDataContainer &sMessage, size_t tcpNum) {
   {
-    upmq::ScopedReadRWLock readRWLock(_sessionsLock);
     auto it = _sessions.find(sMessage.unsubscription().session_id());
-    if (it == _sessions.end()) {
+    if (!it.has_value()) {
       throw EXCEPTION("session not found", sMessage.unsubscription().session_id(), ERROR_ON_UNSUBSCRIPTION);
     }
   }
@@ -233,22 +218,18 @@ void Connection::removeConsumer(const MessageDataContainer &sMessage, size_t tcp
 void Connection::removeConsumers(const std::string &destinationID, const std::string &subscriptionID, size_t tcpNum) {
   std::vector<std::string> ids;
   {
-    upmq::ScopedReadRWLock readRWLock(_sessionsLock);
     ids.reserve(_sessions.size());
-    for (const auto &sess : _sessions) {
-      ids.emplace_back(sess.second->id());
-    }
+    _sessions.applyForEach([&ids](const SessionsList::ItemType::KVPair &pair) { ids.emplace_back(pair.second->id()); });
   }
   std::for_each(
       ids.begin(), ids.end(), [&destinationID, &subscriptionID, &tcpNum](const std::string &sessionId) { EXCHANGE::Instance().removeConsumer(sessionId, destinationID, subscriptionID, tcpNum); });
 }
 void Connection::processAcknowledge(const MessageDataContainer &sMessage) {
-  upmq::ScopedReadRWLock readRWLock(_sessionsLock);
   auto it = _sessions.find(sMessage.ack().session_id());
-  if (it == _sessions.end()) {
+  if (!it.has_value()) {
     throw EXCEPTION("session not found", sMessage.ack().session_id(), ERROR_ON_ACK_MESSAGE);
   }
-  it->second->processAcknowledge(sMessage);
+  (*it.value())->processAcknowledge(sMessage);
 }
 int Connection::maxNotAcknowledgedMessages(size_t tcpConnectionNum) const {
   auto handler = AHRegestry::Instance().aHandler(tcpConnectionNum);
@@ -257,13 +238,12 @@ int Connection::maxNotAcknowledgedMessages(size_t tcpConnectionNum) const {
   }
   return 100;
 }
-std::string Connection::transactionID(const std::string &sessionID) const {
-  upmq::ScopedReadRWLock readRWLock(_sessionsLock);
+std::string Connection::transactionID(const std::string &sessionID) const {  
   auto it = _sessions.find(sessionID);
-  if (it == _sessions.end()) {
+  if (!it.has_value()) {
     throw EXCEPTION("session not found", sessionID, ERROR_ON_SESSION);
   }
-  return it->second->txName();
+  return (*it.value())->txName();
 }
 size_t Connection::tcpConnectionsCount() const {
   upmq::ScopedReadRWLock readRWLock(_tcpLock);

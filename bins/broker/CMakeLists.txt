@@ -8,6 +8,7 @@ add_executable(broker)
 
 include_directories(${SHARE_DIR})
 include_directories(${EXTERNAL_DIR}/concurrent_queue)
+include_directories(${EXTERNAL_DIR}/optional-lite)
 
 include_directories(app)
 include_directories(server)
@@ -87,6 +88,7 @@ set(SOURCE_FILES
     misc/NextBindParam.h
     misc/MoveableRWLock.h
     misc/MoveableRWLock.cpp
+	misc/FixedSizeUnorderedMap.h
     connection/Connection.cpp
     connection/Connection.h
     session/Session.cpp

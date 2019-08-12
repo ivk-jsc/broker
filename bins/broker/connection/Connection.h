@@ -26,7 +26,7 @@
 #include "AsyncTCPHandler.h"
 #include "Selector.h"
 #include "Session.h"
-#include "MoveableRWLock.h"
+#include "FixedSizeUnorderedMap.h"
 
 namespace upmq {
 namespace broker {
@@ -35,15 +35,14 @@ class Connection {
  public:
   using TCPConnectionsList = std::set<size_t>;
   // SessionsList - map<session_id, session>
-  using SessionsList = std::unordered_map<std::string, std::unique_ptr<upmq::broker::Session>>;
+  using SessionsList = FSUnorderedMap<std::string, std::unique_ptr<upmq::broker::Session>>;
 
  private:
   std::string _clientID;
   std::atomic_bool _clientIDWasSet;
   mutable TCPConnectionsList _tcpConnections;
   mutable upmq::MRWLock _tcpLock;
-  SessionsList _sessions;
-  mutable upmq::MRWLock _sessionsLock;
+  SessionsList _sessions;  
 
   const std::string _sessionsT;
   const std::string _tcpT;
