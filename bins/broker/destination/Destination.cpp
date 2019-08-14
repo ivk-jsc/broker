@@ -32,6 +32,7 @@ Destination::Destination(const Exchange &exchange, const std::string &uri, Type 
     : _id(getStoredDestinationID(exchange, Exchange::mainDestinationPath(uri), type)),
       _uri(uri),
       _name(Exchange::mainDestinationPath(uri)),
+      _subscriptions(1024),
       _storage(_id),
       _type(type),
       _exchange(exchange),
@@ -56,11 +57,10 @@ Destination::~Destination() {
       CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't update subscription count", sql.str(), ERROR_UNKNOWN)
     }
     {
-      upmq::ScopedWriteRWLock writeRWLock(_subscriptionsLock);
-      for (auto &subs : _subscriptions) {
-        unsubscribeFromNotify((subs.second));
-        subs.second.destroy();
-      }
+      _subscriptions.changeForEach([this](SubscriptionsList::ItemType::KVPair &pair) {
+        unsubscribeFromNotify((pair.second));
+        pair.second.destroy();
+      });
     }
     if (isTemporary()) {
       sql << "drop table if exists " << _subscriptionsT << ";" << non_std_endl;
@@ -132,15 +132,15 @@ void Destination::saveDestinationId(const std::string &id, storage::DBMSSession 
 void Destination::subscribe(const MessageDataContainer &sMessage) {
   const Proto::Subscribe &subscribe = sMessage.subscribe();
   const std::string &name = subscribe.subscription_name();
-  upmq::ScopedReadRWLock readRWLock(_subscriptionsLock);
+
   auto it = _subscriptions.find(name);
-  if (it != _subscriptions.end()) {
+  if (it.has_value()) {
     Consumer consumer = Consumer::makeFakeConsumer();
     consumer.clientID = sMessage.clientID;
     consumer.tcpNum = sMessage.handlerNum;
     consumer.session.id = subscribe.session_id();
     consumer.id = Consumer::genConsumerID(consumer.clientID, std::to_string(consumer.tcpNum), consumer.session.id, "");
-    it->second.start(consumer);
+    it.value()->start(consumer);
   } else {
     throw EXCEPTION("subscription not found", name, ERROR_ON_SUBSCRIBE);
   }
@@ -148,34 +148,38 @@ void Destination::subscribe(const MessageDataContainer &sMessage) {
 void Destination::unsubscribe(const MessageDataContainer &sMessage) {
   const Proto::Unsubscribe &unsubscribe = sMessage.unsubscribe();
   const std::string &name = unsubscribe.subscription_name();
-  upmq::ScopedReadRWLock readRWLock(_subscriptionsLock);
   auto it = _subscriptions.find(name);
-  if (it != _subscriptions.end()) {
+  if (it.has_value()) {
     Consumer consumer = Consumer::makeFakeConsumer();
     consumer.clientID = sMessage.clientID;
     consumer.tcpNum = sMessage.handlerNum;
     consumer.session.id = unsubscribe.session_id();
     consumer.id = Consumer::genConsumerID(consumer.clientID, std::to_string(consumer.tcpNum), consumer.session.id, "");
-    it->second.stop(consumer);
-    it->second.recover(consumer);
-  } else {
-    //    throw EXCEPTION("subscription not found", name, ERROR_ON_UNSUBSCRIBE);
+    auto &subs = it.value();
+    subs->stop(consumer);
+    subs->recover(consumer);
   }
 }
 void Destination::subscribeOnNotify(Subscription &subscription) const {
-  _routing.insert(std::make_pair(subscription.routingKey(), std::make_unique<Poco::FIFOEvent<const MessageDataContainer *>>()));
-  *_routing[subscription.routingKey()] += Poco::delegate(&subscription, &Subscription::onEvent);
+  {
+    upmq::ScopedWriteRWLock writeRWLock(_routingLock);
+    _routing.insert(std::make_pair(subscription.routingKey(), std::make_unique<Poco::FIFOEvent<const MessageDataContainer *>>()));
+    *_routing[subscription.routingKey()] += Poco::delegate(&subscription, &Subscription::onEvent);
+  }
   subscription.setHasNotify(true);
 }
 void Destination::unsubscribeFromNotify(Subscription &subscription) const {
-  auto item = _routing.find(subscription.routingKey());
-  if (item != _routing.end()) {
-    *item->second -= Poco::delegate(&subscription, &Subscription::onEvent);
-    subscription.setHasNotify(false);
-    if (!item->second->hasDelegates()) {
-      _routing.erase(item);
+  {
+    upmq::ScopedWriteRWLock writeRWLock(_routingLock);
+    auto item = _routing.find(subscription.routingKey());
+    if (item != _routing.end()) {
+      *item->second -= Poco::delegate(&subscription, &Subscription::onEvent);
+      if (!item->second->hasDelegates()) {
+        _routing.erase(item);
+      }
     }
   }
+  subscription.setHasNotify(false);
 }
 Subscription::ConsumerMode Destination::consumerMode() const { return _consumerMode; }
 
@@ -191,23 +195,13 @@ std::string Destination::consumerModeName(Subscription::ConsumerMode mode) {
   }
   return modeName;
 }
-void Destination::eraseSubscription(SubscriptionsList::iterator &it) {
-  if (it != _subscriptions.end()) {
-    _subscriptions.erase(it);
-  }
-}
 const std::string &Destination::id() const { return _id; }
 const std::string &Destination::uri() const { return _uri; }
-bool Destination::isSubscriptionExists(const std::string &name) const {
-  upmq::ScopedReadRWLock readRWLock(_subscriptionsLock);
-  auto it = _subscriptions.find(name);
-  return it != _subscriptions.end();
-}
+bool Destination::isSubscriptionExists(const std::string &name) const { return _subscriptions.contains(name); }
 bool Destination::isSubscriptionBrowser(const std::string &name) const {
-  upmq::ScopedReadRWLock readRWLock(_subscriptionsLock);
   auto it = _subscriptions.find(name);
-  if (it != _subscriptions.end()) {
-    return it->second.isBrowser();
+  if (it.has_value()) {
+    return it.value()->isBrowser();
   }
   return false;
 }
@@ -229,27 +223,28 @@ Subscription &Destination::subscription(const Session &session, const MessageDat
   }
   const std::string &uri = subscription.destination_uri();
 
-  upmq::ScopedWriteRWLock writeRWLock(_subscriptionsLock);
   auto it = _subscriptions.find(name);
-  if (it == _subscriptions.end()) {
+  if (!it.has_value()) {
     std::string routingK = routingKey(uri);
 
-    auto item = _subscriptions.emplace(name, createSubscription(name, routingK, type));
-    subscribeOnNotify(item.first->second);
-    addSendersFromCache(session, sMessage, item.first->second);
+    _subscriptions.emplace(std::string(name), createSubscription(name, routingK, type));
+    auto item = _subscriptions.find(name);
+    subscribeOnNotify(*item.value());
+    addSendersFromCache(session, sMessage, *item.value());
 
     addS2Subs(session.id(), name);
-    it = _subscriptions.find(name);
+    it.emplace(std::move(_subscriptions.find(name).value()));
   }
-  if (!it->second.isInited()) {
+  auto &subs = it.value();
+  if (!subs->isInited()) {
     addS2Subs(session.id(), name);
-    it->second.setInited(true);
+    subs->setInited(true);
   }
   if (isTopicFamily() && session.isTransactAcknowledge()) {
-    it->second.storage().begin(session, it->second.id());
+    subs->storage().begin(session, subs->id());
   }
-  it->second.addClient(session, sMessage.handlerNum, sMessage.objectID(), subscription.selector(), localMode);
-  return it->second;
+  subs->addClient(session, sMessage.handlerNum, sMessage.objectID(), subscription.selector(), localMode);
+  return *subs;
 }
 Subscription::ConsumerMode Destination::makeConsumerMode(const std::string &uri) {
   Poco::URI tURI(uri);
@@ -305,38 +300,32 @@ void Destination::abort(const Session &session) {
 }
 
 void Destination::resetConsumersCache() {
-  upmq::ScopedReadRWLock readRWLock(_subscriptionsLock);
-  for (auto &subs : _subscriptions) {
-    subs.second.resetConsumersCache();
-  }
+  _subscriptions.changeForEach([](SubscriptionsList::ItemType::KVPair &pair) { pair.second.resetConsumersCache(); });
 }
 
 size_t Destination::subscriptionsCount() const {
   size_t result = 0;
-  upmq::ScopedReadRWLock readRWLock(_subscriptionsLock);
+
   if (isQueueFamily()) {
     result = _subscriptions.size();
   } else {
-    for (const auto &subs : _subscriptions) {
-      TopicDestination::ParentTopics parentTopics = TopicDestination::generateParentTopics(subs.second.routingKey());  //_uri
-      for (const auto &routing : _routing) {
-        for (const auto &topic : parentTopics) {
-          if (routing.first.find(topic) != std::string::npos) {
-            ++result;
+    _subscriptions.applyForEach([this, &result](const SubscriptionsList::ItemType::KVPair &pair) {
+      TopicDestination::ParentTopics parentTopics = TopicDestination::generateParentTopics(pair.second.routingKey());  //_uri
+      {
+        upmq::ScopedReadRWLock readRWLock(_routingLock);
+        for (const auto &routing : _routing) {
+          for (const auto &topic : parentTopics) {
+            if (routing.first.find(topic) != std::string::npos) {
+              ++result;
+            }
           }
         }
       }
-    }
+    });
   }
   return result;
 }
-size_t Destination::subscriptionsTrueCount(bool noLock) const {
-  if (noLock) {
-    return _subscriptions.size();
-  }
-  upmq::ScopedReadRWLock readRWLock(_subscriptionsLock);
-  return _subscriptions.size();
-}
+size_t Destination::subscriptionsTrueCount() const { return _subscriptions.size(); }
 const std::string &Destination::name() const { return _name; }
 void Destination::removeMessageOrGroup(const Session &session, Storage &storage, const MessageInfo &msg, message::GroupStatus groupStatus) {
   if (groupStatus == message::LAST_IN_GROUP) {
@@ -422,56 +411,43 @@ void Destination::remFromNotAck(const std::string &objectID) const {
   _notAckList.erase(objectID);
 }
 void Destination::postNewMessageEvent() const {
-  if (_subscriptionsLock.tryReadLock()) {
-    try {
-      for (const auto &item : _subscriptions) {
-        item.second.postNewMessageEvent();
-      }
-    } catch (...) {
-      _subscriptionsLock.unlockRead();
-      throw;
-    }
-    _subscriptionsLock.unlockRead();
-  }
+  _subscriptions.applyForEach([](const SubscriptionsList::ItemType::KVPair &pair) { pair.second.postNewMessageEvent(); });
 }
 bool Destination::removeConsumer(const std::string &sessionID, const std::string &subscriptionID, size_t tcpNum) {
   std::string toerase;
   bool result = false;
   {
-    upmq::ScopedReadRWLock readRWLock(_subscriptionsLock);
-    const auto it = _subscriptions.find(subscriptionID);
-    if (it != _subscriptions.end()) {
-      result = it->second.removeClient(tcpNum, sessionID);
-      if (!it->second.isRunning()) {
-        if (!it->second.isDurable()) {
-          toerase = it->first;
+    auto it = _subscriptions.find(subscriptionID);
+    if (it.has_value()) {
+      auto &subs = it.value();
+      result = subs->removeClient(tcpNum, sessionID);
+      if (!subs->isRunning()) {
+        if (!subs->isDurable()) {
+          toerase = subscriptionID;
         }
-        remS2Subs(sessionID, it->first);
+        remS2Subs(sessionID, subscriptionID);
       }
     }
   }
   if (!toerase.empty()) {
-    upmq::ScopedWriteRWLock writeRWLock(_subscriptionsLock);
-    auto it = _subscriptions.find(toerase);
-    eraseSubscription(it);
+    _subscriptions.erase(toerase);
   }
   return result;
 }
 Storage &Destination::storage() const { return _storage; }
 int64_t Destination::initBrowser(const std::string &subscriptionName) {
-  upmq::ScopedReadRWLock readRWLock(_subscriptionsLock);
   auto it = _subscriptions.find(subscriptionName);
-  if (it == _subscriptions.end()) {
+  if (!it.has_value()) {
     throw EXCEPTION("subscription not found", subscriptionName, ERROR_ON_BROWSER);
   }
-
-  if (!it->second.hasSnapshot()) {
-    copyMessagesTo(it->second);
-    it->second.setHasSnapshot(true);
+  auto &subs = it.value();
+  if (!subs->hasSnapshot()) {
+    copyMessagesTo(*subs);
+    subs->setHasSnapshot(true);
   }
-  const int64_t result = it->second.storage().size();
-  it->second.start();
-  it->second.postNewMessageEvent();
+  const int64_t result = subs->storage().size();
+  subs->start();
+  subs->postNewMessageEvent();
   return result;
 }
 // NOTE: browser subscription has only one consumer
@@ -498,14 +474,10 @@ void Destination::remS2Subs(const std::string &sessionID, const std::string &sub
 void Destination::closeAllSubscriptions(const Session &session, size_t tcpNum) {
   upmq::ScopedWriteRWLock writeRWLock(_s2subsLock);
   auto item = _s2subsList.equal_range(session.id());
-  bool removed = false;
   do {
     if (item.first != item.second) {
       auto itRg = item.first;
-      removed = removeConsumer(session.id(), (*itRg).second, tcpNum);
-      break;
-    }
-    if (!removed) {
+      removeConsumer(session.id(), (*itRg).second, tcpNum);
       break;
     }
     item = _s2subsList.equal_range(session.id());
@@ -514,14 +486,14 @@ void Destination::closeAllSubscriptions(const Session &session, size_t tcpNum) {
 }
 bool Destination::getNexMessageForAllSubscriptions() {
   bool result = false;
-  upmq::ScopedReadRWLock readRWLock(_subscriptionsLock);
-  for (auto &subscription : _subscriptions) {
-    if (subscription.second.isRunning()) {
-      if (subscription.second.getNextMessage() && !result) {
+  _subscriptions.changeForEach([&result](SubscriptionsList::ItemType::KVPair &pair) {
+    if (pair.second.isRunning()) {
+      if (pair.second.getNextMessage() && !result) {
         result = true;
       }
     }
-  }
+  });
+
   return result;
 }
 void Destination::loadDurableSubscriptions() {
@@ -540,12 +512,11 @@ void Destination::loadDurableSubscriptions() {
     while (!select.done()) {
       select.execute();
       if (!id.empty() && !name.empty()) {
-        upmq::ScopedWriteRWLock writeRWLock(_subscriptionsLock);
         const std::string &rKey = (routingKey.isNull() ? emptyString : routingKey.value());
-
-        auto item = _subscriptions.emplace(name, createSubscription(name, rKey, static_cast<Subscription::Type>(type)));
-        subscribeOnNotify(item.first->second);
-        item.first->second.setInited(false);
+        _subscriptions.emplace(std::string(name), createSubscription(name, rKey, static_cast<Subscription::Type>(type)));
+        auto item = _subscriptions.find(name);
+        subscribeOnNotify(*item.value());
+        item.value()->setInited(false);
       }
     }
   }
@@ -612,10 +583,7 @@ Destination::Info Destination::info() const {
                           Poco::DateTimeFormatter::format(*_created, DT_FORMAT_SIMPLE),
                           Exchange::mainDestinationPath(_uri),
                           static_cast<uint64_t>(storage().size()));
-  upmq::ScopedReadRWLock readRWLock(_subscriptionsLock);
-  for (const auto &subscription : _subscriptions) {
-    dinfo.subscriptions.emplace_back(subscription.second.info());
-  }
+  _subscriptions.applyForEach([&dinfo](const SubscriptionsList::ItemType::KVPair &pair) { dinfo.subscriptions.emplace_back(pair.second.info()); });
   return dinfo;
 }
 std::string Destination::typeName(Destination::Type type) {

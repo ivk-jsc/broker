@@ -392,7 +392,8 @@ void Subscription::changeCurrentConsumerNumber() const {
   if (_consumers.empty()) {
     _currentConsumerNumber = 0;
   } else {
-    _currentConsumerNumber = ((++_currentConsumerNumber) % _consumers.size());
+    ++_currentConsumerNumber;
+    _currentConsumerNumber %= _consumers.size();
   }
 }
 const Consumer *Subscription::at(int index) const {
@@ -507,7 +508,7 @@ void Subscription::destroy() {
     CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't erase subscription", sql.str(), ERROR_ON_UNSUBSCRIPTION)
 
     sql.str("");
-    sql << "update " << EXCHANGE::Instance().destinationsT() << " set subscriptions_count = " << _destination.subscriptionsTrueCount(true);
+    sql << "update " << EXCHANGE::Instance().destinationsT() << " set subscriptions_count = " << _destination.subscriptionsTrueCount();
     TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
     CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't update subscriptions count", sql.str(), ERROR_ON_UNSUBSCRIPTION)
   }

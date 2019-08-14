@@ -45,23 +45,28 @@ class FSReadLockedValue {
     } catch (...) {
     }
   }
-  const Value &operator*() const { return _value; }  
-  const Value *operator->() const { return &_value; }  
+  const Value &operator*() const { return _value; }
+  const Value *operator->() const { return &_value; }
+  Value &operator*() { return const_cast<Value &>(_value); }
+  Value *operator->() { return const_cast<Value *>(&_value); }
 };
 template <typename Value>
 class FSWriteLockedValue {
   MRWLock &_rwLock;
   Value &_value;
+  std::atomic_bool _wasMoved{false};
 
  public:
   FSWriteLockedValue(MRWLock &mrwLock, Value &value) : _rwLock(mrwLock), _value(value) {}
   FSWriteLockedValue(const FSWriteLockedValue &) = delete;
-  FSWriteLockedValue(FSWriteLockedValue &&) = delete;
+  FSWriteLockedValue(FSWriteLockedValue &&o) noexcept : _rwLock(o._rwLock), _value(o._value), _wasMoved(false) { o._wasMoved = true; }
   FSWriteLockedValue &operator=(const FSWriteLockedValue &) = delete;
   FSWriteLockedValue &operator=(FSWriteLockedValue &&) = delete;
   ~FSWriteLockedValue() noexcept {
     try {
-      _rwLock.unlockWrite();
+      if (!_wasMoved) {
+        _rwLock.unlockWrite();
+      }
     } catch (...) {
     }
   }
@@ -90,6 +95,11 @@ class FSUnorderedNode {
     }
     _rwLock.unlockRead();
     return {};
+  }
+  bool contains(const Key &key) const {
+    ScopedReadRWLock readRWLock(_rwLock);
+    auto item = std::find_if(_items.begin(), _items.end(), [&key](const KVPair &pair) { return pair.first == key; });
+    return (item != _items.end());
   }
   bool append(const KVPair &pair) {
     _rwLock.writeLock();
@@ -136,10 +146,25 @@ class FSUnorderedNode {
     ScopedWriteRWLock writeRWLock(_rwLock);
     _items.clear();
   }
+  size_t size() const {
+    ScopedReadRWLock readRWLock(_rwLock);
+    return _items.size();
+  }
+  bool empty() const {
+    ScopedReadRWLock readRWLock(_rwLock);
+    return _items.empty();
+  }
   template <typename F>
   void applyForEach(const F &f) const {
     ScopedReadRWLock readRWLock(_rwLock);
     for (const auto &item : _items) {
+      f(item);
+    }
+  }
+  template <typename F>
+  void changeForEach(const F &f) {
+    ScopedReadRWLock readRWLock(_rwLock);
+    for (auto &item : _items) {
       f(item);
     }
   }
@@ -154,48 +179,91 @@ class FSUnorderedMap {
   std::vector<ItemType> _items;
   const size_t _size;
   std::atomic<size_t> _realSize{0};
+  mutable upmq::MRWLock _validIndexesLock;
+  std::set<size_t> _validIndexes;
+
+  void incValidIndex(size_t index) {
+    ++_realSize;
+    upmq::ScopedWriteRWLock writeRWLock(_validIndexesLock);
+    _validIndexes.emplace(index);
+  }
+
+  void decValidIndex(size_t index) {
+    --_realSize;
+    upmq::ScopedWriteRWLock writeRWLock(_validIndexesLock);
+    _validIndexes.erase(index);
+  }
+
+  void clearValidIndex() {
+    _realSize = 0;
+    upmq::ScopedWriteRWLock writeRWLock(_validIndexesLock);
+    _validIndexes.clear();
+  }
 
  public:
   FSUnorderedMap(size_t size) : _items(size), _size(size) {}
+  FSUnorderedMap(FSUnorderedMap &&o) noexcept : _items(std::move(o._items)), _size(std::move(o._size)), _realSize(o._realSize.load()) {}
   nonstd::optional<FSReadLockedValue<Value>> find(const Key &key) const {
     size_t index = Poco::hash(key) % _size;
     return _items.at(index).find(key);
   }
+  bool contains(const Key &key) const {
+    size_t index = Poco::hash(key) % _size;
+    return _items.at(index).contains(key);
+  }
   void insert(const std::pair<Key, Value> &pair) {
     size_t index = Poco::hash(pair.first) % _size;
     if (_items.at(index).append(pair)) {
-      ++_realSize;
+      incValidIndex(index);
     }
   }
   void insert(std::pair<Key, Value> &&pair) {
     size_t index = Poco::hash(pair.first) % _size;
     if (_items.at(index).append(std::move(pair))) {
-      ++_realSize;
+      incValidIndex(index);
     }
   }
   void emplace(Key &&key, Value &&value) {
     size_t index = Poco::hash(key) % _size;
     if (_items.at(index).append(std::pair<Key, Value>(std::move(key), std::move(value)))) {
-      ++_realSize;
+      incValidIndex(index);
     }
   }
   void erase(const Key &key) {
     size_t index = Poco::hash(key) % _size;
     if (_items.at(index).erase(key)) {
-      --_realSize;
+      decValidIndex(index);
     }
   }
   void clear() {
     for (auto &item : _items) {
       item.clear();
     }
-    _realSize = 0;
+    clearValidIndex();
   }
   size_t size() const { return _realSize; }
   template <typename F>
-  void applyForEach(const F &f) {
-    for (const auto &item : _items) {
-      item.applyForEach(f);
+  void applyForEach(const F &f) const {
+    // for (const auto &item : _items) {
+    //   if (!item.empty()) {
+    //     item.applyForEach(f);
+    //   }
+    // }
+    upmq::ScopedReadRWLock readRWLock(_validIndexesLock);
+    for (auto index : _validIndexes) {
+      _items.at(index).applyForEach(f);
+    }
+  }
+  template <typename F>
+  void changeForEach(const F &f) {
+    // for (auto &item : _items) {
+    //   if (!item.empty()) {
+    //     item.changeForEach(f);
+    //   }
+    // }
+    upmq::ScopedReadRWLock readRWLock(_validIndexesLock);
+    for (auto index : _validIndexes) {
+      _items.at(index).changeForEach(f);
     }
   }
 };

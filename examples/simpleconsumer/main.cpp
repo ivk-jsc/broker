@@ -133,12 +133,11 @@ class SimpleConsumer : public cms::ExceptionListener {
           flag = true;
         }
         if (message != nullptr) {
-          std::cout << "recv (" << i << ") <= ";
           const auto *textMessage = dynamic_cast<const cms::TextMessage *>(message);
           if (textMessage != nullptr) {
-            if (outFormat.empty() || outFormat != "json") {
-              std::cout << textMessage->getText() << " elapsed [" << floating_seconds(perf_clock::now() - t0).count() << "]" << '\n';
-            } else {
+            if ((i == 1 || (i % 1000 == 0)) && (outFormat.empty() || outFormat != "json")) {
+              std::cout << "recv (" << i << ") <= " << textMessage->getText() << " elapsed [" << floating_seconds(perf_clock::now() - t0).count() << "]" << '\n';
+            } else if (outFormat == "json") {
               std::cout << textMessage->getText() << std::endl;
               std::cout << "json => " << std::endl;
               std::cout << cms::Utils::toPrettyJsonString(textMessage) << std::endl;
@@ -160,7 +159,7 @@ class SimpleConsumer : public cms::ExceptionListener {
 ////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char *argv[]) {
   (void)argc;
-  //std::string brokerURI = "failover:(tcp://localhost:12345?transport.trace=false)";
+  // std::string brokerURI = "failover:(tcp://localhost:12345?transport.trace=false)";
   std::string brokerURI = "tcp://localhost:12345?transport.trace=false";
   std::string destURI = "defaultDestination";
   std::string destType = "queue";

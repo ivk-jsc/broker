@@ -28,6 +28,7 @@
 #include <utility>
 #include "DestinationOwner.h"
 #include "Subscription.h"
+#include "FixedSizeUnorderedMap.h"
 
 namespace upmq {
 namespace broker {
@@ -38,7 +39,7 @@ class Destination {
  public:
   enum class Type : int { NONE = 0, QUEUE = 1, TOPIC = 2, TEMPORARY_QUEUE = 3, TEMPORARY_TOPIC = 4 };
   /// @brief SubscriptionsList - map<subs-name, subs>
-  using SubscriptionsList = std::unordered_map<std::string, Subscription>;
+  using SubscriptionsList = FSUnorderedMap<std::string, Subscription>;
   /// @brief RoutingList - map<routingKey, message>
   using RoutingList = std::unordered_map<std::string, std::unique_ptr<Poco::FIFOEvent<const MessageDataContainer *>>>;
   /// @brief NotAckConsumersInfoList - map<object_id, message_count>
@@ -74,10 +75,10 @@ class Destination {
   std::string _id;
   std::string _uri;
   std::string _name;
-  SubscriptionsList _subscriptions;
-  mutable upmq::MRWLock _subscriptionsLock;
+  SubscriptionsList _subscriptions;  
   mutable Storage _storage;
   Type _type;
+  mutable upmq::MRWLock _routingLock;
   mutable RoutingList _routing;
   const Exchange &_exchange;
   std::string _subscriptionsT;
@@ -93,8 +94,7 @@ class Destination {
   std::unique_ptr<Poco::Timestamp> _created{new Poco::Timestamp};
   Subscription::ConsumerMode _consumerMode{Subscription::ConsumerMode::ROUND_ROBIN};
 
- private:
-  void eraseSubscription(SubscriptionsList::iterator &it);
+ private:  
   void addS2Subs(const std::string &sesionID, const std::string &subsID);
   void remS2Subs(const std::string &sessionID, const std::string &subsID);
   void createSubscriptionsTable(storage::DBMSSession &dbSession);
@@ -139,7 +139,7 @@ class Destination {
   static std::string routingKey(const std::string &uri);
   const std::string &subscriptionsT() const;
   size_t subscriptionsCount() const;
-  size_t subscriptionsTrueCount(bool noLock = false) const;
+  size_t subscriptionsTrueCount() const;
   const std::string &name() const;
   void doAck(const Session &session, const MessageDataContainer &sMessage, Storage &storage, bool browser, const std::vector<MessageInfo> &messages);
   void increaseNotAcknowledged(const std::string &objectID);

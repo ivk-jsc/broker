@@ -252,6 +252,8 @@ void Exchange::postNewMessageEvent(const std::string &uri) const {
 void Exchange::run() {
   size_t num = _thrNum++;
 
+  DestinationsList::const_iterator destIt = _destinations.end();
+
   bool result = false;
   std::string queueId;
   while (_isRunning) {
@@ -274,11 +276,20 @@ void Exchange::run() {
 
       {
         upmq::ScopedReadRWLock readRWLock(_destinationsLock);
-        for (const auto &dest : _destinations) {
-          if (dest.second->getNexMessageForAllSubscriptions() && !result) {
-            result = true;
-          }
+        if (destIt == _destinations.end()) {
+          destIt = _destinations.begin();
+        } else {
+          destIt = std::next(destIt);
         }
+        if (destIt != _destinations.end()) {
+          result = destIt->second->getNexMessageForAllSubscriptions();
+        }
+
+        // for (const auto &dest : _destinations) {
+        //   if (dest.second->getNexMessageForAllSubscriptions() && !result) {
+        //     result = true;
+        //   }
+        // }
       }
     } while (result);
 
