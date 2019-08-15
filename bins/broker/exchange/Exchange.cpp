@@ -26,7 +26,8 @@ namespace upmq {
 namespace broker {
 
 Exchange::Exchange()
-    : _destinationsT("\"" + BROKER::Instance().id() + "_destinations\""),
+    : _destinations(1024),
+      _destinationsT("\"" + BROKER::Instance().id() + "_destinations\""),
       _mutexDestinations(THREADS_CONFIG.subscribers),
       _conditionDestinations(_mutexDestinations.size()),
       _threadPool("exchange", 1, static_cast<int>(_mutexDestinations.size()) + 1) {
@@ -54,7 +55,6 @@ Exchange::Exchange()
 }
 Exchange::~Exchange() {
   try {
-    upmq::ScopedWriteRWLock writeLock(_destinationsLock);
     _destinations.clear();
   } catch (...) {
   }
@@ -68,51 +68,39 @@ Destination &Exchange::destination(const std::string &uri, Exchange::Destination
   }
   switch (creationMode) {
     case DestinationCreationMode::NO_CREATE: {
-      upmq::ScopedReadRWLock readRWLock(_destinationsLock);
       return getDestination(mainDP);
     }
     case DestinationCreationMode::CREATE: {
-      {
-        upmq::ScopedReadRWLock readRWLock(_destinationsLock);
-        auto it = _destinations.find(mainDP);
-        if (it != _destinations.end()) {
-          if (it->second->consumerMode() != Destination::makeConsumerMode(uri)) {
-            std::string err = "current consumer mode is ";
-            err.append(Destination::consumerModeName(it->second->consumerMode()));
-            throw EXCEPTION("destination was initiated with another consumer mode", err, ERROR_DESTINATION);
-          }
-          return *it->second;
-        }
-      }
-
-      upmq::ScopedWriteRWLock writeRwLock(_destinationsLock);
-
       auto it = _destinations.find(mainDP);
-      if (it == _destinations.end()) {
-        // FIXME: if mainDP isn't uri then createDestination throw exception
-        _destinations.insert(std::make_pair(mainDP, DestinationFactory::createDestination(*this, uri)));
-        it = _destinations.find(mainDP);
+      if (it.has_value()) {
+        auto &dest = (*it.value());
+        if (dest->consumerMode() != Destination::makeConsumerMode(uri)) {
+          std::string err = "current consumer mode is ";
+          err.append(Destination::consumerModeName(dest->consumerMode()));
+          throw EXCEPTION("destination was initiated with another consumer mode", err, ERROR_DESTINATION);
+        }
+        return *dest;
       }
 
-      return *it->second;
+      // FIXME: if mainDP isn't uri then createDestination throw exception
+      _destinations.insert(std::make_pair(mainDP, DestinationFactory::createDestination(*this, uri)));
+      it.emplace(_destinations.find(mainDP).value());
+
+      return *(*it.value());
     }
   }
   throw EXCEPTION("invalid creation mode", std::to_string(static_cast<int>(creationMode)), ERROR_UNKNOWN);
-}
+}  // namespace broker
 Destination &Exchange::getDestination(const std::string &id) const {
   auto it = _destinations.find(id);
-  if (it == _destinations.end()) {
+  if (!it.has_value()) {
     throw EXCEPTION("destination not found", id, ERROR_UNKNOWN);
   }
-  return *it->second;
+  return *(*it.value());
 }
 void Exchange::deleteDestination(const std::string &uri) {
-  upmq::ScopedWriteRWLock writeRWLock(_destinationsLock);
   std::string mainDP = mainDestinationPath(uri);
-  auto it = _destinations.find(mainDP);
-  if (it != _destinations.end()) {
-    _destinations.erase(it);
-  }
+  _destinations.erase(mainDP);
 }
 std::string Exchange::mainDestinationPath(const std::string &uri) {
   Poco::StringTokenizer URI(uri, ":", Poco::StringTokenizer::TOK_TRIM);
@@ -139,7 +127,6 @@ void Exchange::saveMessage(const Session &session, const MessageDataContainer &s
 }
 const std::string &Exchange::destinationsT() const { return _destinationsT; }
 void Exchange::removeConsumer(const std::string &sessionID, const std::string &destinationID, const std::string &subscriptionID, size_t tcpNum) {
-  upmq::ScopedReadRWLock readRWLock(_destinationsLock);
   Destination &destination = getDestination(destinationID);
   destination.removeConsumer(sessionID, subscriptionID, tcpNum);
 }
@@ -153,29 +140,26 @@ void Exchange::begin(const upmq::broker::Session &session, const std::string &de
   dest.begin(session);
 }
 void Exchange::commit(const upmq::broker::Session &session, const std::string &destinationID) {
-  upmq::ScopedReadRWLock readRWLock(_destinationsLock);
   Destination &destination = getDestination(destinationID);
   destination.commit(session);
   destination.postNewMessageEvent();
 }
 void Exchange::abort(const upmq::broker::Session &session, const std::string &destinationID) {
-  upmq::ScopedReadRWLock readRWLock(_destinationsLock);
   Destination &destination = getDestination(destinationID);
   destination.abort(session);
   destination.postNewMessageEvent();
 }
 bool Exchange::isDestinationTemporary(const std::string &id) {
-  upmq::ScopedReadRWLock readRWLock(_destinationsLock);
   Destination &destination = getDestination(id);
   return destination.isTemporary();
 }
 
 void Exchange::dropDestination(const std::string &id, DestinationOwner *owner) {
-  upmq::ScopedWriteRWLock writeRWLock(_destinationsLock);
   auto it = _destinations.find(id);
-  if (it != _destinations.end()) {
-    if ((owner == nullptr) || (it->second->hasOwner() && owner->clientID == it->second->owner().clientID)) {
-      _destinations.erase(it);
+  if (it.has_value()) {
+    auto &dest = (*it.value());
+    if ((owner == nullptr) || (dest->hasOwner() && owner->clientID == dest->owner().clientID)) {
+      _destinations.erase(id);
     }
   }
 }
@@ -212,16 +196,10 @@ void Exchange::removeSender(const upmq::broker::Session &session, const MessageD
   }
 }
 void Exchange::removeSenders(const upmq::broker::Session &session) {
-  upmq::ScopedReadRWLock readRWLock(_destinationsLock);
-  for (const auto &dest : _destinations) {
-    dest.second->removeSenders(session);
-  }
+  _destinations.changeForEach([&session](DestinationsList::ItemType::KVPair &dest) { dest.second->removeSenders(session); });
 }
 void Exchange::removeSenderFromAnyDest(const upmq::broker::Session &session, const std::string &senderID) {
-  upmq::ScopedReadRWLock readRWLock(_destinationsLock);
-  for (const auto &dest : _destinations) {
-    dest.second->removeSenderByID(session, senderID);
-  }
+  _destinations.changeForEach([&session, &senderID](DestinationsList::ItemType::KVPair &dest) { dest.second->removeSenderByID(session, senderID); });
 }
 void Exchange::start() {
   _threadAdapter = std::make_unique<Poco::RunnableAdapter<Exchange>>(*this, &Exchange::run);
@@ -251,46 +229,33 @@ void Exchange::postNewMessageEvent(const std::string &uri) const {
 }
 void Exchange::run() {
   size_t num = _thrNum++;
-
-  DestinationsList::const_iterator destIt = _destinations.end();
-
   bool result = false;
+  size_t next = 0;
+  auto doGet = [&result](const DestinationsList::ItemType::KVPair &pair) { result = pair.second->getNexMessageForAllSubscriptions(); };
+  std::function<size_t(size_t)> forward = [&doGet, this](size_t start) { return _destinations.applyForOnce(start, doGet); };
+  std::function<size_t(size_t)> backward = [&doGet, this](size_t start) { return _destinations.applyForOnceBackward(start, doGet); };
+
+  auto &getNextFromAll = ((num % 2) == 0) ? backward : forward;
+
   std::string queueId;
   while (_isRunning) {
     do {
       result = false;
-      {
-        upmq::ScopedReadRWLock readRWLock(_destinationsLock);
-        do {
-          queueId.clear();
-          if (_destinationEvents.try_dequeue(queueId)) {
-            if (!queueId.empty()) {
-              auto item = _destinations.find(queueId);
-              if (item != _destinations.end()) {
-                item->second->getNexMessageForAllSubscriptions();
-              }
+
+      do {
+        queueId.clear();
+        if (_destinationEvents.try_dequeue(queueId)) {
+          if (!queueId.empty()) {
+            auto item = _destinations.find(queueId);
+            if (item.has_value()) {
+              (*item.value())->getNexMessageForAllSubscriptions();
             }
           }
-        } while (!queueId.empty());
-      }
-
-      {
-        upmq::ScopedReadRWLock readRWLock(_destinationsLock);
-        if (destIt == _destinations.end()) {
-          destIt = _destinations.begin();
-        } else {
-          destIt = std::next(destIt);
         }
-        if (destIt != _destinations.end()) {
-          result = destIt->second->getNexMessageForAllSubscriptions();
-        }
+      } while (!queueId.empty());
 
-        // for (const auto &dest : _destinations) {
-        //   if (dest.second->getNexMessageForAllSubscriptions() && !result) {
-        //     result = true;
-        //   }
-        // }
-      }
+      next = getNextFromAll(next);
+
     } while (result);
 
     auto &mut = _mutexDestinations[num];
@@ -311,29 +276,16 @@ std::vector<Destination::Info> Exchange::info() const {
     return has;
   };
 
-  {
-    upmq::ScopedReadRWLock readRWLock(_destinationsLock);
-    for (const auto &dest : _destinations) {
-      auto info = dest.second->info();
-      size_t sz = 0;
-      if (containDigit(info.name)) {
-        sz = info.name.size();
-      }
-      infosGroup[sz].emplace_back(std::move(info));
+  _destinations.applyForEach([&containDigit, &infosGroup](const DestinationsList::ItemType::KVPair &dest) {
+    auto info = dest.second->info();
+    size_t sz = 0;
+    if (containDigit(info.name)) {
+      sz = info.name.size();
     }
-  }
+    infosGroup[sz].emplace_back(std::move(info));
+  });
   std::stringstream sql;
   sql << "select id, name, type, create_time from " << _destinationsT;
-  // if (!infos.empty()) {
-  //   sql << " where ";
-  //   size_t lastIndex = infos.size() - 1;
-  //   for (size_t i = 0; i < infos.size(); ++i) {
-  //     sql << " id <> '" << infos[i].id << "'";
-  //     if (i < lastIndex) {
-  //       sql << " and ";
-  //     }
-  //   }
-  // }
   storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
   Poco::Data::Statement select(dbSession());
   Destination::Info destInfo;

@@ -33,11 +33,10 @@ class Exchange {
  public:
   enum class DestinationCreationMode { NO_CREATE = 0, CREATE };
   // DestinationsList - map<mainDestinationPath, Destination>
-  using DestinationsList = std::unordered_map<std::string, std::unique_ptr<Destination>>;
+  using DestinationsList = FSUnorderedMap<std::string, std::unique_ptr<Destination>>;
 
  private:
   mutable DestinationsList _destinations;
-  mutable upmq::MRWLock _destinationsLock;
   const std::string _destinationsT;
   std::atomic_bool _isRunning{false};
   mutable std::vector<Poco::FastMutex> _mutexDestinations;

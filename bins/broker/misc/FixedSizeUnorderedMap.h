@@ -174,9 +174,13 @@ template <typename Key, typename Value>
 class FSUnorderedMap {
  public:
   using ItemType = FSUnorderedNode<Key, Value>;
+  using ValidItemsValue = size_t;
+  using ValidItemsType = std::set<ValidItemsValue>;
 
  private:
   std::vector<ItemType> _items;
+  using ItemsType = std::vector<ItemType>;
+
   const size_t _size;
   std::atomic<size_t> _realSize{0};
   mutable upmq::MRWLock _validIndexesLock;
@@ -201,7 +205,7 @@ class FSUnorderedMap {
   }
 
  public:
-  FSUnorderedMap(size_t size) : _items(size), _size(size) {}
+  explicit FSUnorderedMap(size_t size) : _items(size), _size(size) {}
   FSUnorderedMap(FSUnorderedMap &&o) noexcept : _items(std::move(o._items)), _size(std::move(o._size)), _realSize(o._realSize.load()) {}
   nonstd::optional<FSReadLockedValue<Value>> find(const Key &key) const {
     size_t index = Poco::hash(key) % _size;
@@ -242,25 +246,53 @@ class FSUnorderedMap {
     clearValidIndex();
   }
   size_t size() const { return _realSize; }
+  const ItemType &at(size_t index) { return _items.at(index); }
   template <typename F>
   void applyForEach(const F &f) const {
-    // for (const auto &item : _items) {
-    //   if (!item.empty()) {
-    //     item.applyForEach(f);
-    //   }
-    // }
     upmq::ScopedReadRWLock readRWLock(_validIndexesLock);
     for (auto index : _validIndexes) {
       _items.at(index).applyForEach(f);
     }
   }
   template <typename F>
+  ValidItemsValue applyForOnce(ValidItemsValue startFrom, const F &f) const {
+    upmq::ScopedReadRWLock readRWLock(_validIndexesLock);
+    auto index = _validIndexes.find(startFrom);
+    auto endIt = _validIndexes.end();
+    if (index == endIt) {
+      index = _validIndexes.begin();
+    }
+    if (index != endIt) {
+      _items.at(*index).applyForEach(f);
+      auto next = std::next(index);
+      return (next == endIt) ? 0 : *next;
+    }
+    return 0;
+  }
+  template <typename F>
+  ValidItemsValue applyForOnceBackward(ValidItemsValue startFrom, const F &f) const {
+    upmq::ScopedReadRWLock readRWLock(_validIndexesLock);
+    ValidItemsType::const_reverse_iterator index(_validIndexes.find(startFrom));
+    auto rendIt = _validIndexes.rend();
+    if (index == rendIt) {
+      index = _validIndexes.rbegin();
+    }
+    if (index != rendIt) {
+      _items.at(*index).applyForEach(f);
+      auto next = std::next(index);
+      return (next == rendIt) ? 0 : *next;
+    }
+    return 0;
+  }
+  template <typename F>
+  void applyForEachBackward(const F &f) const {
+    upmq::ScopedReadRWLock readRWLock(_validIndexesLock);
+    for (auto index = _validIndexes.rbegin(); index != _validIndexes.rend(); ++index) {
+      _items.at(*index).applyForEach(f);
+    }
+  }
+  template <typename F>
   void changeForEach(const F &f) {
-    // for (auto &item : _items) {
-    //   if (!item.empty()) {
-    //     item.changeForEach(f);
-    //   }
-    // }
     upmq::ScopedReadRWLock readRWLock(_validIndexesLock);
     for (auto index : _validIndexes) {
       _items.at(index).changeForEach(f);
