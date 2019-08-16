@@ -28,20 +28,20 @@ using PCA_HANDLE = void *;
 
 #pragma pack(push, 4)
 typedef struct _SWF_UPINFO {
-  unsigned char orgname[80];  /* полное имя организации                   */
-  unsigned char orgcode[8];   /* код организации                          */
-  unsigned char objname[80];  /* полное имя объекта                       */
-  unsigned char objcode[2];   /* код объекта                              */
-  unsigned char modname[80];  /* полное имя логического модуля            */
-  unsigned char modcode[2];   /* код логического модуля                   */
-  unsigned char nvu[4];       /* номер вычислительной установки           */
-  unsigned char netname[80];  /* полное имя сети                          */
-  unsigned char userstat[10]; /* должность пользователя                   */
-  unsigned char userfio[18];  /* ФИО пользователя                         */
-  unsigned char logadr[4];    /* свой логический адрес                    */
-  unsigned char userid[2];    /* идентификатор пользователя               */
-  unsigned char userrang[2];  /* ранг пользователя                        */
-  unsigned char rezerv[12];   /* резерв                                   */
+  unsigned char orgname[80];
+  unsigned char orgcode[8];
+  unsigned char objname[80];
+  unsigned char objcode[2];
+  unsigned char modname[80];
+  unsigned char modcode[2];
+  unsigned char nvu[4];
+  unsigned char netname[80];
+  unsigned char userstat[10];
+  unsigned char userfio[18];
+  unsigned char logadr[4];
+  unsigned char userid[2];
+  unsigned char userrang[2];
+  unsigned char rezerv[12];
 } SWF_UPINFO;
 #pragma pack(pop)
 
