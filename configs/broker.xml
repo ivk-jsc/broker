@@ -20,7 +20,7 @@
             <subscriber>8</subscriber>
         </threads>
         <log>
-            <level>8</level><!-- уровень журналирования -->
+            <level>8</level>
             <!--log=1 - A fatal error. The application will most likely terminate. This is the highest priority.-->
             <!--log=2 - A critical error. The application might not be able to continue running successfully.-->
             <!--log=3 - An error. An operation did not complete successfully, but the application as a whole is not affected.-->
@@ -30,12 +30,18 @@
             <!--log=7 - A debugging message.-->
             <!--log=8 - A tracing message. This is the lowest priority.-->
             <path windows="C:/ProgramData" _nix="/var/log">upmq/log</path>
-            <interactive>true</interactive><!-- если выставить 0, то в консоль ничего выводиться не будет, только в файл -->
+            <interactive>true</interactive>
         </log>
-
+        <sessions>
+            <max-count>1024</max-count>
+        </sessions>
+        <subscriptions>
+            <max-count>1024</max-count>
+        </subscriptions>
         <destinations>
             <autocreate>true</autocreate>
             <forward by-property="false"/>
+            <max-count>1024</max-count>
         </destinations>
         <storage>
             <!--file::memory:?cache=shared-->

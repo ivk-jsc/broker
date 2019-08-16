@@ -150,9 +150,10 @@ class SimpleProducer {
         producer->send(destination, message, deliveryMode, priority, cms::Message::DEFAULT_TIME_TO_LIVE);
 
         message->setReadable();
-
-        std::cout << "sent => "
-                  << ": " << message->getText() << " elapsed [" << floating_seconds(perf_clock::now() - t0).count() << "]" << '\n';
+        if ((ix == 1 || (ix % 1000 == 0))) {
+          std::cout << "sent => "
+                    << ": " << message->getText() << " elapsed [" << floating_seconds(perf_clock::now() - t0).count() << "]" << '\n';
+        }
       }
       delete message;
     } catch (cms::CMSException &e) {
@@ -162,10 +163,20 @@ class SimpleProducer {
   }
 };
 
+template <typename F>
+int processOption(int option, const char *arg, const F &f) {
+  if (arg != nullptr) {
+    f(arg);
+    return 0;
+  }
+  std::cerr << "invalid option " << static_cast<char>(option) << std::endl;
+  return -1;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char *argv[]) {
   (void)argc;
-  //std::string brokerURI = "failover:(tcp://localhost:12345?transport.trace=false)";
+  // std::string brokerURI = "failover:(tcp://localhost:12345?transport.trace=false)";
   std::string brokerURI = "tcp://localhost:12345?transport.trace=false";
   std::string destURI = "defaultDestination";
   std::string destType = "queue";
@@ -190,35 +201,62 @@ int main(int argc, char *argv[]) {
       {"help", 'h', OPTPARSE_OPTIONAL, false, "show help"},
       {nullptr, 0, OPTPARSE_NONE, 0, nullptr}, /* end (a.k.a. sentinel) */
   };
+
   int option;
   struct optparse options {};
   optparse_init(&options, argv);
   /* parse the all options based on opt_option[] */
-  while ((option = optparse_long(&options, opt_option, NULL)) != -1) {
+  while ((option = optparse_long(&options, opt_option, nullptr)) != -1) {
     switch (option) {
       case 'd':
-        destURI.assign(options.optarg);
+        if (processOption(option, options.optarg, [&destURI](const char *arg) { destURI.assign(arg); }) != 0) {
+          usage(opt_option, 9);
+          return -1;
+        }
         break;
       case 't':
-        useTopics = (std::string(options.optarg) == "topic");
+        if (processOption(option, options.optarg, [&useTopics](const char *arg) { useTopics = (std::string(arg) == "topic"); }) != 0) {
+          usage(opt_option, 9);
+          return -1;
+        }
         break;
       case 'u':
-        brokerURI.assign(options.optarg);
+        if (processOption(option, options.optarg, [&brokerURI](const char *arg) { brokerURI.assign(arg); }) != 0) {
+          usage(opt_option, 9);
+          return -1;
+        }
         break;
       case 'c':
-        numMessages = std::stol(options.optarg);
+        if (processOption(option, options.optarg, [&numMessages](const char *arg) { numMessages = std::stol(arg); }) != 0) {
+          usage(opt_option, 9);
+          return -1;
+        }
         break;
       case 'm':
-        deliveryMode = ((std::string(options.optarg) == "not-persistent") ? cms::DeliveryMode::NON_PERSISTENT : cms::DeliveryMode::PERSISTENT);
+        if (processOption(option, options.optarg, [&deliveryMode](const char *arg) {
+              deliveryMode = ((std::string(arg) == "not-persistent") ? cms::DeliveryMode::NON_PERSISTENT : cms::DeliveryMode::PERSISTENT);
+            }) != 0) {
+          usage(opt_option, 9);
+          return -1;
+        }
         break;
       case 'p':
-        priority = std::stoi(options.optarg);
+        if (processOption(option, options.optarg, [&priority](const char *arg) { priority = std::stoi(arg); }) != 0) {
+          usage(opt_option, 9);
+          return -1;
+        }
         break;
       case 'i':
-        intProperty = IntProperty::fromString(options.optarg);
+        if (processOption(option, options.optarg, [&intProperty](const char *arg) { intProperty = IntProperty::fromString(arg); }) != 0) {
+          usage(opt_option, 9);
+          return -1;
+        }
         break;
       case 'b':
-        text = std::string(options.optarg);
+        if (processOption(option, options.optarg, [&text](const char *arg) { text = std::string(arg); }) != 0) {
+          usage(opt_option, 9);
+          return -1;
+        }
         break;
       case 'h':
         usage(opt_option, 9);

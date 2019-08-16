@@ -38,7 +38,7 @@ void QueueDestination::save(const Session &session, const MessageDataContainer &
 
   TRY_POCO_DATA_EXCEPTION {
     std::string routingK = routingKey(sMessage.message().destination_uri());
-    upmq::ScopedReadRWLock readRWLock(_subscriptionsLock);
+    upmq::ScopedReadRWLock readRWLock(_routingLock);
     auto it = _routing.find(routingK);
     if (it != _routing.end()) {
       const MessageDataContainer *dc = &sMessage;
@@ -56,11 +56,10 @@ void QueueDestination::ack(const Session &session, const MessageDataContainer &s
   Storage *storage = &_storage;
 
   bool browser = isSubscriptionBrowser(subscriptionName);
-  if (browser) {
-    upmq::ScopedReadRWLock readRWLock(_subscriptionsLock);
+  if (browser) {    
     auto it = _subscriptions.find(subscriptionName);
-    if (it != _subscriptions.end()) {
-      storage = &it->second.storage();
+    if (it.has_value()) {
+      storage = &(it.value()->storage());
     } else {
       throw EXCEPTION("can't find browser subscription", subscriptionName, ERROR_ON_ACK_MESSAGE);
     }

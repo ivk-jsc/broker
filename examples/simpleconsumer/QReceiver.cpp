@@ -66,7 +66,8 @@ class QReceiver : public cms::MessageListener {
 
   void onMessage(const cms::Message *message) override {
     try {
-      std::string msgText = dynamic_cast<const cms::TextMessage *>(message)->getText();
+      const auto msg = dynamic_cast<const cms::TextMessage *>(message);
+      const std::string msgText = (msg != nullptr) ? msg->getText() : "";
       std::cout << msgText << std::endl;
       if (msgText == "stop") {
         stop = true;

@@ -30,7 +30,6 @@ void TopicDestination::save(const Session &session, const MessageDataContainer &
 
   TRY_POCO_DATA_EXCEPTION {
     std::string routingK = routingKey(sMessage.message().destination_uri());
-    upmq::ScopedReadRWLock readRWLock(_subscriptionsLock);
     ParentTopics parentTopics = generateParentTopics(routingK);
     bool needRemoveBody = true;
     for (const auto &topic : parentTopics) {
@@ -49,64 +48,59 @@ void TopicDestination::ack(const Session &session, const MessageDataContainer &s
   const std::string &messageID = ack.message_id();
   const std::string &subscriptionName = ack.subscription_name();
 
-  upmq::ScopedReadRWLock readRWLock(_subscriptionsLock);
   if (session.isClientAcknowledge()) {
-    for (const auto &it : _subscriptions) {
-      std::vector<MessageInfo> sentMsgs = it.second.storage().getMessagesBelow(session, messageID);
-      Destination::doAck(session, sMessage, it.second.storage(), false, sentMsgs);
-    }
+    _subscriptions.changeForEach([this, &session, &messageID, &sMessage](SubscriptionsList::ItemType::KVPair &pair) {
+      std::vector<MessageInfo> sentMsgs = pair.second.storage().getMessagesBelow(session, messageID);
+      Destination::doAck(session, sMessage, pair.second.storage(), false, sentMsgs);
+    });
   } else {
     auto it = _subscriptions.find(subscriptionName);
-    if (it != _subscriptions.end()) {
-      std::vector<MessageInfo> sentMsgs = it->second.storage().getMessagesBelow(session, messageID);
-      Destination::doAck(session, sMessage, it->second.storage(), false, sentMsgs);
+    if (it.has_value()) {
+      auto &subs = it.value();
+      std::vector<MessageInfo> sentMsgs = subs->storage().getMessagesBelow(session, messageID);
+      Destination::doAck(session, sMessage, subs->storage(), false, sentMsgs);
     }
   }
 }
 void TopicDestination::commit(const Session &session) {
   Destination::commit(session);
-  upmq::ScopedReadRWLock readRWLock(_subscriptionsLock);
-  for (auto &item : _subscriptions) {
-    item.second.commit(session);
-  }
+  _subscriptions.changeForEach([&session](SubscriptionsList::ItemType::KVPair &pair) { pair.second.commit(session); });
 }
 void TopicDestination::abort(const Session &session) {
   Destination::abort(session);
-  upmq::ScopedReadRWLock readRWLock(_subscriptionsLock);
-  for (auto &item : _subscriptions) {
-    item.second.abort(session);
-  }
+  _subscriptions.changeForEach([&session](SubscriptionsList::ItemType::KVPair &pair) { pair.second.abort(session); });
 }
 
 Subscription TopicDestination::createSubscription(const std::string &name, const std::string &routingKey, Subscription::Type type) { return Subscription(*this, "", name, routingKey, type); }
 void TopicDestination::begin(const Session &session) {
   Destination::begin(session);
-  upmq::ScopedReadRWLock readRWLock(_subscriptionsLock);
-  for (const auto &item : _subscriptions) {
-    item.second.storage().begin(session, item.second.id());
-  }
+  _subscriptions.changeForEach([&session](SubscriptionsList::ItemType::KVPair &pair) { pair.second.storage().begin(session, pair.second.id()); });
 }
 void TopicDestination::addSender(const Session &session, const MessageDataContainer &sMessage) {
   const Proto::Sender &sender = sMessage.sender();
   std::string routingKey = Destination::routingKey(sender.destination_uri());
-  upmq::ScopedReadRWLock readRWLock(_subscriptionsLock);
-  auto item = _routing.find(routingKey);
-  if (item != _routing.end()) {
-    const MessageDataContainer *dc = &sMessage;
-    item->second->notify(&session, dc);
-  } else {
-    upmq::ScopedWriteRWLock writeRWLock(_senderCacheLock);
-    _senderCache.insert(std::make_pair(routingKey, sender.sender_id()));
+  {
+    upmq::ScopedReadRWLock readRWLock(_routingLock);
+    auto item = _routing.find(routingKey);
+    if (item != _routing.end()) {
+      const MessageDataContainer *dc = &sMessage;
+      item->second->notify(&session, dc);
+      return;
+    }
   }
+  upmq::ScopedWriteRWLock writeRWLock(_senderCacheLock);
+  _senderCache.insert(std::make_pair(routingKey, sender.sender_id()));
 }
 void TopicDestination::removeSender(const Session &session, const MessageDataContainer &sMessage) {
   const Proto::Unsender &unsender = sMessage.unsender();
   std::string routingKey = Destination::routingKey(unsender.destination_uri());
-  upmq::ScopedReadRWLock readRWLock(_subscriptionsLock);
-  auto item = _routing.find(routingKey);
-  if (item != _routing.end()) {
-    const MessageDataContainer *dc = &sMessage;
-    item->second->notify(&session, dc);
+  {
+    upmq::ScopedReadRWLock readRWLock(_routingLock);
+    auto item = _routing.find(routingKey);
+    if (item != _routing.end()) {
+      const MessageDataContainer *dc = &sMessage;
+      item->second->notify(&session, dc);
+    }
   }
 
   upmq::ScopedWriteRWLock writeRWLock(_senderCacheLock);
@@ -121,14 +115,13 @@ void TopicDestination::removeSender(const Session &session, const MessageDataCon
   }
 }
 void TopicDestination::removeSenders(const Session &session) {
-  upmq::ScopedReadRWLock readRWLock(_subscriptionsLock);
+  upmq::ScopedReadRWLock readRWLock(_routingLock);
   const MessageDataContainer *dc = nullptr;
   for (const auto &item : _routing) {
     item.second->notify(&session, dc);
   }
 }
-void TopicDestination::removeSenderByID(const Session &session, const std::string &senderID) {
-  upmq::ScopedReadRWLock readRWLock(_subscriptionsLock);
+void TopicDestination::removeSenderByID(const Session &session, const std::string &senderID) {  
   MessageDataContainer messageDataContainer;
   Proto::Unsender &unsender = messageDataContainer.createUnsender(senderID);
   unsender.set_sender_id(senderID);
@@ -136,6 +129,7 @@ void TopicDestination::removeSenderByID(const Session &session, const std::strin
   unsender.set_destination_uri(_uri);
   const MessageDataContainer &dclink = messageDataContainer;
   const MessageDataContainer *dc = &dclink;
+  upmq::ScopedReadRWLock readRWLock(_routingLock);
   for (const auto &item : _routing) {
     item.second->notify(&session, dc);
   }
@@ -163,6 +157,7 @@ TopicDestination::ParentTopics TopicDestination::generateParentTopics(const std:
 }
 
 bool TopicDestination::notifySubscription(const std::string &routingKey, const Session &session, const MessageDataContainer &sMessage) {
+  upmq::ScopedReadRWLock readRWLock(_routingLock);
   auto it = _routing.find(routingKey);
   if (it != _routing.end()) {
     const MessageDataContainer *dc = &sMessage;
