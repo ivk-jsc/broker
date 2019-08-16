@@ -26,7 +26,7 @@ namespace upmq {
 namespace broker {
 
 Exchange::Exchange()
-    : _destinations(1024),
+    : _destinations(DESTINATION_CONFIG.maxCount),
       _destinationsT("\"" + BROKER::Instance().id() + "_destinations\""),
       _mutexDestinations(THREADS_CONFIG.subscribers),
       _conditionDestinations(_mutexDestinations.size()),
@@ -191,7 +191,7 @@ void Exchange::removeSender(const upmq::broker::Session &session, const MessageD
     try {
       Destination &dest = destination(unsender.destination_uri(), DestinationCreationMode::NO_CREATE);
       dest.removeSender(session, sMessage);
-    } catch (Exception &) {  // do nothing -V565
+    } catch (...) {  // do nothing -V565
     }
   }
 }
@@ -228,7 +228,7 @@ void Exchange::postNewMessageEvent(const std::string &uri) const {
   }
 }
 void Exchange::run() {
-  size_t num = _thrNum++;
+  const size_t num = _thrNum++;
   bool result = false;
   size_t next = 0;
   auto doGet = [&result](const DestinationsList::ItemType::KVPair &pair) { result = pair.second->getNexMessageForAllSubscriptions(); };
@@ -256,7 +256,7 @@ void Exchange::run() {
 
       next = getNextFromAll(next);
 
-    } while (result);
+    } while (result);  // -V654
 
     auto &mut = _mutexDestinations[num];
 

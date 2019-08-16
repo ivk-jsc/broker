@@ -32,7 +32,7 @@ Destination::Destination(const Exchange &exchange, const std::string &uri, Type 
     : _id(getStoredDestinationID(exchange, Exchange::mainDestinationPath(uri), type)),
       _uri(uri),
       _name(Exchange::mainDestinationPath(uri)),
-      _subscriptions(1024),
+      _subscriptions(SUBSCRIPTIONS_CONFIG.maxCount),
       _storage(_id),
       _type(type),
       _exchange(exchange),

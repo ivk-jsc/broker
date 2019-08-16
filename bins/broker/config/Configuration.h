@@ -66,9 +66,20 @@ class Configuration {
     std::string toString() const;
   };
 
+  struct Sessions {        
+    size_t maxCount{1024};
+    std::string toString() const;
+  };
+
+  struct Subscriptions {        
+    size_t maxCount{1024};
+    std::string toString() const;
+  };
+
   struct Destinations {
     bool autocreate{true};
     bool forwardByProperty{false};
+    size_t maxCount{1024};
     std::string toString() const;
   };
 
@@ -143,6 +154,10 @@ class Configuration {
   void setThreads(const Threads &threads);
   const Log &log() const;
   void setLog(const Log &log);
+  void setSessions(const Sessions& sessions);
+  void setSubscriptions(const Subscriptions& subscriptions);
+  const Sessions &sessions() const;
+  const Subscriptions &subscriptions() const;
   const Destinations &destinations() const;
   void setDestinations(const Destinations &destinations);
   const Storage &storage() const;
@@ -158,6 +173,8 @@ class Configuration {
   Net _net;
   Threads _threads;
   Log _log;
+  Sessions _sessions;
+  Subscriptions _subscriptions;
   Destinations _destinations;
   Storage _storage;
 };
@@ -167,6 +184,8 @@ class Configuration {
 typedef Singleton<upmq::broker::Configuration> CONFIGURATION;
 
 #define STORAGE_CONFIG CONFIGURATION::Instance().storage()
+#define SESSIONS_CONFIG CONFIGURATION::Instance().sessions()
+#define SUBSCRIPTIONS_CONFIG CONFIGURATION::Instance().subscriptions()
 #define DESTINATION_CONFIG CONFIGURATION::Instance().destinations()
 #define THREADS_CONFIG CONFIGURATION::Instance().threads()
 #define NET_CONFIG CONFIGURATION::Instance().net()

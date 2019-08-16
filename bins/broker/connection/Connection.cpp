@@ -27,7 +27,7 @@ namespace upmq {
 namespace broker {
 
 Connection::Connection(const std::string &clientID)
-    : _clientID(clientID), _clientIDWasSet(!clientID.empty()), _sessions(1024), _sessionsT("\"" + clientID + "_sessions\""), _tcpT("\"" + clientID + "_tcp_connections\"") {
+    : _clientID(clientID), _clientIDWasSet(!clientID.empty()), _sessions(SESSIONS_CONFIG.maxCount), _sessionsT("\"" + clientID + "_sessions\""), _tcpT("\"" + clientID + "_tcp_connections\"") {
   std::stringstream sql;
   storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
   dbSession.beginTX(_clientID);
@@ -63,19 +63,22 @@ Connection::~Connection() {
     _sessions.clear();
   } catch (...) {
   }
-  std::stringstream sql;
-  sql << "delete from \"" << BROKER::Instance().id() << "\" where client_id = \'" << _clientID << "\';";
-  TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
-  CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't delete client_id", sql.str(), ERROR_CONNECTION)
+  try {
+    std::stringstream sql;
+    sql << "delete from \"" << BROKER::Instance().id() << "\" where client_id = \'" << _clientID << "\';";
+    TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
+    CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't delete client_id", sql.str(), ERROR_CONNECTION)
 
-  sql.str("");
-  sql << "drop table if exists " << _sessionsT << ";";
-  TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
-  CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't drop sessions", sql.str(), ERROR_CONNECTION)
-  sql.str("");
-  sql << "drop table if exists " << _tcpT << ";";
-  TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
-  CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't drop tcp connections", sql.str(), ERROR_CONNECTION)
+    sql.str("");
+    sql << "drop table if exists " << _sessionsT << ";";
+    TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
+    CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't drop sessions", sql.str(), ERROR_CONNECTION)
+    sql.str("");
+    sql << "drop table if exists " << _tcpT << ";";
+    TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
+    CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't drop tcp connections", sql.str(), ERROR_CONNECTION)
+  } catch (...) {
+  }
 }
 const std::string &Connection::clientID() const { return _clientID; }
 void Connection::setClientID(const std::string &clientID) {
@@ -238,7 +241,7 @@ int Connection::maxNotAcknowledgedMessages(size_t tcpConnectionNum) const {
   }
   return 100;
 }
-std::string Connection::transactionID(const std::string &sessionID) const {  
+std::string Connection::transactionID(const std::string &sessionID) const {
   auto it = _sessions.find(sessionID);
   if (!it.has_value()) {
     throw EXCEPTION("session not found", sessionID, ERROR_ON_SESSION);

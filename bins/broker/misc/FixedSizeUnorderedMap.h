@@ -73,7 +73,7 @@ class FSWriteLockedValue {
   const Value &operator*() const { return _value; }
   Value &operator*() { return _value; }
   const Value *operator->() const { return &_value; }
-  Value *operator->() { return _value; }
+  Value *operator->() { return &_value; }
 };
 template <typename Key, typename Value>
 class FSUnorderedNode {

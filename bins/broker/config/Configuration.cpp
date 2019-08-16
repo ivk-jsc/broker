@@ -72,6 +72,10 @@ const Configuration::Threads &Configuration::threads() const { return _threads; 
 void Configuration::setThreads(const Configuration::Threads &threads) { _threads = threads; }
 const Configuration::Log &Configuration::log() const { return _log; }
 void Configuration::setLog(const Configuration::Log &log) { _log = log; }
+void Configuration::setSessions(const Sessions &sessions) { _sessions = sessions; }
+void Configuration::setSubscriptions(const Subscriptions &subscriptions) { _subscriptions = subscriptions; }
+const Configuration::Sessions &Configuration::sessions() const { return _sessions; }
+const Configuration::Subscriptions &Configuration::subscriptions() const { return _subscriptions; }
 const Configuration::Destinations &Configuration::destinations() const { return _destinations; }
 void Configuration::setDestinations(const Configuration::Destinations &destinations) { _destinations = destinations; }
 const Configuration::Storage &Configuration::storage() const { return _storage; }
@@ -91,6 +95,10 @@ std::string Configuration::toString() const {
       .append(_threads.toString())
       .append("\n- * \tlog\t\t\t=> ")
       .append(_log.toString())
+      .append("\n- * \tsessions\t\t=> ")
+      .append(_sessions.toString())
+      .append("\n- * \tsubscriptions\t\t=> ")
+      .append(_subscriptions.toString())
       .append("\n- * \tdestination\t\t=> ")
       .append(_destinations.toString())
       .append("\n- * \tstorage\t\t\t=> ")
@@ -118,8 +126,15 @@ std::string Configuration::Log::toString() const {
       .append(path.toString())
       .append("]");
 }
+std::string Configuration::Sessions::toString() const { return std::string("\n- * \t\tmax-count\t: ").append(std::to_string(maxCount)); }
+std::string Configuration::Subscriptions::toString() const { return std::string("\n- * \t\tmax-count\t: ").append(std::to_string(maxCount)); }
 std::string Configuration::Destinations::toString() const {
-  return std::string("\n- * \t\tautocreate\t: ").append(autocreate ? "true" : "false").append("\n- * \t\tforward-by-property\t: ").append(forwardByProperty ? "true" : "false");
+  return std::string("\n- * \t\tautocreate\t: ")
+      .append(autocreate ? "true" : "false")
+      .append("\n- * \t\tforward-by-property\t: ")
+      .append(forwardByProperty ? "true" : "false")
+      .append("\n- * \t\tmax-count\t: ")
+      .append(std::to_string(maxCount));
 }
 std::string Configuration::Storage::Connection::Props::toString() const {
   return std::string("\n- * \t\t\ttype\t: ")
