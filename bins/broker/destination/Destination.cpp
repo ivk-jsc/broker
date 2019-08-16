@@ -110,7 +110,7 @@ std::string Destination::getStoredDestinationID(const Exchange &exchange, const 
   if (tempId.empty()) {
     saveDestinationId(id, dbSession, exchange, name, type);
   } else {
-    id = tempId;
+    id = std::move(tempId);
   }
   dbSession.commitTX();
 

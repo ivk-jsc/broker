@@ -401,10 +401,10 @@ void Subscription::changeCurrentConsumerNumber() const {
     _currentConsumerNumber %= _consumers.size();
   }
 }
-const Consumer *Subscription::at(int index) const {
+const Consumer *Subscription::at(size_t index) const {
   auto consEnd = _consumers.rend();
-  int counter = 0;
-  int curSize = (_consumers.empty()) ? 0 : static_cast<int>(_consumers.size() - 1);
+  size_t counter = 0;
+  const size_t curSize = (_consumers.empty()) ? 0 : (_consumers.size() - 1);
   if (index > curSize) {
     index = curSize;
   }

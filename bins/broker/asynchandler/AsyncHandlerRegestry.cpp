@@ -61,7 +61,7 @@ void AsyncHandlerRegestry::run() {
   int num;
   while (_isRunning) {
     if (_needToErase.wait_dequeue_timed(num, 2000000)) {
-      auto &connection = _connections[num];
+      auto &connection = _connections[static_cast<size_t>(num)];
       if (connection && connection->needErase()) {
         connection = nullptr;
       }

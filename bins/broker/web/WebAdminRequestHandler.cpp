@@ -82,52 +82,53 @@ Poco::Net::HTTPResponse::HTTPStatus WebAdminRequestHandler::onGet() {
     std::vector<std::string> tmpWebVec = split(tmpWebStr, '/');
 
     std::string indexPage = "/index." + extension;
-    auto indexlIt = CONFIGURATION::Instance().replacerMap.find(indexPage);
-    if (indexlIt == CONFIGURATION::Instance().replacerMap.end()) {
-      CONFIGURATION::Instance().replacerMap.emplace(indexPage, std::unique_ptr<TemplateParamReplacer>(new IndexPageReplacer(indexPage, nullptr)));
-      indexlIt = CONFIGURATION::Instance().replacerMap.find(indexPage);
+    upmq::broker::Configuration::ReplacerMapType &replacerMap = CONFIGURATION::Instance().replacerMap;
+    auto indexlIt = replacerMap.find(indexPage);
+    if (indexlIt == replacerMap.end()) {
+      replacerMap.emplace(indexPage, std::unique_ptr<TemplateParamReplacer>(new IndexPageReplacer(indexPage, nullptr)));
+      indexlIt = replacerMap.find(indexPage);
     }
 
-    auto replIt = CONFIGURATION::Instance().replacerMap.find(lFile);
+    auto replIt = replacerMap.find(lFile);
     const std::string clientsPage = "/clients." + extension;
     const std::string messagesPage = "/messages." + extension;
-    if (replIt == CONFIGURATION::Instance().replacerMap.end()) {
+    if (replIt == replacerMap.end()) {
       if (lFile == "/main." + extension) {
-        CONFIGURATION::Instance().replacerMap.emplace(lFile, std::unique_ptr<TemplateParamReplacer>(new MainPageReplacer(lFile)));
-        replIt = CONFIGURATION::Instance().replacerMap.find(lFile);
+        replacerMap.emplace(lFile, std::unique_ptr<TemplateParamReplacer>(new MainPageReplacer(lFile)));
+        replIt = replacerMap.find(lFile);
       }
       if (((tmpWebVec[0] == "queues") || (tmpWebVec[0] == "topics")) && tmpWebVec.size() == 1) {
         if (lFile == "/queues." + extension) {
-          CONFIGURATION::Instance().replacerMap.emplace(lFile, std::unique_ptr<TemplateParamReplacer>(new QueuesPageReplacer(lFile)));
-          replIt = CONFIGURATION::Instance().replacerMap.find(lFile);
+          replacerMap.emplace(lFile, std::unique_ptr<TemplateParamReplacer>(new QueuesPageReplacer(lFile)));
+          replIt = replacerMap.find(lFile);
         }
         if (lFile == "/topics." + extension) {
-          CONFIGURATION::Instance().replacerMap.emplace(lFile, std::unique_ptr<TemplateParamReplacer>(new TopicsPageReplacer(lFile)));
-          replIt = CONFIGURATION::Instance().replacerMap.find(lFile);
+          replacerMap.emplace(lFile, std::unique_ptr<TemplateParamReplacer>(new TopicsPageReplacer(lFile)));
+          replIt = replacerMap.find(lFile);
         }
       } else if (((tmpWebVec[0] == "destinations") || (tmpWebVec[0] == "messages")) && tmpWebVec.size() > 1) {
         if ((tmpWebVec[0] == "destinations") || (tmpWebVec[0] == "topics")) {
-          CONFIGURATION::Instance().replacerMap.emplace(
+          replacerMap.emplace(
               clientsPage,
               std::unique_ptr<TemplateParamReplacer>(
                   new ClientsPageReplacer(clientsPage, tmpWebVec[1], static_cast<int>(upmq::broker::Destination::type(tmpWebVec[2])))));
-          replIt = CONFIGURATION::Instance().replacerMap.find(clientsPage);
+          replIt = replacerMap.find(clientsPage);
         } else if (tmpWebVec[0] == "messages") {
-          CONFIGURATION::Instance().replacerMap.emplace(
+          replacerMap.emplace(
               messagesPage,
               std::unique_ptr<TemplateParamReplacer>(
                   new MessagesPageReplacer(messagesPage, tmpWebVec[1], static_cast<int>(upmq::broker::Destination::type(tmpWebVec[2])))));
-          replIt = CONFIGURATION::Instance().replacerMap.find(messagesPage);
+          replIt = replacerMap.find(messagesPage);
         }
       }
     }
 
-    if (replIt != CONFIGURATION::Instance().replacerMap.end()) {
+    if (replIt != replacerMap.end()) {
       dynamic_cast<IndexPageReplacer *>(indexlIt->second.get())->setChildReplacer(replIt->second.get());
       _htmlResult = dynamic_cast<IndexPageReplacer *>(indexlIt->second.get())->replace();
 
       if ((replIt->first == clientsPage) || (replIt->first == (messagesPage))) {
-        CONFIGURATION::Instance().replacerMap.erase(replIt);
+        replacerMap.erase(replIt);
       }
     }
   } else {
@@ -218,7 +219,7 @@ void WebAdminRequestHandler::onSendMessage(Poco::Net::HTMLForm &form) {
     return;
   }
 
-  std::string destination = tmpWebVec[1];
+  // std::string destination = tmpWebVec[1];
   //  cms::Destination::DestinationType destinationType =
   //  static_cast<cms::Destination::DestinationType>(Storage::_StorageInfo::nameType(tmpWebVec[2])); try {
   //    unique_ptr<cms::ConnectionFactory> connectionFactory(cms::ConnectionFactory::createCMSConnectionFactory(std::string("tcp://127.0.0.1:") +

@@ -78,7 +78,7 @@ class Subscription {
   mutable Storage _storage;
   const Destination &_destination;
   std::unique_ptr<std::atomic_bool> _isRunning;
-  mutable int _currentConsumerNumber;
+  mutable size_t _currentConsumerNumber;
   std::string _consumersT;
 
   unsigned long long _messageCounter;
@@ -115,7 +115,7 @@ class Subscription {
   bool isRunning() const;
 
   //  const Consumer &at(int index) const;
-  const Consumer *at(int index) const;
+  const Consumer *at(size_t index) const;
   const Consumer &byObjectID(const std::string &objectID);
   const Consumer &byClientAndHandlerAndSessionIDs(const std::string &clientID, size_t handlerNum, const std::string &sessionID);
   Storage &storage() const;

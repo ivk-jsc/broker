@@ -478,7 +478,7 @@ const Token &Tokeniser::nextToken() {
   throw TokenException("Found illegal character");
 }
 
-void Tokeniser::returnTokens(unsigned int n) {
+void Tokeniser::returnTokens(size_t n) {
   assert(n <= tokp);
   tokp -= n;
 }

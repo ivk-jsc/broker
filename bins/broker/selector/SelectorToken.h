@@ -88,7 +88,7 @@ bool tokenise(std::string::const_iterator &s, std::string::const_iterator &e, To
 
 class Tokeniser {
   std::vector<Token> tokens;
-  unsigned int tokp;
+  size_t tokp;
 
   std::string::const_iterator inStart;
   std::string::const_iterator inp;
@@ -96,7 +96,7 @@ class Tokeniser {
 
  public:
   Tokeniser(const std::string::const_iterator &s, const std::string::const_iterator &e);
-  void returnTokens(unsigned int n = 1);
+  void returnTokens(size_t n = 1);
   const Token &nextToken();
   std::string remaining();
 };

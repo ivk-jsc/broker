@@ -669,7 +669,7 @@ void MessageDataContainer::moveDataTo(const std::string &uri) const {
     Poco::File fromFile(fromDataFilePath);
     if (fromFile.exists()) {
       fromFile.renameTo(toDataFilePath.toString());
-      data = tempData;
+      data = std::move(tempData);
     }
   }
 }

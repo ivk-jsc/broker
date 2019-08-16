@@ -129,7 +129,7 @@ class AsyncTCPHandler {
   moodycamel::ConcurrentQueue<std::shared_ptr<MessageDataContainer> > outputQueue;
   Poco::FastMutex onWritableLock;
   Poco::FastMutex onReadableLock;
-  char pBuffer[BUFFER_SIZE]{};
+  char pBuffer[BUFFER_SIZE]{};  
   char hbLens[sizeof(uint32_t) + sizeof(uint64_t)]{};
   struct HeaderBodyLens {
     uint32_t headerLen = 0;

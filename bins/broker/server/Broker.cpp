@@ -171,15 +171,20 @@ void Broker::onConnect(const AsyncTCPHandler &tcpHandler, const MessageDataConta
 
   Proto::Connected &connected = outMessage.createConnected(sMessage.objectID());
 
-  connected.mutable_heartbeat()->set_send_timeout(Singleton<Configuration>::Instance().heartbeat().sendTimeout);
-  connected.mutable_heartbeat()->set_recv_timeout(Singleton<Configuration>::Instance().heartbeat().recvTimeout);
-  connected.mutable_server_version()->set_server_major_version(MQ_VERSION_MAJOR);
-  connected.mutable_server_version()->set_server_minor_version(MQ_VERSION_MINOR);
-  connected.mutable_server_version()->set_server_revision_version(MQ_VERSION_REVISION);
-  connected.mutable_server_version()->set_server_vendor_id("upmq(cpp.ver)");
+  Proto::Heartbeat* mutableHeartbeat = connected.mutable_heartbeat();
+  mutableHeartbeat->set_send_timeout(Singleton<Configuration>::Instance().heartbeat().sendTimeout);
+  mutableHeartbeat->set_recv_timeout(Singleton<Configuration>::Instance().heartbeat().recvTimeout);
+
+  Proto::ServerVersion* mutableServerVersion = connected.mutable_server_version();
+  mutableServerVersion->set_server_major_version(MQ_VERSION_MAJOR);
+  mutableServerVersion->set_server_minor_version(MQ_VERSION_MINOR);
+  mutableServerVersion->set_server_revision_version(MQ_VERSION_REVISION);
+  mutableServerVersion->set_server_vendor_id("upmq(cpp.ver)");
+
   Proto::ServerVersion serverVersion;
-  connected.mutable_protocol_version()->set_protocol_major_version(serverVersion.server_major_version());
-  connected.mutable_protocol_version()->set_protocol_minor_version(serverVersion.server_minor_version());
+  Proto::ProtocolVersion* mutableProtocolVersion = connected.mutable_protocol_version();
+  mutableProtocolVersion->set_protocol_major_version(serverVersion.server_major_version());
+  mutableProtocolVersion->set_protocol_minor_version(serverVersion.server_minor_version());
 }
 void Broker::removeTcpConnection(const std::string &clientID, size_t tcpConnectionNum) {
   auto it = _connections.end();

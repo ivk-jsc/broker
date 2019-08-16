@@ -266,16 +266,19 @@ Connection *AsyncTCPHandler::connection() const { return _connection; }
 int AsyncTCPHandler::maxNotAcknowledgedMessages() const { return _maxNotAcknowledgedMessages; }
 void AsyncTCPHandler::storeClientInfo(const MessageDataContainer &sMessage) {
   const Proto::Connect &connect = sMessage.connect();
-  clientVersion.vendorId = connect.client_version().vendor_id();
-  clientVersion.majorVersion = connect.client_version().client_major_version();
-  clientVersion.minorVersion = connect.client_version().client_minor_version();
-  clientVersion.revisionVersion = connect.client_version().client_revision_version();
+  const Proto::ClientVersion &version = connect.client_version();
+  clientVersion.vendorId = version.vendor_id();
+  clientVersion.majorVersion = version.client_major_version();
+  clientVersion.minorVersion = version.client_minor_version();
+  clientVersion.revisionVersion = version.client_revision_version();
 
-  protocolVersion.major = connect.protocol_version().protocol_major_version();
-  protocolVersion.minor = connect.protocol_version().protocol_minor_version();
+  const Proto::ProtocolVersion &protoVersion = connect.protocol_version();
+  protocolVersion.major = protoVersion.protocol_major_version();
+  protocolVersion.minor = protoVersion.protocol_minor_version();
 
-  heartbeat.sendTimeout = connect.heartbeat().send_timeout();
-  heartbeat.recvTimeout = connect.heartbeat().recv_timeout();
+  const Proto::Heartbeat &hb = connect.heartbeat();
+  heartbeat.sendTimeout = hb.send_timeout();
+  heartbeat.recvTimeout = hb.recv_timeout();
 
   _maxNotAcknowledgedMessages = connect.max_not_acknowledged_messages();
 
@@ -394,10 +397,11 @@ AsyncTCPHandler::DataStatus AsyncTCPHandler::fillBody(MessageDataContainer &sMes
   return DataStatus::OK;
 }
 AsyncTCPHandler::DataStatus AsyncTCPHandler::tryMoveBodyByLink(MessageDataContainer &sMessage) {
-  auto it = sMessage.message().property().find(s2s::proto::upmq_data_link);
-  if (it != sMessage.message().property().end() && !it->second.is_null() && !it->second.value_string().empty()) {
-    auto dataSizeItem = sMessage.message().property().find(broker::s2s::proto::upmq_data_size);
-    if (dataSizeItem != sMessage.message().property().end() && !dataSizeItem->second.is_null() && (dataSizeItem->second.value_long() > 0)) {
+  auto &property = sMessage.message().property();
+  auto it = property.find(s2s::proto::upmq_data_link);
+  if (it != property.end() && !it->second.is_null() && !it->second.value_string().empty()) {
+    auto dataSizeItem = property.find(broker::s2s::proto::upmq_data_size);
+    if (dataSizeItem != property.end() && !dataSizeItem->second.is_null() && (dataSizeItem->second.value_long() > 0)) {
       Poco::File dataSrcFile(it->second.value_string());
       Poco::Path dataDestPath = STORAGE_CONFIG.data.bigFilesPath();
       std::string msgID = sMessage.message().message_id();
