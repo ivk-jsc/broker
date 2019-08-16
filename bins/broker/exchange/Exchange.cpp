@@ -290,8 +290,8 @@ std::vector<Destination::Info> Exchange::info() const {
   Poco::Data::Statement select(dbSession());
   Destination::Info destInfo;
   TRY_POCO_DATA_EXCEPTION {
-    select << sql.str(), Poco::Data::Keywords::into(destInfo.id), Poco::Data::Keywords::into(destInfo.name), Poco::Data::Keywords::into(*((int *)&destInfo.type)),
-        Poco::Data::Keywords::into(destInfo.created), Poco::Data::Keywords::range(0, 1);
+    select << sql.str(), Poco::Data::Keywords::into(destInfo.id), Poco::Data::Keywords::into(destInfo.name),
+        Poco::Data::Keywords::into(*((int *)&destInfo.type)), Poco::Data::Keywords::into(destInfo.created), Poco::Data::Keywords::range(0, 1);
     while (!select.done()) {
       select.execute();
       if (!destInfo.name.empty() && !destInfo.id.empty()) {
@@ -311,7 +311,8 @@ std::vector<Destination::Info> Exchange::info() const {
         if (containDigit(destInfo.name)) {
           sz = destInfo.name.size();
         }
-        auto resultInfo = std::find_if(infosGroup[sz].begin(), infosGroup[sz].end(), [&destInfo](const Destination::Info &info) { return info.name == destInfo.name; });
+        auto resultInfo = std::find_if(
+            infosGroup[sz].begin(), infosGroup[sz].end(), [&destInfo](const Destination::Info &info) { return info.name == destInfo.name; });
         if (resultInfo == infosGroup[sz].end()) {
           infosGroup[sz].emplace_back(destInfo);
         }

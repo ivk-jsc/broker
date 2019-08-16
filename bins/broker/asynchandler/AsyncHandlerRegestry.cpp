@@ -22,7 +22,12 @@
 namespace upmq {
 namespace broker {
 AsyncHandlerRegestry::AsyncHandlerRegestry()
-    : _size(static_cast<size_t>(NET_CONFIG.maxConnections)), _thread("AsyncHandlerRegestry"), _connections(_size), _isRunning(false), _current_size(0), _connectionCounter(0) {
+    : _size(static_cast<size_t>(NET_CONFIG.maxConnections)),
+      _thread("AsyncHandlerRegestry"),
+      _connections(_size),
+      _isRunning(false),
+      _current_size(0),
+      _connectionCounter(0) {
   for (int i = 0; i < static_cast<int>(_size); ++i) {
     _freeNums.enqueue(i);
   }

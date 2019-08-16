@@ -77,7 +77,9 @@ std::string MainPageReplacer::brokerLogPriorityReplacer() {
   return log;
 }
 
-std::string MainPageReplacer::brokerStorageDBMSReplacer() { return upmq::broker::Configuration::Storage::typeName(STORAGE_CONFIG.connection.props.dbmsType); }
+std::string MainPageReplacer::brokerStorageDBMSReplacer() {
+  return upmq::broker::Configuration::Storage::typeName(STORAGE_CONFIG.connection.props.dbmsType);
+}
 
 std::string MainPageReplacer::brokerStorageConnectionReplacer() { return STORAGE_CONFIG.connection.value.get(); }
 std::string MainPageReplacer::getH1() const { return "Broker Configuration"; }

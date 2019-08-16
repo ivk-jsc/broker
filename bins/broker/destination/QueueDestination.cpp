@@ -56,7 +56,7 @@ void QueueDestination::ack(const Session &session, const MessageDataContainer &s
   Storage *storage = &_storage;
 
   bool browser = isSubscriptionBrowser(subscriptionName);
-  if (browser) {    
+  if (browser) {
     auto it = _subscriptions.find(subscriptionName);
     if (it.has_value()) {
       storage = &(it.value()->storage());
@@ -95,7 +95,9 @@ void QueueDestination::addSender(const Session &session, const MessageDataContai
   std::unique_ptr<Sender> pSender(new QueueSender(sender.sender_id(), session, *this));
   _senders.addSender(std::move(pSender));
 }
-void QueueDestination::removeSender(const Session &session, const MessageDataContainer &sMessage) { removeSenderByID(session, sMessage.unsender().sender_id()); }
+void QueueDestination::removeSender(const Session &session, const MessageDataContainer &sMessage) {
+  removeSenderByID(session, sMessage.unsender().sender_id());
+}
 void QueueDestination::removeSenders(const Session &session) {
   _senders.closeGroups(session);
   _senders.removeSenders(session);

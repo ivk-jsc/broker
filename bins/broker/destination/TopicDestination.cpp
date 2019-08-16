@@ -23,7 +23,9 @@
 namespace upmq {
 namespace broker {
 
-TopicDestination::TopicDestination(const Exchange &exchange, const std::string &uri, Destination::Type type) : Destination(exchange, uri, type) { loadDurableSubscriptions(); }
+TopicDestination::TopicDestination(const Exchange &exchange, const std::string &uri, Destination::Type type) : Destination(exchange, uri, type) {
+  loadDurableSubscriptions();
+}
 void TopicDestination::save(const Session &session, const MessageDataContainer &sMessage) {
   session.currentDBSession->commitTX();
   session.currentDBSession.reset(nullptr);
@@ -71,7 +73,9 @@ void TopicDestination::abort(const Session &session) {
   _subscriptions.changeForEach([&session](SubscriptionsList::ItemType::KVPair &pair) { pair.second.abort(session); });
 }
 
-Subscription TopicDestination::createSubscription(const std::string &name, const std::string &routingKey, Subscription::Type type) { return Subscription(*this, "", name, routingKey, type); }
+Subscription TopicDestination::createSubscription(const std::string &name, const std::string &routingKey, Subscription::Type type) {
+  return Subscription(*this, "", name, routingKey, type);
+}
 void TopicDestination::begin(const Session &session) {
   Destination::begin(session);
   _subscriptions.changeForEach([&session](SubscriptionsList::ItemType::KVPair &pair) { pair.second.storage().begin(session, pair.second.id()); });
@@ -121,7 +125,7 @@ void TopicDestination::removeSenders(const Session &session) {
     item.second->notify(&session, dc);
   }
 }
-void TopicDestination::removeSenderByID(const Session &session, const std::string &senderID) {  
+void TopicDestination::removeSenderByID(const Session &session, const std::string &senderID) {
   MessageDataContainer messageDataContainer;
   Proto::Unsender &unsender = messageDataContainer.createUnsender(senderID);
   unsender.set_sender_id(senderID);

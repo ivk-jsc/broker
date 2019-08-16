@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #ifndef IVK_UPMQ_ROWPAGEREPLACER_H
 #define IVK_UPMQ_ROWPAGEREPLACER_H
 
@@ -23,8 +23,14 @@ class DestinationRowPageReplacer : public TemplateParamReplacer {
  public:
   enum RowParam { destination = 0, type, subscriptions, creationTime, dataPath, connectionString, messages };
 
-  DestinationRowPageReplacer(
-      std::string pageName, std::string destination, int type, int subscriptions, std::string creationTime, std::string dataPath, std::string connectionString, uint64_t messages);
+  DestinationRowPageReplacer(std::string pageName,
+                             std::string destination,
+                             int type,
+                             int subscriptions,
+                             std::string creationTime,
+                             std::string dataPath,
+                             std::string connectionString,
+                             uint64_t messages);
 
   std::string destinationReplacer();
 

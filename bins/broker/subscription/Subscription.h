@@ -90,7 +90,11 @@ class Subscription {
   std::shared_ptr<std::deque<Consumer::Msg>> _roundRobinCache;
 
  public:
-  Subscription(const upmq::broker::Destination &destination, const std::string &id, std::string name, std::string routingKey, Subscription::Type type = Subscription::Type::SIMPLE);
+  Subscription(const upmq::broker::Destination &destination,
+               const std::string &id,
+               std::string name,
+               std::string routingKey,
+               Subscription::Type type = Subscription::Type::SIMPLE);
   virtual ~Subscription() noexcept;
 
   Subscription(Subscription &&) = default;
@@ -99,7 +103,8 @@ class Subscription {
   void commit(const Session &session);
   void abort(const Session &session);
 
-  void addClient(const Session &session, size_t tcpConnectionNum, const std::string &objectID, const std::string &selector, Subscription::LocalMode localMode);
+  void addClient(
+      const Session &session, size_t tcpConnectionNum, const std::string &objectID, const std::string &selector, Subscription::LocalMode localMode);
   bool removeClient(size_t tcpConnectionNum, const std::string &sessionID);
   void removeClients();
   const std::string &routingKey() const;

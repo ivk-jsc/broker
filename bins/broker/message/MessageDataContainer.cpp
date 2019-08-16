@@ -30,10 +30,16 @@ namespace broker {
 
 MessageDataContainer::MessageDataContainer() : _path(), _headerMessage(nullptr), _dataMessage(nullptr), _withFile(false) {}
 
-MessageDataContainer::MessageDataContainer(std::string path) : _path(std::move(path)), _headerMessage(nullptr), _dataMessage(nullptr), _withFile(false) {}
+MessageDataContainer::MessageDataContainer(std::string path)
+    : _path(std::move(path)), _headerMessage(nullptr), _dataMessage(nullptr), _withFile(false) {}
 
 MessageDataContainer::MessageDataContainer(std::string path, std::string _header, std::string _data, bool useFileLink)
-    : header(std::move(_header)), data(std::move(_data)), _path(std::move(path)), _headerMessage(nullptr), _dataMessage(nullptr), _withFile(useFileLink) {
+    : header(std::move(_header)),
+      data(std::move(_data)),
+      _path(std::move(path)),
+      _headerMessage(nullptr),
+      _dataMessage(nullptr),
+      _withFile(useFileLink) {
   initDataFileStream();
 }
 void MessageDataContainer::initDataFileStream() {
@@ -60,8 +66,12 @@ void MessageDataContainer::initDataFileStream() {
     }
   }
 }
-MessageDataContainer::MessageDataContainer(ProtoMessage *headerProtoMessage) : _headerMessage(headerProtoMessage), _dataMessage(nullptr), _withFile(false) { data.clear(); }
-MessageDataContainer::MessageDataContainer(ProtoMessage *headerProtoMessage, Body *dataBody) : _headerMessage(headerProtoMessage), _dataMessage(dataBody), _withFile(false) {
+MessageDataContainer::MessageDataContainer(ProtoMessage *headerProtoMessage)
+    : _headerMessage(headerProtoMessage), _dataMessage(nullptr), _withFile(false) {
+  data.clear();
+}
+MessageDataContainer::MessageDataContainer(ProtoMessage *headerProtoMessage, Body *dataBody)
+    : _headerMessage(headerProtoMessage), _dataMessage(dataBody), _withFile(false) {
   header = _headerMessage->SerializeAsString();
   data = _dataMessage->SerializeAsString();
 }
@@ -112,8 +122,9 @@ bool MessageDataContainer::isAck() const { return (type() == ProtoMessage::kAck)
 bool MessageDataContainer::isMessage() const { return (type() == ProtoMessage::kMessage); }
 bool MessageDataContainer::isBrowser() const { return (type() == ProtoMessage::kBrowser); }
 bool MessageDataContainer::isForServer() const {
-  return (isConnect() || isClientInfo() || isDisconnect() || isSession() || isUnsession() || isDestination() || isUndestination() || isSender() || isUnsender() || isSubscription() || isSubscribe() ||
-          isUnsubscribe() || isUnsubscription() || isBegin() || isCommit() || isAbort() || isAck() || isMessage() || isBrowser() || isPing());
+  return (isConnect() || isClientInfo() || isDisconnect() || isSession() || isUnsession() || isDestination() || isUndestination() || isSender() ||
+          isUnsender() || isSubscription() || isSubscribe() || isUnsubscribe() || isUnsubscription() || isBegin() || isCommit() || isAbort() ||
+          isAck() || isMessage() || isBrowser() || isPing());
 }
 bool MessageDataContainer::isNotForServer() const { return !isForServer(); }
 std::string MessageDataContainer::typeName() const {

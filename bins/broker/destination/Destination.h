@@ -53,7 +53,13 @@ class Destination {
 
   struct Info {
     Info(std::string uri, std::string id, std::string name, Type type, std::string created, std::string dataPath, uint64_t messages)
-        : uri(std::move(uri)), id(std::move(id)), name(std::move(name)), type(type), created(std::move(created)), dataPath(std::move(dataPath)), messages(messages) {}
+        : uri(std::move(uri)),
+          id(std::move(id)),
+          name(std::move(name)),
+          type(type),
+          created(std::move(created)),
+          dataPath(std::move(dataPath)),
+          messages(messages) {}
     Info() = default;
     Info(Info &&) = default;
     Info(const Info &) = default;
@@ -75,7 +81,7 @@ class Destination {
   std::string _id;
   std::string _uri;
   std::string _name;
-  SubscriptionsList _subscriptions;  
+  SubscriptionsList _subscriptions;
   mutable Storage _storage;
   Type _type;
   mutable upmq::MRWLock _routingLock;
@@ -94,12 +100,13 @@ class Destination {
   std::unique_ptr<Poco::Timestamp> _created{new Poco::Timestamp};
   Subscription::ConsumerMode _consumerMode{Subscription::ConsumerMode::ROUND_ROBIN};
 
- private:  
+ private:
   void addS2Subs(const std::string &sesionID, const std::string &subsID);
   void remS2Subs(const std::string &sessionID, const std::string &subsID);
   void createSubscriptionsTable(storage::DBMSSession &dbSession);
   static std::string getStoredDestinationID(const Exchange &exchange, const std::string &name, Destination::Type type);
-  static void saveDestinationId(const std::string &id, storage::DBMSSession &dbSession, const Exchange &exchange, const std::string &name, Destination::Type type);
+  static void saveDestinationId(
+      const std::string &id, storage::DBMSSession &dbSession, const Exchange &exchange, const std::string &name, Destination::Type type);
 
  public:
   Destination(const Exchange &exchange, const std::string &uri, Type type);

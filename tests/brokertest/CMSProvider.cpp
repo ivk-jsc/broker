@@ -359,7 +359,8 @@ cms::MessageConsumer *CMSProvider::getConsumer(const std::string &destinationNam
 
     if (this->consumer == nullptr) {
       if (this->durable && this->topic) {
-        this->consumer.reset(this->getSession()->createDurableConsumer(dynamic_cast<cms::Topic *>(this->getDestination(destinationName)), this->subscription, ""));
+        this->consumer.reset(
+            this->getSession()->createDurableConsumer(dynamic_cast<cms::Topic *>(this->getDestination(destinationName)), this->subscription, ""));
       } else {
         this->consumer.reset(this->getSession()->createConsumer(this->getDestination(destinationName)));
       }

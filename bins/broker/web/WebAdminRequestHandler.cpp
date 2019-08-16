@@ -108,11 +108,15 @@ Poco::Net::HTTPResponse::HTTPStatus WebAdminRequestHandler::onGet() {
       } else if (((tmpWebVec[0] == "destinations") || (tmpWebVec[0] == "messages")) && tmpWebVec.size() > 1) {
         if ((tmpWebVec[0] == "destinations") || (tmpWebVec[0] == "topics")) {
           CONFIGURATION::Instance().replacerMap.emplace(
-              clientsPage, std::unique_ptr<TemplateParamReplacer>(new ClientsPageReplacer(clientsPage, tmpWebVec[1], static_cast<int>(upmq::broker::Destination::type(tmpWebVec[2])))));
+              clientsPage,
+              std::unique_ptr<TemplateParamReplacer>(
+                  new ClientsPageReplacer(clientsPage, tmpWebVec[1], static_cast<int>(upmq::broker::Destination::type(tmpWebVec[2])))));
           replIt = CONFIGURATION::Instance().replacerMap.find(clientsPage);
         } else if (tmpWebVec[0] == "messages") {
           CONFIGURATION::Instance().replacerMap.emplace(
-              messagesPage, std::unique_ptr<TemplateParamReplacer>(new MessagesPageReplacer(messagesPage, tmpWebVec[1], static_cast<int>(upmq::broker::Destination::type(tmpWebVec[2])))));
+              messagesPage,
+              std::unique_ptr<TemplateParamReplacer>(
+                  new MessagesPageReplacer(messagesPage, tmpWebVec[1], static_cast<int>(upmq::broker::Destination::type(tmpWebVec[2])))));
           replIt = CONFIGURATION::Instance().replacerMap.find(messagesPage);
         }
       }
@@ -215,10 +219,10 @@ void WebAdminRequestHandler::onSendMessage(Poco::Net::HTMLForm &form) {
   }
 
   std::string destination = tmpWebVec[1];
-  //  cms::Destination::DestinationType destinationType = static_cast<cms::Destination::DestinationType>(Storage::_StorageInfo::nameType(tmpWebVec[2]));
-  //  try {
-  //    unique_ptr<cms::ConnectionFactory> connectionFactory(cms::ConnectionFactory::createCMSConnectionFactory(std::string("tcp://127.0.0.1:") + std::to_string((long long) brokerCFG.port)));
-  //    unique_ptr<cms::Connection> connection(connectionFactory->createConnection());
+  //  cms::Destination::DestinationType destinationType =
+  //  static_cast<cms::Destination::DestinationType>(Storage::_StorageInfo::nameType(tmpWebVec[2])); try {
+  //    unique_ptr<cms::ConnectionFactory> connectionFactory(cms::ConnectionFactory::createCMSConnectionFactory(std::string("tcp://127.0.0.1:") +
+  //    std::to_string((long long) brokerCFG.port))); unique_ptr<cms::Connection> connection(connectionFactory->createConnection());
   //    connection->start();
   //    unique_ptr<cms::Session> session(connection->createSession(cms::Session::AUTO_ACKNOWLEDGE));
   //    unique_ptr<cms::Destination> destinationTo(getDestination(session.get(), destination, destinationType));

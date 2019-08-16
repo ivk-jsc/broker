@@ -102,7 +102,9 @@ std::string Destination::getStoredDestinationID(const Exchange &exchange, const 
   sql << "select id from " << exchange.destinationsT() << " where name = " << nextParam() << " and type = " << static_cast<int>(type) << ";";
 
   std::string tempId;
-  TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::useRef(name), Poco::Data::Keywords::into(tempId), Poco::Data::Keywords::now; }
+  TRY_POCO_DATA_EXCEPTION {
+    dbSession << sql.str(), Poco::Data::Keywords::useRef(name), Poco::Data::Keywords::into(tempId), Poco::Data::Keywords::now;
+  }
   CATCH_POCO_DATA_EXCEPTION_NO_INVALID_SQL("can't init destination", sql.str(), ;, ERROR_DESTINATION)
 
   if (tempId.empty()) {
@@ -114,7 +116,8 @@ std::string Destination::getStoredDestinationID(const Exchange &exchange, const 
 
   return id;
 }
-void Destination::saveDestinationId(const std::string &id, storage::DBMSSession &dbSession, const Exchange &exchange, const std::string &name, Destination::Type type) {
+void Destination::saveDestinationId(
+    const std::string &id, storage::DBMSSession &dbSession, const Exchange &exchange, const std::string &name, Destination::Type type) {
   NextBindParam nextParam;
 
   std::stringstream sql;
@@ -250,7 +253,9 @@ Subscription::ConsumerMode Destination::makeConsumerMode(const std::string &uri)
   Poco::URI tURI(uri);
   Poco::URI::QueryParameters parameters = tURI.getQueryParameters();
   if (!parameters.empty()) {
-    auto it = std::find_if(parameters.begin(), parameters.end(), [](const Poco::URI::QueryParameters::value_type &pair) { return (pair.first == "subs-mode" && pair.second == "exclusive"); });
+    auto it = std::find_if(parameters.begin(), parameters.end(), [](const Poco::URI::QueryParameters::value_type &pair) {
+      return (pair.first == "subs-mode" && pair.second == "exclusive");
+    });
     if (it != parameters.end()) {
       return Subscription::ConsumerMode::EXCLUSIVE;
     }
@@ -339,7 +344,8 @@ void Destination::removeMessageOrGroup(const Session &session, Storage &storage,
     storage.removeMessage(msg.tuple.get<message::field_message_id.position>(), *session.currentDBSession);
   }
 }
-void Destination::doAck(const Session &session, const MessageDataContainer &sMessage, Storage &storage, bool browser, const std::vector<MessageInfo> &messages) {
+void Destination::doAck(
+    const Session &session, const MessageDataContainer &sMessage, Storage &storage, bool browser, const std::vector<MessageInfo> &messages) {
   message::GroupStatus groupStatus = message::NOT_IN_GROUP;
   for (const auto &msg : messages) {
     groupStatus = getMsgGroupStatus(msg);
@@ -508,7 +514,8 @@ void Destination::loadDurableSubscriptions() {
   storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
   TRY_POCO_DATA_EXCEPTION {
     Poco::Data::Statement select(dbSession());
-    select << sql.str(), Poco::Data::Keywords::into(id), Poco::Data::Keywords::into(name), Poco::Data::Keywords::into(routingKey), Poco::Data::Keywords::range(0, 1);
+    select << sql.str(), Poco::Data::Keywords::into(id), Poco::Data::Keywords::into(name), Poco::Data::Keywords::into(routingKey),
+        Poco::Data::Keywords::range(0, 1);
     while (!select.done()) {
       select.execute();
       if (!id.empty() && !name.empty()) {

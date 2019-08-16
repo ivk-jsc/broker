@@ -147,7 +147,8 @@ TEST_F(SelectorTest, testInvalidSelector) { assertInvalidSelector("=TEST 'test'"
 void SelectorTest::assertInvalidSelector(const std::string &selector) {
   std::unique_ptr<cms::Session> session(cmsProvider->getConnection()->createSession());
 
-  EXPECT_THROW(std::unique_ptr<cms::MessageConsumer> consumer(session->createConsumer(cmsProvider->getDestination(), selector)), cms::InvalidSelectorException)
+  EXPECT_THROW(std::unique_ptr<cms::MessageConsumer> consumer(session->createConsumer(cmsProvider->getDestination(), selector)),
+               cms::InvalidSelectorException)
       << "should throw InvalidSelectorException";
 }
 

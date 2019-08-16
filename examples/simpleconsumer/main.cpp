@@ -24,7 +24,8 @@
 #include <cms/Message.h>
 #include <cms/Utils.h>
 
-using perf_clock = std::conditional<std::chrono::high_resolution_clock::is_steady, std::chrono::high_resolution_clock, std::chrono::steady_clock>::type;
+using perf_clock =
+    std::conditional<std::chrono::high_resolution_clock::is_steady, std::chrono::high_resolution_clock, std::chrono::steady_clock>::type;
 using floating_seconds = std::chrono::duration<double>;
 
 #define OPTPARSE_IMPLEMENTATION
@@ -36,8 +37,8 @@ void usage(const struct optparse_long *opt_option, size_t count) {
   std::cout << "simpleconsumer usage : " << std::endl;
   for (size_t i = 0; i < count; ++i) {
     std::cout << "\t"
-              << "--" << std::left << std::setw(16) << opt_option[i].longname << " -" << (char)opt_option[i].shortname << " \t" << opt_option[i].description << " "
-              << (opt_option[i].need_arg ? " (need argument)" : "") << std::endl;
+              << "--" << std::left << std::setw(16) << opt_option[i].longname << " -" << (char)opt_option[i].shortname << " \t"
+              << opt_option[i].description << " " << (opt_option[i].need_arg ? " (need argument)" : "") << std::endl;
   }
 }
 
@@ -136,7 +137,8 @@ class SimpleConsumer : public cms::ExceptionListener {
           const auto *textMessage = dynamic_cast<const cms::TextMessage *>(message);
           if (textMessage != nullptr) {
             if ((i == 1 || (i % 1000 == 0)) && (outFormat.empty() || outFormat != "json")) {
-              std::cout << "recv (" << i << ") <= " << textMessage->getText() << " elapsed [" << floating_seconds(perf_clock::now() - t0).count() << "]" << '\n';
+              std::cout << "recv (" << i << ") <= " << textMessage->getText() << " elapsed [" << floating_seconds(perf_clock::now() - t0).count()
+                        << "]" << '\n';
             } else if (outFormat == "json") {
               std::cout << textMessage->getText() << std::endl;
               std::cout << "json => " << std::endl;

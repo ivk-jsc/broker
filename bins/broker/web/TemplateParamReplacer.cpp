@@ -25,7 +25,9 @@ TemplateParamReplacer::TemplateParamReplacer(std::string pageName) : _pageName(s
 
 TemplateParamReplacer::~TemplateParamReplacer() {}
 
-void TemplateParamReplacer::addReplacer(const std::string &param, TemplateParamReplacer::Callback callback) { _handlerMap.insert(make_pair(param, callback)); }
+void TemplateParamReplacer::addReplacer(const std::string &param, TemplateParamReplacer::Callback callback) {
+  _handlerMap.insert(make_pair(param, callback));
+}
 
 std::string TemplateParamReplacer::operator[](const std::string &param) { return (this->*_handlerMap[param])(); }
 

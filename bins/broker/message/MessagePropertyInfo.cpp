@@ -35,7 +35,21 @@ MessagePropertyInfo::MessagePropertyInfo(const std::string &messageID,
                                          const Poco::Data::BLOB &valueBytes,
                                          const Poco::Data::BLOB &valueObject,
                                          bool isNull)
-    : tuple(messageID, propertyName, propertyType, valueString, valueChar, valueBool, valueByte, valueShort, valueInt, valueLong, valueFloat, valueDouble, valueBytes, valueObject, isNull) {}
+    : tuple(messageID,
+            propertyName,
+            propertyType,
+            valueString,
+            valueChar,
+            valueBool,
+            valueByte,
+            valueShort,
+            valueInt,
+            valueLong,
+            valueFloat,
+            valueDouble,
+            valueBytes,
+            valueObject,
+            isNull) {}
 
 MessagePropertyInfo::MessagePropertyInfo(const std::string &messageID) { tuple.set<message::field_prop_message_id.position>(messageID); }
 MessagePropertyInfo::MessagePropertyInfo(const MessagePropertyInfo::MsgTuple &tuple) : tuple(tuple) {}

@@ -50,7 +50,12 @@ std::string Configuration::Storage::typeName(storage::DBMSType dbmsType) {
   }
 }
 std::string Configuration::Storage::toString() const {
-  return std::string("\n- * \t\tconnection\t=> ").append(connection.toString()).append("\n- * \t\tdata\t=>").append(data.toString()).append("\n- * \t\tjournal\t: ").append(_messageJournal);
+  return std::string("\n- * \t\tconnection\t=> ")
+      .append(connection.toString())
+      .append("\n- * \t\tdata\t=>")
+      .append(data.toString())
+      .append("\n- * \t\tjournal\t: ")
+      .append(_messageJournal);
 }
 const std::string &Configuration::Storage::messageJournal() const { return _messageJournal; }
 void Configuration::Storage::setMessageJournal(const std::string &brokerName) { _messageJournal = "\"" + brokerName + "_journal\""; }
@@ -104,7 +109,9 @@ std::string Configuration::toString() const {
       .append("\n- * \tstorage\t\t\t=> ")
       .append(_storage.toString());
 }
-std::string Configuration::Http::toString() const { return std::string("\n- * \t\tport\t\t: ").append(std::to_string(port)).append("\n- * \t\tsite\t\t: [").append(site.toString()).append("]"); }
+std::string Configuration::Http::toString() const {
+  return std::string("\n- * \t\tport\t\t: ").append(std::to_string(port)).append("\n- * \t\tsite\t\t: [").append(site.toString()).append("]");
+}
 std::string Configuration::HeartBeat::toString() const { return std::to_string(sendTimeout).append(".").append(std::to_string(recvTimeout)); }
 std::string Configuration::Net::toString() const { return std::string("\n- * \t\tmax-connections\t: ").append(std::to_string(maxConnections)); }
 std::string Configuration::Threads::toString() const {
@@ -159,10 +166,20 @@ void Configuration::Storage::Connection::Value::set(const std::string &connectio
   std::for_each(options.begin(), options.end(), [this, &sep](const std::string &item) { _v.append(Poco::trim(item) + sep); });
 }
 std::string Configuration::Storage::Connection::toString() const {
-  return std::string("\n- * \t\tproperties\t=>").append(props.toString()).append("\n- * \t\t\tvalue\t=>").append(value.toString()).append("\n- * \t\t\tpath\t: [").append(path.toString()).append("]");
+  return std::string("\n- * \t\tproperties\t=>")
+      .append(props.toString())
+      .append("\n- * \t\t\tvalue\t=>")
+      .append(value.toString())
+      .append("\n- * \t\t\tpath\t: [")
+      .append(path.toString())
+      .append("]");
 }
 std::string Configuration::Storage::Data::toString() const {
-  return std::string("\n- * \t\t\tpath\t\t: [").append(_path.toString()).append("]\n- * \t\t\tbig files\t: [").append(_bigFilesPath.toString()).append("]");
+  return std::string("\n- * \t\t\tpath\t\t: [")
+      .append(_path.toString())
+      .append("]\n- * \t\t\tbig files\t: [")
+      .append(_bigFilesPath.toString())
+      .append("]");
 }
 void Configuration::Storage::Data::set(const std::string &path) {
   Poco::Path storageDataPath(path);

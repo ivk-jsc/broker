@@ -31,7 +31,8 @@ std::string ClientsPageReplacer::rowsReplacer() {
   for (const auto &dest : infos) {
     if ((dest.name == _destination) && (_type == static_cast<int>(dest.type))) {
       for (const auto &subs : dest.subscriptions) {
-        ClientsRowPageReplacer rowPageReplacer("clients/row.html", subs.id, static_cast<int>(subs.type), static_cast<int>(subs.messages), subs.name, static_cast<int>(subs.running), "");
+        ClientsRowPageReplacer rowPageReplacer(
+            "clients/row.html", subs.id, static_cast<int>(subs.type), static_cast<int>(subs.messages), subs.name, static_cast<int>(subs.running), "");
         ss << rowPageReplacer.replace();
       }
     }

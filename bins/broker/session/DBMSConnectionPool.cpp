@@ -48,7 +48,8 @@ namespace upmq {
 namespace broker {
 namespace storage {
 
-DBMSConnectionPool::DBMSConnectionPool() : _count(STORAGE_CONFIG.connection.props.connectionPool), _dbmsString(STORAGE_CONFIG.connection.value.get()) {
+DBMSConnectionPool::DBMSConnectionPool()
+    : _count(STORAGE_CONFIG.connection.props.connectionPool), _dbmsString(STORAGE_CONFIG.connection.value.get()) {
   TRY_POCO_DATA_EXCEPTION {
     std::string connector;
     DBMSType dbmsType = STORAGE_CONFIG.connection.props.dbmsType;
@@ -310,7 +311,9 @@ std::shared_ptr<Poco::Data::Session> DBMSConnectionPool::makeSession(DBMSType db
 }
 
 DBMSSession DBMSConnectionPool::dbmsSession() const { return DBMSSession(dbmsConnection(), const_cast<DBMSConnectionPool &>(*this)); }
-std::unique_ptr<DBMSSession> DBMSConnectionPool::dbmsSessionPtr() const { return std::make_unique<DBMSSession>(dbmsConnection(), const_cast<DBMSConnectionPool &>(*this)); }
+std::unique_ptr<DBMSSession> DBMSConnectionPool::dbmsSessionPtr() const {
+  return std::make_unique<DBMSSession>(dbmsConnection(), const_cast<DBMSConnectionPool &>(*this));
+}
 }  // namespace storage
 }  // namespace broker
 }  // namespace upmq

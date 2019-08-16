@@ -27,7 +27,11 @@ namespace upmq {
 namespace broker {
 
 Connection::Connection(const std::string &clientID)
-    : _clientID(clientID), _clientIDWasSet(!clientID.empty()), _sessions(SESSIONS_CONFIG.maxCount), _sessionsT("\"" + clientID + "_sessions\""), _tcpT("\"" + clientID + "_tcp_connections\"") {
+    : _clientID(clientID),
+      _clientIDWasSet(!clientID.empty()),
+      _sessions(SESSIONS_CONFIG.maxCount),
+      _sessionsT("\"" + clientID + "_sessions\""),
+      _tcpT("\"" + clientID + "_tcp_connections\"") {
   std::stringstream sql;
   storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
   dbSession.beginTX(_clientID);
@@ -224,8 +228,9 @@ void Connection::removeConsumers(const std::string &destinationID, const std::st
     ids.reserve(_sessions.size());
     _sessions.applyForEach([&ids](const SessionsList::ItemType::KVPair &pair) { ids.emplace_back(pair.second->id()); });
   }
-  std::for_each(
-      ids.begin(), ids.end(), [&destinationID, &subscriptionID, &tcpNum](const std::string &sessionId) { EXCHANGE::Instance().removeConsumer(sessionId, destinationID, subscriptionID, tcpNum); });
+  std::for_each(ids.begin(), ids.end(), [&destinationID, &subscriptionID, &tcpNum](const std::string &sessionId) {
+    EXCHANGE::Instance().removeConsumer(sessionId, destinationID, subscriptionID, tcpNum);
+  });
 }
 void Connection::processAcknowledge(const MessageDataContainer &sMessage) {
   auto it = _sessions.find(sMessage.ack().session_id());

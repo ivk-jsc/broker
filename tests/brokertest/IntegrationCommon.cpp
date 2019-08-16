@@ -23,7 +23,8 @@ const unsigned int IntegrationCommon::defaultMsgCount = 5;
 bool IntegrationCommon::debug = false;
 
 ////////////////////////////////////////////////////////////////////////////////
-IntegrationCommon::IntegrationCommon() : urlCommon("tcp://127.0.0.1:"), stompURL(urlCommon + "12345?transport.trace=false"), openwireURL(urlCommon + "12345?transport.trace=false") {}
+IntegrationCommon::IntegrationCommon()
+    : urlCommon("tcp://127.0.0.1:"), stompURL(urlCommon + "12345?transport.trace=false"), openwireURL(urlCommon + "12345?transport.trace=false") {}
 
 ////////////////////////////////////////////////////////////////////////////////
 IntegrationCommon &IntegrationCommon::getInstance() {

@@ -36,7 +36,8 @@ using upmq::broker::storage::DBMSConnectionPool;
 namespace upmq {
 namespace broker {
 
-Storage::Storage(const std::string &messageTableID) : _messageTableID("\"" + messageTableID + "\""), _propertyTableID("\"" + messageTableID + "_property" + "\""), _parent(nullptr) {
+Storage::Storage(const std::string &messageTableID)
+    : _messageTableID("\"" + messageTableID + "\""), _propertyTableID("\"" + messageTableID + "_property" + "\""), _parent(nullptr) {
   std::string mainTsql = generateSQLMainTable(messageTableID);
   auto mainTXsqlIndexes = generateSQLMainTableIndexes(messageTableID);
   TRY_POCO_DATA_EXCEPTION {
@@ -157,7 +158,8 @@ void Storage::removeMessagesBySession(const upmq::broker::Session &session) {
     while (!select.done()) {
       select.execute();
       if (!messageInfo.tuple.get<message::field_message_id.position>().empty()) {
-        if (!messageInfo.tuple.get<message::field_group_id.position>().isNull() && !messageInfo.tuple.get<message::field_group_id.position>().value().empty()) {
+        if (!messageInfo.tuple.get<message::field_group_id.position>().isNull() &&
+            !messageInfo.tuple.get<message::field_group_id.position>().value().empty()) {
           if (messageInfo.tuple.get<message::field_last_in_group.position>()) {
             removeGroupMessage(messageInfo.tuple.get<message::field_group_id.position>().value(), session);
           }
@@ -264,7 +266,8 @@ int Storage::getSubscribersCount(storage::DBMSSession &dbSession, const std::str
 }
 void Storage::updateSubscribersCount(storage::DBMSSession &dbSession, const std::string &messageID) {
   std::stringstream sql;
-  sql << "update " << STORAGE_CONFIG.messageJournal() << " set subscribers_count = subscribers_count - 1 where message_id =\'" << messageID << "\';" << non_std_endl;
+  sql << "update " << STORAGE_CONFIG.messageJournal() << " set subscribers_count = subscribers_count - 1 where message_id =\'" << messageID << "\';"
+      << non_std_endl;
   TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::now; }
   CATCH_POCO_DATA_EXCEPTION_PURE("can't erase message", sql.str(), ERROR_UNKNOWN)
 }
@@ -355,10 +358,11 @@ void Storage::saveMessageHeader(const upmq::broker::Session &session, const Mess
   sql << "," << nextParam() << ");";
 
   // Save header
-  dbs << sql.str(), Poco::Data::Keywords::use(messageID), Poco::Data::Keywords::use(priority), Poco::Data::Keywords::use(persistent), Poco::Data::Keywords::use(correlationID),
-      Poco::Data::Keywords::use(reply_to), Poco::Data::Keywords::use(type), Poco::Data::Keywords::use(timestamp), Poco::Data::Keywords::use(ttl), Poco::Data::Keywords::use(expiration),
-      Poco::Data::Keywords::use(bodyType), Poco::Data::Keywords::useRef(sMessage.clientID), Poco::Data::Keywords::useRef(message.group_id()), Poco::Data::Keywords::use(groupSeq),
-      Poco::Data::Keywords::now;
+  dbs << sql.str(), Poco::Data::Keywords::use(messageID), Poco::Data::Keywords::use(priority), Poco::Data::Keywords::use(persistent),
+      Poco::Data::Keywords::use(correlationID), Poco::Data::Keywords::use(reply_to), Poco::Data::Keywords::use(type),
+      Poco::Data::Keywords::use(timestamp), Poco::Data::Keywords::use(ttl), Poco::Data::Keywords::use(expiration),
+      Poco::Data::Keywords::use(bodyType), Poco::Data::Keywords::useRef(sMessage.clientID), Poco::Data::Keywords::useRef(message.group_id()),
+      Poco::Data::Keywords::use(groupSeq), Poco::Data::Keywords::now;
 }
 void Storage::save(const upmq::broker::Session &session, const MessageDataContainer &sMessage, storage::DBMSSession &dbSession) {
   const Proto::Message &message = sMessage.message();
@@ -464,11 +468,13 @@ std::shared_ptr<MessageDataContainer> Storage::get(const Consumer &consumer, boo
       TRY_POCO_DATA_EXCEPTION {
         Poco::Data::Statement select(dbSession());
 
-        select << sql.str(), Poco::Data::Keywords::into(tempMsg.num), Poco::Data::Keywords::into(tempMsg.messageId), Poco::Data::Keywords::into(tempMsg.priority),
-            Poco::Data::Keywords::into(tempMsg.persistent), Poco::Data::Keywords::into(tempMsg.correlationID), Poco::Data::Keywords::into(tempMsg.replyTo), Poco::Data::Keywords::into(tempMsg.type),
-            Poco::Data::Keywords::into(tempMsg.timestamp), Poco::Data::Keywords::into(tempMsg.ttl), Poco::Data::Keywords::into(tempMsg.expiration), Poco::Data::Keywords::into(tempMsg.screated),
-            Poco::Data::Keywords::into(tempMsg.bodyType), Poco::Data::Keywords::into(tempMsg.deliveryCount), Poco::Data::Keywords::into(tempMsg.groupID), Poco::Data::Keywords::into(tempMsg.groupSeq),
-            Poco::Data::Keywords::range(0, 1);
+        select << sql.str(), Poco::Data::Keywords::into(tempMsg.num), Poco::Data::Keywords::into(tempMsg.messageId),
+            Poco::Data::Keywords::into(tempMsg.priority), Poco::Data::Keywords::into(tempMsg.persistent),
+            Poco::Data::Keywords::into(tempMsg.correlationID), Poco::Data::Keywords::into(tempMsg.replyTo), Poco::Data::Keywords::into(tempMsg.type),
+            Poco::Data::Keywords::into(tempMsg.timestamp), Poco::Data::Keywords::into(tempMsg.ttl), Poco::Data::Keywords::into(tempMsg.expiration),
+            Poco::Data::Keywords::into(tempMsg.screated), Poco::Data::Keywords::into(tempMsg.bodyType),
+            Poco::Data::Keywords::into(tempMsg.deliveryCount), Poco::Data::Keywords::into(tempMsg.groupID),
+            Poco::Data::Keywords::into(tempMsg.groupSeq), Poco::Data::Keywords::range(0, 1);
 
         while (!select.done()) {
           tempMsg.reset();
@@ -937,9 +943,11 @@ void Storage::copyTo(Storage &storage, const Consumer &consumer) {
       auto &session = dbSession();
       Poco::Data::Statement select(session);
       Poco::Data::Statement insert(session);
-      select << sql.str(), Poco::Data::Keywords::into(messageID), Poco::Data::Keywords::into(priority), Poco::Data::Keywords::into(persistent), Poco::Data::Keywords::into(correlationID),
-          Poco::Data::Keywords::into(replyTo), Poco::Data::Keywords::into(type), Poco::Data::Keywords::into(clientTimestamp), Poco::Data::Keywords::into(ttl), Poco::Data::Keywords::into(expiration),
-          Poco::Data::Keywords::into(bodyType), Poco::Data::Keywords::into(clientID), Poco::Data::Keywords::into(groupID), Poco::Data::Keywords::into(groupSeq), Poco::Data::Keywords::range(0, 1);
+      select << sql.str(), Poco::Data::Keywords::into(messageID), Poco::Data::Keywords::into(priority), Poco::Data::Keywords::into(persistent),
+          Poco::Data::Keywords::into(correlationID), Poco::Data::Keywords::into(replyTo), Poco::Data::Keywords::into(type),
+          Poco::Data::Keywords::into(clientTimestamp), Poco::Data::Keywords::into(ttl), Poco::Data::Keywords::into(expiration),
+          Poco::Data::Keywords::into(bodyType), Poco::Data::Keywords::into(clientID), Poco::Data::Keywords::into(groupID),
+          Poco::Data::Keywords::into(groupSeq), Poco::Data::Keywords::range(0, 1);
       NextBindParam nextParam;
       while (!select.done()) {
         nextParam.reset();
@@ -966,9 +974,11 @@ void Storage::copyTo(Storage &storage, const Consumer &consumer) {
             sql << "," << nextParam();
             sql << "," << nextParam();
             sql << "," << nextParam() << ");";
-            insert << sql.str(), Poco::Data::Keywords::use(messageID), Poco::Data::Keywords::use(priority), Poco::Data::Keywords::use(persistent), Poco::Data::Keywords::use(correlationID),
-                Poco::Data::Keywords::use(replyTo), Poco::Data::Keywords::use(type), Poco::Data::Keywords::use(clientTimestamp), Poco::Data::Keywords::use(ttl), Poco::Data::Keywords::use(expiration),
-                Poco::Data::Keywords::use(bodyType), Poco::Data::Keywords::use(clientID), Poco::Data::Keywords::use(groupID), Poco::Data::Keywords::use(groupSeq), Poco::Data::Keywords::now;
+            insert << sql.str(), Poco::Data::Keywords::use(messageID), Poco::Data::Keywords::use(priority), Poco::Data::Keywords::use(persistent),
+                Poco::Data::Keywords::use(correlationID), Poco::Data::Keywords::use(replyTo), Poco::Data::Keywords::use(type),
+                Poco::Data::Keywords::use(clientTimestamp), Poco::Data::Keywords::use(ttl), Poco::Data::Keywords::use(expiration),
+                Poco::Data::Keywords::use(bodyType), Poco::Data::Keywords::use(clientID), Poco::Data::Keywords::use(groupID),
+                Poco::Data::Keywords::use(groupSeq), Poco::Data::Keywords::now;
           }
         }
       }
@@ -1083,7 +1093,8 @@ void Storage::fillProperties(Proto::Message &message) {
             pmap[name].set_value_bytes(messagePropertyInfo.valueBytes().rawContent(), messagePropertyInfo.valueBytes().size());
             break;
           case MessagePropertyInfo::Field::value_object:
-            pmap[name].set_value_object(reinterpret_cast<const char *>(messagePropertyInfo.valueObject().rawContent()), messagePropertyInfo.valueObject().size());
+            pmap[name].set_value_object(reinterpret_cast<const char *>(messagePropertyInfo.valueObject().rawContent()),
+                                        messagePropertyInfo.valueObject().size());
             break;
           default:
             pmap[name].set_is_null(true);

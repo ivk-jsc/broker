@@ -17,7 +17,8 @@
 #include "IndexPageReplacer.h"
 #include "Defines.h"
 
-IndexPageReplacer::IndexPageReplacer(std::string pageName, TemplateParamReplacer *templateReplacer) : TemplateParamReplacer(std::move(pageName)), _templateReplacer(templateReplacer) {
+IndexPageReplacer::IndexPageReplacer(std::string pageName, TemplateParamReplacer *templateReplacer)
+    : TemplateParamReplacer(std::move(pageName)), _templateReplacer(templateReplacer) {
   addReplacer(MakeStringify(indexH1), (TemplateParamReplacer::Callback)&IndexPageReplacer::h1Replacer);
   addReplacer(MakeStringify(indexContent), (TemplateParamReplacer::Callback)&IndexPageReplacer::contentReplacer);
 }

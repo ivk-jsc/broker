@@ -102,8 +102,9 @@ TEST_F(TransactionTest, testSendRollback) {
   outbound2->setReadable();
 
   EXPECT_EQ(outbound1->getText(), inbound1->getText());
-  EXPECT_EQ(outbound2->getText(), inbound2->getText()) << "invalid order : ou1-id[" << outbound1->getCMSMessageID() << "] : in1-id[" << inbound1->getCMSMessageID() << "]\n"
-                                                       << "invalid order : ou2-id[" << outbound2->getCMSMessageID() << "] : in2-id[" << inbound2->getCMSMessageID() << "]";
+  EXPECT_EQ(outbound2->getText(), inbound2->getText())
+      << "invalid order : ou1-id[" << outbound1->getCMSMessageID() << "] : in1-id[" << inbound1->getCMSMessageID() << "]\n"
+      << "invalid order : ou2-id[" << outbound2->getCMSMessageID() << "] : in2-id[" << inbound2->getCMSMessageID() << "]";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -202,7 +203,8 @@ TEST_F(TransactionTest, testWithTTLSet) {
   // sends a message
   for (std::size_t i = 0; i < NUM_MESSAGES; ++i) {
     std::unique_ptr<TextMessage> outbound1(cmsProvider->getSession()->createTextMessage(msg[i].second));
-    EXPECT_NO_THROW(cmsProvider->getProducer()->send(outbound1.get(), cms::DeliveryMode::PERSISTENT, cmsProvider->getProducer()->getPriority(), 120 * 1000));
+    EXPECT_NO_THROW(
+        cmsProvider->getProducer()->send(outbound1.get(), cms::DeliveryMode::PERSISTENT, cmsProvider->getProducer()->getPriority(), 120 * 1000));
     msg[i].first = outbound1->getCMSMessageID();
   }
 

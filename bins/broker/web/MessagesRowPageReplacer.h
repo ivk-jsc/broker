@@ -23,7 +23,21 @@
 
 class MessagesRowPageReplacer : public TemplateParamReplacer {
  public:
-  enum RowParam { messageId = 0, deliveryMode, expiration, priority, created, correlationId, type, clientId, consumerId, error, num, delivered, processMode };
+  enum RowParam {
+    messageId = 0,
+    deliveryMode,
+    expiration,
+    priority,
+    created,
+    correlationId,
+    type,
+    clientId,
+    consumerId,
+    error,
+    num,
+    delivered,
+    processMode
+  };
 
   MessagesRowPageReplacer(std::string pageName,
                           std::string messageId,

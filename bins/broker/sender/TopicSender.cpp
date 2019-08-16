@@ -19,9 +19,12 @@
 
 namespace upmq {
 namespace broker {
-TopicSender::TopicSender(const std::string &id, const Session &session, const Subscription &subscription) : Sender(id, session), _subscription(subscription) {}
+TopicSender::TopicSender(const std::string &id, const Session &session, const Subscription &subscription)
+    : Sender(id, session), _subscription(subscription) {}
 TopicSender::~TopicSender() {}
-void TopicSender::fixMessageInGroup(const Session &session, const MessageDataContainer &sMessage) const { Sender::fixMessageInGroup(session, _subscription.storage(), sMessage); }
+void TopicSender::fixMessageInGroup(const Session &session, const MessageDataContainer &sMessage) const {
+  Sender::fixMessageInGroup(session, _subscription.storage(), sMessage);
+}
 void TopicSender::closeGroup(const Session &session) const { Sender::closeGroup(session, _subscription.storage()); }
 }  // namespace broker
 }  // namespace upmq

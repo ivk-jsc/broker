@@ -152,9 +152,12 @@ TEST_F(QueueBrowserTest, testQueueBrowserWith2Consumers) {
 
   std::unique_ptr<cms::Session> session(connection->createSession(cms::Session::CLIENT_ACKNOWLEDGE));
 
-  std::unique_ptr<cms::Queue> queue(session->createQueue(::testing::UnitTest::GetInstance()->current_test_info()->name()));            // testQueueBrowserWith2Consumers
-  std::unique_ptr<cms::Queue> queuePrefetch10(session->createQueue(::testing::UnitTest::GetInstance()->current_test_info()->name()));  // testQueueBrowserWith2Consumers?consumer.prefetchSize=10
-  std::unique_ptr<cms::Queue> queuePrefetch1(session->createQueue(::testing::UnitTest::GetInstance()->current_test_info()->name()));   // testQueueBrowserWith2Consumers?consumer.prefetchSize=1
+  std::unique_ptr<cms::Queue> queue(
+      session->createQueue(::testing::UnitTest::GetInstance()->current_test_info()->name()));  // testQueueBrowserWith2Consumers
+  std::unique_ptr<cms::Queue> queuePrefetch10(session->createQueue(
+      ::testing::UnitTest::GetInstance()->current_test_info()->name()));  // testQueueBrowserWith2Consumers?consumer.prefetchSize=10
+  std::unique_ptr<cms::Queue> queuePrefetch1(session->createQueue(
+      ::testing::UnitTest::GetInstance()->current_test_info()->name()));  // testQueueBrowserWith2Consumers?consumer.prefetchSize=1
 
   std::unique_ptr<ConnectionFactory> factory(cms::ConnectionFactory::createCMSConnectionFactory(cmsProvider->getBrokerURL()));
   std::unique_ptr<Connection> connection2(factory->createConnection());
@@ -199,7 +202,8 @@ TEST_F(QueueBrowserTest, testQueueBrowserWith2Consumers) {
   EXPECT_FALSE(browserView->hasMoreMessages()) << "nothing left in the browser";
   std::unique_ptr<cms::TextMessage> messageEmpty;
   messageEmpty.reset(dynamic_cast<TextMessage *>(consumer->receiveNoWait()));
-  EXPECT_TRUE(messageEmpty == nullptr) << "expect empty message, but got " << messageEmpty->getText() << " [" << messageEmpty->getCMSMessageID() << "]";
+  EXPECT_TRUE(messageEmpty == nullptr) << "expect empty message, but got " << messageEmpty->getText() << " [" << messageEmpty->getCMSMessageID()
+                                       << "]";
 
   for (auto &msg : messages) {
     EXPECT_NO_THROW(msg->acknowledge());

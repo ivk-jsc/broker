@@ -67,8 +67,17 @@ inline bool operator<(const RWEntry &lhs, const RWEntry &rhs) { return caseless(
 
 bool tokeniseReservedWord(Token &tok) {
   // This must be sorted!!
-  constexpr RWEntry reserved[]{
-      {"and", T_AND}, {"between", T_BETWEEN}, {"escape", T_ESCAPE}, {"false", T_FALSE}, {"in", T_IN}, {"is", T_IS}, {"like", T_LIKE}, {"not", T_NOT}, {"null", T_NULL}, {"or", T_OR}, {"true", T_TRUE}};
+  constexpr RWEntry reserved[]{{"and", T_AND},
+                               {"between", T_BETWEEN},
+                               {"escape", T_ESCAPE},
+                               {"false", T_FALSE},
+                               {"in", T_IN},
+                               {"is", T_IS},
+                               {"like", T_LIKE},
+                               {"not", T_NOT},
+                               {"null", T_NULL},
+                               {"or", T_OR},
+                               {"true", T_TRUE}};
 
   const int reserved_size = sizeof(reserved) / sizeof(RWEntry);
 

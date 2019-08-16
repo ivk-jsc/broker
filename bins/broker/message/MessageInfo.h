@@ -110,25 +110,42 @@ class MessageInfo {
 
 namespace message {
 static constexpr upmq::broker::MessageInfo::FieldInfo field_num = upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::num);
-static constexpr upmq::broker::MessageInfo::FieldInfo field_message_id = upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::message_id);
+static constexpr upmq::broker::MessageInfo::FieldInfo field_message_id =
+    upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::message_id);
 static constexpr upmq::broker::MessageInfo::FieldInfo field_type = upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::type);
-static constexpr upmq::broker::MessageInfo::FieldInfo field_body_type = upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::body_type);
-static constexpr upmq::broker::MessageInfo::FieldInfo field_priority = upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::priority);
-static constexpr upmq::broker::MessageInfo::FieldInfo field_persistent = upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::persistent);
-static constexpr upmq::broker::MessageInfo::FieldInfo field_correlation_id = upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::correlation_id);
-static constexpr upmq::broker::MessageInfo::FieldInfo field_reply_to = upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::reply_to);
-static constexpr upmq::broker::MessageInfo::FieldInfo field_timestamp = upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::timestamp);
-static constexpr upmq::broker::MessageInfo::FieldInfo field_expiration = upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::expiration);
+static constexpr upmq::broker::MessageInfo::FieldInfo field_body_type =
+    upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::body_type);
+static constexpr upmq::broker::MessageInfo::FieldInfo field_priority =
+    upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::priority);
+static constexpr upmq::broker::MessageInfo::FieldInfo field_persistent =
+    upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::persistent);
+static constexpr upmq::broker::MessageInfo::FieldInfo field_correlation_id =
+    upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::correlation_id);
+static constexpr upmq::broker::MessageInfo::FieldInfo field_reply_to =
+    upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::reply_to);
+static constexpr upmq::broker::MessageInfo::FieldInfo field_timestamp =
+    upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::timestamp);
+static constexpr upmq::broker::MessageInfo::FieldInfo field_expiration =
+    upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::expiration);
 static constexpr upmq::broker::MessageInfo::FieldInfo field_ttl = upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::ttl);
-static constexpr upmq::broker::MessageInfo::FieldInfo field_created_time = upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::created_time);
-static constexpr upmq::broker::MessageInfo::FieldInfo field_delivery_count = upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::delivery_count);
-static constexpr upmq::broker::MessageInfo::FieldInfo field_delivery_status = upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::delivery_status);
-static constexpr upmq::broker::MessageInfo::FieldInfo field_client_id = upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::client_id);
-static constexpr upmq::broker::MessageInfo::FieldInfo field_consumer_id = upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::consumer_id);
-static constexpr upmq::broker::MessageInfo::FieldInfo field_group_id = upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::group_id);
-static constexpr upmq::broker::MessageInfo::FieldInfo field_group_seq = upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::group_seq);
-static constexpr upmq::broker::MessageInfo::FieldInfo field_last_in_group = upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::last_in_group);
-static constexpr upmq::broker::MessageInfo::FieldInfo field_transaction_id = upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::transaction_id);
+static constexpr upmq::broker::MessageInfo::FieldInfo field_created_time =
+    upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::created_time);
+static constexpr upmq::broker::MessageInfo::FieldInfo field_delivery_count =
+    upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::delivery_count);
+static constexpr upmq::broker::MessageInfo::FieldInfo field_delivery_status =
+    upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::delivery_status);
+static constexpr upmq::broker::MessageInfo::FieldInfo field_client_id =
+    upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::client_id);
+static constexpr upmq::broker::MessageInfo::FieldInfo field_consumer_id =
+    upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::consumer_id);
+static constexpr upmq::broker::MessageInfo::FieldInfo field_group_id =
+    upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::group_id);
+static constexpr upmq::broker::MessageInfo::FieldInfo field_group_seq =
+    upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::group_seq);
+static constexpr upmq::broker::MessageInfo::FieldInfo field_last_in_group =
+    upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::last_in_group);
+static constexpr upmq::broker::MessageInfo::FieldInfo field_transaction_id =
+    upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::transaction_id);
 }  // namespace message
 
 #endif  // BROKER_MESSAGEINFO_H

@@ -120,21 +120,36 @@ class MessagePropertyInfo {
 }  // namespace upmq
 
 namespace message {
-static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_prop_message_id = upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::message_id);
-static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_prop_name = upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::property_name);
-static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_prop_type = upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::property_type);
-static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_val_string = upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::value_string);
-static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_val_char = upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::value_char);
-static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_val_bool = upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::value_bool);
-static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_val_byte = upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::value_byte);
-static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_val_short = upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::value_short);
-static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_val_int = upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::value_int);
-static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_val_long = upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::value_long);
-static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_val_float = upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::value_float);
-static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_val_double = upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::value_double);
-static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_val_bytes = upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::value_bytes);
-static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_val_object = upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::value_object);
-static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_is_null = upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::is_null);
+static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_prop_message_id =
+    upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::message_id);
+static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_prop_name =
+    upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::property_name);
+static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_prop_type =
+    upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::property_type);
+static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_val_string =
+    upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::value_string);
+static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_val_char =
+    upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::value_char);
+static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_val_bool =
+    upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::value_bool);
+static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_val_byte =
+    upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::value_byte);
+static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_val_short =
+    upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::value_short);
+static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_val_int =
+    upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::value_int);
+static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_val_long =
+    upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::value_long);
+static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_val_float =
+    upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::value_float);
+static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_val_double =
+    upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::value_double);
+static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_val_bytes =
+    upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::value_bytes);
+static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_val_object =
+    upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::value_object);
+static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_is_null =
+    upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::is_null);
 }  // namespace message
 
 #endif  // BROKER_MESSAGEPROPERTYINFO_H

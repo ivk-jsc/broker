@@ -28,7 +28,8 @@ namespace PDSQLITE = Poco::Data::SQLite;
 #endif
 
 #ifdef _DEBUG
-#define do_cerr(__info__, __sql__, __message__, __error__) std::cerr << std::string(__info__) << " : " << (__sql__) << " : " << (__message__) << " : " << (__error__)
+#define do_cerr(__info__, __sql__, __message__, __error__) \
+  std::cerr << std::string(__info__) << " : " << (__sql__) << " : " << (__message__) << " : " << (__error__)
 #else
 #define do_cerr(__info__, __sql__, __message__, __error__) \
   UNUSED_VAR(__info__);                                    \

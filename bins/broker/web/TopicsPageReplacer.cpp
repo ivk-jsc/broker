@@ -28,8 +28,14 @@ std::string TopicsPageReplacer::rowsReplacer() {
   std::stringstream ss;
   for (const auto &dest : infos) {
     if ((dest.type == upmq::broker::Destination::Type::TOPIC) || (dest.type == upmq::broker::Destination::Type::TEMPORARY_TOPIC)) {
-      DestinationRowPageReplacer rowPageReplacer(
-          "destinations/row.html", dest.name, static_cast<int>(dest.type), static_cast<int>(dest.subscriptions.size()), dest.created, dest.dataPath, dest.uri, dest.messages);
+      DestinationRowPageReplacer rowPageReplacer("destinations/row.html",
+                                                 dest.name,
+                                                 static_cast<int>(dest.type),
+                                                 static_cast<int>(dest.subscriptions.size()),
+                                                 dest.created,
+                                                 dest.dataPath,
+                                                 dest.uri,
+                                                 dest.messages);
       ss << rowPageReplacer.replace();
     }
   }

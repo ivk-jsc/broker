@@ -42,7 +42,7 @@ class Connection {
   std::atomic_bool _clientIDWasSet;
   mutable TCPConnectionsList _tcpConnections;
   mutable upmq::MRWLock _tcpLock;
-  SessionsList _sessions;  
+  SessionsList _sessions;
 
   const std::string _sessionsT;
   const std::string _tcpT;

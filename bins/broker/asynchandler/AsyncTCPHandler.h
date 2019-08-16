@@ -69,7 +69,10 @@ class AsyncTCPHandler {
     int minorVersion;
     int revisionVersion;
     std::string vendorId;
-    std::string toString() const { return "vendor (" + vendorId + ") version (" + std::to_string(majorVersion) + "." + std::to_string(minorVersion) + "." + std::to_string(revisionVersion) + ")"; }
+    std::string toString() const {
+      return "vendor (" + vendorId + ") version (" + std::to_string(majorVersion) + "." + std::to_string(minorVersion) + "." +
+             std::to_string(revisionVersion) + ")";
+    }
   };
   struct ProtocolVersion {
     int major;

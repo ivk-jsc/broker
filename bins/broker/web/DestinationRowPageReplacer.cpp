@@ -18,8 +18,14 @@
 #include "Defines.h"
 #include "DestinationRowPageReplacer.h"
 
-DestinationRowPageReplacer::DestinationRowPageReplacer(
-    std::string pageName, std::string destination, int type, int subscriptions, std::string creationTime, std::string dataPath, std::string connectionString, uint64_t messages)
+DestinationRowPageReplacer::DestinationRowPageReplacer(std::string pageName,
+                                                       std::string destination,
+                                                       int type,
+                                                       int subscriptions,
+                                                       std::string creationTime,
+                                                       std::string dataPath,
+                                                       std::string connectionString,
+                                                       uint64_t messages)
     : TemplateParamReplacer(std::move(pageName)),
       _destination(std::move(destination)),
       _type(type),
@@ -39,7 +45,9 @@ DestinationRowPageReplacer::DestinationRowPageReplacer(
 
 std::string DestinationRowPageReplacer::destinationReplacer() { return _destination; }
 
-std::string DestinationRowPageReplacer::typeReplacer() { return upmq::broker::Destination::typeName(static_cast<upmq::broker::Destination::Type>(_type)); }
+std::string DestinationRowPageReplacer::typeReplacer() {
+  return upmq::broker::Destination::typeName(static_cast<upmq::broker::Destination::Type>(_type));
+}
 
 std::string DestinationRowPageReplacer::subscriptionsReplacer() { return std::to_string(_subscriptions); }
 

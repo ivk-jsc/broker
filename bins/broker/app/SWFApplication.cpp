@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #include "SWFApplication.h"
 #include <stdexcept>
 #include <thread>
@@ -55,31 +55,51 @@ void Application::waitTermination() {
   waitThread.join();
 }
 
-std::string Application::getOrgName() const { return std::string(reinterpret_cast<const char *>(&_swfUPInfo.orgname[0]), sizeof(_swfUPInfo.orgname)); }
+std::string Application::getOrgName() const {
+  return std::string(reinterpret_cast<const char *>(&_swfUPInfo.orgname[0]), sizeof(_swfUPInfo.orgname));
+}
 
-std::string Application::getOrgCode() const { return std::string(reinterpret_cast<const char *>(&_swfUPInfo.orgcode[0]), sizeof(_swfUPInfo.orgcode)); }
+std::string Application::getOrgCode() const {
+  return std::string(reinterpret_cast<const char *>(&_swfUPInfo.orgcode[0]), sizeof(_swfUPInfo.orgcode));
+}
 
-std::string Application::getObjectName() const { return std::string(reinterpret_cast<const char *>(&_swfUPInfo.objname[0]), sizeof(_swfUPInfo.objname)); }
+std::string Application::getObjectName() const {
+  return std::string(reinterpret_cast<const char *>(&_swfUPInfo.objname[0]), sizeof(_swfUPInfo.objname));
+}
 
-std::string Application::getObjectCode() const { return std::string(reinterpret_cast<const char *>(&_swfUPInfo.objcode[0]), sizeof(_swfUPInfo.objcode)); }
+std::string Application::getObjectCode() const {
+  return std::string(reinterpret_cast<const char *>(&_swfUPInfo.objcode[0]), sizeof(_swfUPInfo.objcode));
+}
 
-std::string Application::getModName() const { return std::string(reinterpret_cast<const char *>(&_swfUPInfo.modname[0]), sizeof(_swfUPInfo.modname)); }
+std::string Application::getModName() const {
+  return std::string(reinterpret_cast<const char *>(&_swfUPInfo.modname[0]), sizeof(_swfUPInfo.modname));
+}
 
-std::string Application::getModCode() const { return std::string(reinterpret_cast<const char *>(&_swfUPInfo.modcode[0]), sizeof(_swfUPInfo.modcode)); }
+std::string Application::getModCode() const {
+  return std::string(reinterpret_cast<const char *>(&_swfUPInfo.modcode[0]), sizeof(_swfUPInfo.modcode));
+}
 
 std::string Application::getNVU() const { return std::string(reinterpret_cast<const char *>(&_swfUPInfo.nvu[0]), sizeof(_swfUPInfo.nvu)); }
 
-std::string Application::getNetName() const { return std::string(reinterpret_cast<const char *>(&_swfUPInfo.netname[0]), sizeof(_swfUPInfo.netname)); }
+std::string Application::getNetName() const {
+  return std::string(reinterpret_cast<const char *>(&_swfUPInfo.netname[0]), sizeof(_swfUPInfo.netname));
+}
 
-std::string Application::getUserStat() const { return std::string(reinterpret_cast<const char *>(&_swfUPInfo.userstat[0]), sizeof(_swfUPInfo.userstat)); }
+std::string Application::getUserStat() const {
+  return std::string(reinterpret_cast<const char *>(&_swfUPInfo.userstat[0]), sizeof(_swfUPInfo.userstat));
+}
 
-std::string Application::getUserFIO() const { return std::string(reinterpret_cast<const char *>(&_swfUPInfo.userfio[0]), sizeof(_swfUPInfo.userfio)); }
+std::string Application::getUserFIO() const {
+  return std::string(reinterpret_cast<const char *>(&_swfUPInfo.userfio[0]), sizeof(_swfUPInfo.userfio));
+}
 
 std::string Application::getLogAddr() const { return std::string(reinterpret_cast<const char *>(&_swfUPInfo.logadr[0]), sizeof(_swfUPInfo.logadr)); }
 
 std::string Application::getUserID() const { return std::string(reinterpret_cast<const char *>(&_swfUPInfo.userid[0]), sizeof(_swfUPInfo.userid)); }
 
-std::string Application::getUserRang() const { return std::string(reinterpret_cast<const char *>(&_swfUPInfo.userrang[0]), sizeof(_swfUPInfo.userrang)); }
+std::string Application::getUserRang() const {
+  return std::string(reinterpret_cast<const char *>(&_swfUPInfo.userrang[0]), sizeof(_swfUPInfo.userrang));
+}
 
 bool Application::useUpiter() const { return libplot != nullptr && regp != nullptr; }
 

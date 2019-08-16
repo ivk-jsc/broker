@@ -66,12 +66,12 @@ class Configuration {
     std::string toString() const;
   };
 
-  struct Sessions {        
+  struct Sessions {
     size_t maxCount{1024};
     std::string toString() const;
   };
 
-  struct Subscriptions {        
+  struct Subscriptions {
     size_t maxCount{1024};
     std::string toString() const;
   };
@@ -154,8 +154,8 @@ class Configuration {
   void setThreads(const Threads &threads);
   const Log &log() const;
   void setLog(const Log &log);
-  void setSessions(const Sessions& sessions);
-  void setSubscriptions(const Subscriptions& subscriptions);
+  void setSessions(const Sessions &sessions);
+  void setSubscriptions(const Subscriptions &subscriptions);
   const Sessions &sessions() const;
   const Subscriptions &subscriptions() const;
   const Destinations &destinations() const;

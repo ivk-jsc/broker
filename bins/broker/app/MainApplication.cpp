@@ -46,8 +46,10 @@ void MainApplication::defineOptions(Poco::Util::OptionSet &options) {
 
   options.addOption(Poco::Util::Option("help", "h", "display help information on command line arguments").required(false).repeatable(false));
 
-  options.addOption(
-      Poco::Util::Option("version", "v", "display version information").required(false).repeatable(false).callback(Poco::Util::OptionCallback<MainApplication>(this, &MainApplication::handleVersion)));
+  options.addOption(Poco::Util::Option("version", "v", "display version information")
+                        .required(false)
+                        .repeatable(false)
+                        .callback(Poco::Util::OptionCallback<MainApplication>(this, &MainApplication::handleVersion)));
 
   options.addOption(Poco::Util::Option("fileconfig", "f", "path to config file")
                         .required(false)
@@ -107,8 +109,9 @@ int MainApplication::main(const std::vector<std::string> &args) {
   }
 
 #ifdef ENABLE_WEB_ADMIN
-  Poco::Net::HTTPServer s(
-      Poco::MakeShared<WebAdminRequestHandlerFactory>(), ServerSocket(static_cast<Poco::UInt16>(CONFIGURATION::Instance().http().port)), Poco::MakeAuto<Poco::Net::HTTPServerParams>());
+  Poco::Net::HTTPServer s(Poco::MakeShared<WebAdminRequestHandlerFactory>(),
+                          ServerSocket(static_cast<Poco::UInt16>(CONFIGURATION::Instance().http().port)),
+                          Poco::MakeAuto<Poco::Net::HTTPServerParams>());
   Poco::File wwwDir(CONFIGURATION::Instance().http().site);
   if (wwwDir.exists()) {
     s.start();

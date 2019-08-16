@@ -21,7 +21,8 @@
 
 namespace upmq {
 namespace broker {
-Sender::Sender(std::string id, const Session &session) : _id(std::move(id)), _session(session), _groupID(Poco::UUIDGenerator::defaultGenerator().createRandom().toString()) {}
+Sender::Sender(std::string id, const Session &session)
+    : _id(std::move(id)), _session(session), _groupID(Poco::UUIDGenerator::defaultGenerator().createRandom().toString()) {}
 Sender::~Sender() = default;
 void Sender::fixMessageInGroup(const Session &session, Storage &storage, const MessageDataContainer &sMessage) const {
   if (sMessage.message().has_group_id()) {

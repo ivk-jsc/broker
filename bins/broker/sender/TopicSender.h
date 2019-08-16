@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #ifndef BROKER_TOPICSENDER_H
 #define BROKER_TOPICSENDER_H
 

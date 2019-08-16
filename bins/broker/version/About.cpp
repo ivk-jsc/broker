@@ -46,7 +46,8 @@ std::string About::vendor() {
   return version.server_vendor_id();
 }
 
-static const char *broker_version = "SWF : BROKER VER : " VER_FILEVERSION_STR " " MQ_COMMITTER_DATE " [" MQ_COMMITTER_FULLSHA "] (" MQ_COMMITTER_SHORTSHA ") " MQ_COMMITTER_NOTE;
+static const char *broker_version =
+    "SWF : BROKER VER : " VER_FILEVERSION_STR " " MQ_COMMITTER_DATE " [" MQ_COMMITTER_FULLSHA "] (" MQ_COMMITTER_SHORTSHA ") " MQ_COMMITTER_NOTE;
 
 }  // namespace broker
 }  // namespace upmq

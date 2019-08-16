@@ -19,6 +19,7 @@
 namespace upmq {
 namespace broker {
 
-TemporaryTopicDestination::TemporaryTopicDestination(const Exchange &exchange, const std::string &uri) : TopicDestination(exchange, uri, Destination::Type::TEMPORARY_TOPIC) {}
+TemporaryTopicDestination::TemporaryTopicDestination(const Exchange &exchange, const std::string &uri)
+    : TopicDestination(exchange, uri, Destination::Type::TEMPORARY_TOPIC) {}
 }  // namespace broker
 }  // namespace upmq

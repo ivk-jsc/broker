@@ -119,7 +119,8 @@ TEST_F(ClientAckTest, testLastMessageAcked) {
   EXPECT_NO_THROW(consumer.reset(session->createConsumer(queue.get())));
   msg.reset(nullptr);
   EXPECT_NO_THROW(msg.reset(consumer->receive(5000)));
-  EXPECT_TRUE(msg == nullptr) << "expect empty message, but got " << msg->getCMSMessageID() << " : " << dynamic_cast<TextMessage *>(msg.get())->getText();
+  EXPECT_TRUE(msg == nullptr) << "expect empty message, but got " << msg->getCMSMessageID() << " : "
+                              << dynamic_cast<TextMessage *>(msg.get())->getText();
 
   EXPECT_NO_THROW(session->close());
 }

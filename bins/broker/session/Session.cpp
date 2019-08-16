@@ -174,7 +174,9 @@ void Session::addSubscription(const MessageDataContainer &sMessage) {
   addToUsed(subscription.destination_uri());
 }
 void Session::removeConsumer(const MessageDataContainer &sMessage, size_t tcpNum) { EXCHANGE::Instance().removeConsumer(sMessage, tcpNum); }
-void Session::removeConsumers(const std::string &destinationID, const std::string &subscriptionID, size_t tcpNum) { EXCHANGE::Instance().removeConsumer(_id, destinationID, subscriptionID, tcpNum); }
+void Session::removeConsumers(const std::string &destinationID, const std::string &subscriptionID, size_t tcpNum) {
+  EXCHANGE::Instance().removeConsumer(_id, destinationID, subscriptionID, tcpNum);
+}
 const CircularQueue<Session::State> &Session::stateStack() const { return _stateStack; }
 const Connection &Session::connection() const { return _connection; }
 const std::string &Session::id() const { return _id; }

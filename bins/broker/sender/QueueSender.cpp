@@ -20,9 +20,12 @@
 namespace upmq {
 namespace broker {
 
-QueueSender::QueueSender(const std::string &id, const Session &session, const QueueDestination &destination) : Sender(id, session), _destination(destination) {}
+QueueSender::QueueSender(const std::string &id, const Session &session, const QueueDestination &destination)
+    : Sender(id, session), _destination(destination) {}
 QueueSender::~QueueSender() {}
-void QueueSender::fixMessageInGroup(const Session &session, const MessageDataContainer &sMessage) const { Sender::fixMessageInGroup(session, _destination.storage(), sMessage); }
+void QueueSender::fixMessageInGroup(const Session &session, const MessageDataContainer &sMessage) const {
+  Sender::fixMessageInGroup(session, _destination.storage(), sMessage);
+}
 void QueueSender::closeGroup(const Session &session) const { Sender::closeGroup(session, _destination.storage()); }
 }  // namespace broker
 }  // namespace upmq

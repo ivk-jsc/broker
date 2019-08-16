@@ -31,4 +31,4 @@ Poco::SharedPtr<T> MakeShared(Args &&... args) {
 }
 }  // namespace Poco
 
-#endif // BROKER_POCO_POINTERS_HELPER_H
+#endif  // BROKER_POCO_POINTERS_HELPER_H

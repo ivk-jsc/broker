@@ -80,8 +80,9 @@ void CMSListener::onMessage(const cms::Message *message) {
 
 std::string CMSListener::inputMessagesToString() const {
   std::string result;
-  std::for_each(
-      inputMessges.begin(), inputMessges.end(), [&result](const std::pair<std::string, std::string> &msg) { result.append("\n[").append(msg.first).append(":").append(msg.second).append("]"); });
+  std::for_each(inputMessges.begin(), inputMessges.end(), [&result](const std::pair<std::string, std::string> &msg) {
+    result.append("\n[").append(msg.first).append(":").append(msg.second).append("]");
+  });
   return result;
 }
 

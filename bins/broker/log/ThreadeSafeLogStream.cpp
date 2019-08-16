@@ -28,7 +28,8 @@ using namespace upmq::broker;
 // ThreadSafeLogStreamBuf
 //************************************************************
 
-ThreadSafeLogStreamBuf::ThreadSafeLogStreamBuf(Poco::Logger &logger, Poco::Message::Priority priority) : Poco::LogStreamBuf(logger, priority), m_messages() {}
+ThreadSafeLogStreamBuf::ThreadSafeLogStreamBuf(Poco::Logger &logger, Poco::Message::Priority priority)
+    : Poco::LogStreamBuf(logger, priority), m_messages() {}
 
 int ThreadSafeLogStreamBuf::overflow(char c) { return Poco::UnbufferedStreamBuf::overflow(c); }
 
@@ -89,14 +90,16 @@ Poco::LogStreamBuf *ThreadSafeLogIOS::rdbuf() { return &m_buf; }
  * @param logger :: A reference to the logger associated with this stream
  * @param priority :: The stream priority
  */
-ThreadSafeLogStream::ThreadSafeLogStream(Poco::Logger &logger, Poco::Message::Priority priority) : ThreadSafeLogIOS(logger, priority), std::ostream(&m_buf) {}
+ThreadSafeLogStream::ThreadSafeLogStream(Poco::Logger &logger, Poco::Message::Priority priority)
+    : ThreadSafeLogIOS(logger, priority), std::ostream(&m_buf) {}
 
 /**
  * Constructor taking a name for a logger
  * @param loggerName :: A name for the logger stream
  * @param priority :: The stream priority
  */
-ThreadSafeLogStream::ThreadSafeLogStream(const std::string &loggerName, Poco::Message::Priority priority) : ThreadSafeLogIOS(Poco::Logger::get(loggerName), priority), std::ostream(&m_buf) {}
+ThreadSafeLogStream::ThreadSafeLogStream(const std::string &loggerName, Poco::Message::Priority priority)
+    : ThreadSafeLogIOS(Poco::Logger::get(loggerName), priority), std::ostream(&m_buf) {}
 
 /**
  * Return a reference to the log stream with the priority set to fatal

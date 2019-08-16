@@ -90,7 +90,9 @@ Subscription::Subscription(const Destination &destination, const std::string &id
 
   storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
   dbSession.beginTX(_id);
-  TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::useRef(_name), Poco::Data::Keywords::useRef(_routingKey), Poco::Data::Keywords::now; }
+  TRY_POCO_DATA_EXCEPTION {
+    dbSession << sql.str(), Poco::Data::Keywords::useRef(_name), Poco::Data::Keywords::useRef(_routingKey), Poco::Data::Keywords::now;
+  }
   CATCH_POCO_DATA_EXCEPTION_NO_INVALID_SQL("can't create subscription", sql.str(), ;, ERROR_ON_SUBSCRIPTION)
   dbSession.commitTX();
 }
@@ -138,7 +140,8 @@ void Subscription::abort(const Session &session) {
   postNewMessageEvent();
 }
 
-void Subscription::addClient(const Session &session, size_t tcpConnectionNum, const std::string &objectID, const std::string &selector, Subscription::LocalMode localMode) {
+void Subscription::addClient(
+    const Session &session, size_t tcpConnectionNum, const std::string &objectID, const std::string &selector, Subscription::LocalMode localMode) {
   std::stringstream sql;
   // NOTE: if subscription is browser then make client_id more unique
   std::string clientID = session.connection().clientID();
@@ -183,8 +186,9 @@ void Subscription::addClient(const Session &session, size_t tcpConnectionNum, co
 
   dbSession.beginTX(objectID);
   TRY_POCO_DATA_EXCEPTION {
-    dbSession << sql.str(), Poco::Data::Keywords::use(clientID), Poco::Data::Keywords::use(tcpConnectionNum), Poco::Data::Keywords::useRef(selector), Poco::Data::Keywords::useRef(objectID),
-        Poco::Data::Keywords::useRef(session.id()), Poco::Data::Keywords::use(nolocal), Poco::Data::Keywords::now;
+    dbSession << sql.str(), Poco::Data::Keywords::use(clientID), Poco::Data::Keywords::use(tcpConnectionNum), Poco::Data::Keywords::useRef(selector),
+        Poco::Data::Keywords::useRef(objectID), Poco::Data::Keywords::useRef(session.id()), Poco::Data::Keywords::use(nolocal),
+        Poco::Data::Keywords::now;
   }
   CATCH_POCO_DATA_EXCEPTION_PURE("can't add consumer", sql.str(), ERROR_ON_SUBSCRIPTION)
   dbSession.commitTX();
@@ -310,7 +314,8 @@ bool Subscription::getNextMessage() {
       sMessage = storage.get(*consumer, useFileLink);
     } catch (Exception &ex) {
       consumer->select->clear();
-      ASYNCLOG_ERROR(logStream, (std::string(consumer->clientID).append(" ! <= [").append(std::string(__FUNCTION__)).append("] ").append(ex.message())));
+      ASYNCLOG_ERROR(logStream,
+                     (std::string(consumer->clientID).append(" ! <= [").append(std::string(__FUNCTION__)).append("] ").append(ex.message())));
       _consumersLock.unlockWrite();
       return false;
     }

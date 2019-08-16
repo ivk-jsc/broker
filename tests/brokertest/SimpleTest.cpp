@@ -147,7 +147,8 @@ TEST_F(SimpleTest, testProducerSendToNonDefaultDestination) {
   std::unique_ptr<cms::TextMessage> txtMessage(session->createTextMessage("TEST MESSAGE"));
   std::unique_ptr<cms::Destination> destination(session->createTemporaryTopic());
 
-  EXPECT_THROW(producer->send(destination.get(), txtMessage.get()), cms::UnsupportedOperationException) << "Should Throw an UnsupportedOperationException";
+  EXPECT_THROW(producer->send(destination.get(), txtMessage.get()), cms::UnsupportedOperationException)
+      << "Should Throw an UnsupportedOperationException";
 
   session->close();
 }
@@ -518,7 +519,8 @@ TEST_F(SimpleTest, testPublishFailsForDestoryedTempDestination) {
   queue->destroy();
   cmsProvider->getSession()->close();
 
-  EXPECT_THROW(producer->send(message.get()), IllegalStateException) << "Should throw a InvalidDestinationException since temp destination should not exist anymore.";
+  EXPECT_THROW(producer->send(message.get()), IllegalStateException)
+      << "Should throw a InvalidDestinationException since temp destination should not exist anymore.";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -530,7 +532,8 @@ TEST_F(SimpleTest, testDuplicateClientID) {
 
   // 1st test - set in createConnection
   connection1.reset(factory->createConnection("username", "password", "clientID"));
-  EXPECT_THROW(connection2.reset(factory->createConnection("username", "password", "clientID")), cms::InvalidClientIdException) << "Should fail with InvalidClientIdException as duplicate clientID";
+  EXPECT_THROW(connection2.reset(factory->createConnection("username", "password", "clientID")), cms::InvalidClientIdException)
+      << "Should fail with InvalidClientIdException as duplicate clientID";
   connection1->close();
   if (connection2) {
     connection2->close();
@@ -542,7 +545,8 @@ TEST_F(SimpleTest, testDuplicateClientID) {
   EXPECT_THROW(connection1->setClientID("client_ID"), cms::InvalidClientIdException)
       << "Should fail with InvalidClientIdException as duplicate clientID, because clientID was set into createConnection";
   connection2.reset(factory->createConnection());
-  EXPECT_THROW(connection2->setClientID("client_ID"), cms::InvalidClientIdException) << "Should fail with InvalidClientIdException as duplicate clientID";
+  EXPECT_THROW(connection2->setClientID("client_ID"), cms::InvalidClientIdException)
+      << "Should fail with InvalidClientIdException as duplicate clientID";
   connection1->close();
   if (connection2) {
     connection2->close();

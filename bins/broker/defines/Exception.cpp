@@ -20,8 +20,8 @@ namespace upmq {
 namespace broker {
 
 Exception::Exception(const std::string& info, const std::string& errDescription, int err, const std::string& file, int line)
-    : runtime_error(std::string("exception : ") + file + std::string(" : ") + std::to_string(static_cast<long long>(line)) + std::string(" => ") + errDescription + std::string("(") +
-                    std::to_string(static_cast<long long>(err)) + std::string(")") + std::string(" : ") + info),
+    : runtime_error(std::string("exception : ") + file + std::string(" : ") + std::to_string(static_cast<long long>(line)) + std::string(" => ") +
+                    errDescription + std::string("(") + std::to_string(static_cast<long long>(err)) + std::string(")") + std::string(" : ") + info),
       _error(err) {}
 
 Exception::Exception(const Exception&) = default;

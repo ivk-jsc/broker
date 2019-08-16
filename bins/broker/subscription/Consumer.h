@@ -108,7 +108,10 @@ class Consumer {
   void stop() const;
   void start() const;
   static Consumer makeFakeConsumer();
-  static std::string genConsumerID(const std::string &_clientID, const std::string &_tcpID, const std::string &_sessionID, const std::string &_selector);
+  static std::string genConsumerID(const std::string &_clientID,
+                                   const std::string &_tcpID,
+                                   const std::string &_sessionID,
+                                   const std::string &_selector);
 };
 }  // namespace broker
 }  // namespace upmq

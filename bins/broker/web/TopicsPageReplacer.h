@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #ifndef IVK_UPMQ_TOPICSPAGEREPLACER_H
 #define IVK_UPMQ_TOPICSPAGEREPLACER_H
 

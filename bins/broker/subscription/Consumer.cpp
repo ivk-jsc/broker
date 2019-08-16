@@ -48,7 +48,10 @@ void upmq::broker::Consumer::start() const { isRunning = true; }
 upmq::broker::Consumer upmq::broker::Consumer::makeFakeConsumer() {
   return Consumer(0, "", 0, "", "", Proto::Acknowledge::AUTO_ACKNOWLEDGE, "", false, false, 0, std::make_shared<std::deque<Consumer::Msg>>());
 }
-std::string upmq::broker::Consumer::genConsumerID(const std::string &_clientID, const std::string &_tcpID, const std::string &_sessionID, const std::string &_selector) {
+std::string upmq::broker::Consumer::genConsumerID(const std::string &_clientID,
+                                                  const std::string &_tcpID,
+                                                  const std::string &_sessionID,
+                                                  const std::string &_selector) {
   size_t hsh = Poco::hash(_selector);
   std::string shash = (hsh != 0) ? std::to_string(hsh) : "";
   return _clientID + _sessionID + _tcpID + shash;
