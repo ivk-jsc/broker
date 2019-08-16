@@ -85,12 +85,21 @@ UPMQ broker [bins/broker] is configured by the broker.xml file (can be found in 
             <!-- Interactive mode - use 0 for disable console output -->
             <interactive>true</interactive>
         </log>
-
+		<sessions>
+		    <!-- Maximum sessions count per connection -->
+            <max-count>1024</max-count>
+        </sessions>
+        <subscriptions>
+		    <!-- Maximum subscriptions count per destination -->
+            <max-count>1024</max-count>
+        </subscriptions>
         <destinations>
             <!-- Auto create destination -->
             <autocreate>true</autocreate>
             <!-- Forward message to another server by message properties -->
             <forward by-property="false"/>
+			<!-- Maximum destinations count -->
+			<max-count>1024</max-count>
         </destinations>
         <storage>
             <!-- DBMS properties -->
