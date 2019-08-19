@@ -51,6 +51,7 @@ struct IntProperty {
   IntProperty(IntProperty &&) = default;
   IntProperty &operator=(const IntProperty &) = default;
   IntProperty &operator=(IntProperty &&) = default;
+  ~IntProperty() = default;
   bool isEmpty() const { return key.empty(); };
   static IntProperty fromString(const std::string &line) {
     std::string::size_type pos = line.find('=');
@@ -68,11 +69,11 @@ struct IntProperty {
 ////////////////////////////////////////////////////////////////////////////////
 class SimpleProducer {
  private:
-  cms::ConnectionFactory *connectionFactory;
-  cms::Connection *connection;
-  cms::Session *session;
-  cms::Destination *destination;
-  cms::MessageProducer *producer;
+  std::unique_ptr<cms::ConnectionFactory> connectionFactory;
+  std::unique_ptr<cms::Connection> connection;
+  std::unique_ptr<cms::Session> session;
+  std::unique_ptr<cms::Destination> destination;
+  std::unique_ptr<cms::MessageProducer> producer;
 
   std::string brokerURI;
   std::string destURI;
@@ -87,55 +88,57 @@ class SimpleProducer {
   std::chrono::steady_clock::time_point t0{perf_clock::now()};
 
   SimpleProducer(std::string brokerURI, long numMessages, std::string destURI, bool useTopic)
-      : connectionFactory(nullptr),
-        connection(nullptr),
-        session(nullptr),
-        destination(nullptr),
-        producer(nullptr),
-        brokerURI(std::move(brokerURI)),
-        destURI(std::move(destURI)),
-        numMessages(numMessages),
-        useTopic(useTopic) {}
+      : brokerURI(std::move(brokerURI)), destURI(std::move(destURI)), numMessages(numMessages), useTopic(useTopic) {}
 
   ~SimpleProducer() {
-    delete destination;
-    delete producer;
-    delete session;
-    delete connection;
-    delete connectionFactory;
+    try {
+      destination.reset();
+      producer.reset();
+      session.reset();
+      connection.reset();
+      connectionFactory.reset();
+    } catch (...) {
+    }
   }
 
-  void setText(const std::string &newText) { this->text = newText; }
-  void setIntProperty(const IntProperty &newIntProperty) { this->intProperty = newIntProperty; }
-  void setDeliveryMode(cms::DeliveryMode::DELIVERY_MODE newDeliveryMode) { this->deliveryMode = newDeliveryMode; }
-  void open() {
-    connectionFactory = cms::ConnectionFactory::createCMSConnectionFactory(brokerURI);
+  void setText(const std::string &newText) { text = newText; }
+  void setIntProperty(const IntProperty &newIntProperty) { intProperty = newIntProperty; }
+  void setDeliveryMode(cms::DeliveryMode::DELIVERY_MODE newDeliveryMode) { deliveryMode = newDeliveryMode; }
 
-    connection = connectionFactory->createConnection();
+  void open() {
+    connectionFactory.reset(cms::ConnectionFactory::createCMSConnectionFactory(brokerURI));
+
+    connection.reset(connectionFactory->createConnection());
     connection->start();
 
-    session = connection->createSession(cms::Session::AUTO_ACKNOWLEDGE);
+    session.reset(connection->createSession(cms::Session::AUTO_ACKNOWLEDGE));
 
     if (useTopic) {
-      destination = session->createTopic(destURI);
+      destination.reset(session->createTopic(destURI));
     } else {
-      destination = session->createQueue(destURI);
+      destination.reset(session->createQueue(destURI));
     }
 
-    producer = session->createProducer(destination);
+    producer.reset(session->createProducer(destination.get()));
   }
 
   void setPriority(int aPriority) { priority = aPriority; }
 
   void close() {
-    producer->close();
-    session->close();
-    connection->close();
+    try {
+      producer->close();
+      session->close();
+      connection->close();
+    } catch (cms::CMSException &e) {
+      std::cerr << "Exception occurred: " << e.what() << std::endl;
+    } catch (...) {
+      std::cerr << "Exception occurred!" << std::endl;
+    }
   }
 
   void run() {
     try {
-      cms::TextMessage *message = message = session->createTextMessage();
+      std::unique_ptr<cms::TextMessage> message(session->createTextMessage());
       std::string messageText;
       if (!intProperty.isEmpty()) {
         message->setIntProperty(intProperty.key, intProperty.value);
@@ -148,7 +151,7 @@ class SimpleProducer {
         }
         message->setText(messageText);
 
-        producer->send(destination, message, deliveryMode, priority, cms::Message::DEFAULT_TIME_TO_LIVE);
+        producer->send(destination.get(), message.get(), deliveryMode, priority, cms::Message::DEFAULT_TIME_TO_LIVE);
 
         message->setReadable();
         if ((ix == 1 || (ix % 1000 == 0))) {
@@ -156,7 +159,7 @@ class SimpleProducer {
                     << ": " << message->getText() << " elapsed [" << floating_seconds(perf_clock::now() - t0).count() << "]" << '\n';
         }
       }
-      delete message;
+      message.reset();
     } catch (cms::CMSException &e) {
       e.printStackTrace();
     } catch (...) {
@@ -208,62 +211,43 @@ int main(int argc, char *argv[]) {
   optparse_init(&options, argv);
   /* parse the all options based on opt_option[] */
   while ((option = optparse_long(&options, opt_option, nullptr)) != -1) {
+    int processOptionResult = 0;
     switch (option) {
       case 'd':
-        if (processOption(option, options.optarg, [&destURI](const char *arg) { destURI.assign(arg); }) != 0) {
-          usage(opt_option, 9);
-          return -1;
-        }
+        processOptionResult = processOption(option, options.optarg, [&destURI](const char *arg) { destURI.assign(arg); });
         break;
       case 't':
-        if (processOption(option, options.optarg, [&useTopics](const char *arg) { useTopics = (std::string(arg) == "topic"); }) != 0) {
-          usage(opt_option, 9);
-          return -1;
-        }
+        processOptionResult = processOption(option, options.optarg, [&useTopics](const char *arg) { useTopics = (std::string(arg) == "topic"); });
         break;
       case 'u':
-        if (processOption(option, options.optarg, [&brokerURI](const char *arg) { brokerURI.assign(arg); }) != 0) {
-          usage(opt_option, 9);
-          return -1;
-        }
+        processOptionResult = processOption(option, options.optarg, [&brokerURI](const char *arg) { brokerURI.assign(arg); });
         break;
       case 'c':
-        if (processOption(option, options.optarg, [&numMessages](const char *arg) { numMessages = std::stol(arg); }) != 0) {
-          usage(opt_option, 9);
-          return -1;
-        }
+        processOptionResult = processOption(option, options.optarg, [&numMessages](const char *arg) { numMessages = std::stol(arg); });
         break;
       case 'm':
-        if (processOption(option, options.optarg, [&deliveryMode](const char *arg) {
-              deliveryMode = ((std::string(arg) == "not-persistent") ? cms::DeliveryMode::NON_PERSISTENT : cms::DeliveryMode::PERSISTENT);
-            }) != 0) {
-          usage(opt_option, 9);
-          return -1;
-        }
+        processOptionResult = processOption(option, options.optarg, [&deliveryMode](const char *arg) {
+          deliveryMode = ((std::string(arg) == "not-persistent") ? cms::DeliveryMode::NON_PERSISTENT : cms::DeliveryMode::PERSISTENT);
+        });
         break;
       case 'p':
-        if (processOption(option, options.optarg, [&priority](const char *arg) { priority = std::stoi(arg); }) != 0) {
-          usage(opt_option, 9);
-          return -1;
-        }
+        processOptionResult = processOption(option, options.optarg, [&priority](const char *arg) { priority = std::stoi(arg); });
         break;
       case 'i':
-        if (processOption(option, options.optarg, [&intProperty](const char *arg) { intProperty = IntProperty::fromString(arg); }) != 0) {
-          usage(opt_option, 9);
-          return -1;
-        }
+        processOptionResult = processOption(option, options.optarg, [&intProperty](const char *arg) { intProperty = IntProperty::fromString(arg); });
         break;
       case 'b':
-        if (processOption(option, options.optarg, [&text](const char *arg) { text = std::string(arg); }) != 0) {
-          usage(opt_option, 9);
-          return -1;
-        }
+        processOptionResult = processOption(option, options.optarg, [&text](const char *arg) { text = std::string(arg); });
         break;
       case 'h':
         usage(opt_option, 9);
         return 0;
       default:
         break;
+    }
+    if (processOptionResult != 0) {
+      usage(opt_option, 9);
+      return -1;
     }
   }
   char *arg = optparse_arg(&options);

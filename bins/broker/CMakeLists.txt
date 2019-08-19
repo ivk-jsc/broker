@@ -200,9 +200,6 @@ endif ()
 
 target_link_libraries(broker PRIVATE upmq::protocol protobuf::libprotobuf ${CMAKE_DL_LIBS} ${POCO_LIBS})
 if (NOT WIN32)
-    #    get_target_property(PocoFoundationLocation Poco::Foundation LOCATION)
-    #    get_filename_component(PARENT_DIR ${PocoFoundationLocation} PATH)
-    #    target_link_directories(broker PUBLIC ${PARENT_DIR})
     target_link_libraries(broker PRIVATE Threads::Threads)
 else ()
     target_link_libraries(broker PRIVATE ws2_32 mswsock iphlpapi)
@@ -214,14 +211,20 @@ macro(copy_poco_lib APP DLL)
     # find the debug *d.dll file
     get_target_property(Poco${DLL}LocationDebug Poco::${DLL} IMPORTED_LOCATION_DEBUG)
 
-    add_custom_command(TARGET ${APP} POST_BUILD
-                       COMMAND ${CMAKE_COMMAND} -E copy_if_different $<$<CONFIG:Debug>:${Poco${DLL}LocationDebug}> $<$<NOT:$<CONFIG:Debug>>:${Poco${DLL}Location}> $<TARGET_FILE_DIR:${APP}>)
+    set(POCOLIB $<$<CONFIG:Debug>:${Poco${DLL}LocationDebug}> $<$<NOT:$<CONFIG:Debug>>:${Poco${DLL}Location}>)	
 
-    install(FILES $<$<CONFIG:Debug>:${Poco${DLL}LocationDebug}> $<$<NOT:$<CONFIG:Debug>>:${Poco${DLL}Location}>
-            DESTINATION bin
-            COMPONENT server)
+    string(FIND "${POCOLIB}" ".dll" HAS_DLL_EXT)
 
+    if (${HAS_DLL_EXT} GREATER -1)
+        add_custom_command(TARGET ${APP} POST_BUILD
+                           COMMAND ${CMAKE_COMMAND} -E copy_if_different $<$<CONFIG:Debug>:${Poco${DLL}LocationDebug}> $<$<NOT:$<CONFIG:Debug>>:${Poco${DLL}Location}> $<TARGET_FILE_DIR:${APP}>)
+
+        install(FILES $<$<CONFIG:Debug>:${Poco${DLL}LocationDebug}> $<$<NOT:$<CONFIG:Debug>>:${Poco${DLL}Location}>
+                DESTINATION bin
+                COMPONENT server)
+    endif()
 endmacro()
+
 if (WIN32)
     foreach (LIB IN ITEMS ${POCO_LIBS})
         string(SUBSTRING ${LIB} 6 -1 POCO_LIB)

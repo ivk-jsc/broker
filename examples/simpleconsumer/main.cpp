@@ -45,11 +45,11 @@ void usage(const struct optparse_long *opt_option, size_t count) {
 ////////////////////////////////////////////////////////////////////////////////
 class SimpleConsumer : public cms::ExceptionListener {
  private:
-  cms::ConnectionFactory *connectionFactory;
-  cms::Connection *connection;
-  cms::Session *session;
-  cms::Destination *destination;
-  cms::MessageConsumer *consumer;
+  std::unique_ptr<cms::ConnectionFactory> connectionFactory;
+  std::unique_ptr<cms::Connection> connection;
+  std::unique_ptr<cms::Session> session;
+  std::unique_ptr<cms::Destination> destination;
+  std::unique_ptr<cms::MessageConsumer> consumer;
   std::string brokerURI;
   std::string destURI;
   bool useTopic;
@@ -62,50 +62,39 @@ class SimpleConsumer : public cms::ExceptionListener {
   std::chrono::steady_clock::time_point t0{perf_clock::now()};
 
   SimpleConsumer(std::string brokerURI, std::string destURI, bool useTopic, std::string consMode)
-      : connectionFactory(nullptr),
-        connection(nullptr),
-        session(nullptr),
-        destination(nullptr),
-        consumer(nullptr),
-        brokerURI(std::move(brokerURI)),
-        destURI(std::move(destURI)),
-        useTopic(useTopic),
-        isStoped(false),
-        consMode(std::move(consMode)) {}
+      : brokerURI(std::move(brokerURI)), destURI(std::move(destURI)), useTopic(useTopic), isStoped(false), consMode(std::move(consMode)) {}
 
   ~SimpleConsumer() override {
-    delete destination;
-
-    delete consumer;
-
-    delete session;
-
-    delete connection;
-
-    delete connectionFactory;
+    try {
+      destination.reset();
+      consumer.reset();
+      session.reset();
+      connection.reset();
+      connectionFactory.reset();
+    } catch (...) {
+    }
   }
-  void setSelector(const std::string &newSelector) { this->selector = newSelector; }
-  void setOutFormat(const std::string &newOutFormat) { this->outFormat = newOutFormat; }
-  void open() {
-    connectionFactory = cms::ConnectionFactory::createCMSConnectionFactory(brokerURI);
+  void setSelector(const std::string &newSelector) { selector = newSelector; }
+  void setOutFormat(const std::string &newOutFormat) { outFormat = newOutFormat; }
 
-    connection = connectionFactory->createConnection();
+  void open() {
+    connectionFactory.reset(cms::ConnectionFactory::createCMSConnectionFactory(brokerURI));
+
+    connection.reset(connectionFactory->createConnection());
     connection->setExceptionListener(this);
     connection->start();
 
-    session = connection->createSession(cms::Session::AUTO_ACKNOWLEDGE);
-    cms::Topic *topic = nullptr;
+    session.reset(connection->createSession(cms::Session::AUTO_ACKNOWLEDGE));
     if (useTopic) {
-      topic = session->createTopic(destURI);
-      destination = topic;
+      destination.reset(session->createTopic(destURI));
     } else {
-      destination = session->createQueue(destURI);
+      destination.reset(session->createQueue(destURI));
     }
 
     if (consMode == "regular") {
-      consumer = session->createConsumer(destination, selector);
+      consumer.reset(session->createConsumer(destination.get(), selector));
     } else {
-      consumer = session->createDurableConsumer(topic, "test-dutable-consumer", selector);
+      consumer.reset(session->createDurableConsumer(dynamic_cast<const cms::Topic *>(destination.get()), "test-durable-consumer", selector));
     }
   }
 
@@ -128,13 +117,13 @@ class SimpleConsumer : public cms::ExceptionListener {
     try {
       int i = 1;
       while (!isStoped.load()) {
-        cms::Message *message = consumer->receive();
+        std::unique_ptr<cms::Message> message(consumer->receive());
         if (!flag) {
           t0 = perf_clock::now();
           flag = true;
         }
         if (message != nullptr) {
-          const auto *textMessage = dynamic_cast<const cms::TextMessage *>(message);
+          const auto *textMessage = dynamic_cast<const cms::TextMessage *>(message.get());
           if (textMessage != nullptr) {
             if ((i == 1 || (i % 1000 == 0)) && (outFormat.empty() || outFormat != "json")) {
               std::cout << "recv (" << i << ") <= " << textMessage->getText() << " elapsed [" << floating_seconds(perf_clock::now() - t0).count()
@@ -146,7 +135,7 @@ class SimpleConsumer : public cms::ExceptionListener {
               std::cout << "-------------------------------" << std::endl;
             }
           }
-          delete message;
+          message.reset();
           i++;
         }
       }
@@ -157,6 +146,16 @@ class SimpleConsumer : public cms::ExceptionListener {
 
   void onException(const cms::CMSException &ex) override { std::cerr << "Exception occurred: " << ex.what() << std::endl; }
 };
+
+template <typename F>
+int processOption(int option, const char *arg, const F &f) {
+  if (arg != nullptr) {
+    f(arg);
+    return 0;
+  }
+  std::cerr << "invalid option " << static_cast<char>(option) << std::endl;
+  return -1;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char *argv[]) {
@@ -187,31 +186,38 @@ int main(int argc, char *argv[]) {
   struct optparse options {};
   optparse_init(&options, argv);
   /* parse the all options based on opt_option[] */
-  while ((option = optparse_long(&options, opt_option, NULL)) != -1) {
+  while ((option = optparse_long(&options, opt_option, nullptr)) != -1) {
+    int processOptionResult = 0;
     switch (option) {
       case 'd':
-        destURI.assign(options.optarg);
+        processOptionResult = processOption(option, options.optarg, [&destURI](const char *arg) { destURI.assign(arg); });
         break;
       case 't':
-        useTopics = (std::string(options.optarg) == "topic");
+        processOptionResult = processOption(option, options.optarg, [&useTopics](const char *arg) { useTopics = (std::string(arg) == "topic"); });
         break;
       case 'u':
-        brokerURI.assign(options.optarg);
+        processOptionResult = processOption(option, options.optarg, [&brokerURI](const char *arg) { brokerURI.assign(arg); });
         break;
       case 'm':
-        consMode.assign(options.optarg);
+        processOptionResult = processOption(
+            option, options.optarg, [&consMode](const char *arg) { consMode = ((std::string(arg) == "durable") ? "durable" : "regular"); });
         break;
       case 'o':
-        outFormat.assign(options.optarg);
+        processOptionResult =
+            processOption(option, options.optarg, [&outFormat](const char *arg) { outFormat = (std::string(arg) == "json") ? "json" : "text"; });
         break;
       case 's':
-        selector.assign((std::string(options.optarg) != "regular") ? options.optarg : "");
+        processOptionResult = processOption(option, options.optarg, [&selector](const char *arg) { selector.assign(arg); });
         break;
       case 'h':
         usage(opt_option, 7);
         return 0;
       default:
         break;
+    }
+    if (processOptionResult != 0) {
+      usage(opt_option, 9);
+      return -1;
     }
   }
   char *arg = optparse_arg(&options);
