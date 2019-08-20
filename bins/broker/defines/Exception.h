@@ -28,36 +28,26 @@
 namespace upmq {
 namespace broker {
 
-class Exception : public std::runtime_error {
+class Exception : public std::exception {
  public:
-  Exception(const std::string& info,
-            // set exception information
-            const std::string& errDescription,
-            // set error description, for example, strerror(errno)
-            int err,
-            // set error, for example, errno
-            const std::string& file,
-            // set file name
-            int line)  // set line number
-      ;
-
+  ///
+  /// \param info - exception information
+  /// \param errDescription - error description, for example, strerror(errno)
+  /// \param err - error number, for example, errno
+  /// \param file - file name, use __FILE__ macro
+  /// \param line - line number, use __LINE__ macro
+  Exception(const std::string& info, const std::string& errDescription, int err, const std::string& file, int line);
   Exception(const Exception&);
-
   Exception(Exception&&) noexcept;
-
   Exception& operator=(const Exception&);
-
   Exception& operator=(Exception&&) noexcept;
-
   const char* what() const noexcept override;
-
   std::string message() const;
-
   int error() const;
-
   ~Exception() noexcept override;
 
  private:
+  std::string _message{};
   int _error{0};
 };
 }  // namespace broker

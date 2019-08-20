@@ -20,8 +20,17 @@ namespace upmq {
 namespace broker {
 
 Exception::Exception(const std::string& info, const std::string& errDescription, int err, const std::string& file, int line)
-    : runtime_error(std::string("exception : ") + file + std::string(" : ") + std::to_string(static_cast<long long>(line)) + std::string(" => ") +
-                    errDescription + std::string("(") + std::to_string(static_cast<long long>(err)) + std::string(")") + std::string(" : ") + info),
+    : _message(std::string("exception : ")
+                   .append(file)
+                   .append(" : ")
+                   .append(std::to_string(line))
+                   .append(" => ")
+                   .append(errDescription)
+                   .append("(")
+                   .append(std::to_string(err))
+                   .append(")")
+                   .append(" : ")
+                   .append(info)),
       _error(err) {}
 
 Exception::Exception(const Exception&) = default;
@@ -32,9 +41,9 @@ Exception& Exception::operator=(const Exception&) = default;
 
 Exception& Exception::operator=(Exception&&) noexcept = default;
 
-const char* Exception::what() const noexcept { return std::runtime_error::what(); }
+const char* Exception::what() const noexcept { return _message.c_str(); }
 
-std::string Exception::message() const { return std::runtime_error::what(); }
+std::string Exception::message() const { return _message; }
 
 int Exception::error() const { return _error; }
 
