@@ -28,9 +28,7 @@ class Singleton {
   }
 
   static void destroyInstance() {
-    if (Singleton<T>::_instance != nullptr) {
-      delete Singleton<T>::_instance;
-    }
+    delete Singleton<T>::_instance;
     Singleton::_instance = nullptr;
   }
 

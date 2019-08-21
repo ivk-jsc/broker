@@ -25,19 +25,20 @@ Sender::Sender(std::string id, const Session &session)
     : _id(std::move(id)), _session(session), _groupID(Poco::UUIDGenerator::defaultGenerator().createRandom().toString()) {}
 Sender::~Sender() = default;
 void Sender::fixMessageInGroup(const Session &session, Storage &storage, const MessageDataContainer &sMessage) const {
-  if (sMessage.message().has_group_id()) {
-    std::string groupID = sMessage.message().group_id() + "+" + _groupID;
+  auto &message = sMessage.message();
+  if (message.has_group_id()) {
+    std::string groupID = message.group_id() + "+" + _groupID;
     if (!std::get<0>(_groupInfo).empty() && (std::get<0>(_groupInfo) != groupID)) {
       setToLast(session, storage);
     }
     if (std::get<0>(_groupInfo) != groupID) {
-      _groupInfo = std::make_tuple(groupID, sMessage.message().message_id(), 1);
+      _groupInfo = std::make_tuple(groupID, message.message_id(), 1);
     } else {
       ++(std::get<2>(_groupInfo));
-      std::get<1>(_groupInfo) = sMessage.message().message_id();
+      std::get<1>(_groupInfo) = message.message_id();
     }
-    const_cast<Proto::Message &>(sMessage.message()).set_group_id(std::get<0>(_groupInfo));
-    const_cast<Proto::Message &>(sMessage.message()).set_group_seq(std::get<2>(_groupInfo));
+    const_cast<Proto::Message &>(message).set_group_id(std::get<0>(_groupInfo));
+    const_cast<Proto::Message &>(message).set_group_seq(std::get<2>(_groupInfo));
   }
 }
 void Sender::setToLast(const Session &session, Storage &storage) const {

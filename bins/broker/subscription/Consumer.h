@@ -34,13 +34,13 @@ namespace broker {
 
 class Consumer {
  public:
-  typedef struct _session_info {
-    _session_info() = default;
-    _session_info(std::string _id, Proto::Acknowledge _type) : id(std::move(_id)), type(_type), txName("") {}
-    std::string id = "";
+  struct session_info {
+    session_info() = default;
+    session_info(std::string _id, Proto::Acknowledge _type) : id(std::move(_id)), type(_type) {}
+    std::string id;
     Proto::Acknowledge type = Proto::Acknowledge::AUTO_ACKNOWLEDGE;
-    mutable std::string txName = "";
-  } session_info;
+    mutable std::string txName;
+  };
   int num;
   std::unique_ptr<storage::Selector> selector;
   std::string objectID;

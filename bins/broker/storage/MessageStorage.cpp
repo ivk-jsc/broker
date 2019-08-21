@@ -157,14 +157,17 @@ void Storage::removeMessagesBySession(const upmq::broker::Session &session) {
     select << sql.str(), Poco::Data::Keywords::into(messageInfo.tuple), Poco::Data::Keywords::range(0, 1);
     while (!select.done()) {
       select.execute();
-      if (!messageInfo.tuple.get<message::field_message_id.position>().empty()) {
-        if (!messageInfo.tuple.get<message::field_group_id.position>().isNull() &&
-            !messageInfo.tuple.get<message::field_group_id.position>().value().empty()) {
+
+      auto &fieldMessageId = messageInfo.tuple.get<message::field_message_id.position>();
+      if (!fieldMessageId.empty()) {
+        auto &fieldGroupId = messageInfo.tuple.get<message::field_group_id.position>();
+        if (!fieldGroupId.isNull() &&
+            !fieldGroupId.value().empty()) {
           if (messageInfo.tuple.get<message::field_last_in_group.position>()) {
-            removeGroupMessage(messageInfo.tuple.get<message::field_group_id.position>().value(), session);
+            removeGroupMessage(fieldGroupId.value(), session);
           }
         } else {
-          removeMessage(messageInfo.tuple.get<message::field_message_id.position>(), *session.currentDBSession);
+          removeMessage(fieldMessageId, *session.currentDBSession);
         }
       }
     }

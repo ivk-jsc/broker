@@ -128,21 +128,24 @@ void Broker::onEvent(const AsyncTCPHandler &ahandler, MessageDataContainer &sMes
         throw EXCEPTION("unknown message type", std::to_string(static_cast<int>(sMessage.type())), ERROR_UNKNOWN);
     }
   } catch (Exception &ex) {
-    outMessage->protoMessage().Clear();
-    outMessage->protoMessage().mutable_error()->set_error_code(static_cast<Proto::ErrorCode>(ex.error()));
-    outMessage->protoMessage().mutable_error()->set_error_message(ex.message());
+    auto &protoMessage = outMessage->protoMessage();
+    protoMessage.Clear();
+    auto *protoMessageError = protoMessage.mutable_error();
+    protoMessageError->set_error_code(static_cast<Proto::ErrorCode>(ex.error()));
+    protoMessageError->set_error_message(ex.message());
     ASYNCLOG_ERROR(ahandler.logStream, (std::to_string(sMessage.handlerNum).append(" ! => ").append(std::string(ex.what()))));
     if (sMessage.isMessage()) {
       sMessage.removeLinkedFile();
     }
   }
   if (sMessage.isNeedReceipt() || sMessage.isConnect() || sMessage.isBrowser() || outMessage->protoMessage().has_error()) {
-    if (outMessage->protoMessage().has_error()) {
-      outMessage->protoMessage().mutable_error()->set_receipt_id(sMessage.receiptId());
+    auto &protoMessage = outMessage->protoMessage();
+    if (protoMessage.has_error()) {
+      protoMessage.mutable_error()->set_receipt_id(sMessage.receiptId());
     } else if (sMessage.isNeedReceipt()) {
-      outMessage->protoMessage().mutable_receipt()->set_receipt_id(sMessage.receiptId());
+      protoMessage.mutable_receipt()->set_receipt_id(sMessage.receiptId());
     }
-    outMessage->protoMessage().set_object_id(sMessage.objectID());
+    protoMessage.set_object_id(sMessage.objectID());
     outMessage->setRRID(sMessage.rrID());
     outMessage->serialize();
     const_cast<AsyncTCPHandler &>(ahandler).put(std::move(outMessage));
@@ -171,18 +174,18 @@ void Broker::onConnect(const AsyncTCPHandler &tcpHandler, const MessageDataConta
 
   Proto::Connected &connected = outMessage.createConnected(sMessage.objectID());
 
-  Proto::Heartbeat* mutableHeartbeat = connected.mutable_heartbeat();
+  Proto::Heartbeat *mutableHeartbeat = connected.mutable_heartbeat();
   mutableHeartbeat->set_send_timeout(Singleton<Configuration>::Instance().heartbeat().sendTimeout);
   mutableHeartbeat->set_recv_timeout(Singleton<Configuration>::Instance().heartbeat().recvTimeout);
 
-  Proto::ServerVersion* mutableServerVersion = connected.mutable_server_version();
+  Proto::ServerVersion *mutableServerVersion = connected.mutable_server_version();
   mutableServerVersion->set_server_major_version(MQ_VERSION_MAJOR);
   mutableServerVersion->set_server_minor_version(MQ_VERSION_MINOR);
   mutableServerVersion->set_server_revision_version(MQ_VERSION_REVISION);
   mutableServerVersion->set_server_vendor_id("upmq(cpp.ver)");
 
   Proto::ServerVersion serverVersion;
-  Proto::ProtocolVersion* mutableProtocolVersion = connected.mutable_protocol_version();
+  Proto::ProtocolVersion *mutableProtocolVersion = connected.mutable_protocol_version();
   mutableProtocolVersion->set_protocol_major_version(serverVersion.server_major_version());
   mutableProtocolVersion->set_protocol_minor_version(serverVersion.server_minor_version());
 }

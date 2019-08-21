@@ -397,16 +397,17 @@ AsyncTCPHandler::DataStatus AsyncTCPHandler::fillBody(MessageDataContainer &sMes
   return DataStatus::OK;
 }
 AsyncTCPHandler::DataStatus AsyncTCPHandler::tryMoveBodyByLink(MessageDataContainer &sMessage) {
-  auto &property = sMessage.message().property();
+  auto &message = sMessage.message();
+  auto &property = message.property();
   auto it = property.find(s2s::proto::upmq_data_link);
   if (it != property.end() && !it->second.is_null() && !it->second.value_string().empty()) {
     auto dataSizeItem = property.find(broker::s2s::proto::upmq_data_size);
     if (dataSizeItem != property.end() && !dataSizeItem->second.is_null() && (dataSizeItem->second.value_long() > 0)) {
       Poco::File dataSrcFile(it->second.value_string());
       Poco::Path dataDestPath = STORAGE_CONFIG.data.bigFilesPath();
-      std::string msgID = sMessage.message().message_id();
+      std::string msgID = message.message_id();
       msgID[2] = '_';
-      dataDestPath.append(Exchange::mainDestinationPath(sMessage.message().destination_uri())).append(msgID);
+      dataDestPath.append(Exchange::mainDestinationPath(message.destination_uri())).append(msgID);
 
       dataDestPath.makeFile();
       Poco::File dataDestDir(dataDestPath.parent());
