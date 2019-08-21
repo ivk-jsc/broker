@@ -45,8 +45,13 @@ class ConsumerImpl : public cms::MessageConsumer, public cms::QueueBrowser, cms:
 
   enum class Receive { RECEIVE = 1, RECEIVETIMEOUT, RECEIVENOWAIT };
 
-  ConsumerImpl(SessionImpl *sessionImpl, const cms::Destination *destination, ConsumerImpl::Type clientType, const string &selector, const string &subscription, bool noLocal);
-  ~ConsumerImpl();
+  ConsumerImpl(SessionImpl *sessionImpl,
+               const cms::Destination *destination,
+               ConsumerImpl::Type clientType,
+               const string &selector,
+               const string &subscription,
+               bool noLocal);
+  ~ConsumerImpl() override;
 
   cms::Message *receive() override;
   cms::Message *receive(int millisecs) override;

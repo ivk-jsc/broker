@@ -172,10 +172,14 @@ class ArrayPointer {
    * Copy constructor. Copies the value contained in the ArrayPointer to the new
    * instance and increments the reference counter.
    */
-  ArrayPointer(const ArrayPointer &value) : array(value.array), onDelete(onDeleteFunc) { this->array->refs.incrementAndGet(); }
+  ArrayPointer(const ArrayPointer &value) : array(value.array), onDelete(onDeleteFunc) {
+    if (this->array) {
+      this->array->refs.incrementAndGet();
+    }
+  }
 
   virtual ~ArrayPointer() {
-    if (this->array->release() == true) {
+    if (this->array && this->array->release()) {
       onDelete(this->array);
     }
   }
@@ -220,7 +224,7 @@ class ArrayPointer {
    *
    * @return the contained pointer.
    */
-  PointerType get() const { return this->array->value; }
+  PointerType get() const { return (this->array == nullptr) ? nullptr : this->array->value; }
 
   /**
    * Returns the current size of the contained array or zero if the array is
@@ -228,7 +232,7 @@ class ArrayPointer {
    *
    * @return the size of the array or zero if the array is NULL
    */
-  int length() const { return this->array->length; }
+  int length() const { return (this->array == nullptr) ? 0 : this->array->length; }
 
   /**
    * Exception Safe Swap Function
@@ -285,29 +289,31 @@ class ArrayPointer {
    * @throws NullPointerException if the contained value is Null
    */
   ReferenceType operator[](int index) {
-    if (this->array->value == nullptr) {
+    if (this->array == nullptr || this->array->value == nullptr) {
       throw decaf::lang::exceptions::NullPointerException(__FILE__, __LINE__, "ArrayPointer operator& - Pointee is NULL.");
     }
 
     if (index < 0 || this->array->length <= index) {
-      throw decaf::lang::exceptions::IndexOutOfBoundsException(__FILE__, __LINE__, "Array Index %d is out of bounds for this array.", this->array->length);
+      throw decaf::lang::exceptions::IndexOutOfBoundsException(
+          __FILE__, __LINE__, "Array Index %d is out of bounds for this array.", this->array->length);
     }
 
     return this->array->value[index];
   }
   ConstReferenceType operator[](int index) const {
-    if (this->array->value == nullptr) {
+    if (this->array == nullptr || this->array->value == nullptr) {
       throw decaf::lang::exceptions::NullPointerException(__FILE__, __LINE__, "ArrayPointer operator& - Pointee is NULL.");
     }
 
     if (index < 0 || this->array->length <= index) {
-      throw decaf::lang::exceptions::IndexOutOfBoundsException(__FILE__, __LINE__, "Array Index %d is out of bounds for this array.", this->array->length);
+      throw decaf::lang::exceptions::IndexOutOfBoundsException(
+          __FILE__, __LINE__, "Array Index %d is out of bounds for this array.", this->array->length);
     }
 
     return this->array->value[index];
   }
 
-  bool operator!() const { return this->array->value == nullptr; }
+  bool operator!() const { return (this->array == nullptr) ? true : this->array->value == nullptr; }
 
   inline friend bool operator==(const ArrayPointer &left, const T *right) { return left.get() == right; }
 
@@ -378,7 +384,9 @@ class ArrayPointerComparator : public decaf::util::Comparator<ArrayPointer<T> > 
   virtual bool operator()(const ArrayPointer<T> &left, const ArrayPointer<T> &right) const { return left.get() < right.get(); }
 
   // Requires that the type in the pointer is an instance of a Comparable.
-  virtual int compare(const ArrayPointer<T> &left, const ArrayPointer<T> &right) const { return left.get() < right.get() ? -1 : right.get() < left.get() ? 1 : 0; }
+  virtual int compare(const ArrayPointer<T> &left, const ArrayPointer<T> &right) const {
+    return left.get() < right.get() ? -1 : right.get() < left.get() ? 1 : 0;
+  }
 };
 }  // namespace lang
 }  // namespace decaf
@@ -396,7 +404,9 @@ struct less<decaf::lang::ArrayPointer<T> > {
   typedef decaf::lang::ArrayPointer<T> second_argument_type;
   typedef bool result_type;
 
-  bool operator()(const decaf::lang::ArrayPointer<T> &left, const decaf::lang::ArrayPointer<T> &right) const { return less<T *>()(left.get(), right.get()); }
+  bool operator()(const decaf::lang::ArrayPointer<T> &left, const decaf::lang::ArrayPointer<T> &right) const {
+    return less<T *>()(left.get(), right.get());
+  }
 };
 }  // namespace std
 

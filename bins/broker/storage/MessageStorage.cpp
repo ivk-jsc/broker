@@ -161,8 +161,7 @@ void Storage::removeMessagesBySession(const upmq::broker::Session &session) {
       auto &fieldMessageId = messageInfo.tuple.get<message::field_message_id.position>();
       if (!fieldMessageId.empty()) {
         auto &fieldGroupId = messageInfo.tuple.get<message::field_group_id.position>();
-        if (!fieldGroupId.isNull() &&
-            !fieldGroupId.value().empty()) {
+        if (!fieldGroupId.isNull() && !fieldGroupId.value().empty()) {
           if (messageInfo.tuple.get<message::field_last_in_group.position>()) {
             removeGroupMessage(fieldGroupId.value(), session);
           }
@@ -425,7 +424,6 @@ std::shared_ptr<MessageDataContainer> Storage::get(const Consumer &consumer, boo
   }
   do {
     msg.reset();
-    ttlIsOut = false;
 
     bool needFiltered = false;
     if (consumer.select->empty()) {

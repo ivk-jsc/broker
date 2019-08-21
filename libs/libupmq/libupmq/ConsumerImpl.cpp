@@ -40,7 +40,8 @@ using namespace decaf::lang::exceptions;
 using namespace upmq::transport;
 using namespace upmq::transport;
 
-ConsumerImpl::ConsumerImpl(SessionImpl *session, const cms::Destination *destination, ConsumerImpl::Type type, const string &selector, const string &subscr, bool noLocal)
+ConsumerImpl::ConsumerImpl(
+    SessionImpl *session, const cms::Destination *destination, ConsumerImpl::Type type, const string &selector, const string &subscr, bool noLocal)
     : _session(session),
       _destination(nullptr),
       _started(false),
@@ -177,7 +178,8 @@ void ConsumerImpl::subscription() {
     request->getSubscription().set_no_local(_noLocal);
 
     if (getSubscription().empty()) {
-      if ((_destination->getType() == cms::Destination::QUEUE || _destination->getType() == cms::Destination::TEMPORARY_QUEUE) && getType() != Type::BROWSER) {
+      if ((_destination->getType() == cms::Destination::QUEUE || _destination->getType() == cms::Destination::TEMPORARY_QUEUE) &&
+          getType() != Type::BROWSER) {
         setSubscription(_destination->getUri());
       } else {
         setSubscription(_objectId);
@@ -219,17 +221,9 @@ void ConsumerImpl::unsubscription() {
     request->getUnsubscription().set_session_id(_session->getObjectId());
     request->getUnsubscription().set_subscription_name(getSubscription());
 
-    if (getType() == Type::DURABLE_CONSUMER) {
-      request->getUnsubscription().set_durable(true);
-    } else {
-      request->getUnsubscription().set_durable(false);
-    }
+    request->getUnsubscription().set_durable(getType() == Type::DURABLE_CONSUMER);
 
-    if (getType() == Type::BROWSER) {
-      request->getUnsubscription().set_browse(true);
-    } else {
-      request->getUnsubscription().set_browse(false);
-    }
+    request->getUnsubscription().set_browse(getType() == Type::BROWSER);
 
     if (!request->getUnsubscription().IsInitialized()) {
       throw cms::CMSException("request not initialized");
