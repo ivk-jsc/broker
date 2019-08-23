@@ -23,7 +23,7 @@
 
 TemplateParamReplacer::TemplateParamReplacer(std::string pageName) : _pageName(std::move(pageName)) {}
 
-TemplateParamReplacer::~TemplateParamReplacer() {}
+TemplateParamReplacer::~TemplateParamReplacer() = default;
 
 void TemplateParamReplacer::addReplacer(const std::string &param, TemplateParamReplacer::Callback callback) {
   _handlerMap.insert(make_pair(param, callback));

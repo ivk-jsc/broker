@@ -24,15 +24,22 @@ MainPageReplacer::MainPageReplacer(std::string pageName) : TemplateParamReplacer
   addReplacer(MakeStringify(brokerVersion), (TemplateParamReplacer::Callback)&MainPageReplacer::brokerVersionReplacer);
   addReplacer(MakeStringify(brokerPort), (TemplateParamReplacer::Callback)&MainPageReplacer::brokerPortReplacer);
   addReplacer(MakeStringify(brokerLogP), (TemplateParamReplacer::Callback)&MainPageReplacer::brokerLogPriorityReplacer);
+  addReplacer(MakeStringify(brokerLogInteractive), (TemplateParamReplacer::Callback)&MainPageReplacer::brokerLogInteractiveReplacer);
+  addReplacer(MakeStringify(brokerLogPath), (TemplateParamReplacer::Callback)&MainPageReplacer::brokerLogPathReplacer);
   addReplacer(MakeStringify(brokerSDBMS), (TemplateParamReplacer::Callback)&MainPageReplacer::brokerStorageDBMSReplacer);
   addReplacer(MakeStringify(brokerSConnection), (TemplateParamReplacer::Callback)&MainPageReplacer::brokerStorageConnectionReplacer);
   addReplacer(MakeStringify(brokerSData), (TemplateParamReplacer::Callback)&MainPageReplacer::brokerStorageDataReplacer);
+  addReplacer(MakeStringify(brokerSPath), (TemplateParamReplacer::Callback)&MainPageReplacer::brokerStorageDBPathReplacer);
+  addReplacer(MakeStringify(brokerDestinations), (TemplateParamReplacer::Callback)&MainPageReplacer::brokerDestinationReplacer);
   addReplacer(MakeStringify(brokerDestinationAutocreate), (TemplateParamReplacer::Callback)&MainPageReplacer::brokerDestinationAutocreateReplacer);
   addReplacer(MakeStringify(brokerSDBMSPool), (TemplateParamReplacer::Callback)&MainPageReplacer::brokerSDBMSPoolReplacer);
   addReplacer(MakeStringify(brokerJournal), (TemplateParamReplacer::Callback)&MainPageReplacer::brokerJournalReplacer);
   addReplacer(MakeStringify(brokerReaders), (TemplateParamReplacer::Callback)&MainPageReplacer::brokerReadersReplacer);
   addReplacer(MakeStringify(brokerWriters), (TemplateParamReplacer::Callback)&MainPageReplacer::brokerWritersReplacer);
   addReplacer(MakeStringify(brokerAcceptors), (TemplateParamReplacer::Callback)&MainPageReplacer::brokerAcceptorsReplacer);
+  addReplacer(MakeStringify(brokerSubscriptionWorkers), (TemplateParamReplacer::Callback)&MainPageReplacer::brokerSubscriptionWorkersReplacer);
+  addReplacer(MakeStringify(brokerNetClients), (TemplateParamReplacer::Callback)&MainPageReplacer::brokerNetClientsReplacer);
+  addReplacer(MakeStringify(brokerSessions), (TemplateParamReplacer::Callback)&MainPageReplacer::brokerSessionsReplacer);
   addReplacer(MakeStringify(brokerSubscriptions), (TemplateParamReplacer::Callback)&MainPageReplacer::brokerSubscriptionsReplacer);
 }
 
@@ -40,11 +47,11 @@ std::string MainPageReplacer::brokerNameReplacer() { return CONFIGURATION::Insta
 
 std::string MainPageReplacer::brokerPortReplacer() { return std::to_string(CONFIGURATION::Instance().port()); }
 
-std::string MainPageReplacer::brokerVersionReplacer() { return upmq::broker::About::version() + " <br> " + upmq::broker::About::commit(); }
+std::string MainPageReplacer::brokerVersionReplacer() { return upmq::broker::About::version() + " <br> " + upmq::broker::About::commit("<br>"); }
 
 std::string MainPageReplacer::brokerLogPriorityReplacer() {
   std::string log;
-  switch (ASYNCLOGGER::Instance().logPriority) {
+  switch (LOG_CONFIG.level) {
     case 1:
       log = "FATAL ERROR";
       break;
@@ -82,7 +89,7 @@ std::string MainPageReplacer::brokerStorageDBMSReplacer() {
 }
 
 std::string MainPageReplacer::brokerStorageConnectionReplacer() { return STORAGE_CONFIG.connection.value.get(); }
-std::string MainPageReplacer::getH1() const { return "Broker Configuration"; }
+std::string MainPageReplacer::getH1() const { return "Configuration"; }
 std::string MainPageReplacer::brokerStorageDataReplacer() { return STORAGE_CONFIG.data.get().toString(); }
 
 std::string MainPageReplacer::brokerSDBMSPoolReplacer() { return std::to_string(STORAGE_CONFIG.connection.props.connectionPool); }
@@ -91,4 +98,11 @@ std::string MainPageReplacer::brokerJournalReplacer() { return STORAGE_CONFIG.me
 std::string MainPageReplacer::brokerReadersReplacer() { return std::to_string(THREADS_CONFIG.readers); }
 std::string MainPageReplacer::brokerWritersReplacer() { return std::to_string(THREADS_CONFIG.writers); }
 std::string MainPageReplacer::brokerAcceptorsReplacer() { return std::to_string(THREADS_CONFIG.accepters); }
-std::string MainPageReplacer::brokerSubscriptionsReplacer() { return std::to_string(THREADS_CONFIG.subscribers); }
+std::string MainPageReplacer::brokerSubscriptionWorkersReplacer() { return std::to_string(THREADS_CONFIG.subscribers); }
+std::string MainPageReplacer::brokerLogInteractiveReplacer() { return LOG_CONFIG.isInteractive ? "TRUE" : "FALSE"; }
+std::string MainPageReplacer::brokerLogPathReplacer() { return LOG_CONFIG.path.toString(); }
+std::string MainPageReplacer::brokerStorageDBPathReplacer() { return STORAGE_CONFIG.connection.path.toString(); }
+std::string MainPageReplacer::brokerDestinationReplacer() { return std::to_string(DESTINATION_CONFIG.maxCount); }
+std::string MainPageReplacer::brokerNetClientsReplacer() { return std::to_string(NET_CONFIG.maxConnections); }
+std::string MainPageReplacer::brokerSessionsReplacer() { return std::to_string(SESSIONS_CONFIG.maxCount); }
+std::string MainPageReplacer::brokerSubscriptionsReplacer() { return std::string(); }

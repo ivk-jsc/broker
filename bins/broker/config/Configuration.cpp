@@ -174,27 +174,20 @@ std::string Configuration::Storage::Connection::toString() const {
       .append(path.toString())
       .append("]");
 }
-std::string Configuration::Storage::Data::toString() const {
-  return std::string("\n- * \t\t\tpath\t\t: [")
-      .append(_path.toString())
-      .append("]\n- * \t\t\tbig files\t: [")
-      .append(_bigFilesPath.toString())
-      .append("]");
-}
+std::string Configuration::Storage::Data::toString() const { return std::string("\n- * \t\t\tpath\t\t: [").append(_path.toString()).append("]"); }
 void Configuration::Storage::Data::set(const std::string &path) {
   Poco::Path storageDataPath(path);
   if (storageDataPath.isRelative()) {
     storageDataPath.makeAbsolute();
   }
   _path = storageDataPath;
-  _bigFilesPath = storageDataPath;
-  _bigFilesPath.makeDirectory();  // append("persistent")
-  Poco::File tmp(_bigFilesPath);
+
+  _path.makeDirectory();
+  Poco::File tmp(_path);
   if (!tmp.exists()) {
     tmp.createDirectories();
   }
 }
 const Poco::Path &Configuration::Storage::Data::get() const { return _path; }
-const Poco::Path &Configuration::Storage::Data::bigFilesPath() const { return _bigFilesPath; }
 }  // namespace broker
 }  // namespace upmq

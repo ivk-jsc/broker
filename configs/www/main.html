@@ -1,60 +1,153 @@
 <table id="broker" class="object-grid">
-    <caption>{brokerName}</caption>
     <tr>
-        <td class="name">Broker <span style="margin-left: 8px">Name</span></td>
-        <td class="brokerName">{brokerName}</td>
+        <td class="main-item">Broker</td>
+        <td class="empty-item"></td>
+        <td></td>
     </tr>
     <tr>
-        <td class="version">Version</td>
-        <td class="brokerName">{brokerVersion}</td>
+        <td></td>
+        <td class="sub-item">Name</td>
+        <td class="value-item">{brokerName}</td>
     </tr>
     <tr>
-        <td class="logP">Log Priority</td>
-        <td class="brokerLogP">{brokerLogP}</td>
+        <td></td>
+        <td class="sub-item">TCP Port</td>
+        <td class="value-item">{brokerPort}</td>
     </tr>
     <tr>
-        <td class="port">TCP Port</td>
-        <td class="brokerPort">{brokerPort}</td>
+        <td></td>
+        <td class="sub-item">Version</td>
+        <td class="value-item">{brokerVersion}</td>
     </tr>
     <tr>
-        <td class="readers">TCP Readers</td>
-        <td class="brokerReaders">{brokerReaders}</td>
+        <td class="main-item">Log</td>
+        <td></td>
+        <td></td>
     </tr>
     <tr>
-        <td class="writers">TCP Writers</td>
-        <td class="brokerWriters">{brokerWriters}</td>
+        <td></td>
+        <td class="sub-item">Priority</td>
+        <td class="value-item">{brokerLogP}</td>
     </tr>
     <tr>
-        <td class="acceptors">TCP Acceptors</td>
-        <td class="brokerAcceptors">{brokerAcceptors}</td>
+        <td></td>
+        <td class="sub-item">Interactive</td>
+        <td class="value-item">{brokerLogInteractive}</td>
     </tr>
     <tr>
-        <td class="broker-subscriptions">Subscription-Workers</td>
-        <td class="brokerSubscriptions">{brokerSubscriptions}</td>
+        <td></td>
+        <td class="sub-item">Path</td>
+        <td class="value-item">{brokerLogPath}</td>
     </tr>
     <tr>
-        <td class="autocreate-destinations">Autocreate Destinations</td>
-        <td class="autocreate">{brokerDestinationAutocreate}</td>
+        <td class="main-item">Net</td>
+        <td></td>
+        <td></td>
     </tr>
     <tr>
-        <td class="SDBMS">Storage DBMS</td>
-        <td class="brokerSDBMS">{brokerSDBMS}</td>
+        <td></td>
+        <td class="sub-item">Max TCP Clients</td>
+        <td class="value-item">{brokerNetClients}</td>
     </tr>
     <tr>
-        <td class="SDBMS-pool">DBMS Connection Pool</td>
-        <td class="brokerSDBMSPool">{brokerSDBMSPool}</td>
+        <td class="main-item">Sessions</td>
+        <td></td>
+        <td></td>
     </tr>
     <tr>
-        <td class="sconnection">DBMS Connection String</td>
-        <td class="brokerSConnection">{brokerSConnection}</td>
+        <td></td>
+        <td class="sub-item">Max Count</td>
+        <td class="value-item">{brokerSessions}</td>
     </tr>
     <tr>
-        <td class="journal">DBMS Journal</td>
-        <td class="brokerJournal">{brokerJournal}</td>
+        <td class="main-item">Destinations</td>
+        <td></td>
+        <td></td>
     </tr>
     <tr>
-        <td class="sdata">Persistent Payload Path</td>
-        <td class="brokerSData">{brokerSData}</td>
+        <td></td>
+        <td class="sub-item">Max Count</td>
+        <td class="value-item">{brokerDestinations}</td>
+    </tr>
+    <tr>
+        <td></td>
+        <td class="sub-item">Autocreate</td>
+        <td class="value-item">{brokerDestinationAutocreate}</td>
+    </tr>
+    <tr>
+        <td class="main-item">Subscriptions</td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td class="sub-item">Max Count</td>
+        <td class="value-item">{brokerSubscriptions}</td>
+    </tr>
+    <tr>
+        <td class="main-item">Threads</td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td class="sub-item">Readers</td>
+        <td class="value-item">{brokerReaders}</td>
+    </tr>
+    <tr>
+        <td></td>
+        <td class="sub-item">Writers</td>
+        <td class="value-item">{brokerWriters}</td>
+    </tr>
+    <tr>
+        <td></td>
+        <td class="sub-item">Acceptors</td>
+        <td class="value-item">{brokerAcceptors}</td>
+    </tr>
+    <tr>
+        <td></td>
+        <td class="sub-item">Subscription-Workers</td>
+        <td class="value-item">{brokerSubscriptionWorkers}</td>
+    </tr>
+    <tr>
+        <td class="main-item">DBMS</td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td class="sub-item">Type</td>
+        <td class="value-item">{brokerSDBMS}</td>
+    </tr>
+    <tr>
+        <td></td>
+        <td class="sub-item">Connection Pool</td>
+        <td class="value-item">{brokerSDBMSPool}</td>
+    </tr>
+    <tr>
+        <td></td>
+        <td class="sub-item">Connection String</td>
+        <td class="value-item">{brokerSConnection}</td>
+    </tr>
+    <tr>
+        <td></td>
+        <td class="sub-item">DataBase Path</td>
+        <td class="value-item">{brokerSPath}</td>
+    </tr>
+    <tr>
+        <td></td>
+        <td class="sub-item">Journal</td>
+        <td class="value-item">{brokerJournal}</td>
+    </tr>
+    <tr>
+        <td class="main-item">Persistent Storage</td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td class="sub-item">Payload Path</td>
+        <td class="value-item">{brokerSData}</td>
     </tr>
 </table>
 

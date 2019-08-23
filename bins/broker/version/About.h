@@ -28,7 +28,7 @@ class About {
  public:
   static std::string version();
   static std::string author();
-  static std::string commit();
+  static std::string commit(const std::string &delimeter = "");
   static std::string vendor();
 };
 }  // namespace broker
