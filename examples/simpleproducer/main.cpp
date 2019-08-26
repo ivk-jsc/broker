@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <memory>
 #include <iostream>
 #include <sstream>
 #include <ctime>
