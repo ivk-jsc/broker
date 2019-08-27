@@ -88,8 +88,8 @@ UPMQ broker [bins/broker] is configured by the broker.xml file (can be found in 
             <!-- Interactive mode - use 0 for disable console output -->
             <interactive>true</interactive>
         </log>
-		<sessions>
-		    <!-- Maximum sessions count per connection -->
+	<sessions>
+	    <!-- Maximum sessions count per connection -->
             <max-count>1024</max-count>
         </sessions>
         <subscriptions>
