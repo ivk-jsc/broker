@@ -19,11 +19,12 @@
 #include "Connection.h"
 #include "About.h"
 
-MainPageReplacer::MainPageReplacer(std::string pageName) : TemplateParamReplacer(std::move(pageName)) {
+MainPageReplacer::MainPageReplacer(std::string pageName, std::string separator)
+    : TemplateParamReplacer(std::move(pageName)), _separator(std::move(separator)) {
   addReplacer(MakeStringify(brokerName), (TemplateParamReplacer::Callback)&MainPageReplacer::brokerNameReplacer);
   addReplacer(MakeStringify(brokerVersion), (TemplateParamReplacer::Callback)&MainPageReplacer::brokerVersionReplacer);
   addReplacer(MakeStringify(brokerPort), (TemplateParamReplacer::Callback)&MainPageReplacer::brokerPortReplacer);
-  addReplacer(MakeStringify(brokerLogP), (TemplateParamReplacer::Callback)&MainPageReplacer::brokerLogPriorityReplacer);
+  addReplacer(MakeStringify(brokerLogPriority), (TemplateParamReplacer::Callback)&MainPageReplacer::brokerLogPriorityReplacer);
   addReplacer(MakeStringify(brokerLogInteractive), (TemplateParamReplacer::Callback)&MainPageReplacer::brokerLogInteractiveReplacer);
   addReplacer(MakeStringify(brokerLogPath), (TemplateParamReplacer::Callback)&MainPageReplacer::brokerLogPathReplacer);
   addReplacer(MakeStringify(brokerSDBMS), (TemplateParamReplacer::Callback)&MainPageReplacer::brokerStorageDBMSReplacer);
@@ -47,7 +48,9 @@ std::string MainPageReplacer::brokerNameReplacer() { return CONFIGURATION::Insta
 
 std::string MainPageReplacer::brokerPortReplacer() { return std::to_string(CONFIGURATION::Instance().port()); }
 
-std::string MainPageReplacer::brokerVersionReplacer() { return upmq::broker::About::version() + " <br> " + upmq::broker::About::commit("<br>"); }
+std::string MainPageReplacer::brokerVersionReplacer() {
+  return upmq::broker::About::version() + _separator + upmq::broker::About::commit(_separator);
+}
 
 std::string MainPageReplacer::brokerLogPriorityReplacer() {
   std::string log;
@@ -105,4 +108,4 @@ std::string MainPageReplacer::brokerStorageDBPathReplacer() { return STORAGE_CON
 std::string MainPageReplacer::brokerDestinationReplacer() { return std::to_string(DESTINATION_CONFIG.maxCount); }
 std::string MainPageReplacer::brokerNetClientsReplacer() { return std::to_string(NET_CONFIG.maxConnections); }
 std::string MainPageReplacer::brokerSessionsReplacer() { return std::to_string(SESSIONS_CONFIG.maxCount); }
-std::string MainPageReplacer::brokerSubscriptionsReplacer() { return std::string(); }
+std::string MainPageReplacer::brokerSubscriptionsReplacer() { return std::to_string(SUBSCRIPTIONS_CONFIG.maxCount); }

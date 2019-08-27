@@ -89,12 +89,13 @@ Poco::Net::HTTPResponse::HTTPStatus WebAdminRequestHandler::onGet() {
       indexlIt = replacerMap.find(indexPage);
     }
 
-    auto replIt = replacerMap.find(lFile);
+    upmq::broker::Configuration::ReplacerMapType::iterator replIt = replacerMap.find(lFile);
     const std::string clientsPage = "/clients." + extension;
     const std::string messagesPage = "/messages." + extension;
     if (replIt == replacerMap.end()) {
       if (lFile == "/main." + extension) {
-        replacerMap.emplace(lFile, std::unique_ptr<TemplateParamReplacer>(new MainPageReplacer(lFile)));
+        std::string sep = (extension == "json") ? "\n" : "<br>";
+        replacerMap.emplace(lFile, std::unique_ptr<TemplateParamReplacer>(new MainPageReplacer(lFile, std::move(sep))));
         replIt = replacerMap.find(lFile);
       }
       if (((tmpWebVec[0] == "queues") || (tmpWebVec[0] == "topics")) && tmpWebVec.size() == 1) {
@@ -108,24 +109,28 @@ Poco::Net::HTTPResponse::HTTPStatus WebAdminRequestHandler::onGet() {
         }
       } else if (((tmpWebVec[0] == "destinations") || (tmpWebVec[0] == "messages")) && tmpWebVec.size() > 1) {
         if ((tmpWebVec[0] == "destinations") || (tmpWebVec[0] == "topics")) {
-          replacerMap.emplace(
-              clientsPage,
-              std::unique_ptr<TemplateParamReplacer>(
-                  new ClientsPageReplacer(clientsPage, tmpWebVec[1], static_cast<int>(upmq::broker::Destination::type(tmpWebVec[2])))));
+          replacerMap.emplace(clientsPage,
+                              std::unique_ptr<TemplateParamReplacer>(new ClientsPageReplacer(
+                                  clientsPage, tmpWebVec[1], static_cast<int>(upmq::broker::Destination::type(tmpWebVec[2])))));
           replIt = replacerMap.find(clientsPage);
         } else if (tmpWebVec[0] == "messages") {
-          replacerMap.emplace(
-              messagesPage,
-              std::unique_ptr<TemplateParamReplacer>(
-                  new MessagesPageReplacer(messagesPage, tmpWebVec[1], static_cast<int>(upmq::broker::Destination::type(tmpWebVec[2])))));
+          replacerMap.emplace(messagesPage,
+                              std::unique_ptr<TemplateParamReplacer>(new MessagesPageReplacer(
+                                  messagesPage, tmpWebVec[1], static_cast<int>(upmq::broker::Destination::type(tmpWebVec[2])))));
           replIt = replacerMap.find(messagesPage);
         }
       }
     }
 
     if (replIt != replacerMap.end()) {
-      dynamic_cast<IndexPageReplacer *>(indexlIt->second.get())->setChildReplacer(replIt->second.get());
-      _htmlResult = dynamic_cast<IndexPageReplacer *>(indexlIt->second.get())->replace();
+      if (extension != "json" && indexlIt != replIt) {
+        dynamic_cast<IndexPageReplacer *>(indexlIt->second.get())->setChildReplacer(replIt->second.get());
+        _htmlResult = dynamic_cast<IndexPageReplacer *>(indexlIt->second.get())->replace();
+      } else if (indexlIt == replIt) {
+        _htmlResult = "";
+      } else {
+        _htmlResult = replIt->second->replace();
+      }
 
       if ((replIt->first == clientsPage) || (replIt->first == (messagesPage))) {
         replacerMap.erase(replIt);

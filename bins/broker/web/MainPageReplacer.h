@@ -20,12 +20,14 @@
 #include "TemplateParamReplacer.h"
 
 class MainPageReplacer : public TemplateParamReplacer {
+  std::string _separator;
+
  public:
   enum MainParam {
     brokerName = 0,
     brokerVersion,
     brokerPort,
-    brokerLogP,
+    brokerLogPriority,
     brokerLogInteractive,
     brokerLogPath,
     brokerSDBMS,
@@ -45,7 +47,7 @@ class MainPageReplacer : public TemplateParamReplacer {
     brokerSubscriptions
   };
 
-  explicit MainPageReplacer(std::string pageName);
+  explicit MainPageReplacer(std::string pageName, std::string separator);
 
   std::string brokerNameReplacer();
 

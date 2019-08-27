@@ -1,16 +1,63 @@
 {
-    "Broker Name": "{brokerName}",
-    "Version": "{brokerVersion}",
-    "Log Priority" :"{brokerLogP}",
-    "TCP Port" : {brokerPort},
-    "TCP Readers": {brokerReaders},
-    "TCP Writers": {brokerWriters},
-    "TCP Acceptors": {brokerAcceptors},
-    "Subscription-Workers": {brokerSubscriptions},
-    "Autocreate Destinations": "{brokerDestinationAutocreate}",
-    "Storage DBMS": "{brokerSDBMS}",
-    "DBMS Connection Pool": {brokerSDBMSPool},
-    "DBMS Connection String": "{brokerSConnection}",
-    "DBMS Journal":{brokerJournal},
-    "Persistent Payload Path": "{brokerSData}"
+  "Broker": {
+    "Name": "{brokerName}",
+    "TCP Port": {
+      brokerPort
+    },
+    "Version": "{brokerVersion}"
+  },
+  "Log": {
+    "Priority": "{brokerLogPriority}",
+    "Interactive": {
+      brokerLogInteractive
+    },
+    "Path": "{brokerLogPath}"
+  },
+  "Net": {
+    "Max TCP Clients": {
+      brokerNetClients
+    }
+  },
+  "Sessions": {
+    "Max Count": {
+      brokerSessions
+    }
+  },
+  "Destinations": {
+    "Max Count": {
+      brokerDestinations
+    },
+    "Autocreate": "{brokerDestinationAutocreate}"
+  },
+  "Subscriptions": {
+    "Max Count": {
+      brokerSubscriptions
+    }
+  },
+  "Threads": {
+    "Readers": {
+      brokerReaders
+    },
+    "Writers": {
+      brokerWriters
+    },
+    "Acceptors": {
+      brokerAcceptors
+    },
+    "Subscription-Workers": {
+      brokerSubscriptionWorkers
+    }
+  },
+  "DBMS": {
+    "Type": "{brokerSDBMS}",
+    "Connection Pool": {
+      brokerSDBMSPool
+    },
+    "Connection String": "{brokerSConnection}",
+    "DataBase Path": "{brokerSPath}",
+    "Journal": "{brokerJournal}"
+  },
+  "Persistent Storage": {
+    "Payload Path": "{brokerSData}"
+  }
 }
