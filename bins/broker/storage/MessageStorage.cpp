@@ -512,7 +512,7 @@ std::shared_ptr<MessageDataContainer> Storage::get(const Consumer &consumer, boo
     return nullptr;
   }
 
-  std::shared_ptr<MessageDataContainer> sMessage = std::make_shared<MessageDataContainer>(STORAGE_CONFIG.data.bigFilesPath().toString());
+  std::shared_ptr<MessageDataContainer> sMessage = std::make_shared<MessageDataContainer>(STORAGE_CONFIG.data.get().toString());
   try {
     Proto::Message &message = sMessage->createMessageHeader(consumer.objectID);
     sMessage->clientID = Poco::replace(consumer.clientID, "-browser", "");
@@ -530,7 +530,7 @@ std::shared_ptr<MessageDataContainer> Storage::get(const Consumer &consumer, boo
       data = Exchange::mainDestinationPath(sMessage->message().destination_uri()) + "/" + data;
       auto &pmap = *message.mutable_property();
       if (useFileLink) {
-        Poco::Path path = STORAGE_CONFIG.data.bigFilesPath();
+        Poco::Path path = STORAGE_CONFIG.data.get();
         path.append(data);
         pmap[s2s::proto::upmq_data_link].set_value_string(path.toString());
         pmap[s2s::proto::upmq_data_link].set_is_null(false);

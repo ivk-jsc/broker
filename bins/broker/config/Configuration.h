@@ -110,12 +110,10 @@ class Configuration {
     struct Data {
      private:
       Poco::Path _path;
-      Poco::Path _bigFilesPath;
 
      public:
       const Poco::Path &get() const;
       void set(const std::string &path);
-      const Poco::Path &bigFilesPath() const;
       std::string toString() const;
     };
 

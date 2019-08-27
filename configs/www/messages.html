@@ -3,8 +3,7 @@
         var form = document.getElementById(id);
         if (form.style.display === "none") {
             form.style.display = "block";
-        }
-        else {
+        } else {
             form.style.display = "none";
         }
     }
@@ -18,11 +17,13 @@
                 <div>
                     <input value="show send-message-form" type="button" onclick="showdiv('add-message')"/>
                     <form action="" method="post" id="del-all-message">
-                        <input type="submit" id="del-all-message-button" name="del-all-message-button" value="del-all-messages"/>
+                        <input type="submit" id="del-all-message-button" name="del-all-message-button"
+                               value="del-all-messages"/>
                     </form>
                 </div>
                 <form action="" method="post" class="add-form" id="add-message" style="display: none">
-                    <textarea name="message" id="message" cols="30" rows="10"></textarea><br/>
+                    <label for="message"></label><textarea name="message" id="message" cols="30"
+                                                           rows="10"></textarea><br/>
                     <input type="submit" id="add-message-button" name="add-message-button" value="send-message"/>
                 </form>
             </div>

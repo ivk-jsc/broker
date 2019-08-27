@@ -404,7 +404,7 @@ AsyncTCPHandler::DataStatus AsyncTCPHandler::tryMoveBodyByLink(MessageDataContai
     auto dataSizeItem = property.find(broker::s2s::proto::upmq_data_size);
     if (dataSizeItem != property.end() && !dataSizeItem->second.is_null() && (dataSizeItem->second.value_long() > 0)) {
       Poco::File dataSrcFile(it->second.value_string());
-      Poco::Path dataDestPath = STORAGE_CONFIG.data.bigFilesPath();
+      Poco::Path dataDestPath = STORAGE_CONFIG.data.get();
       std::string msgID = message.message_id();
       msgID[2] = '_';
       dataDestPath.append(Exchange::mainDestinationPath(message.destination_uri())).append(msgID);

@@ -156,7 +156,7 @@ inline int fileno_hack(const std::basic_ios<charT, traits>& stream) {
   filebuf_t* bbuf = dynamic_cast<filebuf_t*>(stream.rdbuf());
   if (bbuf != nullptr) {
     struct my_filebuf : public std::basic_filebuf<charT, traits> {
-#if ((_MSC_VER >= 1900) && (_MSC_VER <= 1920))   // MSVC Toolset Version 14.0-14.20
+#if ((_MSC_VER >= 1900) && (_MSC_VER <= 1923))   // MSVC Toolset Version 14.0-14.21
       FILE* c_file() { return *(FILE**)((char*)this + sizeof(filebuf_t) - sizeof(charT*) - sizeof(charT*) - sizeof(FILE*)); }
 #elif ((_MSC_VER >= 1700) && (_MSC_VER < 1900))  // MSVC Toolset Version 11.0, 12.0
       FILE* c_file() { return *(FILE**)((char*)this + sizeof(filebuf_t) - sizeof(FILE*)); }

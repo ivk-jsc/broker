@@ -619,7 +619,7 @@ bool Broker::read(size_t num) {
         return true;
       }
       memset(ahandler->pBuffer, 0, BUFFER_SIZE);
-      MessageDataContainer sMessage(STORAGE_CONFIG.data.bigFilesPath().toString());
+      MessageDataContainer sMessage(STORAGE_CONFIG.data.get().toString());
       try {
         switch (ahandler->fillHeaderBodyLens()) {
           case AsyncTCPHandler::DataStatus::AS_ERROR:

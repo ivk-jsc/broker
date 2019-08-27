@@ -35,9 +35,10 @@ std::string About::author() {
   return ss.str();
 }
 
-std::string About::commit() {
+std::string About::commit(const std::string &delimeter) {
   std::stringstream ss;
-  ss << MQ_COMMITTER_DATE << " [" << MQ_COMMITTER_FULLSHA << "] (" << MQ_COMMITTER_SHORTSHA << ") " << MQ_COMMITTER_NOTE;
+  ss << MQ_COMMITTER_DATE << delimeter << "full-sha [" << MQ_COMMITTER_FULLSHA << "] " << delimeter << "short-sha [" << MQ_COMMITTER_SHORTSHA << "] "
+     << delimeter << "commit [" << MQ_COMMITTER_NOTE << "]";
   return ss.str();
 }
 

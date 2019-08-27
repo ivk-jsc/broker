@@ -23,7 +23,7 @@
 
 TemplateParamReplacer::TemplateParamReplacer(std::string pageName) : _pageName(std::move(pageName)) {}
 
-TemplateParamReplacer::~TemplateParamReplacer() {}
+TemplateParamReplacer::~TemplateParamReplacer() = default;
 
 void TemplateParamReplacer::addReplacer(const std::string &param, TemplateParamReplacer::Callback callback) {
   _handlerMap.insert(make_pair(param, callback));
@@ -52,7 +52,7 @@ std::string TemplateParamReplacer::replace() {
   std::string htmlTemplate = loadTemplate(_pageName);
   if (!htmlTemplate.empty()) {
     for (auto &it : _handlerMap) {
-      replaceStringInPlace(htmlTemplate, ("{" + it.first + "}"), (this->*it.second)());
+      replaceStringInPlace(htmlTemplate, (it.first), (this->*it.second)());
     }
   }
   return htmlTemplate;
@@ -60,9 +60,42 @@ std::string TemplateParamReplacer::replace() {
 
 void TemplateParamReplacer::replaceStringInPlace(std::string &subject, const std::string &search, const std::string &replace) {
   size_t pos = 0;
+
+  auto getFirstBrace = [&subject](size_t pos) {
+    while (pos > 0) {
+      --pos;
+      if (subject[pos] == '{') {
+        return pos;
+      }
+    }
+    return pos;
+  };
+  auto getLastBrace = [&subject](size_t pos) {
+    while (pos < subject.length()) {
+      ++pos;
+      if (subject[pos] == '}') {
+        return pos;
+      }
+    }
+    return pos;
+  };
+
   while ((pos = subject.find(search, pos)) != std::string::npos) {
-    subject.replace(pos, search.length(), replace);
-    pos += replace.length();
+    if (std::isalpha(subject[pos + search.length()])) {
+      pos += search.length();
+      continue;
+    }
+    size_t firstBracePosition = getFirstBrace(pos);
+    if (firstBracePosition > 0) {
+      size_t lastBracePosition = getLastBrace(pos);
+      if (lastBracePosition < subject.length()) {
+        size_t length = lastBracePosition - firstBracePosition + 1;
+        subject.replace(firstBracePosition, length, replace);
+        pos = lastBracePosition;
+      }
+    } else {
+      ++pos;
+    }
   }
 }
 

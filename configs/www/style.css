@@ -1,35 +1,83 @@
-h1 {color : #7a3760  }
-html,body,div,ul,li,h1,h2,h3,p,a,img,table,td,ol{margin:0;padding:0;border:0}
+h1 {
+    color: #7a3760
+}
+
+html, body, div, ul, li, h1, h2, h3, p, a, img, table, td, ol {
+    margin: 0;
+    padding: 0;
+    border: 0
+}
+
 @font-face {
     font-family: "SF_Display_Regular";
     src: url(/fonts/SF_Display_Regular.ttf);
 }
+
 @font-face {
     font-family: "SF_Display_Bold";
     src: url(/fonts/SF_Display_Bold.ttf);
 }
+
 @font-face {
     font-family: "NotoSans-Regular";
     src: url(/fonts/NotoSans-Regular.ttf);
 }
+
 @font-face {
     font-family: "NotoSans-Bold";
     src: url(/fonts/NotoSans-Bold.ttf);
 }
+
 @font-face {
     font-family: "PT Sans Caption Regular";
     src: url(/fonts/PTC55F.ttf);
 }
+
 @font-face {
     font-family: "PT Sans Caption Bold";
     src: url(/fonts/PTC75F.ttf);
 }
-body {text-align: center; font: normal 14px "PT Sans Caption Regular"}
-table {border-collapse:collapse; margin: 0 auto}
-table tr td{border:1px solid #000;padding:5px}
-table caption{font-size:26px;line-height: 40px;font-weight: bold; color: #7a3760;height:40px}
-#main-menu {height:50px; width: 100%; background: #cccccc}
-#main-menu a{height: 30px;
+
+@font-face {
+    font-family: "NotoSans-Mono";
+    src: url("/fonts/NotoMono-Regular.ttf");
+}
+
+body {
+    text-align: center;
+    font: normal 14px "PT Sans Caption Regular"
+}
+
+table {
+    border-collapse: collapse;
+    margin: 0 auto
+}
+
+tr:hover {
+    background-color: lightgray;
+}
+
+table tr td {
+    border: 1px solid #ddd;
+    padding: 3px
+}
+
+table caption {
+    font-size: 26px;
+    line-height: 40px;
+    font-weight: bold;
+    color: #7a3760;
+    height: 40px
+}
+
+#main-menu {
+    height: 50px;
+    width: 100%;
+    background: #cccccc
+}
+
+#main-menu a {
+    height: 30px;
     width: 50px;
     margin: 9px 5px;
     display: block;
@@ -38,42 +86,123 @@ table caption{font-size:26px;line-height: 40px;font-weight: bold; color: #7a3760
     line-height: 30px;
     padding: 0 5px;
     text-decoration: none;
-    color: #770000;}
+    color: #770000;
+}
+
 #main-menu a:link, #main-menu a:visited {
     color: #7a3760;
 }
+
 #main-menu a:active {
     background-color: #555555;
 }
+
 #main-menu a:hover {
     background-color: #777777;
 }
-#broker {text-align: left}
-.name {font: normal 14px "PT Sans Caption Bold"}
-.version {font: normal 14px "PT Sans Caption Bold"; padding-left: 62px}
-.port {font: normal 14px "PT Sans Caption Bold"; padding-left: 62px}
-.logP {font: normal 14px "PT Sans Caption Bold"; padding-left: 62px}
-.autocreate-destinations {font: normal 14px "PT Sans Caption Bold"; padding-left: 62px}
-.SDBMS {font: normal 14px "PT Sans Caption Bold"}
-.SDBMS-pool {font: normal 14px "PT Sans Caption Bold"; padding-left: 62px}
-.sconnection {font: normal 14px "PT Sans Caption Bold"; padding-left: 62px}
-.sdata {font: normal 14px "PT Sans Caption Bold"; padding-left: 62px}
-.journal {font: normal 14px "PT Sans Caption Bold"; padding-left: 62px}
-.readers {font: normal 14px "PT Sans Caption Bold"; padding-left: 62px}
-.writers {font: normal 14px "PT Sans Caption Bold"; padding-left: 62px}
-.acceptors {font: normal 14px "PT Sans Caption Bold"; padding-left: 62px}
-.broker-subscriptions {font: normal 14px "PT Sans Caption Bold"; padding-left: 62px}
-.head-row  {font: normal 14px "PT Sans Caption Bold"}
-.head-row > td {text-align: center}
-.data-row > .destination {text-align: left}
-.data-row > .connectionString {text-align: left}
-.data-row > .dataPath {text-align: left}
-.add-row .add-input, .add-row .add-select {padding: 0; text-align: center}
-.add-row .add-input input {width: 95%; height: 25px; margin: 0 auto; padding: 0; font-size: 14px}
-.add-row .connectionString input, .add-row .dataPath input {text-align: center}
-.add-select select {width: 95%; height: 25px; margin: 0 auto; padding: 0; font-size: 14px; text-align: center}
-.add-div {float: left; width: 100%; height: auto; overflow: hidden;}
-.add-div div{float: left; width: 100%; height: auto; overflow: hidden; text-align: left; margin-bottom: 20px;}
-.add-div form{float: left; width: auto; height: auto; overflow: hidden; display: block; text-align: left;}
-.add-div form textarea {width: 500px;}
-.add-row-form {border-left: none; border-right: none; border-top: none; padding-left: 0;}
+
+#broker {
+    text-align: left;
+}
+
+.main-item {
+    font: normal 14px "PT Sans Caption Bold";
+    text-align: left
+}
+
+.sub-item {
+    font: normal 14px "PT Sans Caption Bold";
+    padding-left: 32px
+}
+
+.value-item {
+    font: normal 14px "NotoSans-Mono";
+    padding-left: 32px;
+}
+
+.empty-item {
+    border-right: #ddd000;
+    padding: 0;
+}
+
+.head-row {
+    font: normal 14px "PT Sans Caption Bold"
+}
+
+.head-row > td {
+    text-align: center
+}
+
+.data-row > .destination {
+    text-align: left
+}
+
+.data-row > .connectionString {
+    text-align: left
+}
+
+.data-row > .dataPath {
+    text-align: left
+}
+
+.add-row .add-input, .add-row .add-select {
+    padding: 0;
+    text-align: center
+}
+
+.add-row .add-input input {
+    width: 95%;
+    height: 25px;
+    margin: 0 auto;
+    padding: 0;
+    font-size: 14px
+}
+
+.add-row .connectionString input, .add-row .dataPath input {
+    text-align: center
+}
+
+.add-select select {
+    width: 95%;
+    height: 25px;
+    margin: 0 auto;
+    padding: 0;
+    font-size: 14px;
+    text-align: center
+}
+
+.add-div {
+    float: left;
+    width: 100%;
+    height: auto;
+    overflow: hidden;
+}
+
+.add-div div {
+    float: left;
+    width: 100%;
+    height: auto;
+    overflow: hidden;
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.add-div form {
+    float: left;
+    width: auto;
+    height: auto;
+    overflow: hidden;
+    display: block;
+    text-align: left;
+}
+
+.add-div form textarea {
+    width: 500px;
+}
+
+.add-row-form {
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    padding-left: 0;
+}

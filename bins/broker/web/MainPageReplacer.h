@@ -20,25 +20,34 @@
 #include "TemplateParamReplacer.h"
 
 class MainPageReplacer : public TemplateParamReplacer {
+  std::string _separator;
+
  public:
   enum MainParam {
     brokerName = 0,
     brokerVersion,
     brokerPort,
-    brokerLogP,
+    brokerLogPriority,
+    brokerLogInteractive,
+    brokerLogPath,
     brokerSDBMS,
     brokerSDBMSPool,
     brokerSConnection,
     brokerSData,
+    brokerSPath,
+    brokerDestinations,
     brokerDestinationAutocreate,
     brokerJournal,
     brokerReaders,
     brokerWriters,
     brokerAcceptors,
+    brokerSubscriptionWorkers,
+    brokerNetClients,
+    brokerSessions,
     brokerSubscriptions
   };
 
-  explicit MainPageReplacer(std::string pageName);
+  explicit MainPageReplacer(std::string pageName, std::string separator);
 
   std::string brokerNameReplacer();
 
@@ -48,8 +57,13 @@ class MainPageReplacer : public TemplateParamReplacer {
 
   std::string brokerLogPriorityReplacer();
 
+  std::string brokerLogInteractiveReplacer();
+
+  std::string brokerLogPathReplacer();
+
   std::string brokerSDBMSPoolReplacer();
 
+  std::string brokerDestinationReplacer();
   std::string brokerDestinationAutocreateReplacer();
 
   std::string brokerJournalReplacer();
@@ -57,13 +71,21 @@ class MainPageReplacer : public TemplateParamReplacer {
   std::string brokerReadersReplacer();
   std::string brokerWritersReplacer();
   std::string brokerAcceptorsReplacer();
-  std::string brokerSubscriptionsReplacer();
+  std::string brokerSubscriptionWorkersReplacer();
 
   std::string brokerStorageDBMSReplacer();
 
   std::string brokerStorageConnectionReplacer();
 
   std::string brokerStorageDataReplacer();
+
+  std::string brokerStorageDBPathReplacer();
+
+  std::string brokerNetClientsReplacer();
+
+  std::string brokerSessionsReplacer();
+
+  std::string brokerSubscriptionsReplacer();
 
   std::string getH1() const override;
 };
