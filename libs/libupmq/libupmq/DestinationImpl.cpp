@@ -93,8 +93,8 @@ void DestinationImpl::destroy() {
     if (_session != nullptr) {
       if (_session->_connection != nullptr) {
         if (!_session->_connection->isClosed()) {
-          for (std::map<std::string, ConsumerImpl *>::iterator it = _session->_consumersMap.begin(); it != _session->_consumersMap.end(); ++it) {
-            if (it->second->_destination->getName().compare(this->getName()) == 0 && it->second->isAlive()) {
+          for (auto& it : _session->_consumersMap) {
+            if (it.second->_destination->getName() == this->getName() && it.second->isAlive()) {
               throw cms::CMSException("destination in use");
             }
           }

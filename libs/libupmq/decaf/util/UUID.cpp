@@ -313,7 +313,7 @@ UUID UUID::fromString(const std::string &uuid) {
 
   int i = 0;
   for (; i < POS_SIZE && lastPosition > 0; i++) {
-    position[i] = (int)uuid.find("-", startPosition);
+    position[i] = (int)uuid.find('-', startPosition);
     lastPosition = position[i];
     startPosition = position[i] + 1;
   }

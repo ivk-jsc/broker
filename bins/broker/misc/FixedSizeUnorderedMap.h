@@ -22,6 +22,7 @@
 #include <algorithm>
 #include "MoveableRWLock.h"
 #include <Poco/Hash.h>
+#include <Exception.h>
 
 namespace upmq {
 
@@ -142,6 +143,17 @@ class FSUnorderedNode {
     }
     return false;
   }
+  template <typename F>
+  size_t eraseIf(const F &f) {
+    ScopedWriteRWLock writeRWLock(_rwLock);
+    size_t sz = _items.size();
+    auto item = std::remove_if(_items.begin(), _items.end(), f);
+    if (item != _items.end()) {
+      _items.erase(item, _items.end());
+      return sz - _items.size();
+    }
+    return 0;
+  }
   void clear() {
     ScopedWriteRWLock writeRWLock(_rwLock);
     _items.clear();
@@ -195,13 +207,21 @@ class FSUnorderedMap {
   void decValidIndex(size_t index) {
     --_realSize;
     upmq::ScopedWriteRWLock writeRWLock(_validIndexesLock);
-    _validIndexes.erase(index);
+    if (_items[index].empty()) {
+      _validIndexes.erase(index);
+    }
   }
 
   void clearValidIndex() {
     _realSize = 0;
     upmq::ScopedWriteRWLock writeRWLock(_validIndexesLock);
     _validIndexes.clear();
+  }
+
+  void checkSize() const {
+    if (_realSize + 1 == _size) {
+      throw EXCEPTION("FSUnorderedMap is full", std::to_string(_realSize), ERROR_UNKNOWN);
+    }
   }
 
  public:
@@ -216,18 +236,21 @@ class FSUnorderedMap {
     return _items.at(index).contains(key);
   }
   void insert(const std::pair<Key, Value> &pair) {
+    checkSize();
     size_t index = Poco::hash(pair.first) % _size;
     if (_items.at(index).append(pair)) {
       incValidIndex(index);
     }
   }
   void insert(std::pair<Key, Value> &&pair) {
+    checkSize();
     size_t index = Poco::hash(pair.first) % _size;
     if (_items.at(index).append(std::move(pair))) {
       incValidIndex(index);
     }
   }
   void emplace(Key &&key, Value &&value) {
+    checkSize();
     size_t index = Poco::hash(key) % _size;
     if (_items.at(index).append(std::pair<Key, Value>(std::move(key), std::move(value)))) {
       incValidIndex(index);
@@ -239,11 +262,26 @@ class FSUnorderedMap {
       decValidIndex(index);
     }
   }
+  template <typename F>
+  void eraseIf(const F &f) {
+    upmq::ScopedWriteRWLock writeRWLock(_validIndexesLock);
+    for (auto item = _validIndexes.begin(); item != _validIndexes.end();) {
+      size_t erased = _items.at(*item).eraseIf(f);
+      if (erased > 0) {
+        _realSize -= erased;
+        if (_items.at(*item).empty()) {
+          item = _validIndexes.erase(item);
+          continue;
+        }
+      }
+      ++item;
+    }
+  }
   void clear() {
+    clearValidIndex();
     for (auto &item : _items) {
       item.clear();
     }
-    clearValidIndex();
   }
   size_t size() const { return _realSize; }
   const ItemType &at(size_t index) { return _items.at(index); }
@@ -256,31 +294,39 @@ class FSUnorderedMap {
   }
   template <typename F>
   ValidItemsValue applyForOnce(ValidItemsValue startFrom, const F &f) const {
-    upmq::ScopedReadRWLock readRWLock(_validIndexesLock);
+    upmq::ScopedReadRWLockWithUnlock readRWLock(_validIndexesLock);
     auto index = _validIndexes.find(startFrom);
-    auto endIt = _validIndexes.end();
+    const auto endIt = _validIndexes.end();
     if (index == endIt) {
       index = _validIndexes.begin();
     }
     if (index != endIt) {
-      _items.at(*index).applyForEach(f);
-      auto next = std::next(index);
-      return (next == endIt) ? 0 : *next;
+      size_t i = *index;
+      const auto next = std::next(index);
+      const ValidItemsValue result = (next == endIt) ? 0 : *next;
+      readRWLock.unlock();
+
+      _items.at(i).applyForEach(f);
+      return result;
     }
     return 0;
   }
   template <typename F>
   ValidItemsValue applyForOnceBackward(ValidItemsValue startFrom, const F &f) const {
-    upmq::ScopedReadRWLock readRWLock(_validIndexesLock);
+    upmq::ScopedReadRWLockWithUnlock readRWLock(_validIndexesLock);
     ValidItemsType::const_reverse_iterator index(_validIndexes.find(startFrom));
-    auto rendIt = _validIndexes.rend();
+    const auto rendIt = _validIndexes.rend();
     if (index == rendIt) {
       index = _validIndexes.rbegin();
     }
     if (index != rendIt) {
-      _items.at(*index).applyForEach(f);
-      auto next = std::next(index);
-      return (next == rendIt) ? 0 : *next;
+      size_t i = *index;
+      const auto next = std::next(index);
+      const ValidItemsValue result = (next == rendIt) ? 0 : *next;
+      readRWLock.unlock();
+
+      _items.at(i).applyForEach(f);
+      return result;
     }
     return 0;
   }
@@ -297,6 +343,9 @@ class FSUnorderedMap {
     for (auto index : _validIndexes) {
       _items.at(index).changeForEach(f);
     }
+  }
+  size_t indexOf(const Key &key) {
+    return Poco::hash(key) % _size;
   }
 };
 }  // namespace upmq

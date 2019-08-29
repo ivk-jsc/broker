@@ -98,8 +98,8 @@ void SessionImpl::close() {
     }
 
     std::vector<ConsumerImpl *> cons;
-    for (std::map<std::string, ConsumerImpl *>::iterator it = _consumersMap.begin(); it != _consumersMap.end(); ++it) {
-      cons.push_back(it->second);
+    for (auto& it : _consumersMap) {
+      cons.push_back(it.second);
     }
     for (auto value : cons) {
       value->close();
@@ -107,8 +107,8 @@ void SessionImpl::close() {
     }
 
     std::vector<ProducerImpl *> prods;
-    for (std::map<std::string, ProducerImpl *>::iterator it = _producersMap.begin(); it != _producersMap.end(); ++it) {
-      prods.push_back(it->second);
+    for (auto& it : _producersMap) {
+      prods.push_back(it.second);
     }
     for (auto value : prods) {
       value->close();
@@ -116,13 +116,13 @@ void SessionImpl::close() {
     }
 
     std::vector<DestinationImpl *> dests;
-    for (std::map<std::string, DestinationImpl *>::iterator it = _destinationsMap.begin(); it != _destinationsMap.end(); ++it) {
-      dests.push_back(it->second);
+    for (auto& it : _destinationsMap) {
+      dests.push_back(it.second);
     }
     for (auto value : dests) {
       value->destroy();
     }
-
+    
     try {
       unsession();
     }
@@ -368,10 +368,11 @@ void SessionImpl::unsubscribe(const string &name) {
   try {
     checkClosed();
 
-    for (std::map<std::string, ConsumerImpl *>::iterator it = _consumersMap.begin(); it != _consumersMap.end(); ++it) {
-      if (it->second->getType() == ConsumerImpl::Type::DURABLE_CONSUMER && !it->second->getSubscription().empty() && (it->second->getSubscription() == name)) {
-        it->second->deleteDurableConsumer();
-        it->second->unsubscription();
+    for (auto& it : _consumersMap) {
+      ConsumerImpl* consumerImpl = it.second;
+      if (consumerImpl->getType() == ConsumerImpl::Type::DURABLE_CONSUMER && !consumerImpl->getSubscription().empty() && (consumerImpl->getSubscription() == name)) {
+        consumerImpl->deleteDurableConsumer();
+        consumerImpl->unsubscription();
       }
     }
   }
@@ -507,12 +508,13 @@ void SessionImpl::session() {
     Pointer<UPMQCommand> request(new UPMQCommand());
     request->getProtoMessage().set_object_id(_objectId);
 
-    request->getSession().set_session_id(_objectId);
-    request->getSession().set_connection_id(_connection->getObjectId());
-    request->getSession().set_receipt_id(_objectId);
-    request->getSession().set_acknowledge_type((Proto::Acknowledge)_ackMode);
+    Proto::Session &session = request->getSession();
+    session.set_session_id(_objectId);
+    session.set_connection_id(_connection->getObjectId());
+    session.set_receipt_id(_objectId);
+    session.set_acknowledge_type((Proto::Acknowledge)_ackMode);
 
-    if (!request->getSession().IsInitialized()) {
+    if (!session.IsInitialized()) {
       throw cms::CMSException("request not initialized");
     }
 

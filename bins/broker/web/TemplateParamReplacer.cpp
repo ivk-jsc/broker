@@ -17,6 +17,7 @@
 #include <Poco/File.h>
 #include <Poco/FileStream.h>
 #include <Poco/Path.h>
+#include <cctype>
 #include "TemplateParamReplacer.h"
 #include "Defines.h"
 #include "Configuration.h"

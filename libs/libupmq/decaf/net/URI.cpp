@@ -230,13 +230,15 @@ void URI::parseURI(const std::string &aUri, bool forceServer) {
 int URI::compareTo(const URI &value) const {
   int ret = 0;
 
+  const std::string thisScheme = this->uri.getScheme();
+  const std::string valueScheme = value.getScheme();
   // compare schemes
-  if (this->uri.getScheme().empty() && !value.getScheme().empty()) {
+  if (thisScheme.empty() && !valueScheme.empty()) {
     return -1;
-  } else if (!this->uri.getScheme().empty() && value.getScheme().empty()) {
+  } else if (!thisScheme.empty() && valueScheme.empty()) {
     return 1;
-  } else if (!this->uri.getScheme().empty() && !value.getScheme().empty()) {
-    ret = StringUtils::compareIgnoreCase(this->uri.getScheme().c_str(), value.getScheme().c_str());
+  } else if (!thisScheme.empty() && !valueScheme.empty()) {
+    ret = StringUtils::compareIgnoreCase(thisScheme.c_str(), valueScheme.c_str());
     if (ret != 0) {
       return ret > 0 ? 1 : -1;
     }
@@ -255,20 +257,24 @@ int URI::compareTo(const URI &value) const {
   } else {
     // otherwise both must be hierarchical
 
+    const std::string thisAuthority = this->uri.getAuthority();
+    const std::string valueAuthority = value.getAuthority();
     // compare authorities
-    if (!this->uri.getAuthority().empty() && value.getAuthority().empty()) {
+    if (!thisAuthority.empty() && valueAuthority.empty()) {
       return 1;
-    } else if (this->uri.getAuthority().empty() && !value.getAuthority().empty()) {
+    } else if (thisAuthority.empty() && !valueAuthority.empty()) {
       return -1;
-    } else if (!this->uri.getAuthority().empty() && !value.getAuthority().empty()) {
+    } else if (!thisAuthority.empty() && !valueAuthority.empty()) {
       if (!this->uri.getHost().empty() && !value.getHost().empty()) {
+        const std::string thisUserInfo = this->getUserInfo();
+        const std::string valueUserInfo = value.getUserInfo();
         // both are server based, so compare userinfo, host, port
-        if (!this->getUserInfo().empty() && value.getUserInfo().empty()) {
+        if (!thisUserInfo.empty() && valueUserInfo.empty()) {
           return 1;
-        } else if (this->getUserInfo().empty() && !value.getUserInfo().empty()) {
+        } else if (thisUserInfo.empty() && !valueUserInfo.empty()) {
           return -1;
-        } else if (!this->getUserInfo().empty() && !value.getUserInfo().empty()) {
-          ret = StringUtils::compare(this->getUserInfo().c_str(), value.getUserInfo().c_str());
+        } else if (!thisUserInfo.empty() && !valueUserInfo.empty()) {
+          ret = StringUtils::compare(thisUserInfo.c_str(), valueUserInfo.c_str());
           if (ret != 0) {
             return ret > 0 ? 1 : -1;
           }
@@ -286,7 +292,7 @@ int URI::compareTo(const URI &value) const {
         }
       } else {
         // one or both are registry based, compare the whole authority
-        ret = StringUtils::compare(this->uri.getAuthority().c_str(), value.getAuthority().c_str());
+        ret = StringUtils::compare(thisAuthority.c_str(), valueAuthority.c_str());
         if (ret != 0) {
           return ret > 0 ? 1 : -1;
         }
@@ -299,28 +305,32 @@ int URI::compareTo(const URI &value) const {
       return ret > 0 ? 1 : -1;
     }
 
+    const std::string thisQuery = this->getQuery();
+    const std::string valueQuery = value.getQuery();
     // compare queries
-    if (!this->getQuery().empty() && value.getQuery().empty()) {
+    if (!thisQuery.empty() && valueQuery.empty()) {
       return 1;
-    } else if (this->getQuery().empty() && !value.getQuery().empty()) {
+    } else if (thisQuery.empty() && !valueQuery.empty()) {
       return -1;
-    } else if (!this->getQuery().empty() && !value.getQuery().empty()) {
-      ret = StringUtils::compare(this->getQuery().c_str(), uri.getQuery().c_str());
+    } else if (!thisQuery.empty() && !valueQuery.empty()) {
+      ret = StringUtils::compare(thisQuery.c_str(), uri.getQuery().c_str());
       if (ret != 0) {
         return ret > 0 ? 1 : -1;
       }
     }
   }
 
+  const std::string thisFragment = this->getFragment();
+  const std::string valueFragment = value.getFragment();
   // everything else is identical, so compare fragments
-  if (!this->getFragment().empty() && value.getFragment().empty()) {
+  if (!thisFragment.empty() && valueFragment.empty()) {
     return 1;
   }
-  if (this->getFragment().empty() && !value.getFragment().empty()) {
+  if (thisFragment.empty() && !valueFragment.empty()) {
     return -1;
   }
-  if (!this->getFragment().empty() && !value.getFragment().empty()) {
-    ret = StringUtils::compare(this->getFragment().c_str(), value.getFragment().c_str());
+  if (!thisFragment.empty() && !valueFragment.empty()) {
+    ret = StringUtils::compare(thisFragment.c_str(), valueFragment.c_str());
     if (ret != 0) {
       return ret > 0 ? 1 : -1;
     }
@@ -610,7 +620,7 @@ std::string URI::normalize(const std::string &path) const {
 
   if (index != string::npos && (index2 == string::npos || index < index2)) {
     newpath.insert(0, "./");
-    result = newpath;
+    result = std::move(newpath);
   }
 
   return result;
@@ -811,7 +821,7 @@ string URI::toString() const {
       result.append(this->uri.getFragment());
     }
 
-    this->uriString = result;
+    this->uriString = std::move(result);
   }
 
   return this->uriString;

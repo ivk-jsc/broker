@@ -91,7 +91,29 @@ ScopedReadRWLock::ScopedReadRWLock(MRWLock& mrwLock) : _rwLock(mrwLock) { _rwLoc
 
 ScopedReadRWLock::~ScopedReadRWLock() noexcept { _rwLock.unlockRead(); }
 
+ScopedReadRWLockWithUnlock::ScopedReadRWLockWithUnlock(MRWLock& mrwLock) : _rwLock(mrwLock) { _rwLock.readLock(); }
+
+ScopedReadRWLockWithUnlock::~ScopedReadRWLockWithUnlock() noexcept { unlock(); }
+
+void ScopedReadRWLockWithUnlock::unlock() {
+  if (_locked) {
+    _locked = false;
+    _rwLock.unlockRead();
+  }
+}
+
 ScopedWriteRWLock::ScopedWriteRWLock(MRWLock& mrwLock) : _rwLock(mrwLock) { _rwLock.writeLock(); }
 
 ScopedWriteRWLock::~ScopedWriteRWLock() noexcept { _rwLock.unlockWrite(); }
+
+ScopedWriteRWLockWithUnlock::ScopedWriteRWLockWithUnlock(MRWLock& mrwLock) : _rwLock(mrwLock) { _rwLock.writeLock(); }
+
+ScopedWriteRWLockWithUnlock::~ScopedWriteRWLockWithUnlock() noexcept { unlock(); }
+
+void ScopedWriteRWLockWithUnlock::unlock() {
+  if (_locked) {
+    _locked = false;
+    _rwLock.unlockWrite();
+  }
+}
 }  // namespace upmq

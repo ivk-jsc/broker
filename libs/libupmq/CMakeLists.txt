@@ -33,6 +33,7 @@ if (WIN32)
     add_definitions(/DNOMINMAX)
     add_definitions(/DCMS_DLL)
     add_definitions(/DCMS_EXPORTS)
+	add_definitions(/D_WIN32_WINNT=0x0600)
     add_compile_options(/FS)
 endif (WIN32)
 

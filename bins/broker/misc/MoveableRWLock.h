@@ -18,6 +18,7 @@
 #define MOVABLE_POCO_RWLOCK_H
 
 #include <memory>
+#include <atomic>
 
 #ifdef _WIN32
 struct _RTL_SRWLOCK;
@@ -66,6 +67,16 @@ class ScopedReadRWLock {
   ~ScopedReadRWLock() noexcept;
 };
 
+class ScopedReadRWLockWithUnlock {
+  MRWLock &_rwLock;
+  std::atomic_bool _locked{true};
+
+ public:
+  explicit ScopedReadRWLockWithUnlock(MRWLock &mrwLock);
+  ~ScopedReadRWLockWithUnlock() noexcept;
+  void unlock();
+};
+
 class ScopedWriteRWLock {
   MRWLock &_rwLock;
 
@@ -74,6 +85,15 @@ class ScopedWriteRWLock {
   ~ScopedWriteRWLock() noexcept;
 };
 
+class ScopedWriteRWLockWithUnlock {
+  MRWLock &_rwLock;
+  std::atomic_bool _locked{true};
+
+ public:
+  explicit ScopedWriteRWLockWithUnlock(MRWLock &mrwLock);
+  ~ScopedWriteRWLockWithUnlock() noexcept;
+  void unlock();
+};
 }  // namespace upmq
 
 #endif  // MOVABLE_POCO_RWLOCK_H

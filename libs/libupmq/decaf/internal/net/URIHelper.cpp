@@ -86,7 +86,7 @@ URIType URIHelper::parseURI(const std::string &uri, bool forceServer) {
     result.setSchemeSpecificPart(temp);
   }
 
-  if (result.getScheme() == "" || (!result.getSchemeSpecificPart().empty() && result.getSchemeSpecificPart().at(0) == '/')) {
+  if (result.getScheme().empty() || (!result.getSchemeSpecificPart().empty() && result.getSchemeSpecificPart().at(0) == '/')) {
     result.setOpaque(false);
     // the URI is hierarchical
 
@@ -216,16 +216,16 @@ URIType URIHelper::parseAuthority(bool forceServer, const std::string &authority
   try {
     URIType result(authority);
 
-    if (authority == "") {
+    if (authority.empty()) {
       return result;
     }
 
-    std::string temp, tempUserinfo = "", tempHost = "";
-    std::size_t index, hostindex = 0;
+    std::string tempUserinfo, tempHost;
+    std::size_t hostindex = 0;
     int tempPort = -1;
 
-    temp = authority;
-    index = temp.find('@');
+    std::string temp = authority;
+    std::size_t index = temp.find('@');
     if (index != std::string::npos) {
       // remove user info
       tempUserinfo = temp.substr(0, index);
@@ -235,7 +235,7 @@ URIType URIHelper::parseAuthority(bool forceServer, const std::string &authority
     }
 
     index = temp.rfind(':');
-    std::size_t endindex = temp.find(']');
+    const std::size_t endindex = temp.find(']');
 
     if (index != std::string::npos && (endindex < index || endindex == std::string::npos)) {
       // determine port and host
@@ -262,10 +262,10 @@ URIType URIHelper::parseAuthority(bool forceServer, const std::string &authority
       }
 
     } else {
-      tempHost = temp;
+      tempHost = std::move(temp);
     }
 
-    if (tempHost == "") {
+    if (tempHost.empty()) {
       if (forceServer) {
         throw URISyntaxException(__FILE__, __LINE__, authority, "Host name is empty", (int)hostindex);
       }
@@ -485,7 +485,7 @@ bool URIHelper::isValidIP6Address(const std::string &ipAddress) {
         if (numberOfColons == 7 && ipAddress.at(0 + offset) != ':' && ipAddress.at(1 + offset) != ':') {
           return false;
         }
-        word = "";
+        word.clear();
         break;
 
       case ':':
@@ -502,7 +502,7 @@ bool URIHelper::isValidIP6Address(const std::string &ipAddress) {
           }
           doubleColon = true;
         }
-        word = "";
+        word.clear();
         break;
 
       default:

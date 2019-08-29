@@ -256,8 +256,7 @@ bool Properties::equals(const Properties &source) const { return this->internal-
 
 ////////////////////////////////////////////////////////////////////////////////
 std::string Properties::toString() const {
-  std::ostringstream stream;
-  std::map<std::string, std::string>::const_iterator iter;
+  std::ostringstream stream;  
 
   stream << "Begin Class decaf::util::Properties:" << std::endl;
 

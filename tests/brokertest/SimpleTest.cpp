@@ -22,6 +22,7 @@
 #include <cms/ConnectionFactory.h>
 #include <cms/Session.h>
 #include <fake_cpp14.h>
+#include <list>
 
 using namespace cms;
 ////////////////////////////////////////////////////////////////////////////////
@@ -613,9 +614,44 @@ TEST_F(SimpleTest, testPriority) {
 
   consumer->close();
   producer->close();
+  queue->destroy();
   cmsProvider->getSession()->close();
 }
+///////////////////////////////////////////////////////////////////////////////
+TEST_F(SimpleTest, DISABLED_testConnectionCount) {
+  std::list<std::unique_ptr<cms::Connection>> connections;
 
+  for (int i = 0; i < 1023; ++i) {
+    EXPECT_NO_THROW(connections.emplace_back(cmsProvider->getConnectionFactory()->createConnection()));
+  }
+  EXPECT_ANY_THROW(connections.emplace_back(cmsProvider->getConnectionFactory()->createConnection()));
+}
+///////////////////////////////////////////////////////////////////////////////
+TEST_F(SimpleTest, DISABLED_testSessionsCount) {
+  std::list<std::unique_ptr<cms::Session>> sessions;
+
+  cmsProvider->getSession()->close();
+
+  for (int i = 0; i < 1024; ++i) {
+    EXPECT_NO_THROW(sessions.emplace_back(cmsProvider->getConnection()->createSession()));
+  }
+  EXPECT_ANY_THROW(sessions.emplace_back(cmsProvider->getConnection()->createSession()));
+}
+///////////////////////////////////////////////////////////////////////////////
+TEST_F(SimpleTest, DISABLED_testDestinationCount) {
+  std::list<std::unique_ptr<cms::TemporaryQueue>> destinations;
+
+  cmsProvider->reconnectSession();
+
+  for (int i = 0; i < 1023; ++i) {
+    EXPECT_NO_THROW(destinations.emplace_back(cmsProvider->getSession()->createTemporaryQueue()));
+  }
+  EXPECT_ANY_THROW(destinations.emplace_back(cmsProvider->getSession()->createTemporaryQueue()));
+  for (auto &dest : destinations) {
+    dest->destroy();
+  }
+  cmsProvider->reconnectSession();
+}
 ///////////////////////////////////////////////////////////////////////////////
 
 void SimpleTest::TearDown() {}

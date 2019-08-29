@@ -234,6 +234,7 @@ void Subscription::onEvent(const void *pSender, const MessageDataContainer *&sMe
 bool Subscription::isDurable() const { return _type == Type::DURABLE; }
 bool Subscription::isBrowser() const { return _type == Type::BROWSER; }
 void Subscription::start() {
+  postNewMessageEvent();
   if (*_isRunning) {
     return;
   }
@@ -265,11 +266,9 @@ void Subscription::start(const Consumer &consumer) {
       const Consumer &cons = byClientAndHandlerAndSessionIDs(consumer.clientID, consumer.tcpNum, consumer.session.id);
       cons.start();
     }
-    if (!*_isRunning) {
-      start();
-    } else {
-      postNewMessageEvent();
-    }
+    
+    start();          
+    
   } catch (Exception &ex) {
     UNUSED_VAR(ex);
   }
