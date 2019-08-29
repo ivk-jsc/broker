@@ -24,6 +24,7 @@
 #include <decaf/net/URLEncoder.h>
 #include <decaf/util/StringTokenizer.h>
 #include <sstream>
+#include <utility>
 
 using namespace std;
 using namespace upmq;
@@ -103,7 +104,7 @@ void URISupport::parseURL(const std::string &URI, decaf::util::Properties &prope
 Properties URISupport::parseQuery(std::string query) {
   try {
     Properties options;
-    URISupport::parseQuery(query, &options);
+    URISupport::parseQuery(std::move(query), &options);
     return options;
   }
   AMQ_CATCH_RETHROW(IllegalArgumentException)
@@ -119,7 +120,7 @@ void URISupport::parseQuery(std::string query, Properties *properties) {
     }
 
     // strip the initial "?"
-    size_t pos = query.find_first_of("?");
+    size_t pos = query.find_first_of('?');
     if (pos != std::string::npos) {
       query = query.substr(pos + 1);
     }
@@ -221,7 +222,7 @@ std::string URISupport::createQueryString(const Properties &options) {
 ////////////////////////////////////////////////////////////////////////////////
 bool URISupport::checkParenthesis(const std::string &str) {
   bool result = true;
-  if (str != "") {
+  if (!str.empty()) {
     int open = 0;
     int closed = 0;
 
@@ -245,7 +246,7 @@ bool URISupport::checkParenthesis(const std::string &str) {
 CompositeData URISupport::parseComposite(const URI &uri) {
   CompositeData result;
   result.setScheme(uri.getScheme());
-  string ssp = stripPrefix(uri.getSchemeSpecificPart(), "//");
+  const string ssp = stripPrefix(uri.getSchemeSpecificPart(), "//");
   parseComposite(uri, result, ssp);
   result.setFragment(uri.getFragment());
   return result;
@@ -263,7 +264,7 @@ void URISupport::parseComposite(const URI &uri, CompositeData &rc, const std::st
   std::size_t p;
   std::size_t intialParen = ssp.find('(');
   if (intialParen == 0) {
-    rc.setHost(ssp.substr(0, intialParen));
+    rc.setHost(""); // FIXME : ssp.substr(0, intialParen)
     p = rc.getHost().find('/');
     if (p != string::npos) {
       rc.setPath(rc.getHost().substr(p));
@@ -276,7 +277,7 @@ void URISupport::parseComposite(const URI &uri, CompositeData &rc, const std::st
 
   } else {
     componentString = ssp;
-    params = "";
+    params.clear();
   }
 
   LinkedList<std::string> components = splitComponents(componentString);
@@ -397,10 +398,10 @@ URI URISupport::createURIWithQuery(const URI &uri, const std::string &query) {
   std::string schemeSpecificPart = uri.getRawSchemeSpecificPart();
 
   // strip existing query if any
-  std::size_t questionMark = schemeSpecificPart.find_last_of("?");
+  std::size_t questionMark = schemeSpecificPart.find_last_of('?');
 
   // make sure question mark is not within parentheses
-  std::size_t lastParend = schemeSpecificPart.find_last_of(")");
+  const std::size_t lastParend = schemeSpecificPart.find_last_of(')');
   if (lastParend != std::string::npos && questionMark < lastParend) {
     questionMark = std::string::npos;
   }

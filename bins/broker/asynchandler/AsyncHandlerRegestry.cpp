@@ -33,13 +33,13 @@ AsyncHandlerRegestry::AsyncHandlerRegestry()
   }
 }
 
-void AsyncHandlerRegestry::addAHandler(std::shared_ptr<AsyncTCPHandler> ahandler) {
+void AsyncHandlerRegestry::addAHandler(AsyncTCPHandler* ahandler) {
   int nextNum = freeNum();
   if (nextNum != -1) {
     ahandler->num = static_cast<size_t>(nextNum);
-    _connections[ahandler->num] = std::move(ahandler);
+    _connections[ahandler->num] = std::shared_ptr<AsyncTCPHandler>(ahandler);
     ++_current_size;
-  } else {
+  } else {    
     throw EXCEPTION("can't get free connection handeler", "try to encrease max connections", -1);
   }
 }

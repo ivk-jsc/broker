@@ -53,9 +53,9 @@ AsyncTCPHandler::AsyncTCPHandler(Poco::Net::StreamSocket &socket, Poco::Net::Soc
       _maxNotAcknowledgedMessages(0),
       _connection(nullptr),
       _readComplete(true) {
-  AHRegestry::Instance().addAHandler(std::shared_ptr<AsyncTCPHandler>(this));
+  AHRegestry::Instance().addAHandler(this);
 
-  size_t queueNum = AHRegestry::Instance()._connectionCounter++;
+  const size_t queueNum = AHRegestry::Instance()._connectionCounter++;
 
   _queueReadNum = queueNum % THREADS_CONFIG.readers;
   _queueWriteNum = queueNum % THREADS_CONFIG.writers;
@@ -112,6 +112,7 @@ AsyncTCPHandler::~AsyncTCPHandler() {
     removeErrorShutdownHandler();
 
     BROKER::Instance().removeTcpConnection(_clientID, num);
+    EXCHANGE::Instance().dropOwnedDestination(_clientID);
 
   } catch (std::exception &ex) {
     ASYNCLOG_ERROR(logStream, (std::to_string(num).append(" ! => ").append(std::string(ex.what()))));

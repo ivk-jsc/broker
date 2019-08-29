@@ -163,6 +163,16 @@ void Exchange::dropDestination(const std::string &id, DestinationOwner *owner) {
     }
   }
 }
+
+void Exchange::dropOwnedDestination(const std::string &clientId) {
+  _destinations.eraseIf([&clientId](const DestinationsList::ItemType::KVPair &pair) {
+    if (pair.second->isTemporary() && pair.second->hasOwner()) {
+      return pair.second->owner().clientID == clientId;
+    }
+    return false;
+  });
+}
+
 void Exchange::addSubscription(const upmq::broker::Session &session, const MessageDataContainer &sMessage) {
   Destination &dest = destination(sMessage.subscription().destination_uri(), DestinationCreationMode::NO_CREATE);
   if (dest.isBindToSubscriber(sMessage.clientID)) {

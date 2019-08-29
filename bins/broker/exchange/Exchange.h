@@ -62,6 +62,7 @@ class Exchange {
   void abort(const upmq::broker::Session &session, const std::string &destinationID);
   bool isDestinationTemporary(const std::string &id);
   void dropDestination(const std::string &id, DestinationOwner *owner = nullptr);
+  void dropOwnedDestination(const std::string &clientId);
   void addSubscription(const upmq::broker::Session &session, const MessageDataContainer &sMessage);
   void addSender(const upmq::broker::Session &session, const MessageDataContainer &sMessage);
   void removeSender(const upmq::broker::Session &session, const MessageDataContainer &sMessage);

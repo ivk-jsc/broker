@@ -293,8 +293,8 @@ const Map<string, string> &System::getenv() {
   System::sys->cachedEnvValues.clear();
 
   StringTokenizer tokenizer("");
-  string key = "";
-  string value = "";
+  string key;
+  string value;
   int tokens = 0;
   std::vector<std::string> env = getEnvArray();
 
@@ -306,7 +306,7 @@ const Map<string, string> &System::getenv() {
     if (tokens == 1) {
       // special case, no value set, store empty string as value
       key = tokenizer.nextToken();
-      value = string("");
+      value.clear();
     } else if (tokens > 2) {
       // special case: first equals delimits the key value, the rest are
       // part of the variable
@@ -331,7 +331,7 @@ const Map<string, string> &System::getenv() {
 
 #if defined(_WIN32)
 
-#include <windows.h>
+#include <Windows.h>
 #include <processenv.h>
 #include <tchar.h>
 
