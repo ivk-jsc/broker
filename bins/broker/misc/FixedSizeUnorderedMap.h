@@ -303,7 +303,7 @@ class FSUnorderedMap {
     if (index != endIt) {
       size_t i = *index;
       const auto next = std::next(index);
-      const ValidItemsValue result = (next == endIt) ? 0 : *next;
+      const ValidItemsValue result = (next == endIt) ? *_validIndexes.begin() : *next;
       readRWLock.unlock();
 
       _items.at(i).applyForEach(f);
@@ -322,7 +322,7 @@ class FSUnorderedMap {
     if (index != rendIt) {
       size_t i = *index;
       const auto next = std::next(index);
-      const ValidItemsValue result = (next == rendIt) ? 0 : *next;
+      const ValidItemsValue result = (next == rendIt) ? *_validIndexes.rbegin() : *next;
       readRWLock.unlock();
 
       _items.at(i).applyForEach(f);
@@ -344,9 +344,7 @@ class FSUnorderedMap {
       _items.at(index).changeForEach(f);
     }
   }
-  size_t indexOf(const Key &key) {
-    return Poco::hash(key) % _size;
-  }
+  size_t indexOf(const Key &key) { return Poco::hash(key) % _size; }
 };
 }  // namespace upmq
 

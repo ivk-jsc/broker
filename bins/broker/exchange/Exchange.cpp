@@ -258,9 +258,7 @@ void Exchange::run() {
           if (!queueId.empty()) {
             auto item = _destinations.find(queueId);
             if (item.has_value()) {
-              if ((*item.value())->getNexMessageForAllSubscriptions()) {
-                next = _destinations.indexOf(queueId);
-              }
+              (*item.value())->getNexMessageForAllSubscriptions();
             }
           }
         }

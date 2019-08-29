@@ -266,9 +266,9 @@ void Subscription::start(const Consumer &consumer) {
       const Consumer &cons = byClientAndHandlerAndSessionIDs(consumer.clientID, consumer.tcpNum, consumer.session.id);
       cons.start();
     }
-    
-    start();          
-    
+
+    start();
+
   } catch (Exception &ex) {
     UNUSED_VAR(ex);
   }
@@ -357,7 +357,9 @@ bool Subscription::getNextMessage() {
 
         storage.setMessageToWasSent(messageID, *consumer);
         _destination.decreesNotAcknowledged(consumer->objectID);
-
+        if (consumer->session.type == Proto::Acknowledge::CLIENT_ACKNOWLEDGE) {
+          postNewMessageEvent();
+        }
         if (_destination.consumerMode() == ConsumerMode::ROUND_ROBIN) {
           for (const auto &cn : _consumers) {
             if (cn.second.objectID != consumer->objectID) {

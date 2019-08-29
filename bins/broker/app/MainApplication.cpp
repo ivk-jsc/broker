@@ -135,7 +135,7 @@ int MainApplication::main(const std::vector<std::string> &args) {
   std::string destinationsSection = "broker.destinations";
   config().keys(destinationsSection, destinationsKeys);
   for (const auto &destItm : destinationsKeys) {
-    if (destItm == "autocreate" || destItm == "forward") {
+    if (destItm == "autocreate" || destItm == "forward" || destItm == "max-count") {
       continue;
     }
     std::string uriKeyType;
@@ -255,6 +255,7 @@ void MainApplication::loadStorageConfig() const {
 }
 void MainApplication::loadDestinationConfig() const {
   Configuration::Destinations destinations;
+  destinations.maxCount = config().getUInt("broker.destinations.max-count", destinations.maxCount);
   destinations.autocreate = config().getBool("broker.destinations.autocreate", destinations.autocreate);
   destinations.forwardByProperty = config().getBool("broker.destinations.forward[@by-property]", destinations.forwardByProperty);
   CONFIGURATION::Instance().setDestinations(destinations);
