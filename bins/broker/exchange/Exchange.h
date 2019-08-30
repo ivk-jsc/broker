@@ -69,7 +69,7 @@ class Exchange {
   void removeSenders(const upmq::broker::Session &session);
   void start();
   void stop();
-  void postNewMessageEvent(const std::string &uri) const;
+  void postNewMessageEvent(const std::string &name) const;
   std::vector<Destination::Info> info() const;
 
  private:

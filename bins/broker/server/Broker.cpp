@@ -321,9 +321,8 @@ void Broker::onMessage(const AsyncTCPHandler &tcpHandler, const MessageDataConta
   }
 
   const Message &constMessage = sMessage.message();
-  Destination &dest =
-      EXCHANGE::Instance().destination(constMessage.destination_uri());  // NOTE: !NEED for pre-creation of destination, try to mitigate deadlock
-  UNUSED_VAR(dest);
+  Destination &dest = EXCHANGE::Instance().destination(constMessage.destination_uri());
+
   if (DESTINATION_CONFIG.forwardByProperty && (constMessage.property_size() > 0)) {
     auto &msg = const_cast<MessageDataContainer &>(sMessage);
     auto &pmap = *msg.mutableMessage().mutable_property();
@@ -357,7 +356,7 @@ void Broker::onMessage(const AsyncTCPHandler &tcpHandler, const MessageDataConta
                             .append("] : into destination : ")
                             .append(constMessage.destination_uri())));
   tcpHandler.connection()->saveMessage(sMessage);
-  EXCHANGE::Instance().postNewMessageEvent(constMessage.destination_uri());
+  EXCHANGE::Instance().postNewMessageEvent(dest.name());
 }
 void Broker::onSender(const AsyncTCPHandler &tcpHandler, const MessageDataContainer &sMessage, MessageDataContainer &outMessage) {
   UNUSED_VAR(outMessage);

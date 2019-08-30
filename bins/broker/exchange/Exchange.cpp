@@ -225,11 +225,11 @@ void Exchange::stop() {
     _threadPool.joinAll();
   }
 }
-void Exchange::postNewMessageEvent(const std::string &uri) const {
+void Exchange::postNewMessageEvent(const std::string &name) const {
   const int count = _threadPool.capacity() - 1;
 
-  if (!uri.empty()) {
-    _destinationEvents.enqueue(mainDestinationPath(uri));
+  if (!name.empty()) {
+    _destinationEvents.enqueue(name);
   }
 
   for (size_t i = 0; i < static_cast<size_t>(count); ++i) {

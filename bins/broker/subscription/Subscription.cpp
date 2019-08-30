@@ -357,7 +357,7 @@ bool Subscription::getNextMessage() {
 
         storage.setMessageToWasSent(messageID, *consumer);
         _destination.decreesNotAcknowledged(consumer->objectID);
-        if (consumer->session.type == Proto::Acknowledge::CLIENT_ACKNOWLEDGE) {
+        if (consumer->session.type == Proto::Acknowledge::CLIENT_ACKNOWLEDGE || !consumer->select->empty()) {
           postNewMessageEvent();
         }
         if (_destination.consumerMode() == ConsumerMode::ROUND_ROBIN) {
@@ -416,7 +416,7 @@ const Consumer *Subscription::at(size_t index) const {
   }
   return nullptr;
 }
-void Subscription::postNewMessageEvent() const { EXCHANGE::Instance().postNewMessageEvent(_destination.uri()); }
+void Subscription::postNewMessageEvent() const { EXCHANGE::Instance().postNewMessageEvent(_destination.name()); }
 Storage &Subscription::storage() const { return _storage; }
 const Consumer &Subscription::byObjectID(const std::string &objectID) {
   auto consEnd = _consumers.rend();

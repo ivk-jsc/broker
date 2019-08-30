@@ -21,6 +21,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <Poco/Error.h>
 #include "Defines.h"
 
 #include <unordered_map>
@@ -53,6 +54,8 @@ class Exception : public std::exception {
 }  // namespace broker
 }  // namespace upmq
 
-#define EXCEPTION(_info, _errDescription, _err) upmq::broker::Exception(_info, _errDescription, _err, __FILE__, __LINE__)
+#define EXCEPTION(_info, _errDescription, _err) \
+  upmq::broker::Exception(                      \
+      _info, _errDescription + std::string(" native(").append(std::to_string(Poco::Error::last())).append(")"), _err, __FILE__, __LINE__)
 
 #endif  // __UPMQ_EXCEPTION_H__

@@ -288,16 +288,19 @@ void AsyncTCPHandler::storeClientInfo(const MessageDataContainer &sMessage) {
 void AsyncTCPHandler::initSubscription(const MessageDataContainer &sMessage) const {
   const Proto::Subscription &subscription = sMessage.subscription();
   std::string destinationID = upmq::broker::Exchange::mainDestinationPath(subscription.destination_uri());
-  if (_subscriptions.find(destinationID) == _subscriptions.end()) {
+  auto subs = _subscriptions.find(destinationID);
+  if (subs == _subscriptions.end()) {
     _subscriptions.insert(std::make_pair(destinationID, std::unordered_set<std::string>()));
+    subs = _subscriptions.find(destinationID);
   }
-  _subscriptions[destinationID].insert(subscription.subscription_name());
+  subs->second.insert(subscription.subscription_name());
 }
 void AsyncTCPHandler::eraseSubscription(const MessageDataContainer &sMessage) const {
   const Proto::Unsubscription &unsubscription = sMessage.unsubscription();
   std::string destinationID = upmq::broker::Exchange::mainDestinationPath(unsubscription.destination_uri());
-  if (_subscriptions.find(destinationID) != _subscriptions.end()) {
-    _subscriptions[destinationID].erase(unsubscription.subscription_name());
+  auto subs = _subscriptions.find(destinationID);
+  if (subs != _subscriptions.end()) {
+    subs->second.erase(unsubscription.subscription_name());
   }
 }
 bool AsyncTCPHandler::needErase() const { return _needErase; }
