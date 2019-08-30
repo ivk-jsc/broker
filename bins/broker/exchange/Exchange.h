@@ -70,6 +70,7 @@ class Exchange {
   void start();
   void stop();
   void postNewMessageEvent(const std::string &name) const;
+  void addNewMessageEvent(const std::string &name) const;
   std::vector<Destination::Info> info() const;
 
  private:

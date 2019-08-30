@@ -75,6 +75,8 @@ class MainApplication : public swf::Application {
   void loadHttpConfig() const;
   void loadHeartBeatConfig() const;
   void loadNetConfig() const;
+  void loadSessionsConfig() const;
+  void loadSubscriptionsConfig() const;
   void loadThreadsConfig() const;
   void loadLogConfig();
   void loadDestinationConfig() const;

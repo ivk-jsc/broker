@@ -228,15 +228,20 @@ void Exchange::stop() {
 void Exchange::postNewMessageEvent(const std::string &name) const {
   const int count = _threadPool.capacity() - 1;
 
-  if (!name.empty()) {
-    _destinationEvents.enqueue(name);
-  }
+  addNewMessageEvent(name);
 
   for (size_t i = 0; i < static_cast<size_t>(count); ++i) {
     Poco::ScopedLock<Poco::FastMutex> lock(_mutexDestinations[i]);
     _conditionDestinations[i].signal();
   }
 }
+
+void Exchange::addNewMessageEvent(const std::string &name) const {
+  if (!name.empty()) {
+    _destinationEvents.enqueue(name);
+  }
+}
+
 void Exchange::run() {
   const size_t num = _thrNum++;
   bool result = false;

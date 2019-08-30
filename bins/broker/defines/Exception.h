@@ -56,6 +56,6 @@ class Exception : public std::exception {
 
 #define EXCEPTION(_info, _errDescription, _err) \
   upmq::broker::Exception(                      \
-      _info, _errDescription + std::string(" native(").append(std::to_string(Poco::Error::last())).append(")"), _err, __FILE__, __LINE__)
+      _info, std::string(_errDescription).append(" native(").append(std::to_string(Poco::Error::last())).append(")"), _err, __FILE__, __LINE__)
 
 #endif  // __UPMQ_EXCEPTION_H__

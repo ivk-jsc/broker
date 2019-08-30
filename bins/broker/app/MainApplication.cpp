@@ -215,6 +215,10 @@ void MainApplication::loadBrokerConfiguration() {
 
   loadNetConfig();
 
+  loadSessionsConfig();
+
+  loadSubscriptionsConfig();
+
   loadThreadsConfig();
 
   loadLogConfig();
@@ -255,7 +259,7 @@ void MainApplication::loadStorageConfig() const {
 }
 void MainApplication::loadDestinationConfig() const {
   Configuration::Destinations destinations;
-  destinations.maxCount = config().getUInt("broker.destinations.max-count", destinations.maxCount);
+  destinations.maxCount = config().getUInt("broker.destinations.max-count", static_cast<uint32_t>(destinations.maxCount));
   destinations.autocreate = config().getBool("broker.destinations.autocreate", destinations.autocreate);
   destinations.forwardByProperty = config().getBool("broker.destinations.forward[@by-property]", destinations.forwardByProperty);
   CONFIGURATION::Instance().setDestinations(destinations);
@@ -299,6 +303,19 @@ void MainApplication::loadNetConfig() const {
   net.maxConnections = config().getInt("broker.net.max-connections", net.maxConnections);
   CONFIGURATION::Instance().setNet(net);
 }
+
+void MainApplication::loadSessionsConfig() const {
+  Configuration::Sessions sessions;
+  sessions.maxCount = config().getUInt("broker.sessions.max-count", static_cast<uint32_t>(sessions.maxCount));
+  CONFIGURATION::Instance().setSessions(sessions);
+}
+
+void MainApplication::loadSubscriptionsConfig() const {
+  Configuration::Subscriptions subscriptions;
+  subscriptions.maxCount = config().getUInt("broker.subscriptions.max-count", static_cast<uint32_t>(subscriptions.maxCount));
+  CONFIGURATION::Instance().setSubscriptions(subscriptions);
+}
+
 void MainApplication::loadHeartBeatConfig() const {
   Configuration::HeartBeat heartBeat;
   heartBeat.sendTimeout = config().getInt("broker.heartbeat.send", 0);

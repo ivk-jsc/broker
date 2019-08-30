@@ -23,7 +23,7 @@ endif ()
 target_sources(libupmqprotocol PRIVATE ${PROTO_SRCS} ${PROTO_HDRS})
 target_link_libraries(libupmqprotocol PRIVATE protobuf::libprotobuf)
 
-set_target_properties(libupmqprotocol PROPERTIES DEBUG_OUTPUT_NAME "upmqprotocold" RELEASE_OUTPUT_NAME "upmqprotocol")
+set_target_properties(libupmqprotocol PROPERTIES DEBUG_OUTPUT_NAME "upmqprotocold" RELEASE_OUTPUT_NAME "upmqprotocol" RELWITHDEBINFO_OUTPUT_NAME "upmqprotocol")
 set_target_properties(libupmqprotocol PROPERTIES PREFIX "lib")
 target_include_directories(libupmqprotocol PUBLIC SYSTEM "${PROTO_HDR_DIRECTORY}")
 
