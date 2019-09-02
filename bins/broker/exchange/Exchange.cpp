@@ -201,7 +201,7 @@ void Exchange::removeSender(const upmq::broker::Session &session, const MessageD
     try {
       Destination &dest = destination(unsender.destination_uri(), DestinationCreationMode::NO_CREATE);
       dest.removeSender(session, sMessage);
-    } catch (...) {  // do nothing -V565
+    } catch (...) {  // -V565 do nothing
     }
   }
 }
@@ -244,34 +244,23 @@ void Exchange::addNewMessageEvent(const std::string &name) const {
 
 void Exchange::run() {
   const size_t num = _thrNum++;
-  bool result = false;
-  size_t next = 0;
-  auto doGet = [&result](const DestinationsList::ItemType::KVPair &pair) { result = pair.second->getNexMessageForAllSubscriptions(); };
-  std::function<size_t(size_t)> forward = [&doGet, this](size_t start) { return _destinations.applyForOnce(start, doGet); };
-  std::function<size_t(size_t)> backward = [&doGet, this](size_t start) { return _destinations.applyForOnceBackward(start, doGet); };
-
-  auto &getNextFromAll = ((num % 2) == 0) ? backward : forward;
 
   std::string queueId;
   while (_isRunning) {
     do {
-      result = false;
-
-      do {
-        queueId.clear();
-        if (_destinationEvents.try_dequeue(queueId)) {
-          if (!queueId.empty()) {
-            auto item = _destinations.find(queueId);
-            if (item.has_value()) {
-              (*item.value())->getNexMessageForAllSubscriptions();
+      queueId.clear();
+      if (_destinationEvents.try_dequeue(queueId)) {
+        if (!queueId.empty()) {
+          auto item = _destinations.find(queueId);
+          if (item.has_value()) {
+            if ((*item.value())->getNexMessageForAllSubscriptions()) {
+              _destinationEvents.enqueue(queueId);
+              break;
             }
           }
         }
-      } while (!queueId.empty());
-
-      next = getNextFromAll(next);
-
-    } while (result);  // -V654
+      }
+    } while (!queueId.empty());
 
     auto &mut = _mutexDestinations[num];
 

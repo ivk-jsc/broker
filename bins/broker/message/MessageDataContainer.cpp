@@ -28,20 +28,12 @@
 namespace upmq {
 namespace broker {
 
-MessageDataContainer::MessageDataContainer() : _path(), _headerMessage(nullptr), _dataMessage(nullptr), _withFile(false) {}
+MessageDataContainer::MessageDataContainer() = default;
 
-MessageDataContainer::MessageDataContainer(std::string path)
-    : _path(std::move(path)), _headerMessage(nullptr), _dataMessage(nullptr), _withFile(false) {}
+MessageDataContainer::MessageDataContainer(std::string path) : _path(std::move(path)) {}
 
 MessageDataContainer::MessageDataContainer(std::string path, std::string _header, std::string _data, bool useFileLink)
-    : header(std::move(_header)),
-      data(std::move(_data)),
-      _path(std::move(path)),
-      _headerMessage(nullptr),
-      _dataMessage(nullptr),
-      _withFile(useFileLink) {
-  initDataFileStream();
-}
+    : header(std::move(_header)), data(std::move(_data)), _path(std::move(path)), _withFile(useFileLink) {}
 void MessageDataContainer::initDataFileStream() {
   if (_withFile) {
     if (!_dataFileStream) {
@@ -66,12 +58,9 @@ void MessageDataContainer::initDataFileStream() {
     }
   }
 }
-MessageDataContainer::MessageDataContainer(ProtoMessage *headerProtoMessage)
-    : _headerMessage(headerProtoMessage), _dataMessage(nullptr), _withFile(false) {
-  data.clear();
-}
+MessageDataContainer::MessageDataContainer(ProtoMessage *headerProtoMessage) : _headerMessage(headerProtoMessage) { data.clear(); }
 MessageDataContainer::MessageDataContainer(ProtoMessage *headerProtoMessage, Body *dataBody)
-    : _headerMessage(headerProtoMessage), _dataMessage(dataBody), _withFile(false) {
+    : _headerMessage(headerProtoMessage), _dataMessage(dataBody) {
   header = _headerMessage->SerializeAsString();
   data = _dataMessage->SerializeAsString();
 }
@@ -572,11 +561,15 @@ void MessageDataContainer::setWithFile(bool withFile) { _withFile = withFile; }
 
 uint64_t MessageDataContainer::dataSize() const {
   if (_withFile) {
-    Poco::Path dataFilePath(_path);
-    dataFilePath.append(data).makeFile();
-    Poco::File dataFile(dataFilePath);
-    if (dataFile.exists()) {
-      return dataFile.getSize();
+    try {
+      Poco::Path dataFilePath(_path);
+      dataFilePath.append(data).makeFile();
+      Poco::File dataFile(dataFilePath);
+      if (dataFile.exists()) {
+        return dataFile.getSize();
+      }
+    } catch (...) {
+      return 0;
     }
   } else {
     return data.size();

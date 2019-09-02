@@ -418,9 +418,6 @@ std::shared_ptr<MessageDataContainer> Storage::get(const Consumer &consumer, boo
   if (consumer.abort) {
     consumer.select->clear();
     consumer.abort = false;
-    for (auto &id : consumer.lastMessageId) {
-      id.clear();
-    }
   }
   do {
     msg.reset();
@@ -448,11 +445,6 @@ std::shared_ptr<MessageDataContainer> Storage::get(const Consumer &consumer, boo
           << " where delivery_status = " << message::NOT_SENT;
       if (consumer.noLocal) {
         sql << " and msgs.client_id <> \'" << consumer.clientID << "\'";
-      }
-      if (!consumer.lastMessageId.empty()) {
-        for (const auto &id : consumer.lastMessageId) {
-          sql << " and msgs.message_id <> \'" << id << "\'";
-        }
       }
       sql << " order by msgs.priority desc, msgs.num";
 
@@ -561,7 +553,6 @@ std::shared_ptr<MessageDataContainer> Storage::get(const Consumer &consumer, boo
         upmq::ScopedReadRWLock readRWLock(_nonPersistentLock);
         item = _nonPersistent.find(msg.messageId);
         if (item != _nonPersistent.end()) {
-          sMessage->setWithFile(false);
           sMessage->data = item->second->data;
         }
       }

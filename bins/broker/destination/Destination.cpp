@@ -251,6 +251,9 @@ Subscription &Destination::subscription(const Session &session, const MessageDat
 }
 Subscription::ConsumerMode Destination::makeConsumerMode(const std::string &uri) {
   Poco::URI tURI(uri);
+  if (tURI.getScheme() == TOPIC_PREFIX) {
+    return Subscription::ConsumerMode::EXCLUSIVE;
+  }
   Poco::URI::QueryParameters parameters = tURI.getQueryParameters();
   if (!parameters.empty()) {
     auto it = std::find_if(parameters.begin(), parameters.end(), [](const Poco::URI::QueryParameters::value_type &pair) {
@@ -468,7 +471,6 @@ void Destination::addS2Subs(const std::string &sesionID, const std::string &subs
   _s2subsList.insert(std::make_pair(sesionID, subsID));
 }
 void Destination::remS2Subs(const std::string &sessionID, const std::string &subsID) {
-  //  upmq::ScopedWriteRWLock writeRWLock(_s2subsLock);
   auto item = _s2subsList.equal_range(sessionID);
   for (auto itRg = item.first; itRg != item.second; ++itRg) {
     if ((*itRg).second == subsID) {
@@ -492,11 +494,11 @@ void Destination::closeAllSubscriptions(const Session &session, size_t tcpNum) {
 }
 bool Destination::getNexMessageForAllSubscriptions() {
   bool result = false;
-  _subscriptions.changeForEach([&result](SubscriptionsList::ItemType::KVPair &pair) {
+  _subscriptions.changeForEach([&result](SubscriptionsList::ItemType::KVPair &pair) {    
     if (pair.second.isRunning()) {
-      if (pair.second.getNextMessage() && !result) {
-        result = true;
-      }
+      result = (pair.second.getNextMessage() == Subscription::ProcessMessageResult::CONSUMER_NOT_RAN);        
+    } else {
+      result = true;
     }
   });
 

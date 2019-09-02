@@ -194,7 +194,7 @@ void Subscription::addClient(
   dbSession.commitTX();
 
   std::shared_ptr<std::deque<Consumer::Msg>> selectCache;
-  if (_destination.consumerMode() == ConsumerMode::ROUND_ROBIN) {
+  if (_destination.isQueueFamily() && _destination.consumerMode() == ConsumerMode::ROUND_ROBIN) {
     selectCache = _roundRobinCache;
   } else {
     selectCache = std::make_shared<std::deque<Consumer::Msg>>();
@@ -261,17 +261,14 @@ void Subscription::stop(const Consumer &consumer) {
 }
 void Subscription::start(const Consumer &consumer) {
   try {
-    {
-      upmq::ScopedReadRWLock readRWLock(_consumersLock);
-      const Consumer &cons = byClientAndHandlerAndSessionIDs(consumer.clientID, consumer.tcpNum, consumer.session.id);
-      cons.start();
-    }
-
-    start();
+    upmq::ScopedReadRWLock readRWLock(_consumersLock);
+    const Consumer &cons = byClientAndHandlerAndSessionIDs(consumer.clientID, consumer.tcpNum, consumer.session.id);
+    cons.start();
 
   } catch (Exception &ex) {
     UNUSED_VAR(ex);
   }
+  start();
 }
 void Subscription::recover() {
   upmq::ScopedReadRWLock readRWLock(_consumersLock);
@@ -290,7 +287,7 @@ void Subscription::recover(const Consumer &consumer) {
     UNUSED_VAR(ex);
   }
 }
-bool Subscription::getNextMessage() {
+Subscription::ProcessMessageResult Subscription::getNextMessage() {
   std::string groupID;
   std::string messageID;
 
@@ -299,16 +296,16 @@ bool Subscription::getNextMessage() {
     if ((consumer == nullptr) || !consumer->isRunning) {
       changeCurrentConsumerNumber();
       _consumersLock.unlockWrite();
-      return false;
+      return ProcessMessageResult::CONSUMER_NOT_RAN;
     }
     if (!_destination.canSendNextMessages(consumer->objectID)) {
       _consumersLock.unlockWrite();
-      return false;
+      return ProcessMessageResult::CONSUMER_CANT_SEND;
     }
 
     std::shared_ptr<MessageDataContainer> sMessage;
     Storage &storage = (_destination.isQueueFamily() && !isBrowser()) ? _destination.storage() : _storage;
-    bool useFileLink = _destination.isSubscriberUseFileLink(consumer->clientID);
+    const bool useFileLink = _destination.isSubscriberUseFileLink(consumer->clientID);
     try {
       sMessage = storage.get(*consumer, useFileLink);
     } catch (Exception &ex) {
@@ -316,7 +313,7 @@ bool Subscription::getNextMessage() {
       ASYNCLOG_ERROR(logStream,
                      (std::string(consumer->clientID).append(" ! <= [").append(std::string(__FUNCTION__)).append("] ").append(ex.message())));
       _consumersLock.unlockWrite();
-      return false;
+      return ProcessMessageResult::SOME_ERROR;
     }
     if (sMessage) {
       if (!sMessage->message().has_group_id()) {
@@ -332,9 +329,8 @@ bool Subscription::getNextMessage() {
       try {
         sMessage->serialize();
         AHRegestry::Instance().put(consumer->tcpNum, std::move(sMessage));
-        ++_messageCounter;
-        consumer->lastMessageId[_messageCounter % 10] = messageID;
-        size_t tid = (size_t)(Poco::Thread::currentTid());
+        ++_messageCounter;        
+        const size_t tid = (size_t)(Poco::Thread::currentTid());
         ASYNCLOG_INFORMATION(logStream,
                              (std::to_string(consumer->tcpNum)
                                   .append(" * <= from subs => ")
@@ -360,7 +356,7 @@ bool Subscription::getNextMessage() {
         if (consumer->session.type == Proto::Acknowledge::CLIENT_ACKNOWLEDGE || !consumer->select->empty()) {
           EXCHANGE::Instance().addNewMessageEvent(_destination.name());
         }
-        if (_destination.consumerMode() == ConsumerMode::ROUND_ROBIN) {
+        if (_destination.isQueueFamily() && _destination.consumerMode() == ConsumerMode::ROUND_ROBIN) {
           for (const auto &cn : _consumers) {
             if (cn.second.objectID != consumer->objectID) {
               _destination.decreesNotAcknowledged(cn.second.objectID);
@@ -379,7 +375,7 @@ bool Subscription::getNextMessage() {
           }
         }
         _consumersLock.unlockWrite();
-        return false;
+        return ProcessMessageResult::SOME_ERROR;
       }
     } else {
       messageID.clear();
@@ -387,12 +383,12 @@ bool Subscription::getNextMessage() {
         changeCurrentConsumerNumber();
       }
       _consumersLock.unlockWrite();
-      return false;
+      return ProcessMessageResult::NO_MESSAGE;
     }
     _consumersLock.unlockWrite();
-    return true;
+    return ProcessMessageResult::OK_COMPLETE;
   }
-  return false;
+  return ProcessMessageResult::CONSUMER_LOCKED;
 }
 void Subscription::changeCurrentConsumerNumber() const {
   if (_consumers.empty()) {
@@ -416,7 +412,12 @@ const Consumer *Subscription::at(size_t index) const {
   }
   return nullptr;
 }
-void Subscription::postNewMessageEvent() const { EXCHANGE::Instance().postNewMessageEvent(_destination.name()); }
+void Subscription::postNewMessageEvent() const {
+  size_t subsCnt = _destination.isTopicFamily() ? _destination.subscriptionsTrueCount() : 1;
+  for (size_t i = 0; i < subsCnt; ++i) {
+    EXCHANGE::Instance().postNewMessageEvent(_destination.name());
+  }
+}
 Storage &Subscription::storage() const { return _storage; }
 const Consumer &Subscription::byObjectID(const std::string &objectID) {
   auto consEnd = _consumers.rend();

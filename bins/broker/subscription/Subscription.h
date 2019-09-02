@@ -45,6 +45,7 @@ class Subscription {
   enum class Type : int { SIMPLE, DURABLE, BROWSER };
   enum class LocalMode : int { DEFAULT, IS_NO_LOCAL };
   enum class ConsumerMode : int { EXCLUSIVE, ROUND_ROBIN };
+  enum class ProcessMessageResult : int { OK_COMPLETE, CONSUMER_LOCKED, CONSUMER_NOT_RAN, CONSUMER_CANT_SEND, NO_MESSAGE, SOME_ERROR };
 
   /// @brief ConsumersListType - map<consumer_id, options>
   using ConsumersListType = std::vector<std::pair<std::string, Consumer>>;
@@ -137,7 +138,7 @@ class Subscription {
   void removeSenders(const Session &session);
   bool hasSnapshot() const;
   void setHasSnapshot(bool hasSnapshot);
-  bool getNextMessage();
+  ProcessMessageResult getNextMessage();
   Info info() const;
   void resetConsumersCache();
 
