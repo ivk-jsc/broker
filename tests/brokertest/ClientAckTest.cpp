@@ -200,7 +200,7 @@ TEST_F(ClientAckTest, testUnAckedMessageAreNotConsumedOnSessionClose) {
 
   // Attempt to Consume the message...
   consumer.reset(session->createConsumer(queue.get()));
-  msg.reset(consumer->receive(1000));
+  msg.reset(consumer->receive(5000));
   EXPECT_TRUE(msg != nullptr);
   msg->acknowledge();
 

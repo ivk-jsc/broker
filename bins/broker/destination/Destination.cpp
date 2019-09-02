@@ -494,9 +494,12 @@ void Destination::closeAllSubscriptions(const Session &session, size_t tcpNum) {
 }
 bool Destination::getNexMessageForAllSubscriptions() {
   bool result = false;
-  _subscriptions.changeForEach([&result](SubscriptionsList::ItemType::KVPair &pair) {    
+  _subscriptions.changeForEach([&result](SubscriptionsList::ItemType::KVPair &pair) {
     if (pair.second.isRunning()) {
-      result = (pair.second.getNextMessage() == Subscription::ProcessMessageResult::CONSUMER_NOT_RAN);        
+      Subscription::ProcessMessageResult pmr = pair.second.getNextMessage();
+      if (!result) {
+        result = (pmr == Subscription::ProcessMessageResult::CONSUMER_NOT_RAN);
+      }
     } else {
       result = true;
     }
