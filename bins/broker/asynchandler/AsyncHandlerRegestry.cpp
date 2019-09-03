@@ -39,7 +39,7 @@ void AsyncHandlerRegestry::addAHandler(AsyncTCPHandler* ahandler) {
     ahandler->num = static_cast<size_t>(nextNum);
     _connections[ahandler->num] = std::shared_ptr<AsyncTCPHandler>(ahandler);
     ++_current_size;
-  } else {    
+  } else {
     throw EXCEPTION("can't get free connection handeler", "try to encrease max connections", -1);
   }
 }
