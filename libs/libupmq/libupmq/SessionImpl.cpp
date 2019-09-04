@@ -55,7 +55,7 @@ SessionImpl::~SessionImpl() {
       close();
     }
   }
-  CATCHALL_NOTHROW
+  CATCH_ALL_NOTHROW
 }
 
 void SessionImpl::start() {
@@ -126,7 +126,7 @@ void SessionImpl::close() {
     try {
       unsession();
     }
-    CATCHALL_NOTHROW
+    CATCH_ALL_NOTHROW
 
     setStarted(false);
     setStoped(true);

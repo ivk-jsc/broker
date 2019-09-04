@@ -91,7 +91,7 @@ ConnectionImpl::~ConnectionImpl() {
       close();
     }
   }
-  CATCHALL_NOTHROW
+  CATCH_ALL_NOTHROW
 }
 
 void ConnectionImpl::close() {

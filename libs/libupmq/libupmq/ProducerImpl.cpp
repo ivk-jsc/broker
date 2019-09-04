@@ -67,7 +67,7 @@ ProducerImpl::~ProducerImpl() {
       delete _destination;
     }
   }
-  CATCHALL_NOTHROW
+  CATCH_ALL_NOTHROW
 }
 
 void ProducerImpl::sender(DestinationImpl *destination) {
@@ -120,7 +120,7 @@ void ProducerImpl::close() {
       try {
         unsender();
       }
-      CATCHALL_NOTHROW
+      CATCH_ALL_NOTHROW
 
       setClosed(true);
 

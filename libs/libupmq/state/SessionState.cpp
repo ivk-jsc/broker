@@ -35,7 +35,7 @@ SessionState::~SessionState() {
   try {
     this->shutdown();
   }
-  CATCHALL_NOTHROW
+  CATCH_ALL_NOTHROW
 }
 
 ////////////////////////////////////////////////////////////////////////////////

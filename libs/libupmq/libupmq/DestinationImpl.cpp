@@ -57,7 +57,16 @@ DestinationImpl::DestinationImpl(SessionImpl *session, const string &destName, c
   _destUri = tmp_uri.str();
 }
 
-DestinationImpl::~DestinationImpl() {}
+DestinationImpl::~DestinationImpl() {
+  switch (_destType) {
+    case cms::Destination::TEMPORARY_QUEUE:
+    case cms::Destination::TEMPORARY_TOPIC:
+      try {
+        destroy();
+      }
+      CATCH_ALL_NOTHROW
+  }
+}
 
 const string &DestinationImpl::getName() const { return _destName; }
 
@@ -93,7 +102,7 @@ void DestinationImpl::destroy() {
     if (_session != nullptr) {
       if (_session->_connection != nullptr) {
         if (!_session->_connection->isClosed()) {
-          for (auto& it : _session->_consumersMap) {
+          for (auto &it : _session->_consumersMap) {
             if (it.second->_destination->getName() == this->getName() && it.second->isAlive()) {
               throw cms::CMSException("destination in use");
             }

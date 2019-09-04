@@ -89,7 +89,7 @@ ConsumerImpl::~ConsumerImpl() {
     delete _onMessageThread;
     delete _activeOnMessageLock;
   }
-  CATCHALL_NOTHROW
+  CATCH_ALL_NOTHROW
 }
 
 void ConsumerImpl::start() {
@@ -149,7 +149,7 @@ void ConsumerImpl::close() {
       try {
         unsubscription();
       }
-      CATCHALL_NOTHROW
+      CATCH_ALL_NOTHROW
     }
 
     _messageQueue->clear();
