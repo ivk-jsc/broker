@@ -39,7 +39,10 @@ class SessionImpl : public cms::Session {
   cms::MessageConsumer *createConsumer(const cms::Destination *destination) override;
   cms::MessageConsumer *createConsumer(const cms::Destination *destination, const string &selector) override;
   cms::MessageConsumer *createConsumer(const cms::Destination *destination, const string &selector, bool noLocal) override;
-  cms::MessageConsumer *createDurableConsumer(const cms::Topic *destination, const string &name, const string &selector, bool noLocal = false) override;
+  cms::MessageConsumer *createDurableConsumer(const cms::Topic *destination,
+                                              const string &name,
+                                              const string &selector,
+                                              bool noLocal = false) override;
 
   cms::QueueBrowser *createBrowser(const cms::Queue *queue) override;
   cms::QueueBrowser *createBrowser(const cms::Queue *queue, const string &selector) override;
@@ -79,7 +82,8 @@ class SessionImpl : public cms::Session {
 
   string &getObjectId();
   void syncOnMessage(cms::MessageListener *messageListener, cms::Message *msg);
-  cms::MessageConsumer *_createConsumer(ConsumerImpl::Type consumerType, const cms::Destination *destination, const string &selector, const string &subscription, bool noLocal);
+  cms::MessageConsumer *_createConsumer(
+      ConsumerImpl::Type consumerType, const cms::Destination *destination, const string &selector, const string &subscription, bool noLocal);
 
   void addConsumer(ConsumerImpl *consumerImpl);
   void removeConsumer(ConsumerImpl *consumer);

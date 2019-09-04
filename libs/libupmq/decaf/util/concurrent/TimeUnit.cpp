@@ -52,7 +52,9 @@ const long long TimeUnit::multipliers[] = {
 TimeUnit::TimeUnit(int index, const std::string &name) : index(index), name(name) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-long long TimeUnit::convert(long long sourceDuration, const TimeUnit &sourceUnit) const { return this->doConvert(sourceUnit.index, this->index, sourceDuration); }
+long long TimeUnit::convert(long long sourceDuration, const TimeUnit &sourceUnit) const {
+  return this->doConvert(sourceUnit.index, this->index, sourceDuration);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 long long TimeUnit::doConvert(int srcIndex, int destIndex, long long duration) const {

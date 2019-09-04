@@ -33,7 +33,9 @@ InvalidSelectorException::InvalidSelectorException(const std::string &message) :
 InvalidSelectorException::InvalidSelectorException(const std::string &message, const std::exception *cause) : CMSException(message, cause) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-InvalidSelectorException::InvalidSelectorException(const std::string &message, const std::exception *cause, const std::vector<triplet<std::string, std::string, int> > &stackTrace)
+InvalidSelectorException::InvalidSelectorException(const std::string &message,
+                                                   const std::exception *cause,
+                                                   const std::vector<triplet<std::string, std::string, int> > &stackTrace)
     : CMSException(message, cause, stackTrace) {}
 
 ////////////////////////////////////////////////////////////////////////////////

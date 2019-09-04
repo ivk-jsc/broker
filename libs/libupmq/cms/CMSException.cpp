@@ -59,13 +59,17 @@ CMSException::CMSException(const std::string &message, const std::exception *cau
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-CMSException::CMSException(const std::string &message, const std::exception *cause, const std::vector<triplet<std::string, std::string, int>> &stackTrace) : data(new CMSExceptionData()) {
+CMSException::CMSException(const std::string &message,
+                           const std::exception *cause,
+                           const std::vector<triplet<std::string, std::string, int>> &stackTrace)
+    : data(new CMSExceptionData()) {
   this->data->cause.reset(cause);
   this->data->message = message;
   this->data->stackTrace = stackTrace;
 }
 
-CMSException::CMSException(const std::string &message, const std::exception *cause, const std::vector<std::pair<std::string, int>> &stackTrace) : data(new CMSExceptionData()) {
+CMSException::CMSException(const std::string &message, const std::exception *cause, const std::vector<std::pair<std::string, int>> &stackTrace)
+    : data(new CMSExceptionData()) {
   this->data->cause.reset(cause);
   this->data->message = message;
 
@@ -101,7 +105,8 @@ std::string CMSException::getStackTraceString() const {
   stream << "\n##### EXCEPTION #####" << std::endl;
   stream << this->data->message << std::endl;
   for (size_t ix = 0; ix < this->data->stackTrace.size(); ++ix) {
-    stream << "\tat " << this->data->stackTrace[ix].first << "(" << this->data->stackTrace[ix].second << ":" << this->data->stackTrace[ix].third << ")" << std::endl;
+    stream << "\tat " << this->data->stackTrace[ix].first << "(" << this->data->stackTrace[ix].second << ":" << this->data->stackTrace[ix].third
+           << ")" << std::endl;
   }
 
   // Return the string from the output stream.

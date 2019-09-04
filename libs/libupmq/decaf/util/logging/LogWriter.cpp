@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #include "LogWriter.h"
 
 #include <decaf/internal/DecafRuntime.h>
@@ -40,7 +40,9 @@ LogWriter::~LogWriter() {}
 ////////////////////////////////////////////////////////////////////////////////
 void LogWriter::log(const std::string &file DECAF_UNUSED, const int line DECAF_UNUSED, const std::string &prefix, const std::string &message) {
   DecafRuntime *runtime = dynamic_cast<DecafRuntime *>(Runtime::getRuntime());
-  synchronized(runtime->getGlobalLock()) { cout << prefix << " " << message << " - tid: " << Thread::currentThread()->getId() << " (" << file << ":" << line << ")" << endl; }  //-V522
+  synchronized(runtime->getGlobalLock()) {
+    cout << prefix << " " << message << " - tid: " << Thread::currentThread()->getId() << " (" << file << ":" << line << ")" << endl;
+  }  //-V522
 }
 
 ////////////////////////////////////////////////////////////////////////////////

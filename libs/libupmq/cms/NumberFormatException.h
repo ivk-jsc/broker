@@ -45,7 +45,9 @@ class CMS_API NumberFormatException : public CMSException {
 
   NumberFormatException(const std::string &message, const std::exception *cause);
 
-  NumberFormatException(const std::string &message, const std::exception *cause, const std::vector<triplet<std::string, std::string, int> > &stackTrace);
+  NumberFormatException(const std::string &message,
+                        const std::exception *cause,
+                        const std::vector<triplet<std::string, std::string, int> > &stackTrace);
 
   ~NumberFormatException() noexcept override;
 

@@ -32,7 +32,8 @@ DoubleArrayBuffer::DoubleArrayBuffer(int size, bool readOnly) : DoubleBuffer(siz
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-DoubleArrayBuffer::DoubleArrayBuffer(double *array, int size, int offset, int length, bool readOnly) : DoubleBuffer(length), _array(), offset(offset), length(length), readOnly(readOnly) {
+DoubleArrayBuffer::DoubleArrayBuffer(double *array, int size, int offset, int length, bool readOnly)
+    : DoubleBuffer(length), _array(), offset(offset), length(length), readOnly(readOnly) {
   try {
     if (offset < 0 || offset > size) {
       throw IndexOutOfBoundsException(__FILE__, __LINE__, "Offset parameter if out of bounds, %d", offset);
@@ -70,7 +71,8 @@ DoubleArrayBuffer::DoubleArrayBuffer(const Pointer<ByteArrayAdapter> &array, int
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-DoubleArrayBuffer::DoubleArrayBuffer(const DoubleArrayBuffer &other) : DoubleBuffer(other), _array(other._array), offset(other.offset), length(other.length), readOnly(other.readOnly) {}
+DoubleArrayBuffer::DoubleArrayBuffer(const DoubleArrayBuffer &other)
+    : DoubleBuffer(other), _array(other._array), offset(other.offset), length(other.length), readOnly(other.readOnly) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 DoubleArrayBuffer::~DoubleArrayBuffer() {}

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #ifndef _DECAF_LANG_EXCEPTIONS_UNSUPPORTEDOPERATIONEXCEPTION_H_
 #define _DECAF_LANG_EXCEPTIONS_UNSUPPORTEDOPERATIONEXCEPTION_H_
 

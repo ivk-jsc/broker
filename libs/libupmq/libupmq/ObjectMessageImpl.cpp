@@ -33,7 +33,8 @@ ObjectMessageImpl::ObjectMessageImpl(const ObjectMessageImpl &other) : MessageTe
 
 ObjectMessageImpl::~ObjectMessageImpl() throw() {}
 
-ObjectMessageImpl::ObjectMessageImpl(Proto::ProtoMessage *header, unsigned char *body_buff, long long body_size, bool pr) : MessageTemplate<cms::ObjectMessage>(header, body_buff, body_size) {
+ObjectMessageImpl::ObjectMessageImpl(Proto::ProtoMessage *header, unsigned char *body_buff, long long body_size, bool pr)
+    : MessageTemplate<cms::ObjectMessage>(header, body_buff, body_size) {
   DECAF_UNUSED_VAR(pr);
 }
 

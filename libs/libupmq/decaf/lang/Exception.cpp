@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #include "Exception.h"
 #include <decaf/lang/Pointer.h>
 #include <decaf/util/logging/LoggerDefines.h>
@@ -51,7 +51,8 @@ class ExceptionData {
 
   ExceptionData(const ExceptionData &other) = default;
 
-  ExceptionData(ExceptionData &&other) noexcept : message(std::move(other.message)), cause(other.cause.release()), stackTrace(std::move(other.stackTrace)) {}
+  ExceptionData(ExceptionData &&other) noexcept
+      : message(std::move(other.message)), cause(other.cause.release()), stackTrace(std::move(other.stackTrace)) {}
 
   ExceptionData &operator=(const ExceptionData &other) = default;
   ExceptionData &operator=(ExceptionData &&other) noexcept = default;

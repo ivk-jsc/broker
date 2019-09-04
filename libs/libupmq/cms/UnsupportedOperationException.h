@@ -44,7 +44,9 @@ class CMS_API UnsupportedOperationException : public CMSException {
 
   UnsupportedOperationException(const std::string &message, const std::exception *cause);
 
-  UnsupportedOperationException(const std::string &message, const std::exception *cause, const std::vector<triplet<std::string, std::string, int> > &stackTrace);
+  UnsupportedOperationException(const std::string &message,
+                                const std::exception *cause,
+                                const std::vector<triplet<std::string, std::string, int> > &stackTrace);
 
   ~UnsupportedOperationException() noexcept override;
 

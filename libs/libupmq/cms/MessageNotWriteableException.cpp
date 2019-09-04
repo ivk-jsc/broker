@@ -33,7 +33,9 @@ MessageNotWriteableException::MessageNotWriteableException(const std::string &me
 MessageNotWriteableException::MessageNotWriteableException(const std::string &message, const std::exception *cause) : CMSException(message, cause) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-MessageNotWriteableException::MessageNotWriteableException(const std::string &message, const std::exception *cause, const std::vector<triplet<std::string, std::string, int> > &stackTrace)
+MessageNotWriteableException::MessageNotWriteableException(const std::string &message,
+                                                           const std::exception *cause,
+                                                           const std::vector<triplet<std::string, std::string, int> > &stackTrace)
     : CMSException(message, cause, stackTrace) {}
 
 ////////////////////////////////////////////////////////////////////////////////

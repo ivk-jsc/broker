@@ -42,7 +42,6 @@ namespace internal {
 namespace security {
 
 class SRNGData {
-
  public:
   SRNGData(const SRNGData &) = delete;
   SRNGData operator=(const SRNGData &) = delete;
@@ -110,7 +109,7 @@ void SecureRandomImpl::providerNextBytes(unsigned char *bytes, int numBytes) {
     // read it all.
     do {
       errno = 0;
-      bytesRead += read(this->config->randFile, (void *) &bytes[bytesRead], numBytes - bytesRead);
+      bytesRead += read(this->config->randFile, (void *)&bytes[bytesRead], numBytes - bytesRead);
     } while (bytesRead < numBytes || errno != 0);
 
     // Since the dev random files are special OS random sources we should never get

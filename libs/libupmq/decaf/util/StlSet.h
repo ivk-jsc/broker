@@ -102,7 +102,9 @@ class StlSet : public decaf::util::AbstractSet<E> {
 
     virtual bool hasNext() const { return (this->current != set->end()); }
 
-    virtual void remove() { throw lang::exceptions::UnsupportedOperationException(__FILE__, __LINE__, "Set::Iterator::remove - Not Valid on a Const Iterator"); }
+    virtual void remove() {
+      throw lang::exceptions::UnsupportedOperationException(__FILE__, __LINE__, "Set::Iterator::remove - Not Valid on a Const Iterator");
+    }
   };
 
  public:

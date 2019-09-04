@@ -28,7 +28,8 @@ using namespace decaf::internal::security::provider;
 using namespace decaf::internal::security::provider::crypto;
 
 ////////////////////////////////////////////////////////////////////////////////
-DefaultMessageDigestProviderService::DefaultMessageDigestProviderService(const Provider *provider, const std::string &algorithmName) : ProviderService(provider, "MessageDigest", algorithmName) {}
+DefaultMessageDigestProviderService::DefaultMessageDigestProviderService(const Provider *provider, const std::string &algorithmName)
+    : ProviderService(provider, "MessageDigest", algorithmName) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 DefaultMessageDigestProviderService::~DefaultMessageDigestProviderService() {}

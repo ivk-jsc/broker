@@ -50,7 +50,11 @@ class UPMQCPP_API InactivityMonitor : public upmq::transport::TransportFilter {
 
  public:
   InactivityMonitor(const Pointer<Transport> next, const Pointer<transport::WireFormat> wireFormat, long long delay, long long period);
-  InactivityMonitor(const Pointer<Transport> next, const decaf::util::Properties &properties, const Pointer<transport::WireFormat> wireFormat, long long delay, long long period);
+  InactivityMonitor(const Pointer<Transport> next,
+                    const decaf::util::Properties &properties,
+                    const Pointer<transport::WireFormat> wireFormat,
+                    long long delay,
+                    long long period);
 
   virtual ~InactivityMonitor();
 

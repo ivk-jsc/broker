@@ -74,12 +74,23 @@ class MessageTemplate : public T, public UPMQCommand {
   }
 
   MessageTemplate(const MessageTemplate &o)
-      : UPMQCommand(o), _messageOffset(0), _bodyWritable(o._bodyWritable), _bodyReadable(o._bodyReadable), _propWritable(o._propWritable), _propReadable(o._propReadable) {}
+      : UPMQCommand(o),
+        _messageOffset(0),
+        _bodyWritable(o._bodyWritable),
+        _bodyReadable(o._bodyReadable),
+        _propWritable(o._propWritable),
+        _propReadable(o._propReadable) {}
 
-  MessageTemplate(const UPMQCommand &command) : UPMQCommand(command), _messageOffset(0), _bodyWritable(false), _bodyReadable(true), _propWritable(false), _propReadable(true) {}
+  MessageTemplate(const UPMQCommand &command)
+      : UPMQCommand(command), _messageOffset(0), _bodyWritable(false), _bodyReadable(true), _propWritable(false), _propReadable(true) {}
 
   MessageTemplate(Proto::ProtoMessage *header, unsigned char *body_buff, long long body_size)
-      : UPMQCommand(header, body_buff, body_size), _messageOffset(0), _bodyWritable(false), _bodyReadable(true), _propWritable(false), _propReadable(true) {}
+      : UPMQCommand(header, body_buff, body_size),
+        _messageOffset(0),
+        _bodyWritable(false),
+        _bodyReadable(true),
+        _propWritable(false),
+        _propReadable(true) {}
 
   ~MessageTemplate() noexcept override {}
 
@@ -174,7 +185,8 @@ class MessageTemplate : public T, public UPMQCommand {
     MessageTemplate *foo = const_cast<MessageTemplate *>(this);
     if (_header->message().has_destination_uri() && foo->_destination == nullptr) {
       foo->_destination.reset(
-          new DestinationImpl(static_cast<ConsumerImpl *>(_consumer) == nullptr ? nullptr : static_cast<ConsumerImpl *>(_consumer)->_session, _header->message().destination_uri()));
+          new DestinationImpl(static_cast<ConsumerImpl *>(_consumer) == nullptr ? nullptr : static_cast<ConsumerImpl *>(_consumer)->_session,
+                              _header->message().destination_uri()));
     }
     return foo->_destination.get();
   }
@@ -183,7 +195,10 @@ class MessageTemplate : public T, public UPMQCommand {
     if (destination != nullptr) {
       DestinationImpl *dest = dynamic_cast<DestinationImpl *>(const_cast<cms::Destination *>(destination));
       if (dest) {
-        _destination.reset(new DestinationImpl(static_cast<ConsumerImpl *>(_consumer) == nullptr ? nullptr : static_cast<ConsumerImpl *>(_consumer)->_session, dest->getName(), dest->getType()));
+        _destination.reset(
+            new DestinationImpl(static_cast<ConsumerImpl *>(_consumer) == nullptr ? nullptr : static_cast<ConsumerImpl *>(_consumer)->_session,
+                                dest->getName(),
+                                dest->getType()));
         _header->mutable_message()->set_destination_uri(dest->getUri());
       } else {
         throw decaf::lang::exceptions::ClassCastException(__FILE__, __LINE__, "can't cast Destination to DestinationImpl");
@@ -197,7 +212,9 @@ class MessageTemplate : public T, public UPMQCommand {
   const cms::Destination *getCMSReplyTo() const override {
     MessageTemplate *foo = const_cast<MessageTemplate *>(this);
     if (_header->mutable_message()->has_reply_to() && foo->_reply_to == nullptr) {
-      foo->_reply_to.reset(new DestinationImpl(static_cast<ConsumerImpl *>(_consumer) == nullptr ? nullptr : static_cast<ConsumerImpl *>(_consumer)->_session, _header->message().reply_to()));
+      foo->_reply_to.reset(
+          new DestinationImpl(static_cast<ConsumerImpl *>(_consumer) == nullptr ? nullptr : static_cast<ConsumerImpl *>(_consumer)->_session,
+                              _header->message().reply_to()));
     }
     return foo->_reply_to.get();
   }
@@ -206,7 +223,10 @@ class MessageTemplate : public T, public UPMQCommand {
     if (destination != nullptr) {
       DestinationImpl *dest = dynamic_cast<DestinationImpl *>(const_cast<cms::Destination *>(destination));
       if (dest) {
-        _reply_to.reset(new DestinationImpl(static_cast<ConsumerImpl *>(_consumer) == nullptr ? nullptr : static_cast<ConsumerImpl *>(_consumer)->_session, dest->getName(), dest->getType()));
+        _reply_to.reset(
+            new DestinationImpl(static_cast<ConsumerImpl *>(_consumer) == nullptr ? nullptr : static_cast<ConsumerImpl *>(_consumer)->_session,
+                                dest->getName(),
+                                dest->getType()));
         _header->mutable_message()->set_reply_to(dest->getUri());
       } else {
         throw decaf::lang::exceptions::ClassCastException(__FILE__, __LINE__, "can't cast Destination to DestinationImpl");
@@ -263,14 +283,18 @@ class MessageTemplate : public T, public UPMQCommand {
 
   std::vector<std::string> getPropertyNames() const override {
     std::vector<std::string> names;
-    for (google::protobuf::Map<string, Proto::Property>::const_iterator it = _header->message().property().begin(); it != _header->message().property().end(); ++it) {
+    for (google::protobuf::Map<string, Proto::Property>::const_iterator it = _header->message().property().begin();
+         it != _header->message().property().end();
+         ++it) {
       names.push_back(it->first);
     }
     return names;
   }
 
   void getPropertyNames(std::vector<std::string> &vect) const {
-    for (google::protobuf::Map<string, Proto::Property>::const_iterator it = _header->message().property().begin(); it != _header->message().property().end(); ++it) {
+    for (google::protobuf::Map<string, Proto::Property>::const_iterator it = _header->message().property().begin();
+         it != _header->message().property().end();
+         ++it) {
       vect.push_back(it->first);
     }
   }
@@ -710,27 +734,27 @@ class MessageTemplate : public T, public UPMQCommand {
 
   void convertPropertyToString(Proto::Property::PropertyValueCase type, Proto::Property property) const {
     MessageTemplate *foo = const_cast<MessageTemplate *>(this);
-    std::stringstream s;    
+    std::stringstream s;
     int i = 0;
     double valDouble;
     float valFloat;
     switch (type) {
-      case Proto::Property::kValueBool:        
+      case Proto::Property::kValueBool:
         s << std::boolalpha << property.value_bool();
         break;
-      case Proto::Property::kValueByte:       
+      case Proto::Property::kValueByte:
         s << property.value_byte();
         break;
-      case Proto::Property::kValueShort:        
+      case Proto::Property::kValueShort:
         s << property.value_short();
         break;
-      case Proto::Property::kValueInt:        
+      case Proto::Property::kValueInt:
         s << property.value_int();
         break;
-      case Proto::Property::kValueLong:        
+      case Proto::Property::kValueLong:
         s << property.value_long();
         break;
-      case Proto::Property::kValueFloat:        
+      case Proto::Property::kValueFloat:
         valFloat = property.value_float();
 #ifdef WIN32
         i = _fpclass(valFloat);
@@ -754,7 +778,7 @@ class MessageTemplate : public T, public UPMQCommand {
           case FP_NAN:
             s << "NaN";
             break;
-          case FP_INFINITE:            
+          case FP_INFINITE:
             s << "Infinity";
             break;
           default:
@@ -763,7 +787,7 @@ class MessageTemplate : public T, public UPMQCommand {
         }
 #endif
         break;
-      case Proto::Property::kValueDouble:        
+      case Proto::Property::kValueDouble:
         valDouble = property.value_double();
 #ifdef WIN32
         i = _fpclass(valDouble);
@@ -787,7 +811,7 @@ class MessageTemplate : public T, public UPMQCommand {
           case FP_NAN:
             s << "NaN";
             break;
-          case FP_INFINITE:            
+          case FP_INFINITE:
             s << "Infinity";
             break;
           default:
@@ -806,23 +830,23 @@ class MessageTemplate : public T, public UPMQCommand {
     foo->_convertedValue.assign(s.str());
   }
 
-  int convertPropertyToInt(Proto::Property::PropertyValueCase type, Proto::Property property) const {    
+  int convertPropertyToInt(Proto::Property::PropertyValueCase type, Proto::Property property) const {
     int s;
     long long longVal;
     char *pEnd;
     string pStart;
     switch (type) {
-      case Proto::Property::kValueByte:        
+      case Proto::Property::kValueByte:
         s = (int)property.value_byte();
         break;
-      case Proto::Property::kValueShort:        
+      case Proto::Property::kValueShort:
         s = (int)property.value_short();
         break;
-      case Proto::Property::kValueString:        
+      case Proto::Property::kValueString:
         pStart = property.value_string();
         longVal = strtoll(pStart.c_str(), &pEnd, 10);
         if (pEnd == pStart.c_str() || *pEnd != '\0') {
-          throw cms::NumberFormatException("message: no possible conversion");          
+          throw cms::NumberFormatException("message: no possible conversion");
         } else if (longVal > INT_MAX || longVal < INT_MIN) {
           throw cms::NumberFormatException("message: no possible conversion");
         } else {
@@ -837,22 +861,22 @@ class MessageTemplate : public T, public UPMQCommand {
     return s;
   }
 
-  long long convertPropertyToLong(Proto::Property::PropertyValueCase type, Proto::Property property) const {    
+  long long convertPropertyToLong(Proto::Property::PropertyValueCase type, Proto::Property property) const {
     long long s;
     long long longVal;
     char *pEnd;
     string pStart;
     switch (type) {
-      case Proto::Property::kValueByte:        
+      case Proto::Property::kValueByte:
         s = static_cast<long long>(property.value_byte());
         break;
-      case Proto::Property::kValueShort:        
+      case Proto::Property::kValueShort:
         s = static_cast<long long>(property.value_short());
         break;
-      case Proto::Property::kValueInt:        
+      case Proto::Property::kValueInt:
         s = static_cast<long long>(property.value_int());
         break;
-      case Proto::Property::kValueString:        
+      case Proto::Property::kValueString:
         pStart = property.value_string();
         longVal = strtoll(pStart.c_str(), &pEnd, 10);
         if (pEnd == pStart.c_str() || *pEnd != '\0') {
@@ -931,7 +955,7 @@ class MessageTemplate : public T, public UPMQCommand {
     float s;
     double longVal;
     char *pEnd;
-    string pStart;    
+    string pStart;
 
     switch (type) {
       case Proto::Property::kValueString:
@@ -950,7 +974,7 @@ class MessageTemplate : public T, public UPMQCommand {
     return s;
   }
 
-  unsigned char convertPropertyToByte(Proto::Property::PropertyValueCase type, const Proto::Property &property) const {    
+  unsigned char convertPropertyToByte(Proto::Property::PropertyValueCase type, const Proto::Property &property) const {
     unsigned char s;
     long longVal;
     char *pEnd;

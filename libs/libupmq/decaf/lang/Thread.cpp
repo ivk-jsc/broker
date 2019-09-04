@@ -89,7 +89,9 @@ Thread::Thread(const std::string &name) : Runnable(), properties(nullptr) { this
 Thread::Thread(Runnable *task, const std::string &name) : Runnable(), properties(nullptr) { this->initializeSelf(task, name, -1); }
 
 ////////////////////////////////////////////////////////////////////////////////
-Thread::Thread(Runnable *task, const std::string &name, long long stackSize) : Runnable(), properties(nullptr) { this->initializeSelf(task, name, stackSize); }
+Thread::Thread(Runnable *task, const std::string &name, long long stackSize) : Runnable(), properties(nullptr) {
+  this->initializeSelf(task, name, stackSize);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 void Thread::initializeSelf(Runnable *task, const std::string &name, long long stackSize) {
@@ -217,7 +219,8 @@ void Thread::setDefaultUncaughtExceptionHandler(Thread::UncaughtExceptionHandler
 
 ////////////////////////////////////////////////////////////////////////////////
 std::string Thread::toString() const {
-  return std::string(Threading::getThreadName(this->properties->handle)) + ": Priority=" + Integer::toString(Threading::getThreadPriority(this->properties->handle)) +
+  return std::string(Threading::getThreadName(this->properties->handle)) +
+         ": Priority=" + Integer::toString(Threading::getThreadPriority(this->properties->handle)) +
          ", ThreadID=" + Long::toString(Threading::getThreadId(this->properties->handle));
 }
 

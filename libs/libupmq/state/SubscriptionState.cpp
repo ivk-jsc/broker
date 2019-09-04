@@ -30,7 +30,9 @@ SubscriptionState::~SubscriptionState() {}
 Pointer<Command> SubscriptionState::getInfo() const { return this->info; }
 
 ////////////////////////////////////////////////////////////////////////////////
-void SubscriptionState::addSubscribe(Pointer<Command> command) { subscribes.put(command->getCurrId(), Pointer<SubscribeState>(new SubscribeState(command))); }
+void SubscriptionState::addSubscribe(Pointer<Command> command) {
+  subscribes.put(command->getCurrId(), Pointer<SubscribeState>(new SubscribeState(command)));
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 Pointer<SubscribeState> SubscriptionState::removeSubscribe(string id) {

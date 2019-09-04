@@ -86,7 +86,8 @@ class TcpTransportImpl {
 }  // namespace upmq
 
 ////////////////////////////////////////////////////////////////////////////////
-TcpTransport::TcpTransport(Pointer<Transport> next, const decaf::net::URI &location) : TransportFilter(std::move(next)), impl(new TcpTransportImpl(location)) {}
+TcpTransport::TcpTransport(Pointer<Transport> next, const decaf::net::URI &location)
+    : TransportFilter(std::move(next)), impl(new TcpTransportImpl(location)) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 TcpTransport::~TcpTransport() {

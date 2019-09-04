@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #include "ByteArrayBuffer.h"
 #include <string.h>
 #include "decaf/lang/Double.h"
@@ -29,10 +29,12 @@ using namespace decaf::lang::exceptions;
 using namespace decaf::internal::nio;
 
 ////////////////////////////////////////////////////////////////////////////////
-ByteArrayBuffer::ByteArrayBuffer(int size, bool readOnly) : decaf::nio::ByteBuffer(size), _array(new ByteArrayAdapter(size)), offset(0), length(size), readOnly(readOnly) {}
+ByteArrayBuffer::ByteArrayBuffer(int size, bool readOnly)
+    : decaf::nio::ByteBuffer(size), _array(new ByteArrayAdapter(size)), offset(0), length(size), readOnly(readOnly) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-ByteArrayBuffer::ByteArrayBuffer(unsigned char *array, int size, int offset, int length, bool readOnly) : decaf::nio::ByteBuffer(length), _array(), offset(offset), length(length), readOnly(readOnly) {
+ByteArrayBuffer::ByteArrayBuffer(unsigned char *array, int size, int offset, int length, bool readOnly)
+    : decaf::nio::ByteBuffer(length), _array(), offset(offset), length(length), readOnly(readOnly) {
   try {
     if (offset < 0 || offset > size) {
       throw IndexOutOfBoundsException(__FILE__, __LINE__, "Offset parameter if out of bounds, %d", offset);
@@ -70,7 +72,8 @@ ByteArrayBuffer::ByteArrayBuffer(const Pointer<ByteArrayAdapter> &array, int off
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-ByteArrayBuffer::ByteArrayBuffer(const ByteArrayBuffer &other) : decaf::nio::ByteBuffer(other), _array(other._array), offset(other.offset), length(other.length), readOnly(other.readOnly) {}
+ByteArrayBuffer::ByteArrayBuffer(const ByteArrayBuffer &other)
+    : decaf::nio::ByteBuffer(other), _array(other._array), offset(other.offset), length(other.length), readOnly(other.readOnly) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 ByteArrayBuffer::~ByteArrayBuffer() {}

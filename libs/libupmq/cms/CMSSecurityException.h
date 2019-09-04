@@ -45,7 +45,9 @@ class CMS_API CMSSecurityException : public CMSException {
 
   CMSSecurityException(const std::string &message, const std::exception *cause);
 
-  CMSSecurityException(const std::string &message, const std::exception *cause, const std::vector<triplet<std::string, std::string, int> > &stackTrace);
+  CMSSecurityException(const std::string &message,
+                       const std::exception *cause,
+                       const std::vector<triplet<std::string, std::string, int> > &stackTrace);
 
   ~CMSSecurityException() noexcept override;
 

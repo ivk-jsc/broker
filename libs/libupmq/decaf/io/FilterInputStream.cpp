@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #include "FilterInputStream.h"
 
 #include <decaf/io/InputStream.h>
@@ -25,7 +25,8 @@ using namespace decaf::lang;
 using namespace decaf::lang::exceptions;
 
 ////////////////////////////////////////////////////////////////////////////////
-FilterInputStream::FilterInputStream(InputStream *inputStream, bool own) : InputStream(), inputStream(inputStream), own(own), closed(inputStream == nullptr ? true : false) {}
+FilterInputStream::FilterInputStream(InputStream *inputStream, bool own)
+    : InputStream(), inputStream(inputStream), own(own), closed(inputStream == nullptr ? true : false) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 FilterInputStream::~FilterInputStream() {

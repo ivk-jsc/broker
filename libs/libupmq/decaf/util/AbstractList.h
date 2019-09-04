@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #ifndef _DECAF_UTIL_ABSTRACTLIST_H_
 #define _DECAF_UTIL_ABSTRACTLIST_H_
 
@@ -199,7 +199,8 @@ class AbstractList : public decaf::util::List<E>, public decaf::util::AbstractCo
     ConstSimpleListIterator operator=(const ConstSimpleListIterator &);
 
    public:
-    ConstSimpleListIterator(const AbstractList<E> *parent, int start) : ListIterator<E>(), parent(parent), numLeft(0), expectedModCount(0), lastPosition(-1) {
+    ConstSimpleListIterator(const AbstractList<E> *parent, int start)
+        : ListIterator<E>(), parent(parent), numLeft(0), expectedModCount(0), lastPosition(-1) {
       if (parent == nullptr) {
         throw decaf::lang::exceptions::NullPointerException(__FILE__, __LINE__, "List Iterator constructed with NULL parent");
       }
@@ -234,7 +235,9 @@ class AbstractList : public decaf::util::List<E>, public decaf::util::AbstractCo
       }
     }
 
-    void remove() override { throw lang::exceptions::UnsupportedOperationException(__FILE__, __LINE__, "AbstractList::Iterator::remove - Const Iterator."); }
+    void remove() override {
+      throw lang::exceptions::UnsupportedOperationException(__FILE__, __LINE__, "AbstractList::Iterator::remove - Const Iterator.");
+    }
 
     void add(const E &value DECAF_UNUSED) override {
       DECAF_UNUSED_VAR(value);

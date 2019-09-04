@@ -27,7 +27,9 @@ void Atomics::initialize() {}
 void Atomics::shutdown() {}
 
 ////////////////////////////////////////////////////////////////////////////////
-bool Atomics::compareAndSet32(volatile int *target, int expect, int update) { return ::InterlockedCompareExchange((volatile LONG *)target, update, expect) == static_cast<LONG>(expect); }
+bool Atomics::compareAndSet32(volatile int *target, int expect, int update) {
+  return ::InterlockedCompareExchange((volatile LONG *)target, update, expect) == static_cast<LONG>(expect);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 bool Atomics::compareAndSet(volatile void **target, void *expect, void *update) {

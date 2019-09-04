@@ -23,7 +23,8 @@ using namespace upmq::state;
 using namespace upmq::transport;
 
 ////////////////////////////////////////////////////////////////////////////////
-ConnectionState::ConnectionState(Pointer<Command> info) : info(info), sessions(), tempDestinations(), disposed(false), connectionInterruptProcessingComplete(true) {}
+ConnectionState::ConnectionState(Pointer<Command> info)
+    : info(info), sessions(), tempDestinations(), disposed(false), connectionInterruptProcessingComplete(true) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 ConnectionState::~ConnectionState() {
@@ -96,7 +97,9 @@ const LinkedList<Pointer<Command>> &ConnectionState::getTempDestinations() const
 const decaf::util::Collection<Pointer<SessionState>> &ConnectionState::getSessionStates() const { return sessions.values(); }
 
 ////////////////////////////////////////////////////////////////////////////////
-void ConnectionState::setConnectionInterruptProcessingComplete(bool isConnectionInterruptProcessingComplete) { this->connectionInterruptProcessingComplete = isConnectionInterruptProcessingComplete; }
+void ConnectionState::setConnectionInterruptProcessingComplete(bool isConnectionInterruptProcessingComplete) {
+  this->connectionInterruptProcessingComplete = isConnectionInterruptProcessingComplete;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 bool ConnectionState::isConnectionInterruptProcessingComplete() const { return this->connectionInterruptProcessingComplete; }

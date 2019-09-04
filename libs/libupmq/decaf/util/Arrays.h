@@ -99,7 +99,8 @@ class Arrays {
     }
 
     if (start < 0 || end > size) {
-      throw decaf::lang::exceptions::IndexOutOfBoundsException(__FILE__, __LINE__, "The start index {%d} end index {%d} range is invalid.", start, end);
+      throw decaf::lang::exceptions::IndexOutOfBoundsException(
+          __FILE__, __LINE__, "The start index {%d} end index {%d} range is invalid.", start, end);
     }
 
     for (int i = start; i < end; ++i) {

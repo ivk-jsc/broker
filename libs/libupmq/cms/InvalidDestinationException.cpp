@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #include "InvalidDestinationException.h"
 
 using namespace cms;
@@ -33,7 +33,9 @@ InvalidDestinationException::InvalidDestinationException(const std::string &mess
 InvalidDestinationException::InvalidDestinationException(const std::string &message, const std::exception *cause) : CMSException(message, cause) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-InvalidDestinationException::InvalidDestinationException(const std::string &message, const std::exception *cause, const std::vector<triplet<std::string, std::string, int> > &stackTrace)
+InvalidDestinationException::InvalidDestinationException(const std::string &message,
+                                                         const std::exception *cause,
+                                                         const std::vector<triplet<std::string, std::string, int> > &stackTrace)
     : CMSException(message, cause, stackTrace) {}
 
 ////////////////////////////////////////////////////////////////////////////////

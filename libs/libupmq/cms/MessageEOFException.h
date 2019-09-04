@@ -44,7 +44,9 @@ class CMS_API MessageEOFException : public CMSException {
 
   MessageEOFException(const std::string &message, const std::exception *cause);
 
-  MessageEOFException(const std::string &message, const std::exception *cause, const std::vector<triplet<std::string, std::string, int> > &stackTrace);
+  MessageEOFException(const std::string &message,
+                      const std::exception *cause,
+                      const std::vector<triplet<std::string, std::string, int> > &stackTrace);
 
   ~MessageEOFException() noexcept override;
 

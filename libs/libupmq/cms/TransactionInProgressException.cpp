@@ -30,10 +30,13 @@ TransactionInProgressException::TransactionInProgressException(TransactionInProg
 TransactionInProgressException::TransactionInProgressException(const std::string &message) : CMSException(message, nullptr) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-TransactionInProgressException::TransactionInProgressException(const std::string &message, const std::exception *cause) : CMSException(message, cause) {}
+TransactionInProgressException::TransactionInProgressException(const std::string &message, const std::exception *cause)
+    : CMSException(message, cause) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-TransactionInProgressException::TransactionInProgressException(const std::string &message, const std::exception *cause, const std::vector<triplet<std::string, std::string, int> > &stackTrace)
+TransactionInProgressException::TransactionInProgressException(const std::string &message,
+                                                               const std::exception *cause,
+                                                               const std::vector<triplet<std::string, std::string, int> > &stackTrace)
     : CMSException(message, cause, stackTrace) {}
 
 ////////////////////////////////////////////////////////////////////////////////

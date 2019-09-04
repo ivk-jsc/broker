@@ -418,7 +418,8 @@ class LinkedList : public AbstractSequentialList<E>, public Deque<E> {
     LinkedListIterator operator=(const LinkedListIterator &);
 
    public:
-    LinkedListIterator(LinkedList<E> *list, int index) : ListIterator<E>(), list(list), current(nullptr), lastReturned(nullptr), index(index), expectedModCount(0) {
+    LinkedListIterator(LinkedList<E> *list, int index)
+        : ListIterator<E>(), list(list), current(nullptr), lastReturned(nullptr), index(index), expectedModCount(0) {
       if (list == nullptr) {
         throw decaf::lang::exceptions::NullPointerException(__FILE__, __LINE__, "Parent LinkedList pointer was Null.");
       }
@@ -562,7 +563,8 @@ class LinkedList : public AbstractSequentialList<E>, public Deque<E> {
     ConstLinkedListIterator operator=(const ConstLinkedListIterator &);
 
    public:
-    ConstLinkedListIterator(const LinkedList<E> *list, int index) : ListIterator<E>(), list(list), current(nullptr), lastReturned(nullptr), index(index) {
+    ConstLinkedListIterator(const LinkedList<E> *list, int index)
+        : ListIterator<E>(), list(list), current(nullptr), lastReturned(nullptr), index(index) {
       if (list == nullptr) {
         throw decaf::lang::exceptions::NullPointerException(__FILE__, __LINE__, "Parent LinkedList pointer was Null.");
       }

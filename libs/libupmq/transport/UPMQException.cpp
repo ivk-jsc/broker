@@ -47,7 +47,8 @@ UPMQException::UPMQException(const char *file, const int lineNumber, const char 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-UPMQException::UPMQException(const char *file, const int lineNumber, const std::exception *cause, const char *msg, ...) : decaf::lang::Exception(cause) {
+UPMQException::UPMQException(const char *file, const int lineNumber, const std::exception *cause, const char *msg, ...)
+    : decaf::lang::Exception(cause) {
   va_list vargs;
   va_start(vargs, msg);
   Exception::buildMessage(msg, vargs);

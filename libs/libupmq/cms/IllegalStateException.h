@@ -46,7 +46,9 @@ class CMS_API IllegalStateException : public CMSException {
 
   IllegalStateException(const std::string &message, const std::exception *cause);
 
-  IllegalStateException(const std::string &message, const std::exception *cause, const std::vector<triplet<std::string, std::string, int> > &stackTrace);
+  IllegalStateException(const std::string &message,
+                        const std::exception *cause,
+                        const std::vector<triplet<std::string, std::string, int> > &stackTrace);
 
   ~IllegalStateException() noexcept override;
 

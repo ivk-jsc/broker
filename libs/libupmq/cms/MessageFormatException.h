@@ -47,7 +47,9 @@ class CMS_API MessageFormatException : public CMSException {
 
   MessageFormatException(const std::string &message, const std::exception *cause);
 
-  MessageFormatException(const std::string &message, const std::exception *cause, const std::vector<triplet<std::string, std::string, int> > &stackTrace);
+  MessageFormatException(const std::string &message,
+                         const std::exception *cause,
+                         const std::vector<triplet<std::string, std::string, int> > &stackTrace);
 
   ~MessageFormatException() noexcept override;
 

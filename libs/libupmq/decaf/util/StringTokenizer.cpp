@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #include "StringTokenizer.h"
 
 #include <decaf/util/NoSuchElementException.h>
@@ -25,7 +25,8 @@ using namespace decaf::lang;
 using namespace decaf::lang::exceptions;
 
 ////////////////////////////////////////////////////////////////////////////////
-StringTokenizer::StringTokenizer(const std::string &str, const std::string &delim, bool returnDelims) : str(str), delim(delim), pos(0), returnDelims(returnDelims) {}
+StringTokenizer::StringTokenizer(const std::string &str, const std::string &delim, bool returnDelims)
+    : str(str), delim(delim), pos(0), returnDelims(returnDelims) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 StringTokenizer::~StringTokenizer() {}

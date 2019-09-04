@@ -136,11 +136,18 @@ class AsyncWriteTask : public CompositeTask {
 }  // namespace upmq
 
 ////////////////////////////////////////////////////////////////////////////////
-InactivityMonitor::InactivityMonitor(const Pointer<Transport> next, const Pointer<transport::WireFormat> wireFormat, long long delay, long long period)
+InactivityMonitor::InactivityMonitor(const Pointer<Transport> next,
+                                     const Pointer<transport::WireFormat> wireFormat,
+                                     long long delay,
+                                     long long period)
     : TransportFilter(next), members(new InactivityMonitorData(wireFormat, delay, period)) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-InactivityMonitor::InactivityMonitor(const Pointer<Transport> next, const decaf::util::Properties &properties, const Pointer<transport::WireFormat> wireFormat, long long delay, long long period)
+InactivityMonitor::InactivityMonitor(const Pointer<Transport> next,
+                                     const decaf::util::Properties &properties,
+                                     const Pointer<transport::WireFormat> wireFormat,
+                                     long long delay,
+                                     long long period)
     : TransportFilter(next), members(new InactivityMonitorData(wireFormat, delay, period)) {
   DECAF_UNUSED_VAR(properties);
   // this->members->keepAliveResponseRequired =
@@ -298,7 +305,8 @@ void InactivityMonitor::startMonitorThreads() {
     this->members->monitorStarted.set(true);
     this->members->writeCheckerTask.reset(new WriteChecker(this));
 
-    this->members->writeCheckTimer.scheduleAtFixedRate(this->members->writeCheckerTask.dynamicCast<TimerTask>(), this->members->initialDelayTime, this->members->writeCheckTime);
+    this->members->writeCheckTimer.scheduleAtFixedRate(
+        this->members->writeCheckerTask.dynamicCast<TimerTask>(), this->members->initialDelayTime, this->members->writeCheckTime);
   }
 }
 

@@ -31,7 +31,8 @@ TextMessageImpl::TextMessageImpl() : MessageTemplate<cms::TextMessage>() {
 
 TextMessageImpl::TextMessageImpl(TextMessageImpl &other) : MessageTemplate<cms::TextMessage>(other) {}
 
-TextMessageImpl::TextMessageImpl(Proto::ProtoMessage *header, unsigned char *body_buff, long long body_size, bool pr) : MessageTemplate<cms::TextMessage>(header, body_buff, body_size) {
+TextMessageImpl::TextMessageImpl(Proto::ProtoMessage *header, unsigned char *body_buff, long long body_size, bool pr)
+    : MessageTemplate<cms::TextMessage>(header, body_buff, body_size) {
   DECAF_UNUSED_VAR(pr);
 }
 

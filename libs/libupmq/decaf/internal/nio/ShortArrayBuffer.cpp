@@ -32,7 +32,8 @@ ShortArrayBuffer::ShortArrayBuffer(int size, bool readOnly) : ShortBuffer(size),
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-ShortArrayBuffer::ShortArrayBuffer(short *array, int size, int offset, int length, bool readOnly) : ShortBuffer(length), _array(), offset(offset), length(length), readOnly(readOnly) {
+ShortArrayBuffer::ShortArrayBuffer(short *array, int size, int offset, int length, bool readOnly)
+    : ShortBuffer(length), _array(), offset(offset), length(length), readOnly(readOnly) {
   try {
     if (offset < 0 || offset > size) {
       throw IndexOutOfBoundsException(__FILE__, __LINE__, "Offset parameter if out of bounds, %d", offset);
@@ -70,7 +71,8 @@ ShortArrayBuffer::ShortArrayBuffer(const Pointer<ByteArrayAdapter> &array, int o
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-ShortArrayBuffer::ShortArrayBuffer(const ShortArrayBuffer &other) : ShortBuffer(other), _array(other._array), offset(other.offset), length(other.length), readOnly(other.readOnly) {}
+ShortArrayBuffer::ShortArrayBuffer(const ShortArrayBuffer &other)
+    : ShortBuffer(other), _array(other._array), offset(other.offset), length(other.length), readOnly(other.readOnly) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 ShortArrayBuffer::~ShortArrayBuffer() {}

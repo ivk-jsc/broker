@@ -182,7 +182,8 @@ int URLStreamHandler::getDefaultPort() const { return -1; }
 ////////////////////////////////////////////////////////////////////////////////
 void URLStreamHandler::parseURL(URL &url, const String &spec, int start, int limit) {
   if (limit < start || limit < 0) {
-    if ((limit <= Integer::MIN_VALUE + 1 && (start >= spec.length() || start < 0)) || (spec.startsWith("//", start) && spec.indexOf('/', start + 2) == -1)) {
+    if ((limit <= Integer::MIN_VALUE + 1 && (start >= spec.length() || start < 0)) ||
+        (spec.startsWith("//", start) && spec.indexOf('/', start + 2) == -1)) {
       throw StringIndexOutOfBoundsException(__FILE__, __LINE__, limit);
     }
     if (this != url.getURLStreamHandler()) {
@@ -225,7 +226,8 @@ void URLStreamHandler::parseURL(URL &url, const String &spec, int start, int lim
     int ipv6End = URLUtils::findFirstOf(spec, "]", hostStart, fileStart);
     if (ipv6End != fileStart) {
       if (URLUtils::findFirstOf(spec, ":", hostStart, ipv6End) == ipv6End) {
-        throw IllegalArgumentException(__FILE__, __LINE__, (std::string("Expected an IPv6 address: ") + spec.substring(hostStart, ipv6End + 1).toString()).c_str());
+        throw IllegalArgumentException(
+            __FILE__, __LINE__, (std::string("Expected an IPv6 address: ") + spec.substring(hostStart, ipv6End + 1).toString()).c_str());
       }
       colonSearchFrom = ipv6End;
     }
@@ -288,8 +290,15 @@ void URLStreamHandler::parseURL(URL &url, const String &spec, int start, int lim
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void URLStreamHandler::setURL(
-    URL &url, const String &protocol, const String &host, int port, const String &authority, const String &userInfo, const String &path, const String &query, const String &ref) {
+void URLStreamHandler::setURL(URL &url,
+                              const String &protocol,
+                              const String &host,
+                              int port,
+                              const String &authority,
+                              const String &userInfo,
+                              const String &path,
+                              const String &query,
+                              const String &ref) {
   if (this != url.getURLStreamHandler()) {
     throw SecurityException(__FILE__, __LINE__, "Stream handler is not the URLs intance.");
   }

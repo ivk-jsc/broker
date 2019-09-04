@@ -65,7 +65,8 @@ Pointer<Transport> FailoverTransportFactory::createComposite(const decaf::net::U
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Pointer<Transport> FailoverTransportFactory::doCreateComposite(const decaf::net::URI &location, const decaf::util::Properties &properties UPMQCPP_UNUSED) {
+Pointer<Transport> FailoverTransportFactory::doCreateComposite(const decaf::net::URI &location,
+                                                               const decaf::util::Properties &properties UPMQCPP_UNUSED) {
   DECAF_UNUSED_VAR(properties);
   try {
     CompositeData data = URISupport::parseComposite(location);

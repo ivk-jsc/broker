@@ -179,7 +179,8 @@ void PlatformThread::interruptibleWaitOnCondition(decaf_condition_t condition, d
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-bool PlatformThread::interruptibleWaitOnCondition(decaf_condition_t condition, decaf_mutex_t mutex, long long mills, int nanos, CompletionCondition &complete) {
+bool PlatformThread::interruptibleWaitOnCondition(
+    decaf_condition_t condition, decaf_mutex_t mutex, long long mills, int nanos, CompletionCondition &complete) {
   struct timeval tv;
   gettimeofday(&tv, nullptr);
   long long timeNow = TimeUnit::SECONDS.toNanos(tv.tv_sec) + TimeUnit::MICROSECONDS.toNanos(tv.tv_usec);
@@ -260,7 +261,8 @@ void PlatformThread::initPriorityMapping(int maxPriority, std::vector<int> &mapp
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void PlatformThread::createNewThread(decaf_thread_t *handle, threadMainMethod threadMain, void *threadArg, int priority, long long stackSize, long long *threadId) {
+void PlatformThread::createNewThread(
+    decaf_thread_t *handle, threadMainMethod threadMain, void *threadArg, int priority, long long stackSize, long long *threadId) {
   pthread_attr_t attributes;
   int schedResult;
   int schedPolicy;

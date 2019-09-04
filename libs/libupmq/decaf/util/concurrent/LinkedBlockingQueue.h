@@ -138,7 +138,16 @@ class LinkedBlockingQueue : public BlockingQueue<E> {
   /**
    * Create a new instance with a Capacity of Integer::MAX_VALUE
    */
-  LinkedBlockingQueue() : BlockingQueue<E>(), capacity(lang::Integer::MAX_VALUE), count(), takeLock(), notEmpty(), putLock(), notFull(), head(new QueueNode<E>()), tail() {
+  LinkedBlockingQueue()
+      : BlockingQueue<E>(),
+        capacity(lang::Integer::MAX_VALUE),
+        count(),
+        takeLock(),
+        notEmpty(),
+        putLock(),
+        notFull(),
+        head(new QueueNode<E>()),
+        tail() {
     this->tail = this->head;
     this->notEmpty.reset(this->takeLock.newCondition());
     this->notFull.reset(this->putLock.newCondition());
@@ -152,7 +161,8 @@ class LinkedBlockingQueue : public BlockingQueue<E> {
    *
    * @throws IllegalArgumentException if the specified capacity is not greater than zero.
    */
-  LinkedBlockingQueue(int capacity) : BlockingQueue<E>(), capacity(capacity), count(), takeLock(), notEmpty(), putLock(), notFull(), head(new QueueNode<E>()), tail() {
+  LinkedBlockingQueue(int capacity)
+      : BlockingQueue<E>(), capacity(capacity), count(), takeLock(), notEmpty(), putLock(), notFull(), head(new QueueNode<E>()), tail() {
     if (capacity <= 0) {
       throw decaf::lang::exceptions::IllegalArgumentException(__FILE__, __LINE__, "Capacity value must be greater than zero.");
     }
@@ -173,7 +183,15 @@ class LinkedBlockingQueue : public BlockingQueue<E> {
    *         this Queue's capacity.
    */
   LinkedBlockingQueue(const Collection<E> &collection)
-      : BlockingQueue<E>(), capacity(lang::Integer::MAX_VALUE), count(), takeLock(), notEmpty(), putLock(), notFull(), head(new QueueNode<E>()), tail() {
+      : BlockingQueue<E>(),
+        capacity(lang::Integer::MAX_VALUE),
+        count(),
+        takeLock(),
+        notEmpty(),
+        putLock(),
+        notFull(),
+        head(new QueueNode<E>()),
+        tail() {
     this->tail = this->head;
     this->notEmpty.reset(this->takeLock.newCondition());
     this->notFull.reset(this->putLock.newCondition());
@@ -185,7 +203,8 @@ class LinkedBlockingQueue : public BlockingQueue<E> {
 
       while (iter->hasNext()) {
         if (count == this->capacity) {
-          throw decaf::lang::exceptions::IllegalStateException(__FILE__, __LINE__, "Number of elements in the Collection exceeds this Queue's Capacity.");
+          throw decaf::lang::exceptions::IllegalStateException(
+              __FILE__, __LINE__, "Number of elements in the Collection exceeds this Queue's Capacity.");
         }
 
         this->enqueue(iter->next());
@@ -210,7 +229,15 @@ class LinkedBlockingQueue : public BlockingQueue<E> {
    *         this Queue's capacity.
    */
   LinkedBlockingQueue(const LinkedBlockingQueue &queue)
-      : BlockingQueue<E>(), capacity(lang::Integer::MAX_VALUE), count(), takeLock(), notEmpty(), putLock(), notFull(), head(new QueueNode<E>()), tail() {
+      : BlockingQueue<E>(),
+        capacity(lang::Integer::MAX_VALUE),
+        count(),
+        takeLock(),
+        notEmpty(),
+        putLock(),
+        notFull(),
+        head(new QueueNode<E>()),
+        tail() {
     this->tail = this->head;
     this->notEmpty.reset(this->takeLock.newCondition());
     this->notFull.reset(this->putLock.newCondition());
@@ -222,7 +249,8 @@ class LinkedBlockingQueue : public BlockingQueue<E> {
 
       while (iter->hasNext()) {
         if (count == this->capacity) {
-          throw decaf::lang::exceptions::IllegalStateException(__FILE__, __LINE__, "Number of elements in the Collection exceeds this Queue's Capacity.");
+          throw decaf::lang::exceptions::IllegalStateException(
+              __FILE__, __LINE__, "Number of elements in the Collection exceeds this Queue's Capacity.");
         }
 
         this->enqueue(iter->next());
@@ -533,7 +561,9 @@ class LinkedBlockingQueue : public BlockingQueue<E> {
     return array;
   }
 
-  virtual std::string toString() const { return std::string("LinkedBlockingQueue [ current size = ") + decaf::lang::Integer::toString(this->count.get()) + "]"; }
+  virtual std::string toString() const {
+    return std::string("LinkedBlockingQueue [ current size = ") + decaf::lang::Integer::toString(this->count.get()) + "]";
+  }
 
   virtual int drainTo(Collection<E> &c) { return this->drainTo(c, decaf::lang::Integer::MAX_VALUE); }
 

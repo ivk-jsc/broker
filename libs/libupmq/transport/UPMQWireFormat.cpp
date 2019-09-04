@@ -35,7 +35,9 @@ UPMQWireFormat::UPMQWireFormat() {}
 UPMQWireFormat::~UPMQWireFormat() {}
 
 ////////////////////////////////////////////////////////////////////////////////
-void UPMQWireFormat::marshal(const Pointer<transport::Command> command, const upmq::transport::Transport *transport, decaf::io::DataOutputStream *dataOut) {
+void UPMQWireFormat::marshal(const Pointer<transport::Command> command,
+                             const upmq::transport::Transport *transport,
+                             decaf::io::DataOutputStream *dataOut) {
   if (transport == nullptr) {
     throw decaf::io::IOException(__FILE__, __LINE__, "Transport passed is NULL");
   }

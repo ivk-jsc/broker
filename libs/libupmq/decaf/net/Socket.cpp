@@ -44,14 +44,16 @@ Socket::Socket() : impl(nullptr), created(false), connected(false), closed(false
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Socket::Socket(SocketImpl *impl) : impl(impl), created(false), connected(false), closed(false), bound(false), inputShutdown(false), outputShutdown(false) {
+Socket::Socket(SocketImpl *impl)
+    : impl(impl), created(false), connected(false), closed(false), bound(false), inputShutdown(false), outputShutdown(false) {
   if (impl == nullptr) {
     throw NullPointerException(__FILE__, __LINE__, "SocketImpl pointer passed was Null.");
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Socket::Socket(const InetAddress *address, int port) : impl(nullptr), created(false), connected(false), closed(false), bound(false), inputShutdown(false), outputShutdown(false) {
+Socket::Socket(const InetAddress *address, int port)
+    : impl(nullptr), created(false), connected(false), closed(false), bound(false), inputShutdown(false), outputShutdown(false) {
   if (address == nullptr) {
     throw NullPointerException(__FILE__, __LINE__, "The InetAddress to connect to cannot be NULL");
   }
@@ -102,7 +104,8 @@ Socket::Socket(const InetAddress *address, int port, const InetAddress *localAdd
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Socket::Socket(const std::string &host, int port) : impl(nullptr), created(false), connected(false), closed(false), bound(false), inputShutdown(false), outputShutdown(false) {
+Socket::Socket(const std::string &host, int port)
+    : impl(nullptr), created(false), connected(false), closed(false), bound(false), inputShutdown(false), outputShutdown(false) {
   if (port < 0 || port > 65535) {
     throw IllegalArgumentException(__FILE__, __LINE__, "Port specified is out of range: %d", port);
   }

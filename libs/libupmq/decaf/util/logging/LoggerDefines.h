@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #ifndef _DECAF_UTIL_LOGGING_LOGGERDEFINES_H_
 #define _DECAF_UTIL_LOGGING_LOGGERDEFINES_H_
 

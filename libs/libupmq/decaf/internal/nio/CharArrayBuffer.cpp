@@ -27,10 +27,12 @@ using namespace decaf::internal::util;
 using namespace decaf::nio;
 
 ///////////////////////////////////////////////////////////////////////////////
-CharArrayBuffer::CharArrayBuffer(int size, bool readOnly) : CharBuffer(size), _array(new ByteArrayAdapter(size)), offset(0), length(size), readOnly(readOnly) {}
+CharArrayBuffer::CharArrayBuffer(int size, bool readOnly)
+    : CharBuffer(size), _array(new ByteArrayAdapter(size)), offset(0), length(size), readOnly(readOnly) {}
 
 ///////////////////////////////////////////////////////////////////////////////
-CharArrayBuffer::CharArrayBuffer(char *array, int size, int offset, int length, bool readOnly) : CharBuffer(length), _array(), offset(offset), length(length), readOnly(readOnly) {
+CharArrayBuffer::CharArrayBuffer(char *array, int size, int offset, int length, bool readOnly)
+    : CharBuffer(length), _array(), offset(offset), length(length), readOnly(readOnly) {
   try {
     if (offset < 0 || offset > size) {
       throw IndexOutOfBoundsException(__FILE__, __LINE__, "Offset parameter if out of bounds, %d", offset);
@@ -68,7 +70,8 @@ CharArrayBuffer::CharArrayBuffer(const Pointer<ByteArrayAdapter> &array, int off
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-CharArrayBuffer::CharArrayBuffer(const CharArrayBuffer &other) : CharBuffer(other), _array(other._array), offset(other.offset), length(other.length), readOnly(other.readOnly) {}
+CharArrayBuffer::CharArrayBuffer(const CharArrayBuffer &other)
+    : CharBuffer(other), _array(other._array), offset(other.offset), length(other.length), readOnly(other.readOnly) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 CharArrayBuffer::~CharArrayBuffer() {}

@@ -1177,7 +1177,7 @@ class DECAF_API String : public CharSequence {
   void getChars(int start, int end, char *buffer, int index) const;
 
   String(Contents *content);
-  String(int offset, int length, const ArrayPointer<char>& content);
+  String(int offset, int length, const ArrayPointer<char> &content);
 
   friend class AbstractStringBuilder;
 };

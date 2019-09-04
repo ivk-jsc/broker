@@ -49,7 +49,11 @@ class DECAF_API URIHelper {
    * @param someLegal - characters that are legal in certain cases.
    * @param allLegal - characters that are always legal.
    */
-  URIHelper(const std::string &unreserved, const std::string &punct, const std::string &reserved, const std::string &someLegal, const std::string &allLegal);
+  URIHelper(const std::string &unreserved,
+            const std::string &punct,
+            const std::string &reserved,
+            const std::string &someLegal,
+            const std::string &allLegal);
 
   /**
    * Sets up the filter strings with sane defaults.

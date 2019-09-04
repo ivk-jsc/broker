@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #include "SimpleLogger.h"
 
 #include <decaf/util/logging/LogWriter.h>
@@ -34,19 +34,29 @@ SimpleLogger::~SimpleLogger() {}
 void SimpleLogger::mark(const std::string &message) { LogWriter::getInstance().log("", 0, "", message); }
 
 ////////////////////////////////////////////////////////////////////////////////
-void SimpleLogger::debug(const std::string &file, const int line, const std::string &message) { LogWriter::getInstance().log(file, line, "DEBUG:", message); }
+void SimpleLogger::debug(const std::string &file, const int line, const std::string &message) {
+  LogWriter::getInstance().log(file, line, "DEBUG:", message);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
-void SimpleLogger::info(const std::string &file, const int line, const std::string &message) { LogWriter::getInstance().log(file, line, "INFO:", message); }
+void SimpleLogger::info(const std::string &file, const int line, const std::string &message) {
+  LogWriter::getInstance().log(file, line, "INFO:", message);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
-void SimpleLogger::warn(const std::string &file, const int line, const std::string &message) { LogWriter::getInstance().log(file, line, "WARNING:", message); }
+void SimpleLogger::warn(const std::string &file, const int line, const std::string &message) {
+  LogWriter::getInstance().log(file, line, "WARNING:", message);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
-void SimpleLogger::error(const std::string &file, const int line, const std::string &message) { LogWriter::getInstance().log(file, line, "ERROR:", message); }
+void SimpleLogger::error(const std::string &file, const int line, const std::string &message) {
+  LogWriter::getInstance().log(file, line, "ERROR:", message);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
-void SimpleLogger::fatal(const std::string &file, const int line, const std::string &message) { LogWriter::getInstance().log(file, line, "FATAL:", message); }
+void SimpleLogger::fatal(const std::string &file, const int line, const std::string &message) {
+  LogWriter::getInstance().log(file, line, "FATAL:", message);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 void SimpleLogger::log(const std::string &message) { LogWriter::getInstance().log(message); }

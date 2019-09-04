@@ -152,7 +152,8 @@ class ExecutorKernel {
     Worker &operator=(const Worker &);
 
    public:
-    Worker(ExecutorKernel *kernel, Runnable *task) : AbstractQueuedSynchronizer(), Runnable(), thread(), firstTask(task), kernel(kernel), completedTasks(0) {
+    Worker(ExecutorKernel *kernel, Runnable *task)
+        : AbstractQueuedSynchronizer(), Runnable(), thread(), firstTask(task), kernel(kernel), completedTasks(0) {
       if (kernel == nullptr) {
         throw IllegalArgumentException(__FILE__, __LINE__, "ThreadPoolExecutor Worker requires non-NULL pointer to parent ExecutorKernel");
       }
@@ -1263,7 +1264,8 @@ const int ExecutorKernel::TERMINATED = 3 << ExecutorKernel::COUNT_BITS;
 }  // namespace decaf
 
 ////////////////////////////////////////////////////////////////////////////////
-ThreadPoolExecutor::ThreadPoolExecutor(int corePoolSize, int maxPoolSize, long long keepAliveTime, const TimeUnit &unit, BlockingQueue<decaf::lang::Runnable *> *workQueue)
+ThreadPoolExecutor::ThreadPoolExecutor(
+    int corePoolSize, int maxPoolSize, long long keepAliveTime, const TimeUnit &unit, BlockingQueue<decaf::lang::Runnable *> *workQueue)
     : AbstractExecutorService(), kernel(nullptr) {
   try {
     if (workQueue == nullptr) {
@@ -1285,8 +1287,12 @@ ThreadPoolExecutor::ThreadPoolExecutor(int corePoolSize, int maxPoolSize, long l
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-ThreadPoolExecutor::ThreadPoolExecutor(
-    int corePoolSize, int maxPoolSize, long long keepAliveTime, const TimeUnit &unit, BlockingQueue<decaf::lang::Runnable *> *workQueue, RejectedExecutionHandler *handler)
+ThreadPoolExecutor::ThreadPoolExecutor(int corePoolSize,
+                                       int maxPoolSize,
+                                       long long keepAliveTime,
+                                       const TimeUnit &unit,
+                                       BlockingQueue<decaf::lang::Runnable *> *workQueue,
+                                       RejectedExecutionHandler *handler)
     : AbstractExecutorService(), kernel(nullptr) {
   try {
     if (workQueue == nullptr) {
@@ -1310,8 +1316,12 @@ ThreadPoolExecutor::ThreadPoolExecutor(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-ThreadPoolExecutor::ThreadPoolExecutor(
-    int corePoolSize, int maxPoolSize, long long keepAliveTime, const TimeUnit &unit, BlockingQueue<decaf::lang::Runnable *> *workQueue, ThreadFactory *threadFactory)
+ThreadPoolExecutor::ThreadPoolExecutor(int corePoolSize,
+                                       int maxPoolSize,
+                                       long long keepAliveTime,
+                                       const TimeUnit &unit,
+                                       BlockingQueue<decaf::lang::Runnable *> *workQueue,
+                                       ThreadFactory *threadFactory)
     : AbstractExecutorService(), kernel(nullptr) {
   try {
     if (workQueue == nullptr) {
@@ -1518,7 +1528,9 @@ bool ThreadPoolExecutor::isTerminating() const { return this->kernel->isTerminat
 void ThreadPoolExecutor::allowCoreThreadTimeout(bool value) { this->kernel->allowCoreThreadTimeOut(value); }
 
 ////////////////////////////////////////////////////////////////////////////////
-long long ThreadPoolExecutor::getKeepAliveTime(const TimeUnit &unit) const { return unit.convert(this->kernel->keepAliveTime, TimeUnit::MILLISECONDS); }
+long long ThreadPoolExecutor::getKeepAliveTime(const TimeUnit &unit) const {
+  return unit.convert(this->kernel->keepAliveTime, TimeUnit::MILLISECONDS);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 void ThreadPoolExecutor::setKeepAliveTime(long long timeout, const TimeUnit &unit) { this->kernel->setKeepAliveTime(timeout, unit); }

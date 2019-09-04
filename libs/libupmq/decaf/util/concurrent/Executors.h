@@ -61,7 +61,8 @@ class DECAF_API Executors {
     RunnableAdapter operator=(const RunnableAdapter &);
 
    public:
-    RunnableAdapter(decaf::lang::Runnable *task, bool owns, const E &result) : decaf::util::concurrent::Callable<E>(), task(task), owns(owns), result(result) {}
+    RunnableAdapter(decaf::lang::Runnable *task, bool owns, const E &result)
+        : decaf::util::concurrent::Callable<E>(), task(task), owns(owns), result(result) {}
 
     virtual ~RunnableAdapter() {
       try {

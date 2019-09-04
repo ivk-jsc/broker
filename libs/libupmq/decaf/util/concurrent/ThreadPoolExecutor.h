@@ -91,7 +91,8 @@ class DECAF_API ThreadPoolExecutor : public AbstractExecutorService {
    *         is greater than maximumPoolSize.
    * @throws NullPointerException if the workQueue pointer is NULL.
    */
-  ThreadPoolExecutor(int corePoolSize, int maxPoolSize, long long keepAliveTime, const TimeUnit &unit, BlockingQueue<decaf::lang::Runnable *> *workQueue);
+  ThreadPoolExecutor(
+      int corePoolSize, int maxPoolSize, long long keepAliveTime, const TimeUnit &unit, BlockingQueue<decaf::lang::Runnable *> *workQueue);
 
   /**
    * Creates a new instance of a ThreadPoolExecutor.
@@ -123,7 +124,12 @@ class DECAF_API ThreadPoolExecutor : public AbstractExecutorService {
    *         is greater than maximumPoolSize.
    * @throws NullPointerException if the workQueue pointer is NULL.
    */
-  ThreadPoolExecutor(int corePoolSize, int maxPoolSize, long long keepAliveTime, const TimeUnit &unit, BlockingQueue<decaf::lang::Runnable *> *workQueue, RejectedExecutionHandler *handler);
+  ThreadPoolExecutor(int corePoolSize,
+                     int maxPoolSize,
+                     long long keepAliveTime,
+                     const TimeUnit &unit,
+                     BlockingQueue<decaf::lang::Runnable *> *workQueue,
+                     RejectedExecutionHandler *handler);
 
   /**
    * Creates a new instance of a ThreadPoolExecutor.
@@ -155,7 +161,12 @@ class DECAF_API ThreadPoolExecutor : public AbstractExecutorService {
    *         is greater than maximumPoolSize.
    * @throws NullPointerException if the workQueue pointer is NULL.
    */
-  ThreadPoolExecutor(int corePoolSize, int maxPoolSize, long long keepAliveTime, const TimeUnit &unit, BlockingQueue<decaf::lang::Runnable *> *workQueue, ThreadFactory *threadFactory);
+  ThreadPoolExecutor(int corePoolSize,
+                     int maxPoolSize,
+                     long long keepAliveTime,
+                     const TimeUnit &unit,
+                     BlockingQueue<decaf::lang::Runnable *> *workQueue,
+                     ThreadFactory *threadFactory);
 
   /**
    * Creates a new instance of a ThreadPoolExecutor.

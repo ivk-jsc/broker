@@ -32,7 +32,8 @@ LongArrayBuffer::LongArrayBuffer(int size, bool readOnly) : LongBuffer(size), _a
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-LongArrayBuffer::LongArrayBuffer(long long *array, int size, int offset, int length, bool readOnly) : LongBuffer(length), _array(), offset(offset), length(length), readOnly(readOnly) {
+LongArrayBuffer::LongArrayBuffer(long long *array, int size, int offset, int length, bool readOnly)
+    : LongBuffer(length), _array(), offset(offset), length(length), readOnly(readOnly) {
   try {
     if (offset < 0 || offset > size) {
       throw IndexOutOfBoundsException(__FILE__, __LINE__, "Offset parameter if out of bounds, %d", offset);
@@ -70,7 +71,8 @@ LongArrayBuffer::LongArrayBuffer(const Pointer<ByteArrayAdapter> &array, int off
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-LongArrayBuffer::LongArrayBuffer(const LongArrayBuffer &other) : LongBuffer(other), _array(other._array), offset(other.offset), length(other.length), readOnly(other.readOnly) {}
+LongArrayBuffer::LongArrayBuffer(const LongArrayBuffer &other)
+    : LongBuffer(other), _array(other._array), offset(other.offset), length(other.length), readOnly(other.readOnly) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 LongArrayBuffer::~LongArrayBuffer() {}

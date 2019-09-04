@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #include "ResourceAllocationException.h"
 
 using namespace cms;
@@ -33,7 +33,9 @@ ResourceAllocationException::ResourceAllocationException(const std::string &mess
 ResourceAllocationException::ResourceAllocationException(const std::string &message, const std::exception *cause) : CMSException(message, cause) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-ResourceAllocationException::ResourceAllocationException(const std::string &message, const std::exception *cause, const std::vector<triplet<std::string, std::string, int> > &stackTrace)
+ResourceAllocationException::ResourceAllocationException(const std::string &message,
+                                                         const std::exception *cause,
+                                                         const std::vector<triplet<std::string, std::string, int> > &stackTrace)
     : CMSException(message, cause, stackTrace) {}
 
 ////////////////////////////////////////////////////////////////////////////////

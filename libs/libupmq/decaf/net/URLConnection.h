@@ -362,7 +362,9 @@ class DECAF_API URLConnection {
    *
    * @throws IOException if no InputStream could be created.
    */
-  virtual decaf::io::InputStream *getInputStream() { throw UnknownServiceException(__FILE__, __LINE__, "Does not support writing to the input stream"); }
+  virtual decaf::io::InputStream *getInputStream() {
+    throw UnknownServiceException(__FILE__, __LINE__, "Does not support writing to the input stream");
+  }
 
   /**
    * Gets an OutputStream for writing data to this URLConnection. It throws an
@@ -373,7 +375,9 @@ class DECAF_API URLConnection {
    *
    * @throws IOException if no OutputStream could be created.
    */
-  virtual decaf::io::OutputStream *getOutputStream() { throw UnknownServiceException(__FILE__, __LINE__, "Does not support writing to the output stream"); }
+  virtual decaf::io::OutputStream *getOutputStream() {
+    throw UnknownServiceException(__FILE__, __LINE__, "Does not support writing to the output stream");
+  }
 
   /**
    * Gets the point of time since when the data must be modified to be

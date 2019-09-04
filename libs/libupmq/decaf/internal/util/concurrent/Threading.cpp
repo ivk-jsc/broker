@@ -114,7 +114,18 @@ struct ThreadingLibrary {
   ThreadingLibrary &operator=(const ThreadingLibrary &);
 
  public:
-  ThreadingLibrary() : threadKey(), selfKey(), globalLock(), tlsLock(), tlsSlots(), osThreads(), mainThread(), activeThreads(), priorityMapping(), osThreadId(), monitors() {}
+  ThreadingLibrary()
+      : threadKey(),
+        selfKey(),
+        globalLock(),
+        tlsLock(),
+        tlsSlots(),
+        osThreads(),
+        mainThread(),
+        activeThreads(),
+        priorityMapping(),
+        osThreadId(),
+        monitors() {}
 
   decaf_tls_key threadKey;
   decaf_tls_key selfKey;

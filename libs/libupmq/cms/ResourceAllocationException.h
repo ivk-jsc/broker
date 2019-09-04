@@ -45,7 +45,9 @@ class CMS_API ResourceAllocationException : public cms::CMSException {
 
   ResourceAllocationException(const std::string &message, const std::exception *cause);
 
-  ResourceAllocationException(const std::string &message, const std::exception *cause, const std::vector<triplet<std::string, std::string, int> > &stackTrace);
+  ResourceAllocationException(const std::string &message,
+                              const std::exception *cause,
+                              const std::vector<triplet<std::string, std::string, int> > &stackTrace);
 
   ~ResourceAllocationException() noexcept override;
 

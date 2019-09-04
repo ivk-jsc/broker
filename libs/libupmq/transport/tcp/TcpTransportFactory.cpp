@@ -74,7 +74,9 @@ Pointer<Transport> TcpTransportFactory::createComposite(const decaf::net::URI &l
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Pointer<Transport> TcpTransportFactory::doCreateComposite(const decaf::net::URI &location, const Pointer<transport::WireFormat> wireFormat, const decaf::util::Properties &properties) {
+Pointer<Transport> TcpTransportFactory::doCreateComposite(const decaf::net::URI &location,
+                                                          const Pointer<transport::WireFormat> wireFormat,
+                                                          const decaf::util::Properties &properties) {
   try {
     Pointer<Transport> transport(new IOTransport(wireFormat));
 

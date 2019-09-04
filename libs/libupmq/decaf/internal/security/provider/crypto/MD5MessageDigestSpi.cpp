@@ -330,7 +330,8 @@ class MD5MessageDigestSpiImpl {
     unsigned int i, j;
 
     for (i = 0, j = 0; j < length; i++, j += 4)
-      output[i] = ((unsigned int)input[j]) | (((unsigned int)input[j + 1]) << 8) | (((unsigned int)input[j + 2]) << 16) | (((unsigned int)input[j + 3]) << 24);
+      output[i] = ((unsigned int)input[j]) | (((unsigned int)input[j + 1]) << 8) | (((unsigned int)input[j + 2]) << 16) |
+                  (((unsigned int)input[j + 3]) << 24);
   }
 
   static void encode(unsigned char *output, const unsigned int *input, unsigned int length) {

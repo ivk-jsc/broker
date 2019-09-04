@@ -26,7 +26,10 @@ MessageImpl::MessageImpl() : MessageTemplate<cms::Message>() {
 
 MessageImpl::MessageImpl(const MessageImpl &other) : MessageTemplate<cms::Message>(other) {}
 
-MessageImpl::MessageImpl(Proto::ProtoMessage *header, unsigned char *body_buff, long long body_size, bool pr) : MessageTemplate<cms::Message>(header, body_buff, body_size) { DECAF_UNUSED_VAR(pr); }
+MessageImpl::MessageImpl(Proto::ProtoMessage *header, unsigned char *body_buff, long long body_size, bool pr)
+    : MessageTemplate<cms::Message>(header, body_buff, body_size) {
+  DECAF_UNUSED_VAR(pr);
+}
 
 MessageImpl::MessageImpl(const UPMQCommand &command) : MessageTemplate<cms::Message>(command) {}
 

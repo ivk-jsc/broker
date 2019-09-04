@@ -68,7 +68,9 @@ class AtomicReference {
    * @return true if successful. False return indicates that the actual value was
    *         not equal to the expected value.
    */
-  bool compareAndSet(T *expect, T *update) { return internal::util::concurrent::Atomics::compareAndSet(&this->value, (void *)expect, (void *)update); }
+  bool compareAndSet(T *expect, T *update) {
+    return internal::util::concurrent::Atomics::compareAndSet(&this->value, (void *)expect, (void *)update);
+  }
 
   /**
    * Atomically sets to the given value and returns the old value.

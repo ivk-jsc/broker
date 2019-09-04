@@ -33,7 +33,9 @@ MessageEOFException::MessageEOFException(const std::string &message) : CMSExcept
 MessageEOFException::MessageEOFException(const std::string &message, const std::exception *cause) : CMSException(message, cause) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-MessageEOFException::MessageEOFException(const std::string &message, const std::exception *cause, const std::vector<triplet<std::string, std::string, int> > &stackTrace)
+MessageEOFException::MessageEOFException(const std::string &message,
+                                         const std::exception *cause,
+                                         const std::vector<triplet<std::string, std::string, int> > &stackTrace)
     : CMSException(message, cause, stackTrace) {}
 
 ////////////////////////////////////////////////////////////////////////////////

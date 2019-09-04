@@ -44,7 +44,9 @@ class CMS_API InvalidClientIdException : public CMSException {
 
   InvalidClientIdException(const std::string &message, const std::exception *cause);
 
-  InvalidClientIdException(const std::string &message, const std::exception *cause, const std::vector<triplet<std::string, std::string, int> > &stackTrace);
+  InvalidClientIdException(const std::string &message,
+                           const std::exception *cause,
+                           const std::vector<triplet<std::string, std::string, int> > &stackTrace);
 
   ~InvalidClientIdException() noexcept override;
 

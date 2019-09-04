@@ -28,7 +28,14 @@ using namespace decaf::lang::exceptions;
 
 ////////////////////////////////////////////////////////////////////////////////
 BufferedInputStream::BufferedInputStream(InputStream *stream, bool own)
-    : FilterInputStream(stream, own), pos(0), count(0), markLimit(-1), markPos(-1), bufferSize(8192), buff(new unsigned char[bufferSize]), proxyBuffer(buff) {}
+    : FilterInputStream(stream, own),
+      pos(0),
+      count(0),
+      markLimit(-1),
+      markPos(-1),
+      bufferSize(8192),
+      buff(new unsigned char[bufferSize]),
+      proxyBuffer(buff) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 BufferedInputStream::BufferedInputStream(InputStream *stream, int bufferSize, bool own)

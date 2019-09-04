@@ -44,7 +44,9 @@ class CMS_API InvalidSelectorException : public CMSException {
 
   InvalidSelectorException(const std::string &message, const std::exception *cause);
 
-  InvalidSelectorException(const std::string &message, const std::exception *cause, const std::vector<triplet<std::string, std::string, int> > &stackTrace);
+  InvalidSelectorException(const std::string &message,
+                           const std::exception *cause,
+                           const std::vector<triplet<std::string, std::string, int> > &stackTrace);
 
   ~InvalidSelectorException() noexcept override;
 

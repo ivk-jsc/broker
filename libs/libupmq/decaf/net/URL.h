@@ -470,7 +470,11 @@ class DECAF_API URL {
    * @param ref
    *      the internal reference in the URL
    */
-  void set(const decaf::lang::String &protocol, const decaf::lang::String &host, int port, const decaf::lang::String &file, const decaf::lang::String &ref);
+  void set(const decaf::lang::String &protocol,
+           const decaf::lang::String &host,
+           int port,
+           const decaf::lang::String &file,
+           const decaf::lang::String &ref);
 
   /**
    * Sets the fields of the URL. This is not a public method so that only URLStreamHandlers
@@ -511,7 +515,8 @@ class DECAF_API URL {
 
  private:
   void initialize(const URL *context, const decaf::lang::String &theSpec, URLStreamHandler *handler);
-  void initialize(const decaf::lang::String &protocol, const decaf::lang::String &host, int port, const decaf::lang::String &file, URLStreamHandler *handler);
+  void initialize(
+      const decaf::lang::String &protocol, const decaf::lang::String &host, int port, const decaf::lang::String &file, URLStreamHandler *handler);
 
   friend class URLStreamHandler;
 };

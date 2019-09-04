@@ -194,8 +194,10 @@ class Node {
  public:
   Node() : waitStatus(0), prev(nullptr), next(nullptr), thread(nullptr), nextWaiter(nullptr), nextFree(nullptr) {}
   Node(Thread *thread, Node *node) : waitStatus(0), prev(nullptr), next(nullptr), thread(thread), nextWaiter(node), nextFree(nullptr) {}
-  Node(Thread *thread, int waitStatus) : waitStatus(waitStatus), prev(nullptr), next(nullptr), thread(thread), nextWaiter(nullptr), nextFree(nullptr) {}
-  Node(Thread *thread, int waitStatus, Node *node) : waitStatus(waitStatus), prev(nullptr), next(nullptr), thread(thread), nextWaiter(node), nextFree(nullptr) {}
+  Node(Thread *thread, int waitStatus)
+      : waitStatus(waitStatus), prev(nullptr), next(nullptr), thread(thread), nextWaiter(nullptr), nextFree(nullptr) {}
+  Node(Thread *thread, int waitStatus, Node *node)
+      : waitStatus(waitStatus), prev(nullptr), next(nullptr), thread(thread), nextWaiter(node), nextFree(nullptr) {}
 
   ~Node() {}
 
@@ -560,7 +562,8 @@ class SynchronizerState {
       // If successor needs signal, try to set pred's next-link
       // so it will get one. Otherwise wake it up to propagate.
       int ws;
-      if (pred != head.get() && ((ws = pred->waitStatus) == Node::SIGNAL || (ws <= 0 && compareAndSetWaitStatus(pred, ws, Node::SIGNAL))) && pred->thread != nullptr) {
+      if (pred != head.get() && ((ws = pred->waitStatus) == Node::SIGNAL || (ws <= 0 && compareAndSetWaitStatus(pred, ws, Node::SIGNAL))) &&
+          pred->thread != nullptr) {
         Node *next = node->next;
         if (next != nullptr && next->waitStatus <= 0) {
           compareAndSetNext(pred, predNext, next);
@@ -1016,7 +1019,9 @@ class SynchronizerState {
   bool compareAndSetHead(Node *update) { return this->head.compareAndSet(nullptr, update); }
   bool compareAndSetTail(Node *expect, Node *update) { return this->tail.compareAndSet(expect, update); }
   static bool compareAndSetWaitStatus(Node *node, int expect, int update) { return Atomics::compareAndSet32(&node->waitStatus, expect, update); }
-  static bool compareAndSetNext(Node *node, Node *expect, Node *update) { return Atomics::compareAndSet((volatile void **)(&node->next), (void *)expect, (void *)update); }
+  static bool compareAndSetNext(Node *node, Node *expect, Node *update) {
+    return Atomics::compareAndSet((volatile void **)(&node->next), (void *)expect, (void *)update);
+  }
 };
 
 /**
@@ -1671,7 +1676,9 @@ Collection<Thread *> *AbstractQueuedSynchronizer::getWaitingThreads(const Condit
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-AbstractQueuedSynchronizer::ConditionObject *AbstractQueuedSynchronizer::createDefaultConditionObject() { return new DefaultConditionObject(this->impl); }
+AbstractQueuedSynchronizer::ConditionObject *AbstractQueuedSynchronizer::createDefaultConditionObject() {
+  return new DefaultConditionObject(this->impl);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 bool AbstractQueuedSynchronizer::hasQueuedPredecessors() const {

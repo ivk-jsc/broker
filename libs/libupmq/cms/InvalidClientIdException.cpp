@@ -33,7 +33,9 @@ InvalidClientIdException::InvalidClientIdException(const std::string &message) :
 InvalidClientIdException::InvalidClientIdException(const std::string &message, const std::exception *cause) : CMSException(message, cause) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-InvalidClientIdException::InvalidClientIdException(const std::string &message, const std::exception *cause, const std::vector<triplet<std::string, std::string, int> > &stackTrace)
+InvalidClientIdException::InvalidClientIdException(const std::string &message,
+                                                   const std::exception *cause,
+                                                   const std::vector<triplet<std::string, std::string, int> > &stackTrace)
     : CMSException(message, cause, stackTrace) {}
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -31,10 +31,13 @@ UnsupportedOperationException::UnsupportedOperationException(UnsupportedOperatio
 UnsupportedOperationException::UnsupportedOperationException(const std::string &message) : CMSException(message, nullptr) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-UnsupportedOperationException::UnsupportedOperationException(const std::string &message, const std::exception *cause) : CMSException(message, cause) {}
+UnsupportedOperationException::UnsupportedOperationException(const std::string &message, const std::exception *cause)
+    : CMSException(message, cause) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-UnsupportedOperationException::UnsupportedOperationException(const std::string &message, const std::exception *cause, const std::vector<triplet<std::string, std::string, int> > &stackTrace)
+UnsupportedOperationException::UnsupportedOperationException(const std::string &message,
+                                                             const std::exception *cause,
+                                                             const std::vector<triplet<std::string, std::string, int> > &stackTrace)
     : CMSException(message, cause, stackTrace) {}
 
 ////////////////////////////////////////////////////////////////////////////////

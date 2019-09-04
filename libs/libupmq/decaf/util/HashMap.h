@@ -95,7 +95,6 @@ class HashMap : public AbstractMap<K, V> {
  protected:
   class HashMapEntry : public MapEntry<K, V> {
    public:
-
     int origKeyHash;
 
     HashMapEntry *next;
@@ -127,7 +126,8 @@ class HashMap : public AbstractMap<K, V> {
     AbstractMapIterator(const AbstractMapIterator &) = delete;
     AbstractMapIterator &operator=(const AbstractMapIterator &) = delete;
 
-    AbstractMapIterator(HashMap *parent) : position(0), expectedModCount(parent->modCount), futureEntry(nullptr), currentEntry(nullptr), prevEntry(nullptr), associatedMap(parent) {}
+    AbstractMapIterator(HashMap *parent)
+        : position(0), expectedModCount(parent->modCount), futureEntry(nullptr), currentEntry(nullptr), prevEntry(nullptr), associatedMap(parent) {}
 
     virtual ~AbstractMapIterator() {}
 
@@ -266,7 +266,8 @@ class HashMap : public AbstractMap<K, V> {
     ConstAbstractMapIterator(const ConstAbstractMapIterator &) = delete;
     ConstAbstractMapIterator &operator=(const ConstAbstractMapIterator &) = delete;
 
-    ConstAbstractMapIterator(const HashMap *parent) : position(0), expectedModCount(parent->modCount), futureEntry(nullptr), currentEntry(nullptr), prevEntry(nullptr), associatedMap(parent) {}
+    ConstAbstractMapIterator(const HashMap *parent)
+        : position(0), expectedModCount(parent->modCount), futureEntry(nullptr), currentEntry(nullptr), prevEntry(nullptr), associatedMap(parent) {}
 
     virtual ~ConstAbstractMapIterator() {}
 
@@ -433,7 +434,9 @@ class HashMap : public AbstractMap<K, V> {
       return result != nullptr && entry.getValue() == result->getValue() || false;
     }
 
-    Iterator<MapEntry<K, V> > *iterator() override { throw decaf::lang::exceptions::UnsupportedOperationException(__FILE__, __LINE__, "Can't return a non-const iterator for a const collection"); }
+    Iterator<MapEntry<K, V> > *iterator() override {
+      throw decaf::lang::exceptions::UnsupportedOperationException(__FILE__, __LINE__, "Can't return a non-const iterator for a const collection");
+    }
 
     Iterator<MapEntry<K, V> > *iterator() const override { return new ConstEntryIterator(associatedMap); }
   };
@@ -494,7 +497,9 @@ class HashMap : public AbstractMap<K, V> {
       throw decaf::lang::exceptions::UnsupportedOperationException(__FILE__, __LINE__, "Can't modify a const collection");
     }
 
-    Iterator<K> *iterator() override { throw decaf::lang::exceptions::UnsupportedOperationException(__FILE__, __LINE__, "Can't return a non-const iterator for a const collection"); }
+    Iterator<K> *iterator() override {
+      throw decaf::lang::exceptions::UnsupportedOperationException(__FILE__, __LINE__, "Can't return a non-const iterator for a const collection");
+    }
 
     Iterator<K> *iterator() const override { return new ConstKeyIterator(this->associatedMap); }
   };
@@ -541,7 +546,9 @@ class HashMap : public AbstractMap<K, V> {
 
     void clear() override { throw decaf::lang::exceptions::UnsupportedOperationException(__FILE__, __LINE__, "Can't modify a const collection"); }
 
-    Iterator<V> *iterator() override { throw decaf::lang::exceptions::UnsupportedOperationException(__FILE__, __LINE__, "Can't return a non-const iterator for a const collection"); }
+    Iterator<V> *iterator() override {
+      throw decaf::lang::exceptions::UnsupportedOperationException(__FILE__, __LINE__, "Can't return a non-const iterator for a const collection");
+    }
 
     Iterator<V> *iterator() const override { return new ConstValueIterator(this->associatedMap); }
   };

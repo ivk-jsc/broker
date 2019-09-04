@@ -32,7 +32,8 @@ FloatArrayBuffer::FloatArrayBuffer(int size, bool readOnly) : FloatBuffer(size),
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-FloatArrayBuffer::FloatArrayBuffer(float *array, int size, int offset, int length, bool readOnly) : FloatBuffer(length), _array(), offset(offset), length(length), readOnly(readOnly) {
+FloatArrayBuffer::FloatArrayBuffer(float *array, int size, int offset, int length, bool readOnly)
+    : FloatBuffer(length), _array(), offset(offset), length(length), readOnly(readOnly) {
   try {
     if (offset < 0 || offset > size) {
       throw IndexOutOfBoundsException(__FILE__, __LINE__, "Offset parameter if out of bounds, %d", offset);
@@ -70,7 +71,8 @@ FloatArrayBuffer::FloatArrayBuffer(const Pointer<ByteArrayAdapter> &array, int o
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-FloatArrayBuffer::FloatArrayBuffer(const FloatArrayBuffer &other) : FloatBuffer(other), _array(other._array), offset(other.offset), length(other.length), readOnly(other.readOnly) {}
+FloatArrayBuffer::FloatArrayBuffer(const FloatArrayBuffer &other)
+    : FloatBuffer(other), _array(other._array), offset(other.offset), length(other.length), readOnly(other.readOnly) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 FloatArrayBuffer::~FloatArrayBuffer() {}

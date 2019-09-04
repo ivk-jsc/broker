@@ -19,7 +19,9 @@
 
 decaf::util::concurrent::atomic::AtomicRefCounter::AtomicRefCounter() : counter(new decaf::util::concurrent::atomic::AtomicInteger(1)) {}
 
-decaf::util::concurrent::atomic::AtomicRefCounter::AtomicRefCounter(const AtomicRefCounter& other) : counter(other.counter) { this->counter->incrementAndGet(); }
+decaf::util::concurrent::atomic::AtomicRefCounter::AtomicRefCounter(const AtomicRefCounter& other) : counter(other.counter) {
+  this->counter->incrementAndGet();
+}
 
 decaf::util::concurrent::atomic::AtomicRefCounter::AtomicRefCounter(AtomicRefCounter&& other) noexcept : counter(other.releaseCounter()) {}
 

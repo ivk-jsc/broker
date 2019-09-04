@@ -30,10 +30,13 @@ TransactionRolledBackException::TransactionRolledBackException(TransactionRolled
 TransactionRolledBackException::TransactionRolledBackException(const std::string &message) : CMSException(message, nullptr) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-TransactionRolledBackException::TransactionRolledBackException(const std::string &message, const std::exception *cause) : CMSException(message, cause) {}
+TransactionRolledBackException::TransactionRolledBackException(const std::string &message, const std::exception *cause)
+    : CMSException(message, cause) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-TransactionRolledBackException::TransactionRolledBackException(const std::string &message, const std::exception *cause, const std::vector<triplet<std::string, std::string, int> > &stackTrace)
+TransactionRolledBackException::TransactionRolledBackException(const std::string &message,
+                                                               const std::exception *cause,
+                                                               const std::vector<triplet<std::string, std::string, int> > &stackTrace)
     : CMSException(message, cause, stackTrace) {}
 
 ////////////////////////////////////////////////////////////////////////////////

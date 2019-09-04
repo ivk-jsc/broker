@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #include <decaf/internal/util/concurrent/PlatformThread.h>
 
 #include <decaf/lang/Thread.h>
@@ -242,7 +242,8 @@ void PlatformThread::interruptibleWaitOnCondition(decaf_condition_t condition, d
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-bool PlatformThread::interruptibleWaitOnCondition(decaf_condition_t condition, decaf_mutex_t mutex, long long mills, int nanos, CompletionCondition &complete) {
+bool PlatformThread::interruptibleWaitOnCondition(
+    decaf_condition_t condition, decaf_mutex_t mutex, long long mills, int nanos, CompletionCondition &complete) {
   DECAF_UNUSED_VAR(nanos);
   DWORD startTime = ::GetTickCount();
   int64_t timeOut = mills;
@@ -295,7 +296,8 @@ void PlatformThread::initPriorityMapping(int maxPriority, std::vector<int> &mapp
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void PlatformThread::createNewThread(decaf_thread_t *handle, threadMainMethod threadMain, void *threadArg, int priority, long long stackSize, long long *threadId) {
+void PlatformThread::createNewThread(
+    decaf_thread_t *handle, threadMainMethod threadMain, void *threadArg, int priority, long long stackSize, long long *threadId) {
   DECAF_UNUSED_VAR(stackSize);
   DECAF_UNUSED_VAR(priority);
   unsigned int osThreadId = 0;

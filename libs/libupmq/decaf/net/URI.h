@@ -95,7 +95,13 @@ class DECAF_API URI : public lang::Comparable<URI> {
    *
    * @throws URISyntaxException if the URI passed is malformed.
    */
-  URI(const std::string &scheme, const std::string &userInfo, const std::string &host, int port, const std::string &path, const std::string &query, const std::string &fragment);
+  URI(const std::string &scheme,
+      const std::string &userInfo,
+      const std::string &host,
+      int port,
+      const std::string &path,
+      const std::string &query,
+      const std::string &fragment);
 
   /**
    * Constructs a URI from the given components.

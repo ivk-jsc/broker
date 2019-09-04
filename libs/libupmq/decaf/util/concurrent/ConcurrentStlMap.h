@@ -69,7 +69,11 @@ class ConcurrentStlMap : public ConcurrentMap<K, V> {
 
    public:
     AbstractMapIterator(ConcurrentStlMap *parent)
-        : position(0), expectedModCount(parent->modCount), futureEntry(parent->valueMap.begin()), currentEntry(parent->valueMap.end()), associatedMap(parent) {}
+        : position(0),
+          expectedModCount(parent->modCount),
+          futureEntry(parent->valueMap.begin()),
+          currentEntry(parent->valueMap.end()),
+          associatedMap(parent) {}
 
     virtual ~AbstractMapIterator() {}
 
@@ -210,7 +214,11 @@ class ConcurrentStlMap : public ConcurrentMap<K, V> {
 
    public:
     ConstAbstractMapIterator(const ConcurrentStlMap *parent)
-        : position(0), expectedModCount(parent->modCount), futureEntry(parent->valueMap.begin()), currentEntry(parent->valueMap.end()), associatedMap(parent) {}
+        : position(0),
+          expectedModCount(parent->modCount),
+          futureEntry(parent->valueMap.begin()),
+          currentEntry(parent->valueMap.end()),
+          associatedMap(parent) {}
 
     virtual ~ConstAbstractMapIterator() {}
 
@@ -404,7 +412,9 @@ class ConcurrentStlMap : public ConcurrentMap<K, V> {
       return false;
     }
 
-    Iterator<MapEntry<K, V> > *iterator() override { throw decaf::lang::exceptions::UnsupportedOperationException(__FILE__, __LINE__, "Can't return a non-const iterator for a const collection"); }
+    Iterator<MapEntry<K, V> > *iterator() override {
+      throw decaf::lang::exceptions::UnsupportedOperationException(__FILE__, __LINE__, "Can't return a non-const iterator for a const collection");
+    }
 
     Iterator<MapEntry<K, V> > *iterator() const override { return new ConstEntryIterator(associatedMap); }
   };
@@ -468,7 +478,9 @@ class ConcurrentStlMap : public ConcurrentMap<K, V> {
       throw decaf::lang::exceptions::UnsupportedOperationException(__FILE__, __LINE__, "Can't modify a const collection");
     }
 
-    Iterator<K> *iterator() override { throw decaf::lang::exceptions::UnsupportedOperationException(__FILE__, __LINE__, "Can't return a non-const iterator for a const collection"); }
+    Iterator<K> *iterator() override {
+      throw decaf::lang::exceptions::UnsupportedOperationException(__FILE__, __LINE__, "Can't return a non-const iterator for a const collection");
+    }
 
     Iterator<K> *iterator() const override { return new ConstKeyIterator(this->associatedMap); }
   };
@@ -517,7 +529,9 @@ class ConcurrentStlMap : public ConcurrentMap<K, V> {
 
     void clear() override { throw decaf::lang::exceptions::UnsupportedOperationException(__FILE__, __LINE__, "Can't modify a const collection"); }
 
-    Iterator<V> *iterator() override { throw decaf::lang::exceptions::UnsupportedOperationException(__FILE__, __LINE__, "Can't return a non-const iterator for a const collection"); }
+    Iterator<V> *iterator() override {
+      throw decaf::lang::exceptions::UnsupportedOperationException(__FILE__, __LINE__, "Can't return a non-const iterator for a const collection");
+    }
 
     Iterator<V> *iterator() const override { return new ConstValueIterator(this->associatedMap); }
   };
@@ -538,7 +552,16 @@ class ConcurrentStlMap : public ConcurrentMap<K, V> {
    * Default constructor - does nothing.
    */
   ConcurrentStlMap()
-      : ConcurrentMap<K, V>(), valueMap(), mutex(), modCount(0), cachedEntrySet(), cachedKeySet(), cachedValueCollection(), cachedConstEntrySet(), cachedConstKeySet(), cachedConstValueCollection() {}
+      : ConcurrentMap<K, V>(),
+        valueMap(),
+        mutex(),
+        modCount(0),
+        cachedEntrySet(),
+        cachedKeySet(),
+        cachedValueCollection(),
+        cachedConstEntrySet(),
+        cachedConstKeySet(),
+        cachedConstValueCollection() {}
 
   /**
    * Copy constructor - copies the content of the given map into this
@@ -546,7 +569,16 @@ class ConcurrentStlMap : public ConcurrentMap<K, V> {
    * @param source The source map.
    */
   ConcurrentStlMap(const ConcurrentStlMap &source)
-      : ConcurrentMap<K, V>(), valueMap(), mutex(), modCount(0), cachedEntrySet(), cachedKeySet(), cachedValueCollection(), cachedConstEntrySet(), cachedConstKeySet(), cachedConstValueCollection() {
+      : ConcurrentMap<K, V>(),
+        valueMap(),
+        mutex(),
+        modCount(0),
+        cachedEntrySet(),
+        cachedKeySet(),
+        cachedValueCollection(),
+        cachedConstEntrySet(),
+        cachedConstKeySet(),
+        cachedConstValueCollection() {
     copy(source);
   }
 
@@ -556,7 +588,16 @@ class ConcurrentStlMap : public ConcurrentMap<K, V> {
    * @param source The source map.
    */
   ConcurrentStlMap(const Map<K, V> &source)
-      : ConcurrentMap<K, V>(), valueMap(), mutex(), modCount(0), cachedEntrySet(), cachedKeySet(), cachedValueCollection(), cachedConstEntrySet(), cachedConstKeySet(), cachedConstValueCollection() {
+      : ConcurrentMap<K, V>(),
+        valueMap(),
+        mutex(),
+        modCount(0),
+        cachedEntrySet(),
+        cachedKeySet(),
+        cachedValueCollection(),
+        cachedConstEntrySet(),
+        cachedConstKeySet(),
+        cachedConstValueCollection() {
     copy(source);
   }
 

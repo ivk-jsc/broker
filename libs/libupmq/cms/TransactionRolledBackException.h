@@ -44,7 +44,9 @@ class CMS_API TransactionRolledBackException : public cms::CMSException {
 
   TransactionRolledBackException(const std::string &message, const std::exception *cause);
 
-  TransactionRolledBackException(const std::string &message, const std::exception *cause, const std::vector<triplet<std::string, std::string, int> > &stackTrace);
+  TransactionRolledBackException(const std::string &message,
+                                 const std::exception *cause,
+                                 const std::vector<triplet<std::string, std::string, int> > &stackTrace);
 
   ~TransactionRolledBackException() noexcept override;
 

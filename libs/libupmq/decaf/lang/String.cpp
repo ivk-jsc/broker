@@ -66,7 +66,7 @@ class Contents {
    * Contents is a view of some other String which can either be all or a
    * window allowing for substring methods to not need to copy the contents.
    */
-  Contents(int offset, int length, const ArrayPointer<char>& value) : value(value), length(length), offset(offset), hashCode(0) {}
+  Contents(int offset, int length, const ArrayPointer<char> &value) : value(value), length(length), offset(offset), hashCode(0) {}
 };
 }  // namespace lang
 }  // namespace decaf
@@ -75,7 +75,7 @@ class Contents {
 String::String(Contents *content) : contents(new Contents(0, content->length, content->value)) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-String::String(int offset, int length, const ArrayPointer<char>& content) : contents(new Contents(offset, length, content)) {}
+String::String(int offset, int length, const ArrayPointer<char> &content) : contents(new Contents(offset, length, content)) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 String::String() : contents(new Contents()) {}
@@ -566,7 +566,9 @@ bool String::contains(const std::string &string) const { return indexOf(string) 
 bool String::contains(const char *string) const { return indexOf(string) >= 0; }
 
 ////////////////////////////////////////////////////////////////////////////////
-bool String::endsWith(const String &suffix) const { return regionMatches(contents->length - suffix.contents->length, suffix, 0, suffix.contents->length); }
+bool String::endsWith(const String &suffix) const {
+  return regionMatches(contents->length - suffix.contents->length, suffix, 0, suffix.contents->length);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 bool String::equals(const String &other) const {

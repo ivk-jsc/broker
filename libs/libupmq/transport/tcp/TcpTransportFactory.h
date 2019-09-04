@@ -42,7 +42,9 @@ class UPMQCPP_API TcpTransportFactory : public AbstractTransportFactory {
   virtual Pointer<Transport> createComposite(const decaf::net::URI &location);
 
  protected:
-  virtual Pointer<Transport> doCreateComposite(const decaf::net::URI &location, const Pointer<transport::WireFormat> wireFormat, const decaf::util::Properties &properties);
+  virtual Pointer<Transport> doCreateComposite(const decaf::net::URI &location,
+                                               const Pointer<transport::WireFormat> wireFormat,
+                                               const decaf::util::Properties &properties);
 
   virtual void doConfigureTransport(Pointer<Transport>, const decaf::util::Properties &properties);
 };

@@ -65,7 +65,12 @@ class StlMap : public Map<K, V> {
     AbstractMapIterator &operator=(const AbstractMapIterator &);
 
    public:
-    AbstractMapIterator(StlMap *parent) : position(0), expectedModCount(parent->modCount), futureEntry(parent->valueMap.begin()), currentEntry(parent->valueMap.end()), associatedMap(parent) {}
+    AbstractMapIterator(StlMap *parent)
+        : position(0),
+          expectedModCount(parent->modCount),
+          futureEntry(parent->valueMap.begin()),
+          currentEntry(parent->valueMap.end()),
+          associatedMap(parent) {}
 
     virtual ~AbstractMapIterator() {}
 
@@ -184,7 +189,11 @@ class StlMap : public Map<K, V> {
 
    public:
     ConstAbstractMapIterator(const StlMap *parent)
-        : position(0), expectedModCount(parent->modCount), futureEntry(parent->valueMap.begin()), currentEntry(parent->valueMap.end()), associatedMap(parent) {}
+        : position(0),
+          expectedModCount(parent->modCount),
+          futureEntry(parent->valueMap.begin()),
+          currentEntry(parent->valueMap.end()),
+          associatedMap(parent) {}
 
     virtual ~ConstAbstractMapIterator() {}
 
@@ -343,7 +352,9 @@ class StlMap : public Map<K, V> {
       return false;
     }
 
-    Iterator<MapEntry<K, V> > *iterator() override { throw decaf::lang::exceptions::UnsupportedOperationException(__FILE__, __LINE__, "Can't return a non-const iterator for a const collection"); }
+    Iterator<MapEntry<K, V> > *iterator() override {
+      throw decaf::lang::exceptions::UnsupportedOperationException(__FILE__, __LINE__, "Can't return a non-const iterator for a const collection");
+    }
 
     Iterator<MapEntry<K, V> > *iterator() const override { return new ConstEntryIterator(associatedMap); }
   };
@@ -405,7 +416,9 @@ class StlMap : public Map<K, V> {
       throw decaf::lang::exceptions::UnsupportedOperationException(__FILE__, __LINE__, "Can't modify a const collection");
     }
 
-    Iterator<K> *iterator() override { throw decaf::lang::exceptions::UnsupportedOperationException(__FILE__, __LINE__, "Can't return a non-const iterator for a const collection"); }
+    Iterator<K> *iterator() override {
+      throw decaf::lang::exceptions::UnsupportedOperationException(__FILE__, __LINE__, "Can't return a non-const iterator for a const collection");
+    }
 
     Iterator<K> *iterator() const override { return new ConstKeyIterator(this->associatedMap); }
   };
@@ -454,7 +467,9 @@ class StlMap : public Map<K, V> {
 
     void clear() override { throw decaf::lang::exceptions::UnsupportedOperationException(__FILE__, __LINE__, "Can't modify a const collection"); }
 
-    Iterator<V> *iterator() override { throw decaf::lang::exceptions::UnsupportedOperationException(__FILE__, __LINE__, "Can't return a non-const iterator for a const collection"); }
+    Iterator<V> *iterator() override {
+      throw decaf::lang::exceptions::UnsupportedOperationException(__FILE__, __LINE__, "Can't return a non-const iterator for a const collection");
+    }
 
     Iterator<V> *iterator() const override { return new ConstValueIterator(this->associatedMap); }
   };
@@ -474,7 +489,17 @@ class StlMap : public Map<K, V> {
   /**
    * Default constructor - does nothing.
    */
-  StlMap() : Map<K, V>(), valueMap(), mutex(), modCount(0), cachedEntrySet(), cachedKeySet(), cachedValueCollection(), cachedConstEntrySet(), cachedConstKeySet(), cachedConstValueCollection() {}
+  StlMap()
+      : Map<K, V>(),
+        valueMap(),
+        mutex(),
+        modCount(0),
+        cachedEntrySet(),
+        cachedKeySet(),
+        cachedValueCollection(),
+        cachedConstEntrySet(),
+        cachedConstKeySet(),
+        cachedConstValueCollection() {}
 
   /**
    * Copy constructor - copies the content of the given map into this one.
@@ -483,7 +508,16 @@ class StlMap : public Map<K, V> {
    *      The source StlMap whose entries are copied into this Map.
    */
   StlMap(const StlMap &source)
-      : Map<K, V>(), valueMap(), mutex(), modCount(0), cachedEntrySet(), cachedKeySet(), cachedValueCollection(), cachedConstEntrySet(), cachedConstKeySet(), cachedConstValueCollection() {
+      : Map<K, V>(),
+        valueMap(),
+        mutex(),
+        modCount(0),
+        cachedEntrySet(),
+        cachedKeySet(),
+        cachedValueCollection(),
+        cachedConstEntrySet(),
+        cachedConstKeySet(),
+        cachedConstValueCollection() {
     copy(source);
   }
 
@@ -494,7 +528,16 @@ class StlMap : public Map<K, V> {
    *      The source ma whose entries are copied into this Map..
    */
   StlMap(const Map<K, V> &source)
-      : Map<K, V>(), valueMap(), mutex(), modCount(0), cachedEntrySet(), cachedKeySet(), cachedValueCollection(), cachedConstEntrySet(), cachedConstKeySet(), cachedConstValueCollection() {
+      : Map<K, V>(),
+        valueMap(),
+        mutex(),
+        modCount(0),
+        cachedEntrySet(),
+        cachedKeySet(),
+        cachedValueCollection(),
+        cachedConstEntrySet(),
+        cachedConstKeySet(),
+        cachedConstValueCollection() {
     copy(source);
   }
 

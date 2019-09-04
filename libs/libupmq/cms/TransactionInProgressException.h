@@ -45,7 +45,9 @@ class CMS_API TransactionInProgressException : public cms::CMSException {
 
   TransactionInProgressException(const std::string &message, const std::exception *cause);
 
-  TransactionInProgressException(const std::string &message, const std::exception *cause, const std::vector<triplet<std::string, std::string, int> > &stackTrace);
+  TransactionInProgressException(const std::string &message,
+                                 const std::exception *cause,
+                                 const std::vector<triplet<std::string, std::string, int> > &stackTrace);
 
   ~TransactionInProgressException() noexcept override;
 

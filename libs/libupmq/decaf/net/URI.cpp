@@ -73,7 +73,13 @@ URI::URI(const std::string &scheme, const std::string &ssp, const std::string &f
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-URI::URI(const std::string &scheme, const std::string &userInfo, const std::string &host, int port, const std::string &path, const std::string &query, const std::string &fragment) {
+URI::URI(const std::string &scheme,
+         const std::string &userInfo,
+         const std::string &host,
+         int port,
+         const std::string &path,
+         const std::string &query,
+         const std::string &fragment) {
   if (scheme.empty() && userInfo.empty() && host.empty() && path.empty() && query.empty() && fragment.empty()) {
     return;
   }
@@ -178,7 +184,8 @@ URI::URI(const std::string &scheme, const std::string &host, const std::string &
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-URI::URI(const std::string &scheme, const std::string &authority, const std::string &path, const std::string &query, const std::string &fragment) : uri(), uriString() {
+URI::URI(const std::string &scheme, const std::string &authority, const std::string &path, const std::string &query, const std::string &fragment)
+    : uri(), uriString() {
   if (!scheme.empty() && !path.empty() && path.at(0) != '/') {
     throw URISyntaxException(__FILE__, __LINE__, path, "URI::URI - Path String %s must start with a '/'");
   }
@@ -737,7 +744,8 @@ URI URI::resolve(const URI &relative) const {
   }
 
   URI result;
-  if (relative.uri.getPath().empty() && relative.uri.getScheme().empty() && relative.uri.getAuthority().empty() && relative.uri.getQuery().empty() && !relative.uri.getFragment().empty()) {
+  if (relative.uri.getPath().empty() && relative.uri.getScheme().empty() && relative.uri.getAuthority().empty() && relative.uri.getQuery().empty() &&
+      !relative.uri.getFragment().empty()) {
     // if the relative URI only consists of fragment,
     // the resolved URI is very similar to this URI,
     // except that it has the fragment from the relative URI.

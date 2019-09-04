@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #include <threads/CompositeTaskRunner.h>
 #include <transport/UPMQException.h>
 
@@ -51,7 +51,9 @@ class CompositeTaskRunnerImpl {
 }  // namespace upmq
 
 ////////////////////////////////////////////////////////////////////////////////
-CompositeTaskRunner::CompositeTaskRunner() : impl(new CompositeTaskRunnerImpl) { this->impl->thread.reset(new Thread(this, "UPMQ CompositeTaskRunner Thread")); }
+CompositeTaskRunner::CompositeTaskRunner() : impl(new CompositeTaskRunnerImpl) {
+  this->impl->thread.reset(new Thread(this, "UPMQ CompositeTaskRunner Thread"));
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 CompositeTaskRunner::~CompositeTaskRunner() {

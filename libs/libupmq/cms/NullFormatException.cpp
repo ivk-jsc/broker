@@ -34,7 +34,9 @@ NullFormatException::NullFormatException(const std::string &message) : CMSExcept
 NullFormatException::NullFormatException(const std::string &message, const std::exception *cause) : CMSException(message, cause) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-NullFormatException::NullFormatException(const std::string &message, const std::exception *cause, const std::vector<triplet<std::string, std::string, int> > &stackTrace)
+NullFormatException::NullFormatException(const std::string &message,
+                                         const std::exception *cause,
+                                         const std::vector<triplet<std::string, std::string, int> > &stackTrace)
     : CMSException(message, cause, stackTrace) {}
 
 ////////////////////////////////////////////////////////////////////////////////

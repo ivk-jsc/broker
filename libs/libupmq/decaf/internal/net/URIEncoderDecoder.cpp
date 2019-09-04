@@ -56,7 +56,8 @@ void URIEncoderDecoder::validate(const std::string &s, const std::string &legal)
       continue;
     }
 
-    if (!(Character::isLetterOrDigit(*itr) || legal.find(*itr, 0) != std::string::npos || ((unsigned char)ch > 127 && (!Character::isWhitespace(ch) || !Character::isISOControl(ch))))) {
+    if (!(Character::isLetterOrDigit(*itr) || legal.find(*itr, 0) != std::string::npos ||
+          ((unsigned char)ch > 127 && (!Character::isWhitespace(ch) || !Character::isISOControl(ch))))) {
       throw URISyntaxException(__FILE__, __LINE__, s, "string contains Invalid Character", (int)i);
     }
   }
@@ -83,7 +84,8 @@ std::string URIEncoderDecoder::quoteIllegal(const std::string &s, const std::str
   for (; iter != s.end(); ++iter) {
     char ch = *iter;
 
-    if (Character::isLetterOrDigit(ch) || legal.find(ch) != std::string::npos || ((unsigned char)ch > 127 && (!Character::isWhitespace(ch) && !Character::isISOControl(ch)))) {
+    if (Character::isLetterOrDigit(ch) || legal.find(ch) != std::string::npos ||
+        ((unsigned char)ch > 127 && (!Character::isWhitespace(ch) && !Character::isISOControl(ch)))) {
       buf += ch;
     } else {
       buf += '%';

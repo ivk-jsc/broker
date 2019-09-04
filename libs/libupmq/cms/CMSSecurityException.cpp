@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #include "CMSSecurityException.h"
 
 using namespace cms;
@@ -33,7 +33,9 @@ CMSSecurityException::CMSSecurityException(const std::string &message) : CMSExce
 CMSSecurityException::CMSSecurityException(const std::string &message, const std::exception *cause) : CMSException(message, cause) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-CMSSecurityException::CMSSecurityException(const std::string &message, const std::exception *cause, const std::vector<triplet<std::string, std::string, int> > &stackTrace)
+CMSSecurityException::CMSSecurityException(const std::string &message,
+                                           const std::exception *cause,
+                                           const std::vector<triplet<std::string, std::string, int> > &stackTrace)
     : CMSException(message, cause, stackTrace) {}
 
 ////////////////////////////////////////////////////////////////////////////////

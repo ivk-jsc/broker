@@ -54,7 +54,9 @@ Pointer<SenderState> SessionState::removeProducer(const string &id) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void SessionState::addConsumer(Pointer<Command> command) { consumers.put(command->getCurrId(), Pointer<SubscriptionState>(new SubscriptionState(command))); }
+void SessionState::addConsumer(Pointer<Command> command) {
+  consumers.put(command->getCurrId(), Pointer<SubscriptionState>(new SubscriptionState(command)));
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 Pointer<SubscriptionState> SessionState::removeConsumer(const string &id) { return consumers.remove(id); }

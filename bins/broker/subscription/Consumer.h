@@ -53,7 +53,7 @@ class Consumer {
   std::string id;
   int maxNotAckMsg;
   mutable bool abort = false;
-  
+
   struct Msg {
     Poco::Int64 num = 0;
     std::string messageId;

@@ -68,7 +68,9 @@ StringIndexOutOfBoundsException::StringIndexOutOfBoundsException(const char *fil
 StringIndexOutOfBoundsException *StringIndexOutOfBoundsException::clone() const { return new StringIndexOutOfBoundsException(*this); }
 
 ////////////////////////////////////////////////////////////////////////////////
-StringIndexOutOfBoundsException::StringIndexOutOfBoundsException(const char *file, const int lineNumber, const std::exception *cause, const char *msg, ...) : IndexOutOfBoundsException(cause) {
+StringIndexOutOfBoundsException::StringIndexOutOfBoundsException(
+    const char *file, const int lineNumber, const std::exception *cause, const char *msg, ...)
+    : IndexOutOfBoundsException(cause) {
   va_list vargs;
   va_start(vargs, msg);
   Exception::buildMessage(msg, vargs);

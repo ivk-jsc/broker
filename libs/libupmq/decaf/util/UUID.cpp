@@ -59,7 +59,10 @@ class UUIDImpl {
 
   UUIDImpl() : mostSigBits(0), leastSigBits(0), variant(0), version(0), timestamp(0), clockSequence(0), node(0), hash(0) {}
 
-  UUIDImpl(long long mostSigBits, long long leastSigBits) : mostSigBits(mostSigBits), leastSigBits(leastSigBits), variant(0), version(0), timestamp(0), clockSequence(0), node(0), hash(0) { init(); }
+  UUIDImpl(long long mostSigBits, long long leastSigBits)
+      : mostSigBits(mostSigBits), leastSigBits(leastSigBits), variant(0), version(0), timestamp(0), clockSequence(0), node(0), hash(0) {
+    init();
+  }
 
  private:
   void init() {
@@ -151,7 +154,9 @@ UUID::~UUID() { delete this->uuid; }
 int UUID::compareTo(const UUID &value) const { return StringUtils::compare(this->toString().c_str(), value.toString().c_str()); }
 
 ////////////////////////////////////////////////////////////////////////////////
-bool UUID::equals(const UUID &value) const { return this->getMostSignificantBits() == value.getMostSignificantBits() && this->getLeastSignificantBits() == value.getLeastSignificantBits(); }
+bool UUID::equals(const UUID &value) const {
+  return this->getMostSignificantBits() == value.getMostSignificantBits() && this->getLeastSignificantBits() == value.getLeastSignificantBits();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 int UUID::hashCode() const { return this->uuid->hash; }

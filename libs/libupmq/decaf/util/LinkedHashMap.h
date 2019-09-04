@@ -119,7 +119,8 @@ class LinkedHashMap : public HashMap<K, V, HASHCODE> {
     LinkedHashMapEntry *chainBackward;
 
    public:
-    LinkedHashMapEntry(const K &key, const V &value, int hash) : HashMap<K, V, HASHCODE>::HashMapEntry(key, value, hash), chainForward(), chainBackward() {}
+    LinkedHashMapEntry(const K &key, const V &value, int hash)
+        : HashMap<K, V, HASHCODE>::HashMapEntry(key, value, hash), chainForward(), chainBackward() {}
 
     LinkedHashMapEntry(const K &key, const V &value) : HashMap<K, V, HASHCODE>::HashMapEntry(key, value), chainForward(), chainBackward() {}
   };
@@ -142,7 +143,8 @@ class LinkedHashMap : public HashMap<K, V, HASHCODE> {
     AbstractMapIterator &operator=(const AbstractMapIterator &);
 
    public:
-    AbstractMapIterator(LinkedHashMap *parent) : expectedModCount(parent->modCount), futureEntry(parent->head), currentEntry(nullptr), associatedMap(parent) {}
+    AbstractMapIterator(LinkedHashMap *parent)
+        : expectedModCount(parent->modCount), futureEntry(parent->head), currentEntry(nullptr), associatedMap(parent) {}
 
     virtual ~AbstractMapIterator() {}
 
@@ -270,7 +272,8 @@ class LinkedHashMap : public HashMap<K, V, HASHCODE> {
     ConstAbstractMapIterator &operator=(const ConstAbstractMapIterator &);
 
    public:
-    ConstAbstractMapIterator(const LinkedHashMap *parent) : expectedModCount(parent->modCount), futureEntry(parent->head), currentEntry(nullptr), associatedMap(parent) {}
+    ConstAbstractMapIterator(const LinkedHashMap *parent)
+        : expectedModCount(parent->modCount), futureEntry(parent->head), currentEntry(nullptr), associatedMap(parent) {}
 
     virtual ~ConstAbstractMapIterator() {}
 
@@ -386,7 +389,9 @@ class LinkedHashMap : public HashMap<K, V, HASHCODE> {
 
     virtual ~ConstLinkedHashMapEntrySet() {}
 
-    virtual Iterator<MapEntry<K, V> > *iterator() { throw decaf::lang::exceptions::UnsupportedOperationException(__FILE__, __LINE__, "Can't return a non-const iterator for a const collection"); }
+    virtual Iterator<MapEntry<K, V> > *iterator() {
+      throw decaf::lang::exceptions::UnsupportedOperationException(__FILE__, __LINE__, "Can't return a non-const iterator for a const collection");
+    }
 
     virtual Iterator<MapEntry<K, V> > *iterator() const { return new ConstEntryIterator(associatedMap); }
   };
@@ -456,7 +461,8 @@ class LinkedHashMap : public HashMap<K, V, HASHCODE> {
     ConstLinkedHashMapValueCollection &operator=(const ConstLinkedHashMapValueCollection &);
 
    public:
-    ConstLinkedHashMapValueCollection(const LinkedHashMap *parent) : HashMap<K, V, HASHCODE>::ConstHashMapValueCollection(parent), associatedMap(parent) {}
+    ConstLinkedHashMapValueCollection(const LinkedHashMap *parent)
+        : HashMap<K, V, HASHCODE>::ConstHashMapValueCollection(parent), associatedMap(parent) {}
 
     virtual ~ConstLinkedHashMapValueCollection() {}
 

@@ -43,7 +43,9 @@ class CMS_API MessageNotReadableException : public CMSException {
 
   MessageNotReadableException(const std::string &message, const std::exception *cause);
 
-  MessageNotReadableException(const std::string &message, const std::exception *cause, const std::vector<triplet<std::string, std::string, int> > &stackTrace);
+  MessageNotReadableException(const std::string &message,
+                              const std::exception *cause,
+                              const std::vector<triplet<std::string, std::string, int> > &stackTrace);
 
   ~MessageNotReadableException() noexcept override;
 

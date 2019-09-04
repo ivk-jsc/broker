@@ -264,7 +264,10 @@ class CMS_API Session : public Closeable, public Startable, public Stoppable {
    * @throws InvalidDestinationException - if an invalid destination is specified.
    * @throws InvalidSelectorException - if the message selector is invalid.
    */
-  virtual MessageConsumer *createDurableConsumer(const Topic *destination, const std::string &name, const std::string &selector, bool noLocal = false) = 0;
+  virtual MessageConsumer *createDurableConsumer(const Topic *destination,
+                                                 const std::string &name,
+                                                 const std::string &selector,
+                                                 bool noLocal = false) = 0;
 
   /**
    * Creates a MessageProducer to send messages to the specified

@@ -49,7 +49,8 @@ class ProviderImpl {
 }  // namespace decaf
 
 ////////////////////////////////////////////////////////////////////////////////
-Provider::Provider(const std::string &name, double version, const std::string &info) : name(name), version(version), info(info), impl(new ProviderImpl) {}
+Provider::Provider(const std::string &name, double version, const std::string &info)
+    : name(name), version(version), info(info), impl(new ProviderImpl) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 Provider::~Provider() {

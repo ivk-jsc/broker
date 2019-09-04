@@ -31,7 +31,8 @@ StreamMessageImpl::StreamMessageImpl() : MessageTemplate<cms::StreamMessage>() {
 
 StreamMessageImpl::StreamMessageImpl(StreamMessageImpl &other) : MessageTemplate<cms::StreamMessage>(other) {}
 
-StreamMessageImpl::StreamMessageImpl(Proto::ProtoMessage *header, unsigned char *body_buff, long long body_size, bool pr) : MessageTemplate<cms::StreamMessage>(header, body_buff, body_size) {
+StreamMessageImpl::StreamMessageImpl(Proto::ProtoMessage *header, unsigned char *body_buff, long long body_size, bool pr)
+    : MessageTemplate<cms::StreamMessage>(header, body_buff, body_size) {
   DECAF_UNUSED_VAR(pr);
 }
 

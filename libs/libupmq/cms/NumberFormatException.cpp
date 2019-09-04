@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #include "NumberFormatException.h"
 
 using namespace cms;
@@ -35,7 +35,9 @@ NumberFormatException::NumberFormatException(const std::string &message) : CMSEx
 NumberFormatException::NumberFormatException(const std::string &message, const std::exception *cause) : CMSException(message, cause) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-NumberFormatException::NumberFormatException(const std::string &message, const std::exception *cause, const std::vector<triplet<std::string, std::string, int> > &stackTrace)
+NumberFormatException::NumberFormatException(const std::string &message,
+                                             const std::exception *cause,
+                                             const std::vector<triplet<std::string, std::string, int> > &stackTrace)
     : CMSException(message, cause, stackTrace) {}
 
 ////////////////////////////////////////////////////////////////////////////////

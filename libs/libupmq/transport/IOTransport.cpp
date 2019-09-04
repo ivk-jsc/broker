@@ -52,7 +52,8 @@ class IOTransportImpl {
 
   IOTransportImpl() : wireFormat(), listener(nullptr), inputStream(nullptr), outputStream(nullptr), thread(), closed(false) {}
 
-  IOTransportImpl(const Pointer<WireFormat> wireFormat) : wireFormat(wireFormat), listener(nullptr), inputStream(nullptr), outputStream(nullptr), thread(), closed(false) {}
+  IOTransportImpl(const Pointer<WireFormat> wireFormat)
+      : wireFormat(wireFormat), listener(nullptr), inputStream(nullptr), outputStream(nullptr), thread(), closed(false) {}
 };
 }  // namespace transport
 }  // namespace upmq
@@ -259,7 +260,8 @@ void IOTransport::run() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Pointer<FutureResponse> IOTransport::asyncRequest(const Pointer<Command> command UPMQCPP_UNUSED, const Pointer<ResponseCallback> responseCallback UPMQCPP_UNUSED) {
+Pointer<FutureResponse> IOTransport::asyncRequest(const Pointer<Command> command UPMQCPP_UNUSED,
+                                                  const Pointer<ResponseCallback> responseCallback UPMQCPP_UNUSED) {
   DECAF_UNUSED_VAR(command);
   DECAF_UNUSED_VAR(responseCallback);
   throw UnsupportedOperationException(__FILE__, __LINE__, "IOTransport::asyncRequest() - unsupported operation");

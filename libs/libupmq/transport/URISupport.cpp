@@ -169,14 +169,16 @@ std::string URISupport::replaceEnvValues(const std::string &value) {
     // and look up the env var.
     if (value.at(0) == '$') {
       if (value.size() > 3 && value.at(1) != '{' && value.at(value.size() - 1) != '}') {
-        throw decaf::lang::exceptions::IllegalArgumentException(__FILE__, __LINE__, "URISupport::replaceEnvValues - Invalid Env Var Syntax: %s", value.c_str());
+        throw decaf::lang::exceptions::IllegalArgumentException(
+            __FILE__, __LINE__, "URISupport::replaceEnvValues - Invalid Env Var Syntax: %s", value.c_str());
       }
 
       string var = value.substr(2, value.size() - 3);
       var = decaf::lang::System::getenv(var);
 
       if (var.empty()) {
-        throw decaf::lang::exceptions::IllegalArgumentException(__FILE__, __LINE__, "URISupport::replaceEnvValues - Env Var not set: %s", value.c_str());
+        throw decaf::lang::exceptions::IllegalArgumentException(
+            __FILE__, __LINE__, "URISupport::replaceEnvValues - Env Var not set: %s", value.c_str());
       }
 
       return var;
@@ -264,7 +266,7 @@ void URISupport::parseComposite(const URI &uri, CompositeData &rc, const std::st
   std::size_t p;
   std::size_t intialParen = ssp.find('(');
   if (intialParen == 0) {
-    rc.setHost(""); // FIXME : ssp.substr(0, intialParen)
+    rc.setHost("");  // FIXME : ssp.substr(0, intialParen)
     p = rc.getHost().find('/');
     if (p != string::npos) {
       rc.setPath(rc.getHost().substr(p));

@@ -113,13 +113,17 @@ URL::URL(const URL &context, const String &spec) : impl(new URLImpl) { initializ
 URL::URL(const URL &context, const String &spec, URLStreamHandler *streamHandler) : impl(new URLImpl) { initialize(&context, spec, streamHandler); }
 
 ////////////////////////////////////////////////////////////////////////////////
-URL::URL(const String &protocol, const String &host, int port, const String &file, URLStreamHandler *handler) : impl(new URLImpl) { initialize(protocol, host, port, file, handler); }
+URL::URL(const String &protocol, const String &host, int port, const String &file, URLStreamHandler *handler) : impl(new URLImpl) {
+  initialize(protocol, host, port, file, handler);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 URL::URL(const String &protocol, const String &host, const String &file) : impl(new URLImpl) { initialize(protocol, host, -1, file, nullptr); }
 
 ////////////////////////////////////////////////////////////////////////////////
-URL::URL(const String &protocol, const String &host, int port, const String &file) : impl(new URLImpl) { initialize(protocol, host, port, file, nullptr); }
+URL::URL(const String &protocol, const String &host, int port, const String &file) : impl(new URLImpl) {
+  initialize(protocol, host, port, file, nullptr);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 void URL::initialize(const URL *context, const String &theSpec, URLStreamHandler *handler) {
@@ -146,7 +150,14 @@ void URL::initialize(const URL *context, const String &theSpec, URLStreamHandler
 
   // Inherit from the context URL if it exists.
   if (context != nullptr) {
-    set(context->getProtocol(), context->getHost(), context->getPort(), context->getAuthority(), context->getUserInfo(), context->getPath(), context->getQuery(), String());
+    set(context->getProtocol(),
+        context->getHost(),
+        context->getPort(),
+        context->getAuthority(),
+        context->getUserInfo(),
+        context->getPath(),
+        context->getQuery(),
+        String());
 
     if (impl->streamHandler == nullptr) {
       impl->streamHandler = context->impl->streamHandler;
@@ -339,7 +350,14 @@ void URL::set(const String &protocol, const String &host, int port, const String
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void URL::set(const String &protocol, const String &host, int port, const String &authority, const String &userInfo, const String &path, const String &query, const String &ref) {
+void URL::set(const String &protocol,
+              const String &host,
+              int port,
+              const String &authority,
+              const String &userInfo,
+              const String &path,
+              const String &query,
+              const String &ref) {
   String filePart = path;
   if (!query.isEmpty()) {
     if (!filePart.isEmpty()) {

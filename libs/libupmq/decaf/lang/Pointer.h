@@ -112,7 +112,8 @@ class Pointer : public REFCOUNTER {
    *      Pointer instance to cast to this type using a static_cast.
    */
   template <typename T1, typename R1>
-  Pointer(const Pointer<T1, R1> &value, const STATIC_CAST_TOKEN &) : REFCOUNTER(value), value(static_cast<T *>(value.get())), onDelete(onDeleteFunc) {}
+  Pointer(const Pointer<T1, R1> &value, const STATIC_CAST_TOKEN &)
+      : REFCOUNTER(value), value(static_cast<T *>(value.get())), onDelete(onDeleteFunc) {}
 
   /**
    * Dynamic Cast constructor. Copies the value contained in the pointer to the new
@@ -126,12 +127,14 @@ class Pointer : public REFCOUNTER {
    * @throw ClassCastException if the dynamic cast returns NULL
    */
   template <typename T1, typename R1>
-  Pointer(const Pointer<T1, R1> &value, const DYNAMIC_CAST_TOKEN &) : REFCOUNTER(value), value(dynamic_cast<T *>(value.get())), onDelete(onDeleteFunc) {
+  Pointer(const Pointer<T1, R1> &value, const DYNAMIC_CAST_TOKEN &)
+      : REFCOUNTER(value), value(dynamic_cast<T *>(value.get())), onDelete(onDeleteFunc) {
     if (this->value == nullptr) {
       // Remove the reference we took in the Reference Counter's ctor since we
       // didn't actually create one as the dynamic cast failed.
       REFCOUNTER::release();
-      throw decaf::lang::exceptions::ClassCastException(__FILE__, __LINE__, "Failed to cast source pointer of type %s to this type: %s.", typeid(T1).name(), typeid(T).name());
+      throw decaf::lang::exceptions::ClassCastException(
+          __FILE__, __LINE__, "Failed to cast source pointer of type %s to this type: %s.", typeid(T1).name(), typeid(T).name());
     }
   }
 

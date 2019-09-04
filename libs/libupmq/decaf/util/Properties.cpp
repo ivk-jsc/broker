@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #include "Properties.h"
 
 #include <decaf/io/BufferedInputStream.h>
@@ -256,7 +256,7 @@ bool Properties::equals(const Properties &source) const { return this->internal-
 
 ////////////////////////////////////////////////////////////////////////////////
 std::string Properties::toString() const {
-  std::ostringstream stream;  
+  std::ostringstream stream;
 
   stream << "Begin Class decaf::util::Properties:" << std::endl;
 

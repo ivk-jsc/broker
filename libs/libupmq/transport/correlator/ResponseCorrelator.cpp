@@ -50,7 +50,8 @@ class ResponseFinalizer {
   HashMap<unsigned int, Pointer<FutureResponse> > *map;
 
  public:
-  ResponseFinalizer(Mutex *mutex, int commandId, HashMap<unsigned int, Pointer<FutureResponse> > *map) : mutex(mutex), commandId(commandId), map(map) {}
+  ResponseFinalizer(Mutex *mutex, int commandId, HashMap<unsigned int, Pointer<FutureResponse> > *map)
+      : mutex(mutex), commandId(commandId), map(map) {}
 
   ~ResponseFinalizer() {
     synchronized(mutex) {

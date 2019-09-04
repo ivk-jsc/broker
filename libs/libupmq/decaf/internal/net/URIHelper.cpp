@@ -32,11 +32,13 @@ using namespace decaf::internal;
 using namespace decaf::internal::net;
 
 ////////////////////////////////////////////////////////////////////////////////
-URIHelper::URIHelper(const std::string &unreserved, const std::string &punct, const std::string &reserved, const std::string &someLegal, const std::string &allLegal)
+URIHelper::URIHelper(
+    const std::string &unreserved, const std::string &punct, const std::string &reserved, const std::string &someLegal, const std::string &allLegal)
     : unreserved(unreserved), punct(punct), reserved(reserved), someLegal(someLegal), allLegal(allLegal) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-URIHelper::URIHelper() : unreserved("_-!.~\'()*"), punct(",;:$&+="), reserved(",;:$&+=?/[]@"), someLegal("_-!.~\'()*,;:$&+="), allLegal("_-!.~\'()*,;:$&+=?/[]@") {}
+URIHelper::URIHelper()
+    : unreserved("_-!.~\'()*"), punct(",;:$&+="), reserved(",;:$&+=?/[]@"), someLegal("_-!.~\'()*,;:$&+="), allLegal("_-!.~\'()*,;:$&+=?/[]@") {}
 
 ////////////////////////////////////////////////////////////////////////////////
 URIType URIHelper::parseURI(const std::string &uri, bool forceServer) {

@@ -44,7 +44,9 @@ class CMS_API InvalidDestinationException : public CMSException {
 
   InvalidDestinationException(const std::string &message, const std::exception *cause);
 
-  InvalidDestinationException(const std::string &message, const std::exception *cause, const std::vector<triplet<std::string, std::string, int> > &stackTrace);
+  InvalidDestinationException(const std::string &message,
+                              const std::exception *cause,
+                              const std::vector<triplet<std::string, std::string, int> > &stackTrace);
 
   ~InvalidDestinationException() noexcept override;
 

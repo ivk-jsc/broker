@@ -506,7 +506,8 @@ void FailoverTransport::oneway(const Pointer<Command> command) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Pointer<FutureResponse> FailoverTransport::asyncRequest(const Pointer<Command> command UPMQCPP_UNUSED, const Pointer<ResponseCallback> responseCallback UPMQCPP_UNUSED) {
+Pointer<FutureResponse> FailoverTransport::asyncRequest(const Pointer<Command> command UPMQCPP_UNUSED,
+                                                        const Pointer<ResponseCallback> responseCallback UPMQCPP_UNUSED) {
   DECAF_UNUSED_VAR(command);
   DECAF_UNUSED_VAR(responseCallback);
   throw decaf::lang::exceptions::UnsupportedOperationException(__FILE__, __LINE__, "FailoverTransport::asyncRequest - Not Supported");

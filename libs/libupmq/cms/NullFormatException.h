@@ -45,7 +45,9 @@ class CMS_API NullFormatException : public CMSException {
 
   NullFormatException(const std::string &message, const std::exception *cause);
 
-  NullFormatException(const std::string &message, const std::exception *cause, const std::vector<triplet<std::string, std::string, int> > &stackTrace);
+  NullFormatException(const std::string &message,
+                      const std::exception *cause,
+                      const std::vector<triplet<std::string, std::string, int> > &stackTrace);
 
   ~NullFormatException() noexcept override;
 

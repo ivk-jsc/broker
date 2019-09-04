@@ -32,7 +32,8 @@ IntArrayBuffer::IntArrayBuffer(int size, bool readOnly) : IntBuffer(size), _arra
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-IntArrayBuffer::IntArrayBuffer(int *array, int size, int offset, int length, bool readOnly) : IntBuffer(length), _array(), offset(offset), length(length), readOnly(readOnly) {
+IntArrayBuffer::IntArrayBuffer(int *array, int size, int offset, int length, bool readOnly)
+    : IntBuffer(length), _array(), offset(offset), length(length), readOnly(readOnly) {
   try {
     if (offset < 0 || offset > size) {
       throw IndexOutOfBoundsException(__FILE__, __LINE__, "Offset parameter if out of bounds, %d", offset);
@@ -52,7 +53,8 @@ IntArrayBuffer::IntArrayBuffer(int *array, int size, int offset, int length, boo
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-IntArrayBuffer::IntArrayBuffer(const Pointer<ByteArrayAdapter> &array, int offset, int length, bool readOnly) : IntBuffer(length), _array(array), offset(offset), length(length), readOnly(readOnly) {
+IntArrayBuffer::IntArrayBuffer(const Pointer<ByteArrayAdapter> &array, int offset, int length, bool readOnly)
+    : IntBuffer(length), _array(array), offset(offset), length(length), readOnly(readOnly) {
   try {
     if (offset < 0 || offset > array->getCapacity()) {
       throw IndexOutOfBoundsException(__FILE__, __LINE__, "Offset parameter if out of bounds, %d", offset);
@@ -69,7 +71,8 @@ IntArrayBuffer::IntArrayBuffer(const Pointer<ByteArrayAdapter> &array, int offse
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-IntArrayBuffer::IntArrayBuffer(const IntArrayBuffer &other) : IntBuffer(other), _array(other._array), offset(other.offset), length(other.length), readOnly(other.readOnly) {}
+IntArrayBuffer::IntArrayBuffer(const IntArrayBuffer &other)
+    : IntBuffer(other), _array(other._array), offset(other.offset), length(other.length), readOnly(other.readOnly) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 IntArrayBuffer::~IntArrayBuffer() {}

@@ -48,7 +48,9 @@ class StateTrackerImpl {
 
   StateTrackerImpl(ConnectionStateTracker *parent) : parent(parent) {}
 
-  Pointer<Command> markerAsCommand() const { return (TRACKED_RESPONSE_MARKER != nullptr ? TRACKED_RESPONSE_MARKER.dynamicCast<Command>() : Pointer<Command>()); }
+  Pointer<Command> markerAsCommand() const {
+    return (TRACKED_RESPONSE_MARKER != nullptr ? TRACKED_RESPONSE_MARKER.dynamicCast<Command>() : Pointer<Command>());
+  }
 
   ~StateTrackerImpl() {}
 };
@@ -56,7 +58,8 @@ class StateTrackerImpl {
 }  // namespace upmq
 
 ////////////////////////////////////////////////////////////////////////////////
-ConnectionStateTracker::ConnectionStateTracker() : impl(new StateTrackerImpl(this)), restoreSessions(true), restoreConsumers(true), restoreProducers(true) {}
+ConnectionStateTracker::ConnectionStateTracker()
+    : impl(new StateTrackerImpl(this)), restoreSessions(true), restoreConsumers(true), restoreProducers(true) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 ConnectionStateTracker::~ConnectionStateTracker() {

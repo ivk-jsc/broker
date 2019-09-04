@@ -98,7 +98,7 @@ void SessionImpl::close() {
     }
 
     std::vector<ConsumerImpl *> cons;
-    for (auto& it : _consumersMap) {
+    for (auto &it : _consumersMap) {
       cons.push_back(it.second);
     }
     for (auto value : cons) {
@@ -107,7 +107,7 @@ void SessionImpl::close() {
     }
 
     std::vector<ProducerImpl *> prods;
-    for (auto& it : _producersMap) {
+    for (auto &it : _producersMap) {
       prods.push_back(it.second);
     }
     for (auto value : prods) {
@@ -116,13 +116,13 @@ void SessionImpl::close() {
     }
 
     std::vector<DestinationImpl *> dests;
-    for (auto& it : _destinationsMap) {
+    for (auto &it : _destinationsMap) {
       dests.push_back(it.second);
     }
     for (auto value : dests) {
       value->destroy();
     }
-    
+
     try {
       unsession();
     }
@@ -156,14 +156,18 @@ cms::MessageConsumer *SessionImpl::createConsumer(const cms::Destination *destin
   CATCH_ALL_THROW_CMSEXCEPTION
 }
 
-cms::MessageConsumer *SessionImpl::createDurableConsumer(const cms::Topic *destination, const string &subscription, const string &selector, bool noLocal /*= false*/) {
+cms::MessageConsumer *SessionImpl::createDurableConsumer(const cms::Topic *destination,
+                                                         const string &subscription,
+                                                         const string &selector,
+                                                         bool noLocal /*= false*/) {
   try {
     return _createConsumer(ConsumerImpl::Type::DURABLE_CONSUMER, destination, selector, subscription, noLocal);
   }
   CATCH_ALL_THROW_CMSEXCEPTION
 }
 
-cms::MessageConsumer *SessionImpl::_createConsumer(ConsumerImpl::Type consumerType, const cms::Destination *destination, const string &selector, const string &subscription, bool noLocal) {
+cms::MessageConsumer *SessionImpl::_createConsumer(
+    ConsumerImpl::Type consumerType, const cms::Destination *destination, const string &selector, const string &subscription, bool noLocal) {
   try {
     checkClosed();
 
@@ -368,9 +372,10 @@ void SessionImpl::unsubscribe(const string &name) {
   try {
     checkClosed();
 
-    for (auto& it : _consumersMap) {
-      ConsumerImpl* consumerImpl = it.second;
-      if (consumerImpl->getType() == ConsumerImpl::Type::DURABLE_CONSUMER && !consumerImpl->getSubscription().empty() && (consumerImpl->getSubscription() == name)) {
+    for (auto &it : _consumersMap) {
+      ConsumerImpl *consumerImpl = it.second;
+      if (consumerImpl->getType() == ConsumerImpl::Type::DURABLE_CONSUMER && !consumerImpl->getSubscription().empty() &&
+          (consumerImpl->getSubscription() == name)) {
         consumerImpl->deleteDurableConsumer();
         consumerImpl->unsubscription();
       }

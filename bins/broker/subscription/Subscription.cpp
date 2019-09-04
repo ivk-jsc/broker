@@ -329,7 +329,7 @@ Subscription::ProcessMessageResult Subscription::getNextMessage() {
       try {
         sMessage->serialize();
         AHRegestry::Instance().put(consumer->tcpNum, std::move(sMessage));
-        ++_messageCounter;        
+        ++_messageCounter;
         const size_t tid = (size_t)(Poco::Thread::currentTid());
         ASYNCLOG_INFORMATION(logStream,
                              (std::to_string(consumer->tcpNum)

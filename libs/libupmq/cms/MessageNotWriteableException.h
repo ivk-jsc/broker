@@ -43,7 +43,9 @@ class CMS_API MessageNotWriteableException : public CMSException {
 
   MessageNotWriteableException(const std::string &message, const std::exception *cause);
 
-  MessageNotWriteableException(const std::string &message, const std::exception *cause, const std::vector<triplet<std::string, std::string, int> > &stackTrace);
+  MessageNotWriteableException(const std::string &message,
+                               const std::exception *cause,
+                               const std::vector<triplet<std::string, std::string, int> > &stackTrace);
 
   ~MessageNotWriteableException() noexcept override;
 

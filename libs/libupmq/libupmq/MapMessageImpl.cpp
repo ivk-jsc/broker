@@ -32,7 +32,8 @@ MapMessageImpl::MapMessageImpl() : MessageTemplate<MapMessage>() {
 
 MapMessageImpl::MapMessageImpl(MapMessageImpl &other) : MessageTemplate<MapMessage>(other) {}
 
-MapMessageImpl::MapMessageImpl(Proto::ProtoMessage *header, unsigned char *body_buff, long long body_size, bool pr) : MessageTemplate<cms::MapMessage>(header, body_buff, body_size) {
+MapMessageImpl::MapMessageImpl(Proto::ProtoMessage *header, unsigned char *body_buff, long long body_size, bool pr)
+    : MessageTemplate<cms::MapMessage>(header, body_buff, body_size) {
   DECAF_UNUSED_VAR(pr);
 }
 
@@ -45,7 +46,8 @@ std::vector<std::string> MapMessageImpl::getMapNames() const {
   foo->unpackBody();
 
   std::vector<std::string> names;
-  for (google::protobuf::Map<string, Proto::Property>::const_iterator it = _body->map_body().value().begin(); it != _body->map_body().value().end(); ++it) {
+  for (google::protobuf::Map<string, Proto::Property>::const_iterator it = _body->map_body().value().begin(); it != _body->map_body().value().end();
+       ++it) {
     names.push_back(it->first);
   }
   return names;

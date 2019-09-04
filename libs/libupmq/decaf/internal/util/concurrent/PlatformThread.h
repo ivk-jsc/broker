@@ -87,7 +87,8 @@ class DECAF_API PlatformThread {
   /**
    * @return true if the condition wait met the timeout parameters without being signaled.
    */
-  static bool interruptibleWaitOnCondition(decaf_condition_t condition, decaf_mutex_t mutex, long long mills, int nanos, CompletionCondition &complete);
+  static bool interruptibleWaitOnCondition(
+      decaf_condition_t condition, decaf_mutex_t mutex, long long mills, int nanos, CompletionCondition &complete);
 
   static void destroyCondition(decaf_condition_t condition);
 

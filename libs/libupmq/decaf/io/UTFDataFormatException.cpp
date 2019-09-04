@@ -34,7 +34,8 @@ UTFDataFormatException::UTFDataFormatException(const UTFDataFormatException &ex)
 UTFDataFormatException::UTFDataFormatException(UTFDataFormatException &&ex) noexcept = default;
 
 ////////////////////////////////////////////////////////////////////////////////
-UTFDataFormatException::UTFDataFormatException(const char *file, const int lineNumber, const std::exception *cause, const char *msg, ...) : io::IOException(cause) {
+UTFDataFormatException::UTFDataFormatException(const char *file, const int lineNumber, const std::exception *cause, const char *msg, ...)
+    : io::IOException(cause) {
   va_list vargs;
   va_start(vargs, msg);
   Exception::buildMessage(msg, vargs);

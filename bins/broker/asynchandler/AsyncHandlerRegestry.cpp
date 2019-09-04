@@ -33,7 +33,7 @@ AsyncHandlerRegestry::AsyncHandlerRegestry()
   }
 }
 
-void AsyncHandlerRegestry::addAHandler(AsyncTCPHandler* ahandler) {
+void AsyncHandlerRegestry::addAHandler(AsyncTCPHandler *ahandler) {
   int nextNum = freeNum();
   if (nextNum != -1) {
     ahandler->num = static_cast<size_t>(nextNum);

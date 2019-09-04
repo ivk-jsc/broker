@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #include "PushbackInputStream.h"
 
 #include <decaf/lang/System.h>
@@ -24,10 +24,12 @@ using namespace decaf::lang;
 using namespace decaf::lang::exceptions;
 
 ////////////////////////////////////////////////////////////////////////////////
-PushbackInputStream::PushbackInputStream(InputStream *stream, bool own) : FilterInputStream(stream, own), buffer(new unsigned char[1]), bufferSize(1), pos(1) {}
+PushbackInputStream::PushbackInputStream(InputStream *stream, bool own)
+    : FilterInputStream(stream, own), buffer(new unsigned char[1]), bufferSize(1), pos(1) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-PushbackInputStream::PushbackInputStream(InputStream *stream, int bufSize, bool own) : FilterInputStream(stream, own), buffer(nullptr), bufferSize(bufSize), pos(bufSize) {
+PushbackInputStream::PushbackInputStream(InputStream *stream, int bufSize, bool own)
+    : FilterInputStream(stream, own), buffer(nullptr), bufferSize(bufSize), pos(bufSize) {
   if (bufSize < 0) {
     throw IllegalArgumentException(__FILE__, __LINE__, "Size of Push Back buffer cannot be negative.");
   }

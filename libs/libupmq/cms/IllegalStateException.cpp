@@ -34,7 +34,9 @@ IllegalStateException::IllegalStateException(const std::string &message) : CMSEx
 IllegalStateException::IllegalStateException(const std::string &message, const std::exception *cause) : CMSException(message, cause) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-IllegalStateException::IllegalStateException(const std::string &message, const std::exception *cause, const std::vector<triplet<std::string, std::string, int> > &stackTrace)
+IllegalStateException::IllegalStateException(const std::string &message,
+                                             const std::exception *cause,
+                                             const std::vector<triplet<std::string, std::string, int> > &stackTrace)
     : CMSException(message, cause, stackTrace) {}
 
 ////////////////////////////////////////////////////////////////////////////////
