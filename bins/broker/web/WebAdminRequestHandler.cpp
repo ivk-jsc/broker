@@ -94,7 +94,7 @@ Poco::Net::HTTPResponse::HTTPStatus WebAdminRequestHandler::onGet() {
     const std::string messagesPage = "/messages." + extension;
     if (replIt == replacerMap.end()) {
       if (lFile == "/main." + extension) {
-        std::string sep = (extension == "json") ? "\n" : "<br>";
+        std::string sep = (extension == "json") ? " " : "<br>";
         replacerMap.emplace(lFile, std::unique_ptr<TemplateParamReplacer>(new MainPageReplacer(lFile, std::move(sep))));
         replIt = replacerMap.find(lFile);
       }

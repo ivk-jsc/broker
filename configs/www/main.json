@@ -55,7 +55,7 @@
     },
     "Connection String": "{brokerSConnection}",
     "DataBase Path": "{brokerSPath}",
-    "Journal": "{brokerJournal}"
+    "Journal": {brokerJournal}
   },
   "Persistent Storage": {
     "Payload Path": "{brokerSData}"

@@ -395,6 +395,7 @@ void Broker::onSubscription(const AsyncTCPHandler &tcpHandler, const MessageData
 }
 void Broker::onSubscribe(const AsyncTCPHandler &tcpHandler, const MessageDataContainer &sMessage, MessageDataContainer &outMessage) {
   UNUSED_VAR(outMessage);
+  UNUSED_VAR(tcpHandler);
   const Subscribe &subscribe = sMessage.subscribe();
   const std::string &name = subscribe.subscription_name();
   if (name.empty()) {
@@ -404,6 +405,7 @@ void Broker::onSubscribe(const AsyncTCPHandler &tcpHandler, const MessageDataCon
 }
 void Broker::onUnsubscribe(const AsyncTCPHandler &tcpHandler, const MessageDataContainer &sMessage, MessageDataContainer &outMessage) {
   UNUSED_VAR(outMessage);
+  UNUSED_VAR(tcpHandler);
   try {
     EXCHANGE::Instance().destination(sMessage.unsubscribe().destination_uri(), Exchange::DestinationCreationMode::NO_CREATE).unsubscribe(sMessage);
   } catch (Exception &ex) {
@@ -443,6 +445,7 @@ void Broker::onAcknowledge(const AsyncTCPHandler &tcpHandler, const MessageDataC
   tcpHandler.connection()->processAcknowledge(sMessage);
 }
 void Broker::onBrowser(const AsyncTCPHandler &tcpHandler, const MessageDataContainer &sMessage, MessageDataContainer &outMessage) {
+  UNUSED_VAR(tcpHandler);
   const Proto::Browser &browser = sMessage.browser();
   const std::string &name = browser.subscription_name();
   // NOTE: do subscribe into initBrowser

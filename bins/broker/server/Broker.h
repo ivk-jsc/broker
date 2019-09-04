@@ -17,8 +17,6 @@
 #ifndef BROKER_BROKER_H
 #define BROKER_BROKER_H
 
-#include <Poco/RWLock.h>
-#include <Poco/Thread.h>
 #include <atomic>
 #include <memory>
 #include <string>
@@ -32,7 +30,10 @@
 #include "Configuration.h"
 #include "MessageDataContainer.h"
 #include "Singleton.h"
+
 #include <Poco/Condition.h>
+#include <Poco/RWLock.h>
+#include <Poco/Thread.h>
 
 namespace upmq {
 namespace broker {

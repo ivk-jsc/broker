@@ -93,18 +93,18 @@ std::string MainPageReplacer::brokerStorageDBMSReplacer() {
 
 std::string MainPageReplacer::brokerStorageConnectionReplacer() { return STORAGE_CONFIG.connection.value.get(); }
 std::string MainPageReplacer::getH1() const { return "Configuration"; }
-std::string MainPageReplacer::brokerStorageDataReplacer() { return STORAGE_CONFIG.data.get().toString(); }
+std::string MainPageReplacer::brokerStorageDataReplacer() { return Poco::replace(STORAGE_CONFIG.data.get().toString(), "\\", "/"); }
 
 std::string MainPageReplacer::brokerSDBMSPoolReplacer() { return std::to_string(STORAGE_CONFIG.connection.props.connectionPool); }
-std::string MainPageReplacer::brokerDestinationAutocreateReplacer() { return DESTINATION_CONFIG.autocreate ? "TRUE" : "FALSE"; }
+std::string MainPageReplacer::brokerDestinationAutocreateReplacer() { return DESTINATION_CONFIG.autocreate ? "true" : "false"; }
 std::string MainPageReplacer::brokerJournalReplacer() { return STORAGE_CONFIG.messageJournal(); }
 std::string MainPageReplacer::brokerReadersReplacer() { return std::to_string(THREADS_CONFIG.readers); }
 std::string MainPageReplacer::brokerWritersReplacer() { return std::to_string(THREADS_CONFIG.writers); }
 std::string MainPageReplacer::brokerAcceptorsReplacer() { return std::to_string(THREADS_CONFIG.accepters); }
 std::string MainPageReplacer::brokerSubscriptionWorkersReplacer() { return std::to_string(THREADS_CONFIG.subscribers); }
-std::string MainPageReplacer::brokerLogInteractiveReplacer() { return LOG_CONFIG.isInteractive ? "TRUE" : "FALSE"; }
-std::string MainPageReplacer::brokerLogPathReplacer() { return LOG_CONFIG.path.toString(); }
-std::string MainPageReplacer::brokerStorageDBPathReplacer() { return STORAGE_CONFIG.connection.path.toString(); }
+std::string MainPageReplacer::brokerLogInteractiveReplacer() { return LOG_CONFIG.isInteractive ? "true" : "false"; }
+std::string MainPageReplacer::brokerLogPathReplacer() { return Poco::replace(LOG_CONFIG.path.toString(), "\\", "/"); }
+std::string MainPageReplacer::brokerStorageDBPathReplacer() { return Poco::replace(STORAGE_CONFIG.connection.path.toString(), "\\", "/"); }
 std::string MainPageReplacer::brokerDestinationReplacer() { return std::to_string(DESTINATION_CONFIG.maxCount); }
 std::string MainPageReplacer::brokerNetClientsReplacer() { return std::to_string(NET_CONFIG.maxConnections); }
 std::string MainPageReplacer::brokerSessionsReplacer() { return std::to_string(SESSIONS_CONFIG.maxCount); }

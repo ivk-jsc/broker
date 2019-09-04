@@ -21,6 +21,7 @@
 #include <AsyncHandlerRegestry.h>
 #include <Poco/DateTime.h>
 #include <Poco/Util/PropertyFileConfiguration.h>
+#include <Poco/String.h>
 #include <cstdlib>
 #include <fake_cpp14.h>
 #include <poco_pointers_helper.h>
@@ -38,6 +39,13 @@
 
 namespace upmq {
 namespace broker {
+
+static std::string expandPath(std::string path) {
+#ifdef _WIN32
+  Poco::replaceInPlace(path, std::string("%CD%"), Poco::Path::current());
+#endif
+  return Poco::Path::expand(path);
+}
 
 MainApplication::MainApplication() : swf::Application("brkr"), _helpRequested(false), _versionRequested(false), _name("broker"), _port(12345) {}
 
@@ -227,6 +235,7 @@ void MainApplication::loadBrokerConfiguration() {
 
   loadStorageConfig();
 }
+
 void MainApplication::loadStorageConfig() const {
   Configuration::Storage storage;
   storage.connection.props.dbmsType = Configuration::Storage::type(config().getString("broker.storage.connection[@dbms]", "sqlite-native"));
@@ -239,20 +248,20 @@ void MainApplication::loadStorageConfig() const {
 
   Poco::Path prefix;
 #ifdef _WIN32
-  prefix = config().getString("broker.storage.connection.path[@windows]", "C:/ProgramData");
+  prefix = expandPath(config().getString("broker.storage.connection.path[@windows]", "C:/ProgramData"));
 #else
-  prefix = config().getString("broker.storage.connection.path[@_nix]", "../share");
+  prefix = expandPath(config().getString("broker.storage.connection.path[@_nix]", "../share"));
 #endif
   storage.connection.path.assign(prefix).makeDirectory();
-  storage.connection.path.append(config().getString("broker.storage.connection.path", "upmq/db")).makeDirectory();
+  storage.connection.path.append(expandPath(config().getString("broker.storage.connection.path", "upmq/db"))).makeDirectory();
 
   prefix.clear();
 #ifdef _WIN32
-  prefix = config().getString("broker.storage.data[@windows]", "C:/ProgramData");
+  prefix = expandPath(config().getString("broker.storage.data[@windows]", "C:/ProgramData"));
 #else
-  prefix = config().getString("broker.storage.data[@_nix]", "../share");
+  prefix = expandPath(config().getString("broker.storage.data[@_nix]", "../share"));
 #endif
-  storage.data.set(prefix.append(config().getString("broker.storage.data", "upmq/data")).toString());
+  storage.data.set(prefix.append(expandPath(config().getString("broker.storage.data", "upmq/data"))).toString());
 
   storage.setMessageJournal(CONFIGURATION::Instance().name());
   CONFIGURATION::Instance().setStorage(storage);
@@ -271,12 +280,12 @@ void MainApplication::loadLogConfig() {
   log.name = CONFIGURATION::Instance().name();
   Poco::Path prefix;
 #ifdef _WIN32
-  prefix = config().getString("broker.log.path[@windows]", "C:/ProgramData");
+  prefix = expandPath(config().getString("broker.log.path[@windows]", "C:/ProgramData"));
 #else
-  prefix = config().getString("broker.log.path[@_nix]", "/var/log");
+  prefix = expandPath(config().getString("broker.log.path[@_nix]", "/var/log"));
 #endif
   log.path.assign(prefix);
-  log.path.append(config().getString("broker.log.path", "upmq/log")).makeDirectory();
+  log.path.append(expandPath(config().getString("broker.log.path", "upmq/log"))).makeDirectory();
   CONFIGURATION::Instance().setLog(log);
 
   ASYNCLOGGER::Instance().logPriority = log.level;
@@ -326,7 +335,7 @@ void MainApplication::loadHttpConfig() const {
   Configuration::Http http;
   http.port = config().getInt("broker.http.port", http.port);
   // TODO : verify path by app-bin path
-  http.site = config().getString("broker.http.site", "../share/upmq/www");
+  http.site = expandPath(config().getString("broker.http.site", "../share/upmq/www"));
   CONFIGURATION::Instance().setHttp(http);
 }
 
