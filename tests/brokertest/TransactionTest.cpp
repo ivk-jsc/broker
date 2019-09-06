@@ -197,7 +197,7 @@ TEST_F(TransactionTest, testWithTTLSet) {
   cms::MessageConsumer *consumer = cmsProvider->getConsumer();
 
   const std::size_t NUM_MESSAGES = 50;
-  std::vector<std::pair<::std::string, std::string>> msg(NUM_MESSAGES);
+  std::vector<std::pair<std::string, std::string>> msg(NUM_MESSAGES);
   size_t ii = 0;
   std::generate(msg.begin(), msg.end(), [&ii]() { return std::make_pair("", "message" + std::to_string(ii++)); });
   // sends a message

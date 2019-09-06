@@ -19,6 +19,7 @@
 #include <sstream>
 #include <ctime>
 #include <chrono>
+#include <stdexcept>
 
 #include <cms/ConnectionFactory.h>
 #include <cms/Connection.h>

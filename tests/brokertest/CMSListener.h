@@ -21,6 +21,7 @@
 #include <cms/MessageListener.h>
 #include <cms/Session.h>
 #include <deque>
+#include <algorithm>
 
 class CMSListener : public cms::MessageListener, public cms::ExceptionListener {
  private:
