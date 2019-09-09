@@ -38,7 +38,7 @@ class SubscribeState {
   SubscribeState(Pointer<Command> info);
   virtual ~SubscribeState();
 
-  const Pointer<Command> getInfo() const;
+  Pointer<Command> getInfo() const;
 };
 }  // namespace state
 }  // namespace upmq

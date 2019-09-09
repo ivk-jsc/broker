@@ -31,14 +31,15 @@ Pointer<Command> SubscriptionState::getInfo() const { return this->info; }
 
 ////////////////////////////////////////////////////////////////////////////////
 void SubscriptionState::addSubscribe(Pointer<Command> command) {
-  subscribes.put(command->getCurrId(), Pointer<SubscribeState>(new SubscribeState(command)));
+  const std::string currId = command->getCurrId();
+  subscribes.put(currId, Pointer<SubscribeState>(new SubscribeState(std::move(command))));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Pointer<SubscribeState> SubscriptionState::removeSubscribe(string id) {
+Pointer<SubscribeState> SubscriptionState::removeSubscribe(const string& id) {
   Pointer<SubscribeState> producerState = subscribes.remove(id);
   return producerState;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-const decaf::util::Collection<Pointer<SubscribeState>> &SubscriptionState::getSubscribeStates() const { return subscribes.values(); }
+const decaf::util::Collection<Pointer<SubscribeState>>& SubscriptionState::getSubscribeStates() const { return subscribes.values(); }

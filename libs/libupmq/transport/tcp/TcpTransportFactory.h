@@ -43,10 +43,10 @@ class UPMQCPP_API TcpTransportFactory : public AbstractTransportFactory {
 
  protected:
   virtual Pointer<Transport> doCreateComposite(const decaf::net::URI &location,
-                                               const Pointer<transport::WireFormat> wireFormat,
+                                               const Pointer<transport::WireFormat> &wireFormat,
                                                const decaf::util::Properties &properties);
 
-  virtual void doConfigureTransport(Pointer<Transport>, const decaf::util::Properties &properties);
+  virtual void doConfigureTransport(const Pointer<Transport> &transport, const decaf::util::Properties &properties);
 };
 }  // namespace tcp
 }  // namespace transport

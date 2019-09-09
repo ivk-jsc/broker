@@ -43,24 +43,24 @@ class ConnectionStateTracker {
   ConnectionStateTracker();
   virtual ~ConnectionStateTracker();
 
-  Pointer<Tracked> track(Pointer<Command> command);
-  void restore(Pointer<transport::Transport> transport);
+  Pointer<Tracked> track(const Pointer<Command> &command);
+  void restore(const Pointer<transport::Transport> &transport);
   void transportInterrupted();
 
-  virtual decaf::lang::Pointer<Command> processConnect(Pointer<Command> info);
-  virtual decaf::lang::Pointer<Command> processDisconnect(Pointer<Command> info);
+  virtual decaf::lang::Pointer<Command> processConnect(const Pointer<Command> &info);
+  virtual decaf::lang::Pointer<Command> processDisconnect(const Pointer<Command> &info);
 
-  virtual decaf::lang::Pointer<Command> processSession(Pointer<Command> info);
-  virtual decaf::lang::Pointer<Command> processUnsession(Pointer<Command> info);
+  virtual decaf::lang::Pointer<Command> processSession(const Pointer<Command> &info);
+  virtual decaf::lang::Pointer<Command> processUnsession(const Pointer<Command> &info);
 
-  virtual decaf::lang::Pointer<Command> processSender(Pointer<Command> info);
-  virtual decaf::lang::Pointer<Command> processUnsender(Pointer<Command> info);
+  virtual decaf::lang::Pointer<Command> processSender(const Pointer<Command> &info);
+  virtual decaf::lang::Pointer<Command> processUnsender(const Pointer<Command> &info);
 
-  virtual decaf::lang::Pointer<Command> processSubscription(Pointer<Command> info);
-  virtual decaf::lang::Pointer<Command> processUnsubscription(Pointer<Command> info);
+  virtual decaf::lang::Pointer<Command> processSubscription(const Pointer<Command> &info);
+  virtual decaf::lang::Pointer<Command> processUnsubscription(const Pointer<Command> &info);
 
-  virtual decaf::lang::Pointer<Command> processSubscribe(Pointer<Command> info);
-  virtual decaf::lang::Pointer<Command> processUnsubscribe(Pointer<Command> info);
+  virtual decaf::lang::Pointer<Command> processSubscribe(const Pointer<Command> &info);
+  virtual decaf::lang::Pointer<Command> processUnsubscribe(const Pointer<Command> &info);
 
   void setRestoreSessions(bool isRestoreSessions);
   void setRestoreConsumers(bool isRestoreConsumers);
@@ -71,10 +71,11 @@ class ConnectionStateTracker {
   bool isRestoreProducers() const;
 
  private:
-  void doRestoreSessions(decaf::lang::Pointer<transport::Transport> transport, decaf::lang::Pointer<ConnectionState> connectionState);
-  void doRestoreConsumers(decaf::lang::Pointer<transport::Transport> transport, decaf::lang::Pointer<SessionState> sessionState);
-  void doRestoreProducers(decaf::lang::Pointer<transport::Transport> transport, decaf::lang::Pointer<SessionState> sessionState);
-  void doRestoreTempDestinations(decaf::lang::Pointer<transport::Transport> transport, decaf::lang::Pointer<ConnectionState> connectionState);
+  void doRestoreSessions(const decaf::lang::Pointer<transport::Transport> &transport, const decaf::lang::Pointer<ConnectionState> &connectionState);
+  void doRestoreConsumers(const decaf::lang::Pointer<transport::Transport> &transport, const decaf::lang::Pointer<SessionState> &sessionState);
+  void doRestoreProducers(const decaf::lang::Pointer<transport::Transport> &transport, const decaf::lang::Pointer<SessionState> &sessionState);
+  void doRestoreTempDestinations(const decaf::lang::Pointer<transport::Transport> &transport,
+                                 const decaf::lang::Pointer<ConnectionState> &connectionState);
 };
 }  // namespace state
 }  // namespace upmq

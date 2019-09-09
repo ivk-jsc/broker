@@ -56,7 +56,7 @@ using upmq::transport::Response;
  */
 class UPMQCPP_API Transport : public upmq::transport::Service, public decaf::io::Closeable {
  public:
-  virtual ~Transport(){};
+  ~Transport() override = default;;
 
   /**
    * Starts the Transport, the send methods of a Transport will throw an exception
@@ -64,14 +64,14 @@ class UPMQCPP_API Transport : public upmq::transport::Service, public decaf::io:
    *
    * @throw IOException if and error occurs while starting the Transport.
    */
-  virtual void start() = 0;
+  void start() override = 0;
 
   /**
    * Stops the Transport.
    *
    * @throw IOException if an error occurs while stopping the transport.
    */
-  virtual void stop() = 0;
+  void stop() override = 0;
 
   /**
    * Sends a one-way command.  Does not wait for any response from the
@@ -84,7 +84,7 @@ class UPMQCPP_API Transport : public upmq::transport::Service, public decaf::io:
    * @throws UnsupportedOperationException if this method is not implemented
    *         by this transport.
    */
-  virtual void oneway(const Pointer<Command> command) = 0;
+  virtual void oneway(Pointer<Command> command) = 0;
 
   /**
    * Sends a commands asynchronously, returning a FutureResponse object that the caller
@@ -101,7 +101,7 @@ class UPMQCPP_API Transport : public upmq::transport::Service, public decaf::io:
    * @throws UnsupportedOperationException if this method is not implemented
    *         by this transport.
    */
-  virtual Pointer<FutureResponse> asyncRequest(const Pointer<Command> command, const Pointer<ResponseCallback> responseCallback) = 0;
+  virtual Pointer<FutureResponse> asyncRequest(Pointer<Command> command, Pointer<ResponseCallback> responseCallback) = 0;
 
   /**
    * Sends the given command to the broker and then waits for the response.
@@ -114,7 +114,7 @@ class UPMQCPP_API Transport : public upmq::transport::Service, public decaf::io:
    * @throws UnsupportedOperationException if this method is not implemented
    *         by this transport.
    */
-  virtual Pointer<Response> request(const Pointer<Command> command) = 0;
+  virtual Pointer<Response> request(Pointer<Command> command) = 0;
 
   /**
    * Sends the given command to the broker and then waits for the response.
@@ -130,7 +130,7 @@ class UPMQCPP_API Transport : public upmq::transport::Service, public decaf::io:
    * @throws UnsupportedOperationException if this method is not implemented
    *         by this transport.
    */
-  virtual Pointer<Response> request(const Pointer<Command> command, unsigned int timeout) = 0;
+  virtual Pointer<Response> request(Pointer<Command> command, unsigned int timeout) = 0;
 
   /**
    * Gets the WireFormat instance that is in use by this transport.  In the case of
@@ -146,7 +146,7 @@ class UPMQCPP_API Transport : public upmq::transport::Service, public decaf::io:
    * @param wireFormat
    *      The WireFormat the object used to encode / decode commands.
    */
-  virtual void setWireFormat(const Pointer<transport::WireFormat> wireFormat) = 0;
+  virtual void setWireFormat(Pointer<transport::WireFormat> wireFormat) = 0;
 
   /**
    * Sets the observer of asynchronous events from this transport.

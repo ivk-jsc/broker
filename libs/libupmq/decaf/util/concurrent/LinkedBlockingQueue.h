@@ -199,19 +199,19 @@ class LinkedBlockingQueue : public BlockingQueue<E> {
     Pointer<Iterator<E> > iter(collection.iterator());
 
     try {
-      int count = 0;
+      int icount = 0;
 
       while (iter->hasNext()) {
-        if (count == this->capacity) {
+        if (icount == this->capacity) {
           throw decaf::lang::exceptions::IllegalStateException(
               __FILE__, __LINE__, "Number of elements in the Collection exceeds this Queue's Capacity.");
         }
 
         this->enqueue(iter->next());
-        ++count;
+        ++icount;
       }
 
-      this->count.set(count);
+      this->count.set(icount);
     }
     DECAF_CATCH_RETHROW(decaf::lang::exceptions::IllegalStateException)
     DECAF_CATCH_RETHROW(decaf::lang::Exception)
@@ -245,19 +245,19 @@ class LinkedBlockingQueue : public BlockingQueue<E> {
     Pointer<Iterator<E> > iter(queue.iterator());
 
     try {
-      int count = 0;
+      int icount = 0;
 
       while (iter->hasNext()) {
-        if (count == this->capacity) {
+        if (icount == this->capacity) {
           throw decaf::lang::exceptions::IllegalStateException(
               __FILE__, __LINE__, "Number of elements in the Collection exceeds this Queue's Capacity.");
         }
 
         this->enqueue(iter->next());
-        ++count;
+        ++icount;
       }
 
-      this->count.set(count);
+      this->count.set(icount);
     }
     DECAF_CATCH_RETHROW(decaf::lang::exceptions::IllegalStateException)
     DECAF_CATCH_RETHROW(decaf::lang::Exception)
@@ -518,6 +518,7 @@ class LinkedBlockingQueue : public BlockingQueue<E> {
     try {
       Pointer<QueueNode<E> > front = this->head->next;
       if (front == nullptr) {
+        this->takeLock.unlock();
         return false;
       } else {
         result = front->get();

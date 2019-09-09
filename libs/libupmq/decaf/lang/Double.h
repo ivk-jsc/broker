@@ -23,6 +23,7 @@
 #include <decaf/lang/exceptions/NumberFormatException.h>
 #include <decaf/util/Config.h>
 #include <string>
+#include <cmath>
 
 namespace decaf {
 namespace lang {
@@ -81,20 +82,20 @@ class DECAF_API Double : public Number, public Comparable<Double>, public Compar
    * than the passed in value, and -1 if this object repesents a value
    * less than the passed in value.
    */
-  virtual int compareTo(const Double &d) const;
+  int compareTo(const Double &d) const override;
 
   /**
    * @param d - the Double object to compare against.
    * @return true if the two Double Objects have the same value.
    */
-  bool equals(const Double &d) const { return this->value == d.value; }
+  bool equals(const Double &d) const override { return fabs(this->value - d.value) < std::numeric_limits<double>::epsilon(); }
 
   /**
    * Compares equality between this object and the one passed.
    * @param d - the value to be compared to this one.
    * @return true if this object is equal to the one passed.
    */
-  virtual bool operator==(const Double &d) const { return this->value == d.value; }
+  bool operator==(const Double &d) const override { return fabs(this->value - d.value) < std::numeric_limits<double>::epsilon(); }
 
   /**
    * Compares this object to another and returns true if this object
@@ -102,7 +103,7 @@ class DECAF_API Double : public Number, public Comparable<Double>, public Compar
    * @param d - the value to be compared to this one.
    * @return true if this object is equal to the one passed.
    */
-  virtual bool operator<(const Double &d) const { return this->value < d.value; }
+  bool operator<(const Double &d) const override { return this->value < d.value; }
 
   /**
    * Compares this Double instance with another.
@@ -112,20 +113,20 @@ class DECAF_API Double : public Number, public Comparable<Double>, public Compar
    * than the passed in value, and -1 if this object represents a value
    * less than the passed in value.
    */
-  virtual int compareTo(const double &d) const;
+  int compareTo(const double &d) const override;
 
   /**
    * @param d - the Double object to compare against.
    * @return true if the two Double Objects have the same value.
    */
-  bool equals(const double &d) const { return this->value == d; }
+  bool equals(const double &d) const override { return fabs(this->value - d) < std::numeric_limits<double>::epsilon(); }
 
   /**
    * Compares equality between this object and the one passed.
    * @param d - the value to be compared to this one.
    * @return true if this object is equal to the one passed.
    */
-  virtual bool operator==(const double &d) const { return this->value == d; }
+  bool operator==(const double &d) const override { return fabs(this->value - d) < std::numeric_limits<double>::epsilon(); }
 
   /**
    * Compares this object to another and returns true if this object
@@ -133,7 +134,7 @@ class DECAF_API Double : public Number, public Comparable<Double>, public Compar
    * @param d - the value to be compared to this one.
    * @return true if this object is equal to the one passed.
    */
-  virtual bool operator<(const double &d) const { return this->value < d; }
+  bool operator<(const double &d) const override { return this->value < d; }
 
   /**
    * @return this Double Object as a String Representation
@@ -144,37 +145,37 @@ class DECAF_API Double : public Number, public Comparable<Double>, public Compar
    * Answers the double value which the receiver represents
    * @return double the value of the receiver.
    */
-  virtual double doubleValue() const { return this->value; }
+  double doubleValue() const override { return this->value; }
 
   /**
    * Answers the float value which the receiver represents
    * @return float the value of the receiver.
    */
-  virtual float floatValue() const { return (float)this->value; }
+  float floatValue() const override { return (float)this->value; }
 
   /**
    * Answers the byte value which the receiver represents
    * @return byte the value of the receiver.
    */
-  virtual unsigned char byteValue() const { return (unsigned char)this->value; }
+  unsigned char byteValue() const override { return (unsigned char)this->value; }
 
   /**
    * Answers the short value which the receiver represents
    * @return short the value of the receiver.
    */
-  virtual short shortValue() const { return (short)this->value; }
+  short shortValue() const override { return (short)this->value; }
 
   /**
    * Answers the int value which the receiver represents
    * @return int the value of the receiver.
    */
-  virtual int intValue() const { return (int)this->value; }
+  int intValue() const override { return (int)this->value; }
 
   /**
    * Answers the long value which the receiver represents
    * @return long the value of the receiver.
    */
-  virtual long long longValue() const { return (long long)this->value; }
+  long long longValue() const override { return (long long)this->value; }
 
   /**
    * @return true if the double is equal to positive infinity.

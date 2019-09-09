@@ -27,4 +27,4 @@ SubscribeState::SubscribeState(Pointer<Command> info) : info(info) {}
 SubscribeState::~SubscribeState() {}
 
 ////////////////////////////////////////////////////////////////////////////////
-const Pointer<Command> SubscribeState::getInfo() const { return this->info; }
+Pointer<Command> SubscribeState::getInfo() const { return this->info; }

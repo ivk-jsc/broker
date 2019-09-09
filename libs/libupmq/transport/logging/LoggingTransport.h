@@ -36,29 +36,29 @@ class UPMQCPP_API LoggingTransport : public TransportFilter {
    * Constructor.
    * @param next - the next Transport in the chain
    */
-  LoggingTransport(const Pointer<Transport> next);
+  LoggingTransport(Pointer<Transport> next);
 
-  virtual ~LoggingTransport() {}
-
- public:  // TransportFilter methods.
-  virtual void onCommand(const Pointer<Command> command);
+  ~LoggingTransport() override {}
 
  public:  // TransportFilter methods.
-  virtual void oneway(const Pointer<Command> command);
+  void onCommand(Pointer<Command> command) override;
+
+ public:  // TransportFilter methods.
+  void oneway(Pointer<Command> command) override;
 
   /**
    * {@inheritDoc}
    *
    * Not supported by this class - throws an exception.
    */
-  virtual Pointer<Response> request(const Pointer<Command> command);
+  Pointer<Response> request(Pointer<Command> command) override;
 
   /**
    * {@inheritDoc}
    *
    * Not supported by this class - throws an exception.
    */
-  virtual Pointer<Response> request(const Pointer<Command> command, unsigned int timeout);
+  Pointer<Response> request(Pointer<Command> command, unsigned int timeout) override;
 };
 }  // namespace logging
 }  // namespace transport

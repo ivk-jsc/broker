@@ -34,7 +34,7 @@ CloseTransportsTask::CloseTransportsTask() : transports() {}
 CloseTransportsTask::~CloseTransportsTask() {}
 
 ////////////////////////////////////////////////////////////////////////////////
-void CloseTransportsTask::add(const Pointer<Transport> transport) { transports.put(transport); }
+void CloseTransportsTask::add(const Pointer<Transport>& transport) { transports.put(transport); }
 
 ////////////////////////////////////////////////////////////////////////////////
 bool CloseTransportsTask::isPending() const {

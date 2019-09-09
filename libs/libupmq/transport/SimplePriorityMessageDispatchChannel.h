@@ -44,13 +44,12 @@ class UPMQCPP_API SimplePriorityMessageDispatchChannel : public MessageDispatchC
 
   int enqueued;
 
- private:
-  SimplePriorityMessageDispatchChannel(const SimplePriorityMessageDispatchChannel&);
-  SimplePriorityMessageDispatchChannel& operator=(const SimplePriorityMessageDispatchChannel&);
+public:
+  SimplePriorityMessageDispatchChannel(const SimplePriorityMessageDispatchChannel&) = delete;
+  SimplePriorityMessageDispatchChannel& operator=(const SimplePriorityMessageDispatchChannel&) = delete;
 
- public:
   SimplePriorityMessageDispatchChannel();
-  virtual ~SimplePriorityMessageDispatchChannel();
+  ~SimplePriorityMessageDispatchChannel() override;
 
   void enqueue(const Pointer<Command>& message) override;
 

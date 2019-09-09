@@ -34,6 +34,7 @@
 #include <transport/UPMQCommand.h>
 
 #include <stdexcept>
+#include <utility>
 
 using namespace decaf::lang;
 using namespace decaf::lang::exceptions;
@@ -172,10 +173,11 @@ void ConsumerImpl::subscription() {
     Pointer<UPMQCommand> request(new UPMQCommand());
     request->getProtoMessage().set_object_id(_objectId);
 
-    request->getSubscription().set_receipt_id(_objectId);
-    request->getSubscription().set_destination_uri(_destination->getUri());
-    request->getSubscription().set_session_id(_session->getObjectId());
-    request->getSubscription().set_no_local(_noLocal);
+    Proto::Subscription &subscription = request->getSubscription();
+    subscription.set_receipt_id(_objectId);
+    subscription.set_destination_uri(_destination->getUri());
+    subscription.set_session_id(_session->getObjectId());
+    subscription.set_no_local(_noLocal);
 
     if (getSubscription().empty()) {
       if ((_destination->getType() == cms::Destination::QUEUE || _destination->getType() == cms::Destination::TEMPORARY_QUEUE) &&
@@ -186,17 +188,17 @@ void ConsumerImpl::subscription() {
       }
     }
 
-    request->getSubscription().set_subscription_name(getSubscription());
+    subscription.set_subscription_name(getSubscription());
 
     if (!_selector.empty()) {
-      request->getSubscription().set_selector(_selector);
+      subscription.set_selector(_selector);
     }
 
-    request->getSubscription().set_durable(getType() == Type::DURABLE_CONSUMER);
+    subscription.set_durable(getType() == Type::DURABLE_CONSUMER);
 
-    request->getSubscription().set_browse(getType() == Type::BROWSER);
+    subscription.set_browse(getType() == Type::BROWSER);
 
-    if (!request->getSubscription().IsInitialized()) {
+    if (!subscription.IsInitialized()) {
       throw cms::CMSException("request not initialized");
     }
 
@@ -216,16 +218,17 @@ void ConsumerImpl::unsubscription() {
     Pointer<UPMQCommand> request(new UPMQCommand());
     request->getProtoMessage().set_object_id(_objectId);
 
-    request->getUnsubscription().set_receipt_id(_objectId);
-    request->getUnsubscription().set_destination_uri(_destination->getUri());
-    request->getUnsubscription().set_session_id(_session->getObjectId());
-    request->getUnsubscription().set_subscription_name(getSubscription());
+    Proto::Unsubscription &unsubscription = request->getUnsubscription();
+    unsubscription.set_receipt_id(_objectId);
+    unsubscription.set_destination_uri(_destination->getUri());
+    unsubscription.set_session_id(_session->getObjectId());
+    unsubscription.set_subscription_name(getSubscription());
 
-    request->getUnsubscription().set_durable(getType() == Type::DURABLE_CONSUMER);
+    unsubscription.set_durable(getType() == Type::DURABLE_CONSUMER);
 
-    request->getUnsubscription().set_browse(getType() == Type::BROWSER);
+    unsubscription.set_browse(getType() == Type::BROWSER);
 
-    if (!request->getUnsubscription().IsInitialized()) {
+    if (!unsubscription.IsInitialized()) {
       throw cms::CMSException("request not initialized");
     }
 
@@ -249,18 +252,19 @@ void ConsumerImpl::subscribe() {
     Pointer<UPMQCommand> request(new UPMQCommand());
     request->getProtoMessage().set_object_id(_objectId);
 
-    request->getSubscribe().set_receipt_id(_objectId);
-    request->getSubscribe().set_destination_uri(_destination->getUri());
-    request->getSubscribe().set_subscription_name(getSubscription());
-    request->getSubscribe().set_session_id(_session->getObjectId());
+    Proto::Subscribe &subscribe = request->getSubscribe();
+    subscribe.set_receipt_id(_objectId);
+    subscribe.set_destination_uri(_destination->getUri());
+    subscribe.set_subscription_name(getSubscription());
+    subscribe.set_session_id(_session->getObjectId());
 
     if (getType() == Type::BROWSER) {
-      request->getSubscribe().set_browse(true);
+      subscribe.set_browse(true);
     } else {
-      request->getSubscribe().set_browse(false);
+      subscribe.set_browse(false);
     }
 
-    if (!request->getSubscribe().IsInitialized()) {
+    if (!subscribe.IsInitialized()) {
       throw cms::CMSException("request not initialized");
     }
 
@@ -280,19 +284,20 @@ void ConsumerImpl::unsubscribe() {
     Pointer<UPMQCommand> request(new UPMQCommand());
     request->getProtoMessage().set_object_id(_objectId);
 
-    request->getUnsubscribe().set_receipt_id(_objectId);
-    request->getUnsubscribe().set_destination_uri(_destination->getUri());
-    request->getUnsubscribe().set_subscription_name(getSubscription());
-    request->getUnsubscribe().set_session_id(_session->getObjectId());
-    request->getUnsubscribe().set_durable(_deleteDurableConsumer);
+    Proto::Unsubscribe &unsubscribe = request->getUnsubscribe();
+    unsubscribe.set_receipt_id(_objectId);
+    unsubscribe.set_destination_uri(_destination->getUri());
+    unsubscribe.set_subscription_name(getSubscription());
+    unsubscribe.set_session_id(_session->getObjectId());
+    unsubscribe.set_durable(_deleteDurableConsumer);
 
     if (getType() == Type::BROWSER) {
-      request->getUnsubscribe().set_browse(true);
+      unsubscribe.set_browse(true);
     } else {
-      request->getUnsubscribe().set_browse(false);
+      unsubscribe.set_browse(false);
     }
 
-    if (!request->getUnsubscribe().IsInitialized()) {
+    if (!unsubscribe.IsInitialized()) {
       throw cms::CMSException("request not initialized");
     }
 
@@ -577,9 +582,9 @@ void ConsumerImpl::setType(ConsumerImpl::Type val) { _type = val; }
 
 std::string ConsumerImpl::getSubscription() const { return _subscription; }
 
-void ConsumerImpl::setSubscription(std::string subscription) { _subscription = subscription; }
+void ConsumerImpl::setSubscription(std::string subscription) { _subscription = std::move(subscription); }
 
-cms::Message *ConsumerImpl::commandToMessage(Pointer<Command> comm) {
+cms::Message *ConsumerImpl::commandToMessage(const Pointer<Command>& comm) {
   UPMQCommand *command = dynamic_cast<UPMQCommand *>(comm.get());
   if (command == nullptr) {
     throw cms::CMSException("error message type");

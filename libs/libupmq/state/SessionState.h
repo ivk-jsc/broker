@@ -39,15 +39,14 @@ class SessionState {
   ConcurrentStlMap<string, Pointer<SenderState>> producers;
   ConcurrentStlMap<string, Pointer<SubscriptionState>> consumers;
 
- private:
-  SessionState(const SessionState &);
-  SessionState &operator=(const SessionState &);
-
  public:
+  SessionState(const SessionState &) = delete;
+  SessionState &operator=(const SessionState &) = delete;
+
   SessionState(Pointer<Command> info);
   virtual ~SessionState();
 
-  const Pointer<Command> getInfo() const;
+  Pointer<Command> getInfo() const;
 
   void addProducer(Pointer<Command> command);
   Pointer<SenderState> removeProducer(const string &id);

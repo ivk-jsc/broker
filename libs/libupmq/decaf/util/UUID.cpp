@@ -42,25 +42,24 @@ namespace decaf {
 namespace util {
 
 class UUIDImpl {
- private:
-  UUIDImpl(const UUIDImpl &);
-  UUIDImpl &operator=(const UUIDImpl &);
-
  public:
-  unsigned long long mostSigBits;
-  unsigned long long leastSigBits;
+  UUIDImpl(const UUIDImpl &) = delete;
+  UUIDImpl &operator=(const UUIDImpl &) = delete;
 
   int variant;
   int version;
-  long long timestamp;
-  int clockSequence;
-  long long node;
-  int hash;
 
-  UUIDImpl() : mostSigBits(0), leastSigBits(0), variant(0), version(0), timestamp(0), clockSequence(0), node(0), hash(0) {}
+  int clockSequence;
+  int hash;
+  long long node;
+  long long timestamp;
+  unsigned long long mostSigBits;
+  unsigned long long leastSigBits;
+
+  UUIDImpl() : variant(0), version(0), clockSequence(0), hash(0), node(0), timestamp(0), mostSigBits(0), leastSigBits(0) {}
 
   UUIDImpl(long long mostSigBits, long long leastSigBits)
-      : mostSigBits(mostSigBits), leastSigBits(leastSigBits), variant(0), version(0), timestamp(0), clockSequence(0), node(0), hash(0) {
+      : variant(0), version(0), clockSequence(0), hash(0), node(0), timestamp(0), mostSigBits(mostSigBits), leastSigBits(leastSigBits) {
     init();
   }
 

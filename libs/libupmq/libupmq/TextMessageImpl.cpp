@@ -20,10 +20,11 @@
 #include "TextMessageImpl.h"
 
 TextMessageImpl::TextMessageImpl() : MessageTemplate<cms::TextMessage>() {
-  _header->mutable_message()->set_body_type(Proto::Body::kTextBody);
-  _header->mutable_message()->set_sender_id("");
-  _header->mutable_message()->set_session_id("");
-  _header->mutable_message()->set_timestamp(0);
+  Proto::Message* mutableMessage = _header->mutable_message();
+  mutableMessage->set_body_type(Proto::Body::kTextBody);
+  mutableMessage->set_sender_id("");
+  mutableMessage->set_session_id("");
+  mutableMessage->set_timestamp(0);
   _header->mutable_object_id()->assign("");
   _header->set_request_reply_id(-1);
   _body->mutable_text_body();  //-V773

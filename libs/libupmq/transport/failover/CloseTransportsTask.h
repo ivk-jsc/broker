@@ -42,7 +42,7 @@ class UPMQCPP_API CloseTransportsTask : public upmq::threads::CompositeTask {
   /**
    * Add a new Transport to close.
    */
-  void add(const Pointer<Transport> transport);
+  void add(const Pointer<Transport>& transport);
 
   /**
    * This Task is pending if there are transports in the Queue that need to be
@@ -50,12 +50,12 @@ class UPMQCPP_API CloseTransportsTask : public upmq::threads::CompositeTask {
    *
    * @return true if there is a transport in the queue that needs closed.
    */
-  virtual bool isPending() const;
+  bool isPending() const override;
 
   /**
    * Return true until all transports have been closed and removed from the queue.
    */
-  virtual bool iterate();
+  bool iterate() override;
 };
 }  // namespace failover
 }  // namespace transport

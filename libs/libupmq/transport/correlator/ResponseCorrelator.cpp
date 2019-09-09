@@ -107,14 +107,14 @@ ResponseCorrelator::~ResponseCorrelator() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void ResponseCorrelator::oneway(const Pointer<Command> command) {
+void ResponseCorrelator::oneway(Pointer<Command> command) {
   try {
     checkClosed();
 
     command->setCommandId(this->impl->nextCommandId.getAndIncrement());
     command->setResponseRequired(false);
 
-    next->oneway(command);
+    next->oneway(std::move(command));
   }
   AMQ_CATCH_RETHROW(UnsupportedOperationException)
   AMQ_CATCH_RETHROW(IOException)
@@ -124,21 +124,21 @@ void ResponseCorrelator::oneway(const Pointer<Command> command) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Pointer<FutureResponse> ResponseCorrelator::asyncRequest(const Pointer<Command> command, const Pointer<ResponseCallback> responseCallback) {
+Pointer<FutureResponse> ResponseCorrelator::asyncRequest(Pointer<Command> command, Pointer<ResponseCallback> responseCallback) {
   try {
     checkClosed();
 
     command->setCommandId(this->impl->nextCommandId.getAndIncrement());
     command->setResponseRequired(true);
-
+    const int commandId = command->getCommandId();
     // Add a future response object to the map indexed by this command id.
-    Pointer<FutureResponse> futureResponse(new FutureResponse(responseCallback));
+    Pointer<FutureResponse> futureResponse(new FutureResponse(std::move(responseCallback)));
     Pointer<Exception> priorError;
 
     synchronized(&this->impl->mapMutex) {
       priorError = this->impl->priorError;
       if (priorError == nullptr) {
-        this->impl->requestMap.put((unsigned int)command->getCommandId(), futureResponse);
+        this->impl->requestMap.put(static_cast<unsigned int>(commandId), futureResponse);
       }
     }
 
@@ -154,10 +154,10 @@ Pointer<FutureResponse> ResponseCorrelator::asyncRequest(const Pointer<Command> 
 
     // Send the request.
     try {
-      next->oneway(command);
+      next->oneway(std::move(command));
     } catch (Exception &) {
       // We have to ensure this gets cleaned out otherwise we can consume memory over time.
-      this->impl->requestMap.remove(command->getCommandId());
+      this->impl->requestMap.remove(commandId);
       throw;
     }
 
@@ -171,7 +171,7 @@ Pointer<FutureResponse> ResponseCorrelator::asyncRequest(const Pointer<Command> 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Pointer<Response> ResponseCorrelator::request(const Pointer<Command> command) {
+Pointer<Response> ResponseCorrelator::request(Pointer<Command> command) {
   try {
     checkClosed();
 
@@ -182,10 +182,11 @@ Pointer<Response> ResponseCorrelator::request(const Pointer<Command> command) {
     Pointer<FutureResponse> futureResponse(new FutureResponse());
     Pointer<Exception> priorError;
 
+    const int commandId = command->getCommandId();
     synchronized(&this->impl->mapMutex) {
       priorError = this->impl->priorError;
       if (priorError == nullptr) {
-        this->impl->requestMap.put((unsigned int)command->getCommandId(), futureResponse);
+        this->impl->requestMap.put(static_cast<unsigned int>(commandId), futureResponse);
       }
     }
 
@@ -194,19 +195,18 @@ Pointer<Response> ResponseCorrelator::request(const Pointer<Command> command) {
     }
 
     // The finalizer will cleanup the map even if an exception is thrown.
-    ResponseFinalizer finalizer(&this->impl->mapMutex, command->getCommandId(), &this->impl->requestMap);
+    ResponseFinalizer finalizer(&this->impl->mapMutex, (commandId), &this->impl->requestMap);
 
-    // Wait to be notified of the response via the futureResponse object.
-    Pointer<transport::Response> response;
+    const std::string commandType = command->typeName();
 
     // Send the request.
-    next->oneway(command);
+    next->oneway(std::move(command));
 
     // Get the response.
-    response = futureResponse->getResponse();
+    Pointer<transport::Response> response = futureResponse->getResponse();
 
     if (response == nullptr) {
-      throw IOException(__FILE__, __LINE__, "No valid response received for command: %s, check broker.", command->toString().c_str());
+      throw IOException(__FILE__, __LINE__, "No valid response received for command: %s, check broker.", commandType.c_str());
     }
 
     return response;
@@ -219,7 +219,7 @@ Pointer<Response> ResponseCorrelator::request(const Pointer<Command> command) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Pointer<Response> ResponseCorrelator::request(const Pointer<Command> command, unsigned int timeout) {
+Pointer<Response> ResponseCorrelator::request(Pointer<Command> command, unsigned int timeout) {
   try {
     checkClosed();
 
@@ -230,10 +230,11 @@ Pointer<Response> ResponseCorrelator::request(const Pointer<Command> command, un
     Pointer<FutureResponse> futureResponse(new FutureResponse());
     Pointer<Exception> priorError;
 
+    const int commandId = command->getCommandId();
     synchronized(&this->impl->mapMutex) {
       priorError = this->impl->priorError;
       if (priorError == nullptr) {
-        this->impl->requestMap.put((unsigned int)command->getCommandId(), futureResponse);
+        this->impl->requestMap.put(static_cast<unsigned int>(commandId), futureResponse);
       }
     }
 
@@ -242,19 +243,21 @@ Pointer<Response> ResponseCorrelator::request(const Pointer<Command> command, un
     }
 
     // The finalizer will cleanup the map even if an exception is thrown.
-    ResponseFinalizer finalizer(&this->impl->mapMutex, command->getCommandId(), &this->impl->requestMap);
+    ResponseFinalizer finalizer(&this->impl->mapMutex, (commandId), &this->impl->requestMap);
 
     // Wait to be notified of the response via the futureResponse object.
 
+    const std::string commandType = command->typeName();
+
     // Send the request.
-    next->oneway(command);
+    next->oneway(std::move(command));
 
     // Get the response.
 
     Pointer<transport::Response> response = futureResponse->getResponse(timeout);
 
     if (response == nullptr) {
-      throw IOException(__FILE__, __LINE__, "No valid response received for command: %s, check broker.", command->toString().c_str());
+      throw IOException(__FILE__, __LINE__, "No valid response received for command: %s, check broker.", commandType.c_str());
     }
 
     return response;
@@ -267,11 +270,11 @@ Pointer<Response> ResponseCorrelator::request(const Pointer<Command> command, un
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void ResponseCorrelator::onCommand(const Pointer<Command> command) {
+void ResponseCorrelator::onCommand(Pointer<Command> command) {
   // Let's see if the incoming command is a response, if not we just pass it along
   // and allow outstanding requests to keep waiting without stalling control commands.
   if (!command->isResponse()) {
-    TransportFilter::onCommand(command);
+    TransportFilter::onCommand(std::move(command));
     return;
   }
 
@@ -287,7 +290,7 @@ void ResponseCorrelator::onCommand(const Pointer<Command> command) {
     }
 
     // Set the response property in the future response.
-    futureResponse->setResponse(response);
+    futureResponse->setResponse(std::move(response));
   }
 }
 
@@ -308,7 +311,7 @@ void ResponseCorrelator::onException(const decaf::lang::Exception &ex) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void ResponseCorrelator::dispose(Pointer<Exception> error) {
+void ResponseCorrelator::dispose(const Pointer<Exception> &error) {
   ArrayList<Pointer<FutureResponse> > requests;
   synchronized(&this->impl->mapMutex) {
     if (this->impl->priorError == nullptr) {

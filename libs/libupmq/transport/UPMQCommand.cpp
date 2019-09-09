@@ -123,6 +123,94 @@ bool UPMQCommand::isPing() const { return _header->ProtoMessageType_case() == Pr
 
 bool UPMQCommand::isPong() const { return _header->ProtoMessageType_case() == Proto::ProtoMessage::kPong; }
 
+std::string UPMQCommand::typeName() const {
+  std::string type = "Unknown";
+  if (_header) {
+    switch (_header->ProtoMessageType_case()) {
+      case Proto::ProtoMessage::kConnect:
+        type = "Connect";
+        break;
+      case Proto::ProtoMessage::kConnected:
+        type = "Connected";
+        break;
+      case Proto::ProtoMessage::kDisconnect:
+        type = "Disconnect";
+        break;
+      case Proto::ProtoMessage::kClientInfo:
+        type = "ClientInfo";
+        break;
+      case Proto::ProtoMessage::kSession:
+        type = "Session";
+        break;
+      case Proto::ProtoMessage::kUnsession:
+        type = "Unsession";
+        break;
+      case Proto::ProtoMessage::kSubscription:
+        type = "Subscription";
+        break;
+      case Proto::ProtoMessage::kSubscribe:
+        type = "Subscribe";
+        break;
+      case Proto::ProtoMessage::kUnsubscribe:
+        type = "Unsubscribe";
+        break;
+      case Proto::ProtoMessage::kUnsubscription:
+        type = "Unsubscription";
+        break;
+      case Proto::ProtoMessage::kBegin:
+        type = "Begin";
+        break;
+      case Proto::ProtoMessage::kCommit:
+        type = "Commit";
+        break;
+      case Proto::ProtoMessage::kAbort:
+        type = "Abort";
+        break;
+      case Proto::ProtoMessage::kAck:
+        type = "Ack";
+        break;
+      case Proto::ProtoMessage::kMessage:
+        type = "Message";
+        break;
+      case Proto::ProtoMessage::kReceipt:
+        type = "Receipt";
+        break;
+      case Proto::ProtoMessage::kError:
+        type = "Error";
+        break;
+      case Proto::ProtoMessage::kBrowser:
+        type = "Browser";
+        break;
+      case Proto::ProtoMessage::kBrowserInfo:
+        type = "BrowserInfo";
+        break;
+      case Proto::ProtoMessage::kSender:
+        type = "Sender";
+        break;
+      case Proto::ProtoMessage::kUnsender:
+        type = "Unsender";
+        break;
+      case Proto::ProtoMessage::kPing:
+        type = "Ping";
+        break;
+      case Proto::ProtoMessage::kPong:
+        type = "Pong";
+        break;
+      case Proto::ProtoMessage::kDestination:
+        type = "Destination";
+        break;
+      case Proto::ProtoMessage::kUndestination:
+        type = "Undestination";
+        break;
+      case Proto::ProtoMessage::PROTOMESSAGETYPE_NOT_SET:
+        type = "PROTOMESSAGETYPE_NOT_SET";
+        break;
+      default:;
+    }
+  }
+  return type;
+}
+
 Command *UPMQCommand::duplicate() { return new UPMQCommand(*this); }
 
 string UPMQCommand::getCurrId() {
@@ -310,7 +398,7 @@ string UPMQCommand::serializeHeader() const {
     if (_headerSize) {
       _headerString = _header->SerializeAsString();
     } else {
-      _headerString = "";
+      _headerString.clear();
     }
     return _headerString;
   }
@@ -331,7 +419,7 @@ string UPMQCommand::serializeBody() const {
     if (_bodySize) {
       _bodyString = _body->SerializeAsString();
     } else {
-      _bodyString = "";
+      _bodyString.clear();
     }
     return _bodyString;
   }

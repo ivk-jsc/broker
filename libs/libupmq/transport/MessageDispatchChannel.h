@@ -32,7 +32,7 @@ using upmq::transport::Command;
 
 class UPMQCPP_API MessageDispatchChannel : public decaf::util::concurrent::Synchronizable {
  public:
-  virtual ~MessageDispatchChannel(){};
+  ~MessageDispatchChannel() override {};
 
   /**
    * Add a Message to the Channel behind all pending message.

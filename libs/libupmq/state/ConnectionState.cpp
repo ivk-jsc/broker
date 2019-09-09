@@ -34,7 +34,7 @@ ConnectionState::~ConnectionState() {
 
 ////////////////////////////////////////////////////////////////////////////////
 void ConnectionState::reset(Pointer<Command> command) {
-  this->info = command;
+  this->info = std::move(command);
   sessions.clear();
   tempDestinations.clear();
   disposed.set(false);
@@ -58,7 +58,8 @@ void ConnectionState::checkShutdown() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void ConnectionState::removeTempDestination(Pointer<Command> destination) {
+void ConnectionState::removeTempDestination(const Pointer<Command> &destination) {
+  DECAF_UNUSED_VAR(destination);
   //  std::unique_ptr<decaf::util::Iterator<Pointer<DestinationInfo> > > iter(tempDestinations.iterator());
   //
   //  while (iter->hasNext()) {
@@ -70,10 +71,10 @@ void ConnectionState::removeTempDestination(Pointer<Command> destination) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-const Pointer<Command> ConnectionState::getInfo() const { return this->info; }
+Pointer<Command> ConnectionState::getInfo() const { return this->info; }
 
 ////////////////////////////////////////////////////////////////////////////////
-void ConnectionState::addTempDestination(Pointer<Command> command) {
+void ConnectionState::addTempDestination(const Pointer<Command> &command) {
   checkShutdown();
   tempDestinations.add(command);
 }
@@ -81,14 +82,15 @@ void ConnectionState::addTempDestination(Pointer<Command> command) {
 ////////////////////////////////////////////////////////////////////////////////
 void ConnectionState::addSession(Pointer<Command> command) {
   checkShutdown();
-  sessions.put(command->getCurrId(), Pointer<SessionState>(new SessionState(command)));
+  const std::string currId = command->getCurrId();
+  sessions.put(currId, Pointer<SessionState>(new SessionState(std::move(command))));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Pointer<SessionState> ConnectionState::removeSession(string id) { return sessions.remove(id); }
+Pointer<SessionState> ConnectionState::removeSession(const string &id) { return sessions.remove(id); }
 
 ////////////////////////////////////////////////////////////////////////////////
-Pointer<SessionState> ConnectionState::getSessionState(Pointer<Command> id) const { return sessions.get(id->getParentId()); }
+Pointer<SessionState> ConnectionState::getSessionState(const Pointer<Command> &id) const { return sessions.get(id->getParentId()); }
 
 ////////////////////////////////////////////////////////////////////////////////
 const LinkedList<Pointer<Command>> &ConnectionState::getTempDestinations() const { return tempDestinations; }

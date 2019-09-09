@@ -85,7 +85,7 @@ URI URIPool::getURI() {
 ////////////////////////////////////////////////////////////////////////////////
 bool URIPool::addURI(const URI &uri) {
   synchronized(&uriPool) {
-    if (priorityURI.toString() == "" && uri.toString() != "") {
+    if (priorityURI.toString().empty() && !uri.toString().empty()) {
       priorityURI = uri;
     }
 
@@ -108,7 +108,7 @@ bool URIPool::addURIs(const List<URI> &uris) {
     while (iter->hasNext()) {
       URI uri = iter->next();
 
-      if (priorityURI.toString() == "" && uri.toString() != "") {
+      if (priorityURI.toString().empty() && !uri.toString().empty()) {
         priorityURI = uri;
       }
 

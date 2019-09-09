@@ -28,6 +28,7 @@
 #include <decaf/util/Timer.h>
 #include <decaf/util/concurrent/atomic/AtomicBoolean.h>
 #include <decaf/util/concurrent/atomic/AtomicInteger.h>
+#include <utility>
 
 using namespace std;
 using namespace upmq;
@@ -48,11 +49,10 @@ namespace transport {
 namespace inactivity {
 
 class InactivityMonitorData {
- private:
-  InactivityMonitorData(const InactivityMonitorData &);
-  InactivityMonitorData operator=(const InactivityMonitorData &);
-
  public:
+  InactivityMonitorData(const InactivityMonitorData &) = delete;
+  InactivityMonitorData operator=(const InactivityMonitorData &) = delete;
+
   Pointer<WriteChecker> writeCheckerTask;
 
   Timer readCheckTimer;
@@ -77,7 +77,7 @@ class InactivityMonitorData {
   long long writeCheckTime;
   long long initialDelayTime;
 
-  InactivityMonitorData(const Pointer<WireFormat> wireFormat, long long delay, long long period)
+  InactivityMonitorData(Pointer<WireFormat> wireFormat, long long delay, long long period)
       : writeCheckerTask(),
         readCheckTimer("InactivityMonitor Read Check Timer"),
         writeCheckTimer("InactivityMonitor Write Check Timer"),
@@ -93,7 +93,9 @@ class InactivityMonitorData {
         monitor(),
         readCheckTime(period),
         writeCheckTime(period),
-        initialDelayTime(delay) {}
+        initialDelayTime(delay) {
+    DECAF_UNUSED_VAR(wireFormat);
+  }
 };
 
 // Task that fires when the TaskRunner is signaled by the WriteCheck Timer Task.
@@ -136,19 +138,13 @@ class AsyncWriteTask : public CompositeTask {
 }  // namespace upmq
 
 ////////////////////////////////////////////////////////////////////////////////
-InactivityMonitor::InactivityMonitor(const Pointer<Transport> next,
-                                     const Pointer<transport::WireFormat> wireFormat,
-                                     long long delay,
-                                     long long period)
-    : TransportFilter(next), members(new InactivityMonitorData(wireFormat, delay, period)) {}
+InactivityMonitor::InactivityMonitor(Pointer<Transport> next, Pointer<transport::WireFormat> wireFormat, long long delay, long long period)
+    : TransportFilter(std::move(next)), members(new InactivityMonitorData(std::move(wireFormat), delay, period)) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-InactivityMonitor::InactivityMonitor(const Pointer<Transport> next,
-                                     const decaf::util::Properties &properties,
-                                     const Pointer<transport::WireFormat> wireFormat,
-                                     long long delay,
-                                     long long period)
-    : TransportFilter(next), members(new InactivityMonitorData(wireFormat, delay, period)) {
+InactivityMonitor::InactivityMonitor(
+    Pointer<Transport> next, const decaf::util::Properties &properties, Pointer<transport::WireFormat> wireFormat, long long delay, long long period)
+    : TransportFilter(std::move(next)), members(new InactivityMonitorData(std::move(wireFormat), delay, period)) {
   DECAF_UNUSED_VAR(properties);
   // this->members->keepAliveResponseRequired =
   // Boolean::parseBoolean(properties.getProperty("keepAliveResponseRequired", "false"));
@@ -218,12 +214,12 @@ void InactivityMonitor::onException(const decaf::lang::Exception &ex) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void InactivityMonitor::onCommand(const Pointer<Command> command) {
+void InactivityMonitor::onCommand(Pointer<Command> command) {
   this->members->commandReceived.set(true);
   this->members->inRead.set(true);
 
   try {
-    TransportFilter::onCommand(command);
+    TransportFilter::onCommand(std::move(command));
 
     this->members->inRead.set(false);
   } catch (Exception &ex) {
@@ -234,7 +230,7 @@ void InactivityMonitor::onCommand(const Pointer<Command> command) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void InactivityMonitor::oneway(const Pointer<Command> command) {
+void InactivityMonitor::oneway(Pointer<Command> command) {
   try {
     synchronized(&this->members->inWriteMutex) {
       this->members->inWrite.set(true);
@@ -243,7 +239,7 @@ void InactivityMonitor::oneway(const Pointer<Command> command) {
           throw IOException(__FILE__, __LINE__, (std::string("Channel was inactive for too long: ") + next->getRemoteAddress()).c_str());
         }
 
-        this->next->oneway(command);
+        this->next->oneway(std::move(command));
 
         this->members->commandSent.set(true);
         this->members->inWrite.set(false);

@@ -63,6 +63,8 @@ class UPMQCommand : public Response {
   bool isPing() const override;
   bool isPong() const override;
 
+  std::string typeName() const override;
+
   Command *duplicate() override;
 
   int commandId;

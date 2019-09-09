@@ -78,7 +78,7 @@ class ConsumerImpl : public cms::MessageConsumer, public cms::QueueBrowser, cms:
 
   void checkClosed();
 
-  virtual void dispatch(const decaf::lang::Pointer<upmq::transport::Command> &message) override;
+  void dispatch(const decaf::lang::Pointer<upmq::transport::Command> &message) override;
 
   void run() override;
 
@@ -138,7 +138,7 @@ class ConsumerImpl : public cms::MessageConsumer, public cms::QueueBrowser, cms:
   Thread *_onMessageThread;
   ReentrantLock *_activeOnMessageLock;
 
-  cms::Message *commandToMessage(Pointer<Command> pointer);
+  cms::Message *commandToMessage(const Pointer<Command>& pointer);
 };
 
 #endif  //__MessageConsumerImpl_H__

@@ -46,7 +46,7 @@ class SubscriptionState {
   Pointer<Command> getInfo() const;
 
   void addSubscribe(Pointer<Command> command);
-  Pointer<SubscribeState> removeSubscribe(string id);
+  Pointer<SubscribeState> removeSubscribe(const string &id);
 
   const decaf::util::Collection<Pointer<SubscribeState>> &getSubscribeStates() const;
 };

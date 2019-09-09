@@ -46,11 +46,10 @@ class UPMQCPP_API ResponseCorrelator : public TransportFilter {
  private:
   CorrelatorData *impl;
 
- private:
-  ResponseCorrelator(const ResponseCorrelator &);
-  ResponseCorrelator &operator=(const ResponseCorrelator &);
-
  public:
+  ResponseCorrelator(const ResponseCorrelator &) = delete;
+  ResponseCorrelator &operator=(const ResponseCorrelator &) = delete;
+
   /**
    * Creates a new ResponseCorrelator transport filter that wraps the given transport.
    *
@@ -61,16 +60,16 @@ class UPMQCPP_API ResponseCorrelator : public TransportFilter {
    */
   ResponseCorrelator(Pointer<Transport> next);
 
-  virtual ~ResponseCorrelator();
+  ~ResponseCorrelator() override;
 
  public:  // Transport Methods
-  virtual void oneway(const Pointer<Command> command);
+  void oneway(Pointer<Command> command) override;
 
-  virtual Pointer<FutureResponse> asyncRequest(const Pointer<Command> command, const Pointer<ResponseCallback> responseCallback);
+  Pointer<FutureResponse> asyncRequest(Pointer<Command> command, Pointer<ResponseCallback> responseCallback) override;
 
-  virtual Pointer<Response> request(const Pointer<Command> command);
+  Pointer<Response> request(Pointer<Command> command) override;
 
-  virtual Pointer<Response> request(const Pointer<Command> command, unsigned int timeout);
+  Pointer<Response> request(Pointer<Command> command, unsigned int timeout) override;
 
   /**
    * This is called in the context of the nested transport's reading thread.  In
@@ -81,7 +80,7 @@ class UPMQCPP_API ResponseCorrelator : public TransportFilter {
    * @param command
    *      The received from the nested transport.
    */
-  virtual void onCommand(const Pointer<Command> command);
+  void onCommand(Pointer<Command> command) override;
 
   /**
    * Event handler for an exception from a command transport.
@@ -91,13 +90,13 @@ class UPMQCPP_API ResponseCorrelator : public TransportFilter {
    * @param ex
    *      The exception that was caught.
    */
-  virtual void onException(const decaf::lang::Exception &ex);
+  void onException(const decaf::lang::Exception &ex) override;
 
  protected:
-  virtual void doClose();
+  void doClose() override;
 
  private:
-  void dispose(Pointer<decaf::lang::Exception> ex);
+  void dispose(const Pointer<decaf::lang::Exception> &ex);
 };
 }  // namespace correlator
 }  // namespace transport

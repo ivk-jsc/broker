@@ -152,11 +152,12 @@ void ConnectionImpl::setClientID(const string &clientId) {
       Pointer<UPMQCommand> request(new UPMQCommand());
       request->getProtoMessage().set_object_id(_objectId);
 
-      request->getClientInfo().set_new_client_id(clientId);
-      request->getClientInfo().set_old_client_id(_objectId);
-      request->getClientInfo().set_receipt_id(_objectId);
+      Proto::ClientInfo &clientInfo = request->getClientInfo();
+      clientInfo.set_new_client_id(clientId);
+      clientInfo.set_old_client_id(_objectId);
+      clientInfo.set_receipt_id(_objectId);
 
-      if (!request->getClientInfo().IsInitialized()) {
+      if (!clientInfo.IsInitialized()) {
         throw cms::CMSException("request not initialized");
       }
 
@@ -308,7 +309,7 @@ void ConnectionImpl::removeDispatcher(ConsumerImpl *consumerImpl) {
   CATCH_ALL_THROW_CMSEXCEPTION
 }
 
-ConsumerImpl *ConnectionImpl::getDispatcher(string objectId) {
+ConsumerImpl *ConnectionImpl::getDispatcher(const string& objectId) {
   ConsumerImpl *consumer = nullptr;
   try {
     synchronized(&_lockCommand) { consumer = _dispatchersMap.at(objectId); }
@@ -328,7 +329,7 @@ void ConnectionImpl::postDispatcher() {
   CATCH_ALL_THROW_CMSEXCEPTION
 }
 
-void ConnectionImpl::onCommand(const Pointer<Command> command) {
+void ConnectionImpl::onCommand(Pointer<Command> command) {
   try {
     UPMQCommand *upmqCommand = (UPMQCommand *)command.get();
     if (upmqCommand != nullptr) {

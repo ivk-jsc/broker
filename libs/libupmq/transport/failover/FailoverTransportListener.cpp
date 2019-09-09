@@ -35,17 +35,16 @@ FailoverTransportListener::FailoverTransportListener(FailoverTransport *parent) 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-FailoverTransportListener::~FailoverTransportListener() {}
+FailoverTransportListener::~FailoverTransportListener() = default;
 
 ////////////////////////////////////////////////////////////////////////////////
-void FailoverTransportListener::onCommand(const Pointer<Command> command) {
+void FailoverTransportListener::onCommand(Pointer<Command> command) {
   if (command == nullptr) {
     return;
   }
 
   if (command->isResponse()) {
-    Pointer<Response> response = command.dynamicCast<Response>();
-    parent->processResponse(response);
+    parent->processResponse(command.dynamicCast<Response>());
   }
 
   if (!parent->isInitialized()) {
@@ -57,7 +56,7 @@ void FailoverTransportListener::onCommand(const Pointer<Command> command) {
   }
 
   if (parent->getTransportListener() != nullptr) {
-    parent->getTransportListener()->onCommand(command);
+    parent->getTransportListener()->onCommand(std::move(command));
   }
 }
 

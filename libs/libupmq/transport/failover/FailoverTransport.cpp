@@ -360,7 +360,7 @@ std::string FailoverTransport::getRemoteAddress() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void FailoverTransport::oneway(const Pointer<Command> command) {
+void FailoverTransport::oneway(Pointer<Command> command) {
   Pointer<Exception> error;
   class TScopedLock {
     decaf::util::concurrent::Lock &lock_;
@@ -414,11 +414,11 @@ void FailoverTransport::oneway(const Pointer<Command> command) {
         try {
           // Wait for transport to be connected.
           Pointer<Transport> transport = this->impl->connectedTransport;
-          long long start = System::currentTimeMillis();
+          const long long start = System::currentTimeMillis();
           bool timedout = false;
 
           while (transport == nullptr && !this->impl->closed && this->impl->connectionFailure == nullptr) {
-            long long end = System::currentTimeMillis();
+            const long long end = System::currentTimeMillis();
             if (command->isUnsubscription() && this->impl->timeout > 0 && (end - start > this->impl->timeout)) {
               timedout = true;
               break;
@@ -447,13 +447,14 @@ void FailoverTransport::oneway(const Pointer<Command> command) {
           // tracker, then hold it in the requestMap so that we can replay
           // it later.
           Pointer<Tracked> tracked;
+          const int commandId = command->getCommandId();
           try {
             tracked = stateTracker.track(command);
             synchronized(&this->impl->requestMap) {
               if (tracked != nullptr && tracked->isWaitingForResponse()) {
-                this->impl->requestMap.put(command->getCommandId(), tracked.dynamicCast<Command>());
+                this->impl->requestMap.put(commandId, tracked.dynamicCast<Command>());
               } else if (tracked == nullptr && command->isResponseRequired()) {
-                this->impl->requestMap.put(command->getCommandId(), command);
+                this->impl->requestMap.put(commandId, command);
               }
             }
           } catch (Exception &ex) {
@@ -463,8 +464,9 @@ void FailoverTransport::oneway(const Pointer<Command> command) {
           }
 
           // Send the message.
+          const bool isRespReq = command->isResponseRequired();
           try {
-            transport->oneway(command);
+            transport->oneway(std::move(command));
           } catch (IOException &e) {
             e.setMark(__FILE__, __LINE__);
 
@@ -473,8 +475,8 @@ void FailoverTransport::oneway(const Pointer<Command> command) {
             if (tracked == nullptr) {
               // since we will retry in this method.. take it out of the
               // request map so that it is not sent 2 times on recovery
-              if (command->isResponseRequired()) {
-                this->impl->requestMap.remove(command->getCommandId());
+              if (isRespReq) {
+                this->impl->requestMap.remove(commandId);
               }
 
               // re-throw the exception so it will handled by the outer catch
@@ -506,21 +508,21 @@ void FailoverTransport::oneway(const Pointer<Command> command) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Pointer<FutureResponse> FailoverTransport::asyncRequest(const Pointer<Command> command UPMQCPP_UNUSED,
-                                                        const Pointer<ResponseCallback> responseCallback UPMQCPP_UNUSED) {
+Pointer<FutureResponse> FailoverTransport::asyncRequest(Pointer<Command> command UPMQCPP_UNUSED,
+                                                        Pointer<ResponseCallback> responseCallback UPMQCPP_UNUSED) {
   DECAF_UNUSED_VAR(command);
   DECAF_UNUSED_VAR(responseCallback);
   throw decaf::lang::exceptions::UnsupportedOperationException(__FILE__, __LINE__, "FailoverTransport::asyncRequest - Not Supported");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Pointer<Response> FailoverTransport::request(const Pointer<Command> command UPMQCPP_UNUSED) {
+Pointer<Response> FailoverTransport::request(Pointer<Command> command UPMQCPP_UNUSED) {
   DECAF_UNUSED_VAR(command);
   throw decaf::lang::exceptions::UnsupportedOperationException(__FILE__, __LINE__, "FailoverTransport::request - Not Supported");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Pointer<Response> FailoverTransport::request(const Pointer<Command> command UPMQCPP_UNUSED, unsigned int timeout UPMQCPP_UNUSED) {
+Pointer<Response> FailoverTransport::request(Pointer<Command> command UPMQCPP_UNUSED, unsigned int timeout UPMQCPP_UNUSED) {
   DECAF_UNUSED_VAR(command);
   DECAF_UNUSED_VAR(timeout);
   throw decaf::lang::exceptions::UnsupportedOperationException(__FILE__, __LINE__, "FailoverTransport::request - Not Supported");
@@ -625,7 +627,7 @@ void FailoverTransport::reconnect(bool rebalance) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void FailoverTransport::restoreTransport(const Pointer<Transport> transport) {
+void FailoverTransport::restoreTransport(const Pointer<Transport> &transport) {
   try {
     transport->start();
 
@@ -693,7 +695,7 @@ void FailoverTransport::handleTransportFailure(const decaf::lang::Exception &err
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void FailoverTransport::handleConnectionControl(const Pointer<Command> control) {
+void FailoverTransport::handleConnectionControl(Pointer<Command> control) {
   try {
     //    Pointer<ConnectionControl> ctrlCommand = control.dynamicCast<ConnectionControl>();
     //
@@ -985,7 +987,8 @@ Pointer<Transport> FailoverTransport::createTransport(const URI &location) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void FailoverTransport::setConnectionInterruptProcessingComplete(const Pointer<Command> connectionId) {
+void FailoverTransport::setConnectionInterruptProcessingComplete(Pointer<Command> connectionId) {
+  DECAF_UNUSED_VAR(connectionId);
   synchronized(&this->impl->reconnectMutex) {
     //    stateTracker.connectionInterruptProcessingComplete(this, connectionId);
   }
@@ -1017,7 +1020,7 @@ Transport *FailoverTransport::narrow(const std::type_info &typeId) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void FailoverTransport::processResponse(const Pointer<Response> response) {
+void FailoverTransport::processResponse(const Pointer<Response> &response) {
   Pointer<Command> object;
 
   synchronized(&(this->impl->requestMap)) {

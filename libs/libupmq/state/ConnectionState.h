@@ -47,18 +47,18 @@ class ConnectionState {
   ConnectionState(Pointer<Command> info);
   virtual ~ConnectionState();
 
-  const Pointer<Command> getInfo() const;
+  Pointer<Command> getInfo() const;
 
   void shutdown();
   void checkShutdown() const;
   void reset(Pointer<Command> command);
 
-  void addTempDestination(Pointer<Command> command);
-  void removeTempDestination(Pointer<Command> destination);
+  void addTempDestination(const Pointer<Command> &command);
+  void removeTempDestination(const Pointer<Command> &destination);
 
   void addSession(Pointer<Command> command);
-  Pointer<SessionState> removeSession(string id);
-  Pointer<SessionState> getSessionState(Pointer<Command> id) const;
+  Pointer<SessionState> removeSession(const string &id);
+  Pointer<SessionState> getSessionState(const Pointer<Command> &id) const;
   const decaf::util::Collection<Pointer<SessionState>> &getSessionStates() const;
 
   const LinkedList<Pointer<Command>> &getTempDestinations() const;

@@ -40,9 +40,9 @@ LogWriter::~LogWriter() {}
 ////////////////////////////////////////////////////////////////////////////////
 void LogWriter::log(const std::string &file DECAF_UNUSED, const int line DECAF_UNUSED, const std::string &prefix, const std::string &message) {
   DecafRuntime *runtime = dynamic_cast<DecafRuntime *>(Runtime::getRuntime());
-  synchronized(runtime->getGlobalLock()) {
+  synchronized(runtime->getGlobalLock()) { //-V522
     cout << prefix << " " << message << " - tid: " << Thread::currentThread()->getId() << " (" << file << ":" << line << ")" << endl;
-  }  //-V522
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

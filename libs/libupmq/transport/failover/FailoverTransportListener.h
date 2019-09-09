@@ -38,14 +38,13 @@ class UPMQCPP_API FailoverTransportListener : public TransportListener {
   // The Transport that created this listener
   FailoverTransport *parent;
 
- private:
-  FailoverTransportListener(const FailoverTransportListener &);
-  FailoverTransportListener &operator=(const FailoverTransportListener &);
+public:
+  FailoverTransportListener(const FailoverTransportListener &) = delete;
+  FailoverTransportListener &operator=(const FailoverTransportListener &) = delete;
 
- public:
   FailoverTransportListener(FailoverTransport *parent);
 
-  virtual ~FailoverTransportListener();
+  ~FailoverTransportListener() override;
 
   /**
    * Event handler for the receipt of a command.  The transport passes
@@ -55,24 +54,24 @@ class UPMQCPP_API FailoverTransportListener : public TransportListener {
    *
    * @param command the received command object.
    */
-  virtual void onCommand(const Pointer<Command> command);
+  void onCommand(Pointer<Command> command) override;
 
   /**
    * Event handler for an exception from a command transport.
    *
    * @param ex The exception.
    */
-  virtual void onException(const decaf::lang::Exception &ex);
+  void onException(const decaf::lang::Exception &ex) override;
 
   /**
    * The transport has suffered an interruption from which it hopes to recover
    */
-  virtual void transportInterrupted();
+  void transportInterrupted() override;
 
   /**
    * The transport has resumed after an interruption
    */
-  virtual void transportResumed();
+  void transportResumed() override;
 };
 }  // namespace failover
 }  // namespace transport

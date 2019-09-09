@@ -35,7 +35,7 @@ UPMQWireFormat::UPMQWireFormat() {}
 UPMQWireFormat::~UPMQWireFormat() {}
 
 ////////////////////////////////////////////////////////////////////////////////
-void UPMQWireFormat::marshal(const Pointer<transport::Command> command,
+void UPMQWireFormat::marshal(Pointer<transport::Command> command,
                              const upmq::transport::Transport *transport,
                              decaf::io::DataOutputStream *dataOut) {
   if (transport == nullptr) {

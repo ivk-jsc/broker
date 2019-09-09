@@ -31,7 +31,7 @@ class UPMQCPP_API UPMQWireFormat : public transport::WireFormat {
   UPMQWireFormat();
   virtual ~UPMQWireFormat();
 
-  virtual void marshal(const Pointer<transport::Command> command, const upmq::transport::Transport *transport, decaf::io::DataOutputStream *out);
+  virtual void marshal(Pointer<transport::Command> command, const upmq::transport::Transport *transport, decaf::io::DataOutputStream *out);
   virtual Pointer<transport::Command> unmarshal(const upmq::transport::Transport *transport, decaf::io::DataInputStream *in);
 };
 }  // namespace transport

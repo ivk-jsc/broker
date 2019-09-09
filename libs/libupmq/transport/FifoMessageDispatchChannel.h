@@ -33,14 +33,13 @@ class UPMQCPP_API FifoMessageDispatchChannel : public MessageDispatchChannel {
 
   mutable decaf::util::LinkedList<Pointer<Command> > channel;
 
- private:
-  FifoMessageDispatchChannel(const FifoMessageDispatchChannel &);
-  FifoMessageDispatchChannel &operator=(const FifoMessageDispatchChannel &);
+public:
+  FifoMessageDispatchChannel(const FifoMessageDispatchChannel &) = delete;
+  FifoMessageDispatchChannel &operator=(const FifoMessageDispatchChannel &) = delete;
 
- public:
   FifoMessageDispatchChannel();
 
-  virtual ~FifoMessageDispatchChannel();
+  ~FifoMessageDispatchChannel() override;
 
   void enqueue(const Pointer<Command> &message) override;
 

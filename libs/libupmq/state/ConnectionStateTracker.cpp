@@ -70,7 +70,7 @@ ConnectionStateTracker::~ConnectionStateTracker() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Pointer<Tracked> ConnectionStateTracker::track(Pointer<Command> command) {
+Pointer<Tracked> ConnectionStateTracker::track(const Pointer<Command> &command) {
   try {
     Pointer<Command> result;
 
@@ -108,7 +108,7 @@ Pointer<Tracked> ConnectionStateTracker::track(Pointer<Command> command) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void ConnectionStateTracker::restore(Pointer<transport::Transport> transport) {
+void ConnectionStateTracker::restore(const Pointer<transport::Transport> &transport) {
   try {
     Pointer<ConnectionState> state = this->impl->connectionState;
     if (state.get() != nullptr) {
@@ -128,11 +128,11 @@ void ConnectionStateTracker::restore(Pointer<transport::Transport> transport) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Pointer<Command> ConnectionStateTracker::processConnect(Pointer<Command> info) {
+Pointer<Command> ConnectionStateTracker::processConnect(const Pointer<Command> &info) {
   try {
     if (info.get() != nullptr) {
       Pointer<Command> infoCopy(info->duplicate());
-      this->impl->connectionState = Pointer<ConnectionState>(new ConnectionState(infoCopy));
+      this->impl->connectionState = Pointer<ConnectionState>(new ConnectionState(std::move(infoCopy)));
     }
     return this->impl->markerAsCommand();
   }
@@ -142,7 +142,7 @@ Pointer<Command> ConnectionStateTracker::processConnect(Pointer<Command> info) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Pointer<Command> ConnectionStateTracker::processDisconnect(Pointer<Command> info) {
+Pointer<Command> ConnectionStateTracker::processDisconnect(const Pointer<Command> &info) {
   try {
     if (info.get() != nullptr) {
       Pointer<ConnectionState> cs = this->impl->connectionState;
@@ -158,7 +158,7 @@ Pointer<Command> ConnectionStateTracker::processDisconnect(Pointer<Command> info
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Pointer<Command> ConnectionStateTracker::processSession(Pointer<Command> info) {
+Pointer<Command> ConnectionStateTracker::processSession(const Pointer<Command> &info) {
   try {
     if (info.get() != nullptr) {
       Pointer<ConnectionState> cs = this->impl->connectionState;
@@ -174,7 +174,7 @@ Pointer<Command> ConnectionStateTracker::processSession(Pointer<Command> info) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Pointer<Command> ConnectionStateTracker::processUnsession(Pointer<Command> info) {
+Pointer<Command> ConnectionStateTracker::processUnsession(const Pointer<Command> &info) {
   try {
     if (info.get() != nullptr) {
       Pointer<ConnectionState> cs = this->impl->connectionState;
@@ -190,7 +190,7 @@ Pointer<Command> ConnectionStateTracker::processUnsession(Pointer<Command> info)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-decaf::lang::Pointer<Command> ConnectionStateTracker::processSender(Pointer<Command> info) {
+decaf::lang::Pointer<Command> ConnectionStateTracker::processSender(const Pointer<Command> &info) {
   try {
     if (info.get() != nullptr) {
       Pointer<ConnectionState> cs = this->impl->connectionState;
@@ -209,7 +209,7 @@ decaf::lang::Pointer<Command> ConnectionStateTracker::processSender(Pointer<Comm
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Pointer<Command> ConnectionStateTracker::processUnsender(Pointer<Command> info) {
+Pointer<Command> ConnectionStateTracker::processUnsender(const Pointer<Command> &info) {
   try {
     if (info.get() != nullptr) {
       Pointer<ConnectionState> cs = this->impl->connectionState;
@@ -228,7 +228,7 @@ Pointer<Command> ConnectionStateTracker::processUnsender(Pointer<Command> info) 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Pointer<Command> ConnectionStateTracker::processSubscription(Pointer<Command> info) {
+Pointer<Command> ConnectionStateTracker::processSubscription(const Pointer<Command> &info) {
   try {
     if (info.get() != nullptr) {
       Pointer<ConnectionState> cs = this->impl->connectionState;
@@ -247,7 +247,7 @@ Pointer<Command> ConnectionStateTracker::processSubscription(Pointer<Command> in
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Pointer<Command> ConnectionStateTracker::processUnsubscription(Pointer<Command> info) {
+Pointer<Command> ConnectionStateTracker::processUnsubscription(const Pointer<Command> &info) {
   try {
     if (info.get() != nullptr) {
       Pointer<ConnectionState> cs = this->impl->connectionState;
@@ -266,7 +266,7 @@ Pointer<Command> ConnectionStateTracker::processUnsubscription(Pointer<Command> 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Pointer<Command> ConnectionStateTracker::processSubscribe(Pointer<Command> info) {
+Pointer<Command> ConnectionStateTracker::processSubscribe(const Pointer<Command> &info) {
   try {
     if (info.get() != nullptr) {
       Pointer<ConnectionState> cs = this->impl->connectionState;
@@ -288,7 +288,7 @@ Pointer<Command> ConnectionStateTracker::processSubscribe(Pointer<Command> info)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Pointer<Command> ConnectionStateTracker::processUnsubscribe(Pointer<Command> info) {
+Pointer<Command> ConnectionStateTracker::processUnsubscribe(const Pointer<Command> &info) {
   try {
     if (info.get() != nullptr) {
       Pointer<ConnectionState> cs = this->impl->connectionState;
@@ -310,7 +310,7 @@ Pointer<Command> ConnectionStateTracker::processUnsubscribe(Pointer<Command> inf
 }
 
 //////////////////////////////////////////////////////////////////////////////////
-void ConnectionStateTracker::doRestoreSessions(Pointer<transport::Transport> transport, Pointer<ConnectionState> connectionState) {
+void ConnectionStateTracker::doRestoreSessions(const Pointer<transport::Transport> &transport, const Pointer<ConnectionState> &connectionState) {
   try {
     Pointer<Iterator<Pointer<SessionState> > > iter(connectionState->getSessionStates().iterator());
     while (iter->hasNext()) {
@@ -332,7 +332,7 @@ void ConnectionStateTracker::doRestoreSessions(Pointer<transport::Transport> tra
 }
 
 //////////////////////////////////////////////////////////////////////////////////
-void ConnectionStateTracker::doRestoreConsumers(Pointer<transport::Transport> transport, Pointer<SessionState> sessionState) {
+void ConnectionStateTracker::doRestoreConsumers(const Pointer<transport::Transport> &transport, const Pointer<SessionState> &sessionState) {
   try {
     Pointer<ConnectionState> connectionState = this->impl->connectionState;
     if (connectionState.get() != nullptr) {
@@ -355,7 +355,7 @@ void ConnectionStateTracker::doRestoreConsumers(Pointer<transport::Transport> tr
 }
 
 //////////////////////////////////////////////////////////////////////////////////
-void ConnectionStateTracker::doRestoreProducers(Pointer<transport::Transport> transport, Pointer<SessionState> sessionState) {
+void ConnectionStateTracker::doRestoreProducers(const Pointer<transport::Transport> &transport, const Pointer<SessionState> &sessionState) {
   try {
     Pointer<ConnectionState> connectionState = this->impl->connectionState;
     if (connectionState.get() != nullptr) {
@@ -373,7 +373,11 @@ void ConnectionStateTracker::doRestoreProducers(Pointer<transport::Transport> tr
 }
 
 //////////////////////////////////////////////////////////////////////////////////
-void ConnectionStateTracker::doRestoreTempDestinations(Pointer<transport::Transport> transport, Pointer<ConnectionState> connectionState) {}
+void ConnectionStateTracker::doRestoreTempDestinations(const Pointer<transport::Transport> &transport,
+                                                       const Pointer<ConnectionState> &connectionState) {
+  DECAF_UNUSED_VAR(transport);
+  DECAF_UNUSED_VAR(connectionState);
+}
 
 //////////////////////////////////////////////////////////////////////////////////
 void ConnectionStateTracker::transportInterrupted() {

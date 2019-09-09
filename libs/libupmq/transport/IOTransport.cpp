@@ -23,6 +23,7 @@
 #include <transport/UPMQException.h>
 #include <transport/WireFormat.h>
 #include <typeinfo>
+#include <utility>
 
 using namespace upmq;
 using namespace upmq::transport;
@@ -37,11 +38,10 @@ namespace upmq {
 namespace transport {
 
 class IOTransportImpl {
- private:
-  IOTransportImpl(const IOTransportImpl &);
-  IOTransportImpl &operator=(const IOTransportImpl &);
-
  public:
+  IOTransportImpl(const IOTransportImpl &) = delete;
+  IOTransportImpl &operator=(const IOTransportImpl &) = delete;
+
   Pointer<transport::WireFormat> wireFormat;
   TransportListener *listener;
   decaf::io::DataInputStream *inputStream;
@@ -52,8 +52,8 @@ class IOTransportImpl {
 
   IOTransportImpl() : wireFormat(), listener(nullptr), inputStream(nullptr), outputStream(nullptr), thread(), closed(false) {}
 
-  IOTransportImpl(const Pointer<WireFormat> wireFormat)
-      : wireFormat(wireFormat), listener(nullptr), inputStream(nullptr), outputStream(nullptr), thread(), closed(false) {}
+  IOTransportImpl(Pointer<WireFormat> wireFormat)
+      : wireFormat(std::move(wireFormat)), listener(nullptr), inputStream(nullptr), outputStream(nullptr), thread(), closed(false) {}
 };
 }  // namespace transport
 }  // namespace upmq
@@ -62,12 +62,12 @@ class IOTransportImpl {
 IOTransport::IOTransport() : impl(new IOTransportImpl()) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-IOTransport::IOTransport(const Pointer<WireFormat> wireFormat) : impl(new IOTransportImpl(wireFormat)) {}
+IOTransport::IOTransport(Pointer<WireFormat> wireFormat) : impl(new IOTransportImpl(std::move(wireFormat))) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 IOTransport::~IOTransport() {
   try {
-    close();
+    IOTransport::close();
   }
   AMQ_CATCHALL_NOTHROW()
 
@@ -88,7 +88,7 @@ void IOTransport::fire(decaf::lang::Exception &ex) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void IOTransport::fire(const Pointer<Command> command) {
+void IOTransport::fire(Pointer<Command> command) {
   try {
     // If we have been closed then we don't deliver any messages that
     // might have sneaked in while we where closing.
@@ -96,13 +96,13 @@ void IOTransport::fire(const Pointer<Command> command) {
       return;
     }
 
-    this->impl->listener->onCommand(command);
+    this->impl->listener->onCommand(std::move(command));
   }
   AMQ_CATCHALL_NOTHROW()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void IOTransport::oneway(const Pointer<Command> command) {
+void IOTransport::oneway(Pointer<Command> command) {
   try {
     if (impl->closed.get()) {
       throw IOException(__FILE__, __LINE__, "IOTransport::oneway() - transport is closed!");
@@ -125,7 +125,7 @@ void IOTransport::oneway(const Pointer<Command> command) {
 
     synchronized(impl->outputStream) {
       // Write the command to the output stream.
-      this->impl->wireFormat->marshal(command, this, this->impl->outputStream);
+      this->impl->wireFormat->marshal(std::move(command), this, this->impl->outputStream);
       this->impl->outputStream->flush();
     }
   }
@@ -260,21 +260,21 @@ void IOTransport::run() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Pointer<FutureResponse> IOTransport::asyncRequest(const Pointer<Command> command UPMQCPP_UNUSED,
-                                                  const Pointer<ResponseCallback> responseCallback UPMQCPP_UNUSED) {
+Pointer<FutureResponse> IOTransport::asyncRequest(Pointer<Command> command UPMQCPP_UNUSED,
+                                                  Pointer<ResponseCallback> responseCallback UPMQCPP_UNUSED) {
   DECAF_UNUSED_VAR(command);
   DECAF_UNUSED_VAR(responseCallback);
   throw UnsupportedOperationException(__FILE__, __LINE__, "IOTransport::asyncRequest() - unsupported operation");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Pointer<Response> IOTransport::request(const Pointer<Command> command UPMQCPP_UNUSED) {
+Pointer<Response> IOTransport::request(Pointer<Command> command UPMQCPP_UNUSED) {
   DECAF_UNUSED_VAR(command);
   throw UnsupportedOperationException(__FILE__, __LINE__, "IOTransport::request() - unsupported operation");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Pointer<Response> IOTransport::request(const Pointer<Command> command UPMQCPP_UNUSED, unsigned int timeout UPMQCPP_UNUSED) {
+Pointer<Response> IOTransport::request(Pointer<Command> command UPMQCPP_UNUSED, unsigned int timeout UPMQCPP_UNUSED) {
   DECAF_UNUSED_VAR(command);
   DECAF_UNUSED_VAR(timeout);
   throw UnsupportedOperationException(__FILE__, __LINE__, "IOTransport::request() - unsupported operation");
@@ -290,7 +290,7 @@ void IOTransport::setOutputStream(decaf::io::DataOutputStream *os) { this->impl-
 Pointer<transport::WireFormat> IOTransport::getWireFormat() const { return this->impl->wireFormat; }
 
 ////////////////////////////////////////////////////////////////////////////////
-void IOTransport::setWireFormat(const Pointer<transport::WireFormat> wireFormat) { this->impl->wireFormat = wireFormat; }
+void IOTransport::setWireFormat(Pointer<transport::WireFormat> wireFormat) { this->impl->wireFormat = std::move(wireFormat); }
 
 ////////////////////////////////////////////////////////////////////////////////
 void IOTransport::setTransportListener(TransportListener *newListener) { this->impl->listener = newListener; }

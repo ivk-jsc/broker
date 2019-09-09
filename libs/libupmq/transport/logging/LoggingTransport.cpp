@@ -26,21 +26,21 @@ using namespace decaf::lang;
 using namespace decaf::lang::exceptions;
 
 ////////////////////////////////////////////////////////////////////////////////
-LoggingTransport::LoggingTransport(const Pointer<Transport> next) : TransportFilter(next) {}
+LoggingTransport::LoggingTransport(Pointer<Transport> next) : TransportFilter(std::move(next)) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-void LoggingTransport::onCommand(const Pointer<Command> command) {
+void LoggingTransport::onCommand(Pointer<Command> command) {
   char buff[20] = {0};
   auto now = time(nullptr);
   strftime(buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&now));
   std::cout << buff << " |RECV: " << command->toString() << std::endl;
 
   // Delegate to the base class.
-  TransportFilter::onCommand(command);
+  TransportFilter::onCommand(std::move(command));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void LoggingTransport::oneway(const Pointer<Command> command) {
+void LoggingTransport::oneway(Pointer<Command> command) {
   try {
     char buff[20] = {0};
     auto now = time(nullptr);
@@ -48,7 +48,7 @@ void LoggingTransport::oneway(const Pointer<Command> command) {
     std::cout << buff << " |SEND: " << command->toString() << std::endl;
 
     // Delegate to the base class.
-    TransportFilter::oneway(command);
+    TransportFilter::oneway(std::move(command));
   }
   AMQ_CATCH_RETHROW(IOException)
   AMQ_CATCH_RETHROW(UnsupportedOperationException)
@@ -57,7 +57,7 @@ void LoggingTransport::oneway(const Pointer<Command> command) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Pointer<Response> LoggingTransport::request(const Pointer<Command> command) {
+Pointer<Response> LoggingTransport::request(Pointer<Command> command) {
   try {
     char buff[20] = {0};
     auto now = time(nullptr);
@@ -65,7 +65,7 @@ Pointer<Response> LoggingTransport::request(const Pointer<Command> command) {
     std::cout << buff << " |SEND: " << command->toString() << std::endl;
 
     // Delegate to the base class.
-    Pointer<Response> response = TransportFilter::request(command);
+    Pointer<Response> response = TransportFilter::request(std::move(command));
 
     return response;
   }
@@ -76,7 +76,7 @@ Pointer<Response> LoggingTransport::request(const Pointer<Command> command) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Pointer<Response> LoggingTransport::request(const Pointer<Command> command, unsigned int timeout) {
+Pointer<Response> LoggingTransport::request(Pointer<Command> command, unsigned int timeout) {
   try {
     char buff[20] = {0};
     auto now = time(nullptr);
@@ -84,7 +84,7 @@ Pointer<Response> LoggingTransport::request(const Pointer<Command> command, unsi
     std::cout << buff << " |SEND: " << command->toString() << std::endl;
 
     // Delegate to the base class.
-    Pointer<Response> response = TransportFilter::request(command, timeout);
+    Pointer<Response> response = TransportFilter::request(std::move(command), timeout);
 
     return response;
   }

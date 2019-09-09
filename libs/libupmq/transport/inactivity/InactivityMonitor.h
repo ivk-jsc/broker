@@ -44,26 +44,25 @@ class UPMQCPP_API InactivityMonitor : public upmq::transport::TransportFilter {
   friend class WriteChecker;
   friend class AsyncWriteTask;
 
- private:
-  InactivityMonitor(const InactivityMonitor &);
-  InactivityMonitor operator=(const InactivityMonitor &);
+public:
+  InactivityMonitor(const InactivityMonitor &) = delete;
+  InactivityMonitor operator=(const InactivityMonitor &) = delete;
 
- public:
-  InactivityMonitor(const Pointer<Transport> next, const Pointer<transport::WireFormat> wireFormat, long long delay, long long period);
-  InactivityMonitor(const Pointer<Transport> next,
+  InactivityMonitor(Pointer<Transport> next, Pointer<transport::WireFormat> wireFormat, long long delay, long long period);
+  InactivityMonitor(Pointer<Transport> next,
                     const decaf::util::Properties &properties,
-                    const Pointer<transport::WireFormat> wireFormat,
+                    Pointer<transport::WireFormat> wireFormat,
                     long long delay,
                     long long period);
 
-  virtual ~InactivityMonitor();
+  ~InactivityMonitor() override;
 
  public:  // TransportFilter Methods
-  virtual void onException(const decaf::lang::Exception &ex);
+  void onException(const decaf::lang::Exception &ex) override;
 
-  virtual void onCommand(const Pointer<Command> command);
+  void onCommand(Pointer<Command> command) override;
 
-  virtual void oneway(const Pointer<Command> command);
+  void oneway(Pointer<Command> command) override;
 
  public:
   long long getWriteCheckTime() const;
@@ -75,11 +74,11 @@ class UPMQCPP_API InactivityMonitor : public upmq::transport::TransportFilter {
   void setInitialDelayTime(long long value) const;
 
  protected:
-  virtual void afterNextIsStarted();
+  void afterNextIsStarted() override;
 
-  virtual void beforeNextIsStopped();
+  void beforeNextIsStopped() override;
 
-  virtual void doClose();
+  void doClose() override;
 
  private:
   // Performs a Read Check on the current connection, called from a separate Thread.

@@ -23,6 +23,7 @@
 #include <decaf/lang/exceptions/NumberFormatException.h>
 #include <decaf/util/Config.h>
 #include <string>
+#include <cmath>
 
 namespace decaf {
 namespace lang {
@@ -76,20 +77,20 @@ class DECAF_API Float : public Number, public Comparable<Float>, public Comparab
    * than the passed in value, and -1 if this object represents a value
    * less than the passed in value.
    */
-  virtual int compareTo(const Float &f) const;
+  int compareTo(const Float &f) const override;
 
   /**
    * @param f - the Float object to compare against.
    * @return true if the two Float Objects have the same value.
    */
-  bool equals(const Float &f) const { return this->value == f.value; }
+  bool equals(const Float &f) const override { return fabs(this->value - f.value) < std::numeric_limits<float>::epsilon(); }
 
   /**
    * Compares equality between this object and the one passed.
    * @param f - the value to be compared to this one.
    * @return true if this object is equal to the one passed.
    */
-  virtual bool operator==(const Float &f) const { return this->value == f.value; }
+  bool operator==(const Float &f) const override { return fabs(this->value - f.value) < std::numeric_limits<float>::epsilon(); }
 
   /**
    * Compares this object to another and returns true if this object
@@ -97,7 +98,7 @@ class DECAF_API Float : public Number, public Comparable<Float>, public Comparab
    * @param f - the value to be compared to this one.
    * @return true if this object is equal to the one passed.
    */
-  virtual bool operator<(const Float &f) const { return this->value < f.value; }
+  bool operator<(const Float &f) const override { return this->value < f.value; }
 
   /**
    * Compares this Float instance with another.
@@ -107,20 +108,20 @@ class DECAF_API Float : public Number, public Comparable<Float>, public Comparab
    * than the passed in value, and -1 if this object represents a value
    * less than the passed in value.
    */
-  virtual int compareTo(const float &f) const;
+  int compareTo(const float &f) const override;
 
   /**
    * @param f - the Float object to compare against.
    * @return true if the two Float Objects have the same value.
    */
-  bool equals(const float &f) const { return this->value == f; }
+  bool equals(const float &f) const override { return fabs(this->value - f) < std::numeric_limits<float>::epsilon(); }
 
   /**
    * Compares equality between this object and the one passed.
    * @param f - the value to be compared to this one.
    * @return true if this object is equal to the one passed.
    */
-  virtual bool operator==(const float &f) const { return this->value == f; }
+  bool operator==(const float &f) const override { return fabs(this->value - f) < std::numeric_limits<float>::epsilon(); }
 
   /**
    * Compares this object to another and returns true if this object
@@ -128,7 +129,7 @@ class DECAF_API Float : public Number, public Comparable<Float>, public Comparab
    * @param f - the value to be compared to this one.
    * @return true if this object is equal to the one passed.
    */
-  virtual bool operator<(const float &f) const { return this->value < f; }
+  bool operator<(const float &f) const override { return this->value < f; }
 
   /**
    * @return this Float Object as a String Representation
@@ -139,37 +140,37 @@ class DECAF_API Float : public Number, public Comparable<Float>, public Comparab
    * Answers the double value which the receiver represents
    * @return double the value of the receiver.
    */
-  virtual double doubleValue() const { return (double)this->value; }
+  double doubleValue() const override { return (double)this->value; }
 
   /**
    * Answers the float value which the receiver represents
    * @return float the value of the receiver.
    */
-  virtual float floatValue() const { return this->value; }
+  float floatValue() const override { return this->value; }
 
   /**
    * Answers the byte value which the receiver represents
    * @return byte the value of the receiver.
    */
-  virtual unsigned char byteValue() const { return (unsigned char)this->value; }
+  unsigned char byteValue() const override { return (unsigned char)this->value; }
 
   /**
    * Answers the short value which the receiver represents
    * @return short the value of the receiver.
    */
-  virtual short shortValue() const { return (short)this->value; }
+  short shortValue() const override { return (short)this->value; }
 
   /**
    * Answers the int value which the receiver represents
    * @return int the value of the receiver.
    */
-  virtual int intValue() const { return (int)this->value; }
+  int intValue() const override { return (int)this->value; }
 
   /**
    * Answers the long value which the receiver represents
    * @return long the value of the receiver.
    */
-  virtual long long longValue() const { return (long long)this->value; }
+  long long longValue() const override { return (long long)this->value; }
 
   /**
    * @return true if the float is equal to positive infinity.

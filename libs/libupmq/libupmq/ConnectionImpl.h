@@ -74,10 +74,10 @@ class ConnectionImpl : public cms::Connection, public TransportListener {
 
   string &getObjectId();
 
-  virtual void onCommand(const Pointer<Command> command) override;
-  virtual void onException(const decaf::lang::Exception &ex) override;
-  virtual void transportInterrupted() override;
-  virtual void transportResumed() override;
+  void onCommand(Pointer<Command> command) override;
+  void onException(const decaf::lang::Exception &ex) override;
+  void transportInterrupted() override;
+  void transportResumed() override;
 
   AtomicBoolean _transportFailed;
   cms::CMSException *_exception;
@@ -100,7 +100,7 @@ class ConnectionImpl : public cms::Connection, public TransportListener {
 
   void addDispatcher(ConsumerImpl *consumerImpl);
   void removeDispatcher(ConsumerImpl *consumerImpl);
-  ConsumerImpl *getDispatcher(string objectId);
+  ConsumerImpl *getDispatcher(const string& objectId);
   void postDispatcher();
 
   void _checkClosed() const;

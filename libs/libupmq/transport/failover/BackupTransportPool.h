@@ -57,21 +57,21 @@ class UPMQCPP_API BackupTransportPool : public upmq::threads::CompositeTask {
 
  public:
   BackupTransportPool(FailoverTransport *parent,
-                      const Pointer<CompositeTaskRunner> taskRunner,
-                      const Pointer<CloseTransportsTask> closeTask,
-                      const Pointer<URIPool> uriPool,
-                      const Pointer<URIPool> updates,
-                      const Pointer<URIPool> priorityUriPool);
+                      Pointer<CompositeTaskRunner> taskRunner,
+                      Pointer<CloseTransportsTask> closeTask,
+                      Pointer<URIPool> uriPool,
+                      Pointer<URIPool> updates,
+                      Pointer<URIPool> priorityUriPool);
 
   BackupTransportPool(FailoverTransport *parent,
                       int backupPoolSize,
-                      const Pointer<CompositeTaskRunner> taskRunner,
-                      const Pointer<CloseTransportsTask> closeTask,
-                      const Pointer<URIPool> uriPool,
-                      const Pointer<URIPool> updates,
-                      const Pointer<URIPool> priorityUriPool);
+                      Pointer<CompositeTaskRunner> taskRunner,
+                      Pointer<CloseTransportsTask> closeTask,
+                      Pointer<URIPool> uriPool,
+                      Pointer<URIPool> updates,
+                      Pointer<URIPool> priorityUriPool);
 
-  virtual ~BackupTransportPool();
+  ~BackupTransportPool() override;
 
   /**
    * Closes down the pool and destroys any Backups contained in the pool.
@@ -81,7 +81,7 @@ class UPMQCPP_API BackupTransportPool : public upmq::threads::CompositeTask {
   /**
    * Return true if we don't currently have enough Connected Transports
    */
-  virtual bool isPending() const;
+  bool isPending() const override;
 
   /**
    * Get a Connected Transport from the pool of Backups if any are present,
@@ -95,7 +95,7 @@ class UPMQCPP_API BackupTransportPool : public upmq::threads::CompositeTask {
    * Connect to a Backup Broker if we haven't already connected to the max
    * number of Backups.
    */
-  virtual bool iterate();
+  bool iterate() override;
 
   /**
    * Gets the Max number of Backups this Task will create.

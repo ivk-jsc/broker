@@ -35,7 +35,7 @@ void BackupTransport::setUri(const decaf::net::URI &newUri) { this->uri = newUri
 const Pointer<Transport> &BackupTransport::getTransport() const { return transport; }
 
 void BackupTransport::setTransport(Pointer<Transport> newTransport) {
-  this->transport = newTransport;
+  this->transport = std::move(newTransport);
 
   if (this->transport != nullptr) {
     this->transport->setTransportListener(this);

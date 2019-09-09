@@ -54,14 +54,13 @@ class UPMQCPP_API FailoverTransport : public upmq::transport::CompositeTransport
 
   FailoverTransportImpl *impl;
 
- private:
-  FailoverTransport(const FailoverTransport &);
-  FailoverTransport &operator=(const FailoverTransport &);
-
  public:
+  FailoverTransport(const FailoverTransport &) = delete;
+  FailoverTransport &operator=(const FailoverTransport &) = delete;
+
   FailoverTransport();
 
-  virtual ~FailoverTransport();
+  ~FailoverTransport() override;
 
   /**
    * Indicates that the Transport needs to reconnect to another URI in its
@@ -83,46 +82,46 @@ class UPMQCPP_API FailoverTransport : public upmq::transport::CompositeTransport
   void add(bool rebalance, const std::string &uri);
 
  public:  // CompositeTransport methods
-  virtual void addURI(bool rebalance, const List<decaf::net::URI> &uris);
+  void addURI(bool rebalance, const List<decaf::net::URI> &uris) override;
 
-  virtual void removeURI(bool rebalance, const List<decaf::net::URI> &uris);
+  void removeURI(bool rebalance, const List<decaf::net::URI> &uris) override;
 
  public:
-  virtual void start();
+  void start() override;
 
-  virtual void stop();
+  void stop() override;
 
-  virtual void close();
+  void close() override;
 
-  virtual void oneway(const Pointer<Command> command);
+  void oneway(Pointer<Command> command) override;
 
-  virtual Pointer<FutureResponse> asyncRequest(const Pointer<Command> command, const Pointer<ResponseCallback> responseCallback);
+  Pointer<FutureResponse> asyncRequest(Pointer<Command> command, Pointer<ResponseCallback> responseCallback) override;
 
-  virtual Pointer<Response> request(const Pointer<Command> command);
+  Pointer<Response> request(Pointer<Command> command) override;
 
-  virtual Pointer<Response> request(const Pointer<Command> command, unsigned int timeout);
+  Pointer<Response> request(Pointer<Command> command, unsigned int timeout) override;
 
-  virtual Pointer<WireFormat> getWireFormat() const;
+  Pointer<WireFormat> getWireFormat() const override;
 
-  virtual void setWireFormat(const Pointer<WireFormat> wireFormat UPMQCPP_UNUSED) {}
+  void setWireFormat(Pointer<WireFormat> wireFormat UPMQCPP_UNUSED) override {}
 
-  virtual void setTransportListener(TransportListener *newListener);
+  void setTransportListener(TransportListener *newListener) override;
 
-  virtual TransportListener *getTransportListener() const;
+  TransportListener *getTransportListener() const override;
 
-  virtual bool isFaultTolerant() const { return true; }
+  bool isFaultTolerant() const override { return true; }
 
-  virtual bool isConnected() const;
+  bool isConnected() const override;
 
-  virtual bool isClosed() const;
+  bool isClosed() const override;
 
   bool isInitialized() const;
 
   void setInitialized(bool value);
 
-  virtual Transport *narrow(const std::type_info &typeId);
+  Transport *narrow(const std::type_info &typeId) override;
 
-  virtual std::string getRemoteAddress() const;
+  std::string getRemoteAddress() const override;
 
   virtual void reconnect(const decaf::net::URI &uri);
 
@@ -133,7 +132,7 @@ class UPMQCPP_API FailoverTransport : public upmq::transport::CompositeTransport
    * @return true if there is a need for the iterate method to be called by this
    *          classes task runner.
    */
-  virtual bool isPending() const;
+  bool isPending() const override;
 
   /**
    * Performs the actual Reconnect operation for the FailoverTransport, when a
@@ -142,7 +141,7 @@ class UPMQCPP_API FailoverTransport : public upmq::transport::CompositeTransport
    *
    * @return false to indicate a connection, true to indicate it needs to try again.
    */
-  virtual bool iterate();
+  bool iterate() override;
 
  public:
   long long getTimeout() const;
@@ -225,7 +224,7 @@ class UPMQCPP_API FailoverTransport : public upmq::transport::CompositeTransport
 
   const decaf::util::List<decaf::net::URI> &getPriorityURIs() const;
 
-  void setConnectionInterruptProcessingComplete(const Pointer<Command> connectionId);
+  void setConnectionInterruptProcessingComplete(Pointer<Command> connectionId);
 
   bool isConnectedToPriority() const;
 
@@ -239,7 +238,7 @@ class UPMQCPP_API FailoverTransport : public upmq::transport::CompositeTransport
    *
    * @throw IOException if an errors occurs while restoring the old state.
    */
-  void restoreTransport(const Pointer<Transport> transport);
+  void restoreTransport(const Pointer<Transport> &transport);
 
   /**
    * Called when this class' TransportListener is notified of a Failure.
@@ -256,7 +255,7 @@ class UPMQCPP_API FailoverTransport : public upmq::transport::CompositeTransport
    * @param control
    *      The ConnectionControl command sent from the Broker.
    */
-  void handleConnectionControl(const Pointer<Command> control);
+  void handleConnectionControl(Pointer<Command> control);
 
  private:
   /**
@@ -271,7 +270,7 @@ class UPMQCPP_API FailoverTransport : public upmq::transport::CompositeTransport
 
   void processNewTransports(bool rebalance, std::string newTransports);
 
-  void processResponse(const Pointer<Response> response);
+  void processResponse(const Pointer<Response> &response);
 };
 }  // namespace failover
 }  // namespace transport

@@ -74,14 +74,14 @@ TransportFilter::~TransportFilter() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void TransportFilter::onCommand(const Pointer<Command> command) {
+void TransportFilter::onCommand(Pointer<Command> command) {
   if (!this->impl->started.get() || this->impl->closed.get()) {
     return;
   }
 
   try {
     if (this->listener != nullptr) {
-      this->listener->onCommand(command);
+      this->listener->onCommand(std::move(command));
     }
   } catch (...) {
   }
@@ -286,9 +286,9 @@ Pointer<transport::WireFormat> TransportFilter::getWireFormat() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void TransportFilter::setWireFormat(const Pointer<transport::WireFormat> wireFormat) {
+void TransportFilter::setWireFormat(Pointer<transport::WireFormat> wireFormat) {
   checkClosed();
-  next->setWireFormat(wireFormat);
+  next->setWireFormat(std::move(wireFormat));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

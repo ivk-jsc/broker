@@ -52,7 +52,7 @@ class UPMQCPP_API WireFormat {
    *
    * @throws IOException if an I/O error occurs.
    */
-  virtual void marshal(const Pointer<transport::Command> command, const upmq::transport::Transport *transport, decaf::io::DataOutputStream *out) = 0;
+  virtual void marshal(Pointer<transport::Command> command, const upmq::transport::Transport *transport, decaf::io::DataOutputStream *out) = 0;
 
   /**
    * Stream based unmarshaling, blocks on reads on the input stream until a complete

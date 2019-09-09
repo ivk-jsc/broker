@@ -85,7 +85,7 @@ class UPMQCPP_API TransportFilter : public Transport, public TransportListener {
    * Event handler for the receipt of a command.
    * @param command - the received command object.
    */
-  void onCommand(const Pointer<Command> command) override;
+  void onCommand(Pointer<Command> command) override;
 
   /**
    * Event handler for an exception from a command transport.
@@ -105,22 +105,22 @@ class UPMQCPP_API TransportFilter : public Transport, public TransportListener {
   void transportResumed() override;
 
  public:
-  void oneway(const Pointer<Command> command) override {
+  void oneway(Pointer<Command> command) override {
     checkClosed();
     next->oneway(command);
   }
 
-  Pointer<FutureResponse> asyncRequest(const Pointer<Command> command, const Pointer<ResponseCallback> responseCallback) override {
+  Pointer<FutureResponse> asyncRequest(Pointer<Command> command, Pointer<ResponseCallback> responseCallback) override {
     checkClosed();
     return next->asyncRequest(command, responseCallback);
   }
 
-  Pointer<Response> request(const Pointer<Command> command) override {
+  Pointer<Response> request(Pointer<Command> command) override {
     checkClosed();
     return next->request(command);
   }
 
-  Pointer<Response> request(const Pointer<Command> command, unsigned int timeout) override {
+  Pointer<Response> request(Pointer<Command> command, unsigned int timeout) override {
     checkClosed();
     return next->request(command, timeout);
   }
@@ -131,7 +131,7 @@ class UPMQCPP_API TransportFilter : public Transport, public TransportListener {
 
   Pointer<transport::WireFormat> getWireFormat() const override;
 
-  void setWireFormat(const Pointer<transport::WireFormat> wireFormat) override;
+  void setWireFormat(Pointer<transport::WireFormat> wireFormat) override;
 
   Transport *narrow(const std::type_info &typeId) override;
 

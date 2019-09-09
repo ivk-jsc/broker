@@ -79,7 +79,7 @@ class UPMQCPP_API IOTransport : public Transport, public decaf::lang::Runnable {
    * @param
    *      The command the command the send to any registered listener.
    */
-  void fire(const Pointer<Command> command);
+  void fire(Pointer<Command> command);
 
  public:
   /**
@@ -94,9 +94,9 @@ class UPMQCPP_API IOTransport : public Transport, public decaf::lang::Runnable {
    * @param wireFormat
    *        Data encoder / decoder to use when reading and writing.
    */
-  IOTransport(const Pointer<transport::WireFormat> wireFormat);
+  IOTransport(Pointer<transport::WireFormat> wireFormat);
 
-  virtual ~IOTransport();
+  ~IOTransport() override;
 
   /**
    * Sets the stream from which this Transport implementation will read its data.
@@ -115,44 +115,44 @@ class UPMQCPP_API IOTransport : public Transport, public decaf::lang::Runnable {
   virtual void setOutputStream(decaf::io::DataOutputStream *os);
 
  public:  // Transport methods
-  virtual void oneway(const Pointer<Command> command);
+  void oneway(Pointer<Command> command) override;
 
   /**
    * {@inheritDoc}
    *
    * This method always thrown an UnsupportedOperationException.
    */
-  virtual Pointer<FutureResponse> asyncRequest(const Pointer<Command> command, const Pointer<ResponseCallback> responseCallback);
+  Pointer<FutureResponse> asyncRequest(Pointer<Command> command, Pointer<ResponseCallback> responseCallback) override;
 
   /**
    * {@inheritDoc}
    *
    * This method always thrown an UnsupportedOperationException.
    */
-  virtual Pointer<Response> request(const Pointer<Command> command);
+  Pointer<Response> request(Pointer<Command> command) override;
 
   /**
    * {@inheritDoc}
    *
    * This method always thrown an UnsupportedOperationException.
    */
-  virtual Pointer<Response> request(const Pointer<Command> command, unsigned int timeout);
+  Pointer<Response> request(Pointer<Command> command, unsigned int timeout) override;
 
-  virtual Pointer<transport::WireFormat> getWireFormat() const;
+  Pointer<transport::WireFormat> getWireFormat() const override;
 
-  virtual void setWireFormat(const Pointer<transport::WireFormat> wireFormat);
+  void setWireFormat(Pointer<transport::WireFormat> wireFormat) override;
 
-  virtual void setTransportListener(TransportListener *newListener);
+  void setTransportListener(TransportListener *newListener) override;
 
-  virtual TransportListener *getTransportListener() const;
+  TransportListener *getTransportListener() const override;
 
-  virtual void start();
+  void start() override;
 
-  virtual void stop();
+  void stop() override;
 
-  virtual void close();
+  void close() override;
 
-  virtual Transport *narrow(const std::type_info &typeId) {
+  Transport *narrow(const std::type_info &typeId) override {
     if (typeid(*this) == typeId) {
       return this;
     }
@@ -160,17 +160,17 @@ class UPMQCPP_API IOTransport : public Transport, public decaf::lang::Runnable {
     return nullptr;
   }
 
-  virtual bool isFaultTolerant() const { return false; }
+  bool isFaultTolerant() const override { return false; }
 
-  virtual bool isConnected() const;
+  bool isConnected() const override;
 
-  virtual bool isClosed() const;
+  bool isClosed() const override;
 
-  virtual std::string getRemoteAddress() const { return ""; }
+  std::string getRemoteAddress() const override { return ""; }
 
-  virtual bool isReconnectSupported() const { return false; }
+  bool isReconnectSupported() const override { return false; }
 
-  virtual bool isUpdateURIsSupported() const { return false; }
+  bool isUpdateURIsSupported() const override { return false; }
 
   // virtual void updateURIs(bool rebalance UPMQCPP_UNUSED, const decaf::util::List<decaf::net::URI> &uris
   // UPMQCPP_UNUSED) {
@@ -185,7 +185,7 @@ class UPMQCPP_API IOTransport : public Transport, public decaf::lang::Runnable {
   // virtual void reconnect(const decaf::net::URI &uri UPMQCPP_UNUSED) {}
 
  public:  // Runnable methods.
-  virtual void run();
+  void run() override;
 };
 }  // namespace transport
 }  // namespace upmq

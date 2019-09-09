@@ -91,6 +91,11 @@ class UPMQCPP_API Command {
   virtual bool isPing() const = 0;
   virtual bool isPong() const = 0;
   virtual bool isResponse() const = 0;
+  /**
+   * Returns a provider-specific string that provides information
+   * about the command type.
+   */
+  virtual std::string typeName() const = 0;
 
   virtual Command *duplicate() = 0;
 };

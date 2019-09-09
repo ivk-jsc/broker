@@ -38,7 +38,7 @@ class SenderState {
   SenderState(Pointer<Command> info);
   virtual ~SenderState();
 
-  const Pointer<Command> getInfo() const;
+  Pointer<Command> getInfo() const;
 };
 }  // namespace state
 }  // namespace upmq

@@ -28,7 +28,7 @@ using namespace decaf::lang;
 SessionState::SessionState(Pointer<Command> info) : info(std::move(info)), producers(), consumers() {}
 
 ////////////////////////////////////////////////////////////////////////////////
-const Pointer<Command> SessionState::getInfo() const { return this->info; }
+Pointer<Command> SessionState::getInfo() const { return this->info; }
 
 ////////////////////////////////////////////////////////////////////////////////
 SessionState::~SessionState() {
@@ -45,7 +45,10 @@ void SessionState::shutdown() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void SessionState::addProducer(Pointer<Command> command) { producers.put(command->getCurrId(), Pointer<SenderState>(new SenderState(command))); }
+void SessionState::addProducer(Pointer<Command> command) {
+  const std::string currId = command->getCurrId();
+  producers.put(currId, Pointer<SenderState>(new SenderState(std::move(command))));
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 Pointer<SenderState> SessionState::removeProducer(const string &id) {
@@ -55,7 +58,8 @@ Pointer<SenderState> SessionState::removeProducer(const string &id) {
 
 ////////////////////////////////////////////////////////////////////////////////
 void SessionState::addConsumer(Pointer<Command> command) {
-  consumers.put(command->getCurrId(), Pointer<SubscriptionState>(new SubscriptionState(command)));
+  const std::string currId = command->getCurrId();
+  consumers.put(currId, Pointer<SubscriptionState>(new SubscriptionState(std::move(command))));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

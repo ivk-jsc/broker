@@ -104,9 +104,8 @@ std::string CMSException::getStackTraceString() const {
   // Write the message and each stack entry.
   stream << "\n##### EXCEPTION #####" << std::endl;
   stream << this->data->message << std::endl;
-  for (size_t ix = 0; ix < this->data->stackTrace.size(); ++ix) {
-    stream << "\tat " << this->data->stackTrace[ix].first << "(" << this->data->stackTrace[ix].second << ":" << this->data->stackTrace[ix].third
-           << ")" << std::endl;
+  for (const auto &ix : this->data->stackTrace) {
+    stream << "\tat " << ix.first << "(" << ix.second << ":" << ix.third << ")" << std::endl;
   }
 
   // Return the string from the output stream.

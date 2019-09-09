@@ -36,7 +36,7 @@ using namespace decaf::util::concurrent;
 FutureResponse::FutureResponse() : responseLatch(1), response(), responseCallback() {}
 
 ////////////////////////////////////////////////////////////////////////////////
-FutureResponse::FutureResponse(const Pointer<ResponseCallback> responseCallback) : responseLatch(1), response(), responseCallback(responseCallback) {}
+FutureResponse::FutureResponse(Pointer<ResponseCallback> responseCallback) : responseLatch(1), response(), responseCallback(responseCallback) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 FutureResponse::~FutureResponse() {}
@@ -85,7 +85,7 @@ Pointer<Response> FutureResponse::getResponse(unsigned int timeout) {
 
 ////////////////////////////////////////////////////////////////////////////////
 void FutureResponse::setResponse(Pointer<Response> newResponse) {
-  this->response = newResponse;
+  this->response = std::move(newResponse);
   this->responseLatch.countDown();
   if (responseCallback != nullptr) {
     responseCallback->onComplete(this->response);

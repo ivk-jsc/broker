@@ -27,4 +27,4 @@ SenderState::SenderState(Pointer<Command> info) : info(std::move(info)) {}
 SenderState::~SenderState() {}
 
 ////////////////////////////////////////////////////////////////////////////////
-const Pointer<Command> SenderState::getInfo() const { return this->info; }
+Pointer<Command> SenderState::getInfo() const { return this->info; }

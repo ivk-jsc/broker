@@ -51,7 +51,7 @@ TransportFactory *TransportRegistry::findFactory(const std::string &name) const 
 
 ////////////////////////////////////////////////////////////////////////////////
 void TransportRegistry::registerFactory(const std::string &name, TransportFactory *factory) {
-  if (name == "") {
+  if (name.empty()) {
     throw IllegalArgumentException(__FILE__, __LINE__, "TransportFactory name cannot be the empty string");
   }
 

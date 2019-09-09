@@ -47,7 +47,7 @@ class UPMQCPP_API TransportListener {
    * @param command
    *      The received command object.
    */
-  virtual void onCommand(const Pointer<Command> command) = 0;
+  virtual void onCommand(Pointer<Command> command) = 0;
 
   /**
    * Event handler for an exception from a command transport.

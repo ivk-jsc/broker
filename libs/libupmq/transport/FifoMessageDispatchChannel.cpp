@@ -25,10 +25,10 @@ using namespace decaf::util;
 using namespace decaf::util::concurrent;
 
 ////////////////////////////////////////////////////////////////////////////////
-FifoMessageDispatchChannel::FifoMessageDispatchChannel() : closed(false), running(false), channel() {}
+FifoMessageDispatchChannel::FifoMessageDispatchChannel() : closed(false), running(false) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-FifoMessageDispatchChannel::~FifoMessageDispatchChannel() {}
+FifoMessageDispatchChannel::~FifoMessageDispatchChannel() = default;
 
 ////////////////////////////////////////////////////////////////////////////////
 void FifoMessageDispatchChannel::enqueue(const Pointer<Command> &message) {

@@ -21,10 +21,11 @@
 #include "math.h"
 
 MapMessageImpl::MapMessageImpl() : MessageTemplate<MapMessage>() {
-  _header->mutable_message()->set_body_type(Proto::Body::kMapBody);
-  _header->mutable_message()->set_sender_id("");
-  _header->mutable_message()->set_session_id("");
-  _header->mutable_message()->set_timestamp(0);
+  Proto::Message* mutableMessage = _header->mutable_message();
+  mutableMessage->set_body_type(Proto::Body::kMapBody);
+  mutableMessage->set_sender_id("");
+  mutableMessage->set_session_id("");
+  mutableMessage->set_timestamp(0);
   _header->mutable_object_id()->assign("");
   _header->set_request_reply_id(-1);
   _body->mutable_map_body();  //-V773

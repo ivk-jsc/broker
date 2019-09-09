@@ -514,7 +514,7 @@ class MessageTemplate : public T, public UPMQCommand {
   }
 
   void setBooleanProperty(const std::string &name, bool value) override {
-    if (name == "") {
+    if (name.empty()) {
       throw cms::CMSException("Message Property names must not be empty", nullptr);
     }
     failIfReadOnlyProperties();
@@ -531,7 +531,7 @@ class MessageTemplate : public T, public UPMQCommand {
   }
 
   void setByteProperty(const std::string &name, signed char value) override {
-    if (name == "") {
+    if (name.empty()) {
       throw cms::CMSException("Message Property names must not be empty", nullptr);
     }
     failIfReadOnlyProperties();
@@ -565,7 +565,7 @@ class MessageTemplate : public T, public UPMQCommand {
   }
 
   void setFloatProperty(const std::string &name, float value) override {
-    if (name == "") {
+    if (name.empty()) {
       throw cms::CMSException("Message Property names must not be empty", nullptr);
     }
     failIfReadOnlyProperties();
@@ -582,7 +582,7 @@ class MessageTemplate : public T, public UPMQCommand {
   }
 
   void setIntProperty(const std::string &name, int value) override {
-    if (name == "") {
+    if (name.empty()) {
       throw cms::CMSException("Message Property names must not be empty", nullptr);
     }
     failIfReadOnlyProperties();
@@ -599,7 +599,7 @@ class MessageTemplate : public T, public UPMQCommand {
   }
 
   void setLongProperty(const std::string &name, long long value) override {
-    if (name == "") {
+    if (name.empty()) {
       throw cms::CMSException("Message Property names must not be empty", nullptr);
     }
     failIfReadOnlyProperties();
@@ -616,7 +616,7 @@ class MessageTemplate : public T, public UPMQCommand {
   }
 
   void setShortProperty(const std::string &name, short value) override {
-    if (name == "") {
+    if (name.empty()) {
       throw cms::CMSException("Message Property names must not be empty", nullptr);
     }
     failIfReadOnlyProperties();
@@ -633,7 +633,7 @@ class MessageTemplate : public T, public UPMQCommand {
   }
 
   void setStringProperty(const std::string &name, const std::string &value) override {
-    if (name == "") {
+    if (name.empty()) {
       throw cms::CMSException("Message Property names must not be empty", nullptr);
     }
     failIfReadOnlyProperties();
@@ -650,7 +650,7 @@ class MessageTemplate : public T, public UPMQCommand {
   }
 
   void setCharProperty(const std::string &name, unsigned short value) {
-    if (name == "") {
+    if (name.empty()) {
       throw cms::CMSException("Message Property names must not be empty", nullptr);
     }
     failIfReadOnlyProperties();

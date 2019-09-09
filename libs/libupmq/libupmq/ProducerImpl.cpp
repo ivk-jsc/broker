@@ -61,11 +61,10 @@ ProducerImpl::ProducerImpl(SessionImpl *sessionImpl, const cms::Destination *des
 ProducerImpl::~ProducerImpl() {
   try {
     if (!isClosed()) {
-      close();
+      ProducerImpl::close();
     }
-    if (_destination) {
-      delete _destination;
-    }
+
+    delete _destination;
   }
   CATCH_ALL_NOTHROW
 }
@@ -75,12 +74,13 @@ void ProducerImpl::sender(DestinationImpl *destination) {
     Pointer<UPMQCommand> request(new UPMQCommand());
     request->getProtoMessage().set_object_id(_objectId);
 
-    request->getSender().set_receipt_id(_objectId);
-    request->getSender().set_destination_uri(destination->getUri());
-    request->getSender().set_session_id(_session->getObjectId());
-    request->getSender().set_sender_id(_objectId);
+    Proto::Sender &sender = request->getSender();
+    sender.set_receipt_id(_objectId);
+    sender.set_destination_uri(destination->getUri());
+    sender.set_session_id(_session->getObjectId());
+    sender.set_sender_id(_objectId);
 
-    if (!request->getSender().IsInitialized()) {
+    if (!sender.IsInitialized()) {
       throw cms::CMSException("request not initialized");
     }
 
@@ -94,12 +94,13 @@ void ProducerImpl::unsender() {
     Pointer<UPMQCommand> request(new UPMQCommand());
     request->getProtoMessage().set_object_id(_objectId);
 
-    request->getUnsender().set_receipt_id(_objectId);
-    request->getUnsender().set_destination_uri(_destination != nullptr ? _destination->getUri() : "");
-    request->getUnsender().set_session_id(_session->getObjectId());
-    request->getUnsender().set_sender_id(_objectId);
+    Proto::Unsender &unsender = request->getUnsender();
+    unsender.set_receipt_id(_objectId);
+    unsender.set_destination_uri(_destination != nullptr ? _destination->getUri() : "");
+    unsender.set_session_id(_session->getObjectId());
+    unsender.set_sender_id(_objectId);
 
-    if (!request->getUnsender().IsInitialized()) {
+    if (!unsender.IsInitialized()) {
       throw cms::CMSException("request not initialized");
     }
 
@@ -206,17 +207,18 @@ void ProducerImpl::send(const cms::Destination *destination, cms::Message *msg, 
     if (!command) {
       throw cms::MessageFormatException("can't cast to UPMQCommand");
     }
-    command->_header->mutable_message()->set_sender_id(_objectId);
-    command->_header->mutable_message()->set_session_id(_session->getObjectId());
-    command->_header->mutable_message()->set_persistent(deliveryMode == cms::DeliveryMode::PERSISTENT);
-    command->_header->mutable_message()->set_priority(priority);
+    Proto::Message *mutableMessage = command->_header->mutable_message();
+    mutableMessage->set_sender_id(_objectId);
+    mutableMessage->set_session_id(_session->getObjectId());
+    mutableMessage->set_persistent(deliveryMode == cms::DeliveryMode::PERSISTENT);
+    mutableMessage->set_priority(priority);
     auto uuid = assignNewId();
     while (_lastMessageId == uuid) {
       uuid = assignNewId();
     }
     _lastMessageId = std::move(uuid);
-    command->_header->mutable_message()->set_message_id(_lastMessageId);
-    command->_header->mutable_message()->set_receipt_id(command->_header->mutable_message()->message_id());
+    mutableMessage->set_message_id(_lastMessageId);
+    mutableMessage->set_receipt_id(mutableMessage->message_id());
 
     long long currTimeMillis = 0;
     if (timeToLive > 0 || !_isDisableMessageTimestamp) {
@@ -224,15 +226,15 @@ void ProducerImpl::send(const cms::Destination *destination, cms::Message *msg, 
     }
 
     if (timeToLive > 0) {
-      command->_header->mutable_message()->set_timetolive(timeToLive);
-      command->_header->mutable_message()->set_expiration(timeToLive + currTimeMillis);
+      mutableMessage->set_timetolive(timeToLive);
+      mutableMessage->set_expiration(timeToLive + currTimeMillis);
     } else {
-      command->_header->mutable_message()->set_timetolive(0);
-      command->_header->mutable_message()->set_expiration(0);
+      mutableMessage->set_timetolive(0);
+      mutableMessage->set_expiration(0);
     }
 
     if (!_isDisableMessageTimestamp) {
-      command->_header->mutable_message()->set_timestamp(currTimeMillis);
+      mutableMessage->set_timestamp(currTimeMillis);
     }
 
     // Destination
