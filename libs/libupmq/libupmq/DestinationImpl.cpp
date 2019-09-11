@@ -65,6 +65,7 @@ DestinationImpl::~DestinationImpl() {
         destroy();
       }
       CATCH_ALL_NOTHROW
+    default:;
   }
 }
 

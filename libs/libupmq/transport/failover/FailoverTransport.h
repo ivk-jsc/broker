@@ -204,11 +204,11 @@ class UPMQCPP_API FailoverTransport : public upmq::transport::CompositeTransport
 
   void setMaxPullCacheSize(int value);
 
-  bool isReconnectSupported() const;
+  bool isReconnectSupported() const override;
 
   void setReconnectSupported(bool value);
 
-  bool isUpdateURIsSupported() const;
+  bool isUpdateURIsSupported() const override;
 
   void setUpdateURIsSupported(bool value);
 
