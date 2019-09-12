@@ -231,8 +231,7 @@ void Exchange::postNewMessageEvent(const std::string &name) const {
   addNewMessageEvent(name);
 
   for (size_t i = 0; i < static_cast<size_t>(count); ++i) {
-    Poco::ScopedLock<Poco::FastMutex> lock(_mutexDestinations[i]);
-    _conditionDestinations[i].signal();
+    _conditionDestinations[i].notify_one();
   }
 }
 
@@ -264,8 +263,8 @@ void Exchange::run() {
 
     auto &mut = _mutexDestinations[num];
 
-    Poco::ScopedLock<Poco::FastMutex> lock(mut);
-    _conditionDestinations[num].tryWait(mut, 1000);
+    std::unique_lock<std::mutex> lock(mut);
+    _conditionDestinations[num].wait_for(lock, std::chrono::milliseconds(1000));
   }
 }
 std::vector<Destination::Info> Exchange::info() const {

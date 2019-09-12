@@ -128,16 +128,16 @@ void Subscription::save(const Session &session, const MessageDataContainer &sMes
     TRY_POCO_DATA_EXCEPTION { _storage.save(session, sMessage, *dbSession); }
     CATCH_POCO_DATA_EXCEPTION_PURE("can't save message", "", ERROR_ON_SAVE_MESSAGE)
     dbSession->commitTX();
-    postNewMessageEvent();
+    _destination.postNewMessageEvent();
   }
 }
 void Subscription::commit(const Session &session) {
   _storage.commit(session);
-  postNewMessageEvent();
+  _destination.postNewMessageEvent();
 }
 void Subscription::abort(const Session &session) {
   _storage.abort(session);
-  postNewMessageEvent();
+  _destination.postNewMessageEvent();
 }
 
 void Subscription::addClient(
@@ -234,7 +234,7 @@ void Subscription::onEvent(const void *pSender, const MessageDataContainer *&sMe
 bool Subscription::isDurable() const { return _type == Type::DURABLE; }
 bool Subscription::isBrowser() const { return _type == Type::BROWSER; }
 void Subscription::start() {
-  postNewMessageEvent();
+  _destination.postNewMessageEvent();
   if (*_isRunning) {
     return;
   }
@@ -412,12 +412,6 @@ const Consumer *Subscription::at(size_t index) const {
   }
   return nullptr;
 }
-void Subscription::postNewMessageEvent() const {
-  size_t subsCnt = _destination.isTopicFamily() ? _destination.subscriptionsTrueCount() : 1;
-  for (size_t i = 0; i < subsCnt; ++i) {
-    EXCHANGE::Instance().postNewMessageEvent(_destination.name());
-  }
-}
 Storage &Subscription::storage() const { return _storage; }
 const Consumer &Subscription::byObjectID(const std::string &objectID) {
   auto consEnd = _consumers.rend();
@@ -460,7 +454,7 @@ bool Subscription::removeClient(size_t tcpConnectionNum, const std::string &sess
     return result;
   }
 
-  postNewMessageEvent();
+  _destination.postNewMessageEvent();
 
   return result;
 }

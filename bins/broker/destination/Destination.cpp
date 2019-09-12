@@ -420,7 +420,10 @@ void Destination::remFromNotAck(const std::string &objectID) const {
   _notAckList.erase(objectID);
 }
 void Destination::postNewMessageEvent() const {
-  _subscriptions.applyForEach([](const SubscriptionsList::ItemType::KVPair &pair) { pair.second.postNewMessageEvent(); });
+  const size_t subsCnt = isTopicFamily() ? subscriptionsTrueCount() : 1;
+  for (size_t i = 0; i < subsCnt; ++i) {
+    EXCHANGE::Instance().postNewMessageEvent(name());
+  }
 }
 bool Destination::removeConsumer(const std::string &sessionID, const std::string &subscriptionID, size_t tcpNum) {
   std::string toerase;
@@ -456,7 +459,7 @@ int64_t Destination::initBrowser(const std::string &subscriptionName) {
   }
   const int64_t result = subs->storage().size();
   subs->start();
-  subs->postNewMessageEvent();
+  postNewMessageEvent();
   return result;
 }
 // NOTE: browser subscription has only one consumer

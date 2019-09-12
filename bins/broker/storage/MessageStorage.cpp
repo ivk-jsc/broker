@@ -360,11 +360,25 @@ void Storage::saveMessageHeader(const upmq::broker::Session &session, const Mess
   sql << "," << nextParam() << ");";
 
   // Save header
-  dbs << sql.str(), Poco::Data::Keywords::use(messageID), Poco::Data::Keywords::use(priority), Poco::Data::Keywords::use(persistent),
-      Poco::Data::Keywords::use(correlationID), Poco::Data::Keywords::use(reply_to), Poco::Data::Keywords::use(type),
-      Poco::Data::Keywords::use(timestamp), Poco::Data::Keywords::use(ttl), Poco::Data::Keywords::use(expiration),
-      Poco::Data::Keywords::use(bodyType), Poco::Data::Keywords::useRef(sMessage.clientID), Poco::Data::Keywords::useRef(message.group_id()),
-      Poco::Data::Keywords::use(groupSeq), Poco::Data::Keywords::now;
+
+  Poco::Data::Statement insert(dbs());
+  insert.addBind(Poco::Data::Keywords::use(messageID))
+      .addBind(Poco::Data::Keywords::use(priority))
+      .addBind(Poco::Data::Keywords::use(persistent))
+      .addBind(Poco::Data::Keywords::use(correlationID))
+      .addBind(Poco::Data::Keywords::use(reply_to))
+      .addBind(Poco::Data::Keywords::use(type))
+      .addBind(Poco::Data::Keywords::use(timestamp))
+      .addBind(Poco::Data::Keywords::use(ttl))
+      .addBind(Poco::Data::Keywords::use(expiration))
+      .addBind(Poco::Data::Keywords::use(bodyType))
+      .addBind(Poco::Data::Keywords::useRef(sMessage.clientID))
+      .addBind(Poco::Data::Keywords::useRef(message.group_id()))
+      .addBind(Poco::Data::Keywords::use(groupSeq));
+
+  insert << sql.str();
+
+  insert.execute();
 }
 void Storage::save(const upmq::broker::Session &session, const MessageDataContainer &sMessage, storage::DBMSSession &dbSession) {
   const Proto::Message &message = sMessage.message();

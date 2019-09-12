@@ -127,7 +127,6 @@ class Subscription {
   void stop(const Consumer &consumer);
   void recover();
   void recover(const Consumer &consumer);
-  void postNewMessageEvent() const;
   void setHasNotify(bool hasNotify);
   void destroy();
   const std::string &id() const;
