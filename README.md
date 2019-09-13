@@ -1,5 +1,7 @@
 # UPMQ
 
+UPMQ - JMS-like message broker written with C++.
+
 ## Proto
 * [UPMQ protocol (russian version)](https://github.com/ivk-jsc/broker/wiki/UPMQ.proto-%5BRU%5D) 
 
