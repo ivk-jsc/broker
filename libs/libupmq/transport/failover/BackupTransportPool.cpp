@@ -77,23 +77,23 @@ BackupTransportPool::BackupTransportPool(FailoverTransport *parent,
       backupPoolSize(1),
       enabled(false),
       maxReconnectDelay(0) {
-  if (parent == nullptr) {
+  if (this->parent == nullptr) {
     throw NullPointerException(__FILE__, __LINE__, "Parent transport passed is NULL");
   }
 
-  if (taskRunner == nullptr) {
+  if (this->taskRunner == nullptr) {
     throw NullPointerException(__FILE__, __LINE__, "TaskRunner passed is NULL");
   }
 
-  if (uriPool == nullptr) {
+  if (this->uriPool == nullptr) {
     throw NullPointerException(__FILE__, __LINE__, "URIPool passed is NULL");
   }
 
-  if (priorityUriPool == nullptr) {
+  if (this->priorityUriPool == nullptr) {
     throw NullPointerException(__FILE__, __LINE__, "Piroirty URIPool passed is NULL");
   }
 
-  if (closeTask == nullptr) {
+  if (this->closeTask == nullptr) {
     throw NullPointerException(__FILE__, __LINE__, "Close Transport Task passed is NULL");
   }
 
@@ -122,23 +122,23 @@ BackupTransportPool::BackupTransportPool(FailoverTransport *parent,
       backupPoolSize(backupPoolSize),
       enabled(false),
       maxReconnectDelay(0) {
-  if (parent == nullptr) {
+  if (this->parent == nullptr) {
     throw NullPointerException(__FILE__, __LINE__, "Parent transport passed is NULL");
   }
 
-  if (taskRunner == nullptr) {
+  if (this->taskRunner == nullptr) {
     throw NullPointerException(__FILE__, __LINE__, "TaskRunner passed is NULL");
   }
 
-  if (uriPool == nullptr) {
+  if (this->uriPool == nullptr) {
     throw NullPointerException(__FILE__, __LINE__, "URIPool passed is NULL");
   }
 
-  if (priorityUriPool == nullptr) {
+  if (this->priorityUriPool == nullptr) {
     throw NullPointerException(__FILE__, __LINE__, "Piroirty URIPool passed is NULL");
   }
 
-  if (closeTask == nullptr) {
+  if (this->closeTask == nullptr) {
     throw NullPointerException(__FILE__, __LINE__, "Close Transport Task passed is NULL");
   }
 
