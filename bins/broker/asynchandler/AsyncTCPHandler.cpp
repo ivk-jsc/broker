@@ -123,11 +123,7 @@ AsyncTCPHandler::~AsyncTCPHandler() {
 
 void AsyncTCPHandler::onReadable(const AutoPtr<Poco::Net::ReadableNotification> &pNf) {
   if (_needErase) {
-    try {
-      _reactor.removeEventHandler(_socket, _readableCallBack);
-    } catch (Poco::Exception &pex) {
-      ASYNCLOG_ERROR(logStream, (std::to_string(num).append(" ! => ").append(std::string(pex.what()))));
-    }
+    _reactor.removeEventHandler(_socket, _readableCallBack);
     _readComplete = true;
     return;
   }

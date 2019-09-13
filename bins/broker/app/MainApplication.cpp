@@ -129,7 +129,8 @@ int MainApplication::main(const std::vector<std::string> &args) {
 
   ASYNCLOG_CRITICAL(logStream, (std::string("-").append(" * ").append("<<========= start =========>>")));
   ASYNCLOG_CRITICAL(logStream, (std::string("-").append(" * ").append("version\t\t\t: ").append(About::version())));
-  ASYNCLOG_CRITICAL(logStream, (std::string("-").append(" * ").append("configuration\t\t=> ").append(CONFIGURATION::Instance().toString())));
+  ASYNCLOG_CRITICAL(logStream, (std::string("-").append(" * ").append("configuration\t\t=> ")));
+  logStream->critical() << CONFIGURATION::Instance().toString() << non_std_endl;
 
   std::string webuiStatus = "disabled";
 #ifdef ENABLE_WEB_ADMIN
