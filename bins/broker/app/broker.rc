@@ -1,5 +1,7 @@
 #include "afxres.h"
 
+IDI_ICON1          ICON     DISCARDABLE      "broker.ico"
+
 #ifndef _DEBUG
 #define VER_DEBUG                   0
 #else
