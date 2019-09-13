@@ -115,6 +115,7 @@ AsyncHandlerRegestry::~AsyncHandlerRegestry() {
     for (auto &_connection : _connections) {
       if (_connection) {
         _connection->setNeedErase();
+        _connection->onReadable(AutoPtr<Poco::Net::ReadableNotification>(nullptr));
         _connection = nullptr;
       }
     }

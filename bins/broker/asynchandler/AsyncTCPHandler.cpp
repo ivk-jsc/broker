@@ -122,9 +122,9 @@ AsyncTCPHandler::~AsyncTCPHandler() {
 }
 
 void AsyncTCPHandler::onReadable(const AutoPtr<Poco::Net::ReadableNotification> &pNf) {
-  if (_needErase) {
-    _reactor.removeEventHandler(_socket, _readableCallBack);
+  if (_needErase && !_readComplete) {
     _readComplete = true;
+    _reactor.removeEventHandler(_socket, _readableCallBack);
     return;
   }
   UNUSED_VAR(pNf);
@@ -132,7 +132,9 @@ void AsyncTCPHandler::onReadable(const AutoPtr<Poco::Net::ReadableNotification> 
     _allowPutEvent = false;
     BROKER::Instance().putReadable(_queueReadNum, num);
   }
-  _readComplete = false;
+  if (!_needErase) {
+    _readComplete = false;
+  }
 }
 void AsyncTCPHandler::put(std::shared_ptr<MessageDataContainer> sMessage) {
   do {
