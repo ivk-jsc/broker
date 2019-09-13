@@ -115,7 +115,6 @@ AsyncHandlerRegestry::~AsyncHandlerRegestry() {
     for (auto &_connection : _connections) {
       if (_connection) {
         _connection->setNeedErase();
-        _connection->setReadComplete(true);
         _connection = nullptr;
       }
     }

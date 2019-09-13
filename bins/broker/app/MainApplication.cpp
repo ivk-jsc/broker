@@ -195,11 +195,12 @@ int MainApplication::main(const std::vector<std::string> &args) {
   s.stop();
 #endif
 
-  reactor.stop();
-  thread.join();
   BROKER::Instance().stop();
   EXCHANGE::Instance().stop();
   AHRegestry::Instance().stop();
+
+  reactor.stop();
+  thread.join();
 
   AHRegestry::destroyInstance();
   BROKER::destroyInstance();
