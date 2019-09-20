@@ -89,7 +89,7 @@ Poco::Net::HTTPResponse::HTTPStatus WebAdminRequestHandler::onGet() {
       indexlIt = replacerMap.find(indexPage);
     }
 
-    upmq::broker::Configuration::ReplacerMapType::iterator replIt = replacerMap.find(lFile);
+    auto replIt = replacerMap.find(lFile);
     const std::string clientsPage = "/clients." + extension;
     const std::string messagesPage = "/messages." + extension;
     if (replIt == replacerMap.end()) {

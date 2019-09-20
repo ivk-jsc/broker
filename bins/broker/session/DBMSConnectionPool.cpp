@@ -278,7 +278,6 @@ void DBMSConnectionPool::doNow(const std::string &sql, DBMSConnectionPool::TX tx
 void DBMSConnectionPool::initDB(Poco::Data::Session &dbSession) {
   switch (STORAGE_CONFIG.connection.props.dbmsType) {
     case NO_TYPE:
-      break;
     case Postgresql:
       break;
     case SQLite:

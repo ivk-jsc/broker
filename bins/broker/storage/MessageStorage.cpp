@@ -41,14 +41,14 @@ Storage::Storage(const std::string &messageTableID)
   std::string mainTsql = generateSQLMainTable(messageTableID);
   auto mainTXsqlIndexes = generateSQLMainTableIndexes(messageTableID);
   TRY_POCO_DATA_EXCEPTION {
-    storage::DBMSConnectionPool::doNow(mainTsql);
+    storage::DBMSConnectionPool::doNow(mainTsql, DBMSConnectionPool::TX::NOT_USE);
     for (const auto &index : mainTXsqlIndexes) {
-      storage::DBMSConnectionPool::doNow(index);
+      storage::DBMSConnectionPool::doNow(index, DBMSConnectionPool::TX::NOT_USE);
     }
   }
   CATCH_POCO_DATA_EXCEPTION_PURE("can't init storage", mainTsql, ERROR_STORAGE)
   std::string propTsql = generateSQLProperties();
-  TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(propTsql); }
+  TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(propTsql, DBMSConnectionPool::TX::NOT_USE); }
   CATCH_POCO_DATA_EXCEPTION_PURE("can't init storage", mainTsql, ERROR_STORAGE)
   _nonPersistent.reserve(100);
 }

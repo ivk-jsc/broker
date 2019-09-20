@@ -78,13 +78,8 @@ class ArrayPointer {
     }
   };
 
-  typedef void (*deletionFuncPtr)(ArrayData *p);
-
  private:
   ArrayData *array;
-
-  // Pointer to our internal delete function, allows incompletes.
-  deletionFuncPtr onDelete;
 
  public:
   typedef T *PointerType;               // type returned by operator->
@@ -98,7 +93,7 @@ class ArrayPointer {
    * Initialized the contained array pointer to NULL, using the subscript operator
    * results in an exception unless reset to contain a real value.
    */
-  ArrayPointer() : array(new ArrayData()), onDelete(onDeleteFunc) {}
+  ArrayPointer() : array(new ArrayData()) {}
 
   /**
    * Create a new ArrayPointer instance and allocates an internal array that is sized
@@ -107,7 +102,7 @@ class ArrayPointer {
    * @param size
    *      The size of the array to allocate for this ArrayPointer instance.
    */
-  ArrayPointer(int size) : array(nullptr), onDelete(onDeleteFunc) {
+  ArrayPointer(int size) : array(nullptr) {
     if (size == 0) {
       return;
     }
@@ -133,7 +128,7 @@ class ArrayPointer {
    * @param fillWith
    *      The value to initialize each element of the newly allocated array with.
    */
-  ArrayPointer(int size, const T &fillWith) : array(nullptr), onDelete(onDeleteFunc) {
+  ArrayPointer(int size, const T &fillWith) : array(nullptr) {
     if (size == 0) {
       return;
     }
@@ -158,7 +153,7 @@ class ArrayPointer {
    * @param size
    *      The size of the array this object is taking ownership of.
    */
-  explicit ArrayPointer(const PointerType value, int size) : array(nullptr), onDelete(onDeleteFunc) {
+  explicit ArrayPointer(const PointerType value, int size) : array(nullptr) {
     try {
       this->array = new ArrayData(value, size);
     } catch (std::exception &ex) {
@@ -172,7 +167,7 @@ class ArrayPointer {
    * Copy constructor. Copies the value contained in the ArrayPointer to the new
    * instance and increments the reference counter.
    */
-  ArrayPointer(const ArrayPointer &value) : array(value.array), onDelete(onDeleteFunc) {
+  ArrayPointer(const ArrayPointer &value) : array(value.array) {
     if (this->array) {
       this->array->refs.incrementAndGet();
     }
@@ -180,7 +175,8 @@ class ArrayPointer {
 
   virtual ~ArrayPointer() {
     if (this->array && this->array->release()) {
-      onDelete(this->array);
+      delete[] this->array->value;
+      delete this->array;
     }
   }
 
@@ -331,13 +327,6 @@ class ArrayPointer {
   template <typename T1>
   bool operator!=(const ArrayPointer<T1> &right) const {
     return this->array->value != right.get();
-  }
-
- private:
-  // Internal Static deletion function.
-  static void onDeleteFunc(ArrayData *value) {
-    delete[] value->value;
-    delete value;
   }
 };
 

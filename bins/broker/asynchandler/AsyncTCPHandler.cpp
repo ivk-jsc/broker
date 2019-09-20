@@ -127,6 +127,10 @@ void AsyncTCPHandler::onReadable(const AutoPtr<Poco::Net::ReadableNotification> 
     _reactor.removeEventHandler(_socket, _readableCallBack);
     return;
   }
+  if (_needErase && _readComplete) {
+    Poco::Thread::sleep(100);
+    return;
+  }
   UNUSED_VAR(pNf);
   if (_allowPutEvent) {
     _allowPutEvent = false;
@@ -148,14 +152,12 @@ void AsyncTCPHandler::put(std::shared_ptr<MessageDataContainer> sMessage) {
 void AsyncTCPHandler::onShutdown(const AutoPtr<Poco::Net::ShutdownNotification> &pNf) {
   UNUSED_VAR(pNf);
   ASYNCLOG_NOTICE(logStream, (std::to_string(num).append(" ! => shutdown : ").append(_peerAddress)));
-  _readComplete = true;
   emitCloseEvent();
 }
 
 void AsyncTCPHandler::onError(const AutoPtr<Poco::Net::ErrorNotification> &pNf) {
   UNUSED_VAR(pNf);
   ASYNCLOG_ERROR(logStream, (std::to_string(num).append(" ! => network error : ").append(_peerAddress)));
-  _readComplete = true;
   emitCloseEvent(true);
 }
 

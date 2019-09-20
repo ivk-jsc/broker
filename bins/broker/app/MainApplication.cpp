@@ -196,6 +196,7 @@ int MainApplication::main(const std::vector<std::string> &args) {
   s.stop();
 #endif
 
+  reactor.setTimeout(1);
   reactor.stop();
   thread.join();
 

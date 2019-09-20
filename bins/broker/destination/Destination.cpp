@@ -40,11 +40,7 @@ Destination::Destination(const Exchange &exchange, const std::string &uri, Type 
       _consumerMode(makeConsumerMode(_uri)) {
   _storage.setParent(this);
   storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
-  dbSession.beginTX(_id);
-
   createSubscriptionsTable(dbSession);
-
-  dbSession.commitTX();
 }
 Destination::~Destination() {
   try {

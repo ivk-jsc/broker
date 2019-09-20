@@ -80,10 +80,6 @@ class ProducerImpl : public cms::MessageProducer {
 
   string _objectId;
   string _lastMessageId;
-  template <typename T>
-  static void onDeleteFunc(T *value) {
-    DECAF_UNUSED_VAR(value);
-  }
 };
 
 #endif  //__MessageProducerImpl_H__
