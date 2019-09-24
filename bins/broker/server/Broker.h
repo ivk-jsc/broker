@@ -30,6 +30,7 @@
 #include "Configuration.h"
 #include "MessageDataContainer.h"
 #include "Singleton.h"
+#include <FixedSizeUnorderedMap.h>
 
 #include <Poco/Condition.h>
 #include <Poco/RWLock.h>
@@ -44,13 +45,12 @@ class Consumer;
 
 class Broker {
  public:
-  using ConnectionsList = std::unordered_map<std::string, std::unique_ptr<Connection>>;
+  using ConnectionsList = FSUnorderedMap<std::string, std::unique_ptr<Connection>>;
   std::unique_ptr<ThreadSafeLogStream> logStream;
 
  private:
   std::string _id;
   ConnectionsList _connections;
-  mutable upmq::MRWLock _connectionsLock;
   std::atomic_bool _isRunning;
   std::atomic_bool _isReadable;
   std::atomic_bool _isWritable;
@@ -93,7 +93,6 @@ class Broker {
   static void onUndestination(const AsyncTCPHandler &tcpHandler, const MessageDataContainer &sMessage, MessageDataContainer &outMessage);
 
   void removeTcpConnection(const std::string &clientID, size_t tcpConnectionNum);
-  void removeTcpConnection(Connection &connection, size_t tcpConnectionNum);
   void removeConsumers(const std::string &destinationID, const std::string &subscriptionID, size_t tcpNum);
   bool isConnectionExists(const std::string &clientID);
   std::string currentTransaction(const std::string &clientID, const std::string &sessionID) const;

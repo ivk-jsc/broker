@@ -34,6 +34,7 @@ namespace broker {
 Broker::Broker(std::string id)
     : logStream(new ThreadSafeLogStream(ASYNCLOGGER::Instance().get(LOG_CONFIG.name))),
       _id(std::move(id)),
+      _connections(NET_CONFIG.maxConnections),
       _isRunning(false),
       _isReadable(false),
       _isWritable(false),
@@ -56,7 +57,6 @@ Broker::Broker(std::string id)
 }
 Broker::~Broker() {
   try {
-    upmq::ScopedWriteRWLock writeLock(_connectionsLock);
     _connections.clear();
   } catch (...) {
   }
@@ -160,20 +160,17 @@ void Broker::onConnect(const AsyncTCPHandler &tcpHandler, const MessageDataConta
   UNUSED_VAR(tcpHandler);
   const Proto::Connect &connect = sMessage.connect();
 
-  {
-    upmq::ScopedWriteRWLock writeRWLock(_connectionsLock);
-    auto it = _connections.find(connect.client_id());
-    if (it == _connections.end()) {
-      _connections.insert(std::make_pair(connect.client_id(), std::make_unique<Connection>(connect.client_id())));
-      it = _connections.find(connect.client_id());
-    } else {
-      if (it->second->isTcpConnectionExists(sMessage.handlerNum)) {
-        throw EXCEPTION("connection already exists", connect.client_id() + " : " + std::to_string(sMessage.handlerNum), ERROR_CLIENT_ID_EXISTS);
-      }
+  auto it = _connections.find(connect.client_id());
+  if (!it.has_value()) {
+    _connections.insert(std::make_pair(connect.client_id(), std::make_unique<Connection>(connect.client_id())));
+    it = _connections.find(connect.client_id());
+  } else {
+    if ((*it.value())->isTcpConnectionExists(sMessage.handlerNum)) {
+      throw EXCEPTION("connection already exists", connect.client_id() + " : " + std::to_string(sMessage.handlerNum), ERROR_CLIENT_ID_EXISTS);
     }
-    it->second->addTcpConnection(sMessage.handlerNum);
-    tcpHandler.setConnection(it->second.get());
   }
+  (*it.value())->addTcpConnection(sMessage.handlerNum);
+  tcpHandler.setConnection((*it.value()).get());
 
   Proto::Connected &connected = outMessage.createConnected(sMessage.objectID());
 
@@ -193,31 +190,23 @@ void Broker::onConnect(const AsyncTCPHandler &tcpHandler, const MessageDataConta
   mutableProtocolVersion->set_protocol_minor_version(serverVersion.server_minor_version());
 }
 void Broker::removeTcpConnection(const std::string &clientID, size_t tcpConnectionNum) {
-  auto it = _connections.end();
+  bool needErase = false;
   {
-    upmq::ScopedReadRWLock readRWLock(_connectionsLock);
-    it = _connections.find(clientID);
-    if (it != _connections.end()) {
-      it->second->removeTcpConnection(tcpConnectionNum);
+    auto it = _connections.find(clientID);
+    if (it.has_value()) {
+      (*it.value())->removeTcpConnection(tcpConnectionNum);
     }
+    needErase = it.has_value() && (*it.value())->tcpConnectionsCount() == 0;
   }
-  if (it != _connections.end() && it->second->tcpConnectionsCount() == 0) {
+  if (needErase) {
     eraseConnection(clientID);
     ASYNCLOG_INFORMATION(logStream, (std::to_string(tcpConnectionNum).append(" # => ").append("erase connection ").append(clientID)));
   }
 }
-void Broker::removeTcpConnection(Connection &connection, size_t tcpConnectionNum) {
-  connection.removeTcpConnection(tcpConnectionNum);
-  if (connection.tcpConnectionsCount() == 0) {
-    eraseConnection(connection.clientID());
-    ASYNCLOG_INFORMATION(logStream, (std::to_string(tcpConnectionNum).append(" # => ").append("erase connection ").append(connection.clientID())));
-  }
-}
 void Broker::removeConsumers(const std::string &destinationID, const std::string &subscriptionID, size_t tcpNum) {
-  upmq::ScopedReadRWLock readRWLock(_connectionsLock);
-  for (const auto &conn : _connections) {
+  _connections.applyForEach([&destinationID, &subscriptionID, &tcpNum](const ConnectionsList::ItemType::KVPair &conn) {
     conn.second->removeConsumers(destinationID, subscriptionID, tcpNum);
-  }
+  });
 }
 void Broker::onSetClientId(const AsyncTCPHandler &tcpHandler, const MessageDataContainer &sMessage, MessageDataContainer &outMessage) {
   UNUSED_VAR(tcpHandler);
@@ -237,23 +226,19 @@ void Broker::onSetClientId(const AsyncTCPHandler &tcpHandler, const MessageDataC
   if (!isConnectionExists(clientInfo.old_client_id())) {
     throw EXCEPTION("connection not found", clientInfo.old_client_id(), ERROR_CONNECTION);
   }
-
+  std::unique_ptr<Connection> connection;
   {
-    upmq::ScopedWriteRWLock wlock(_connectionsLock);
     auto it = _connections.find(clientInfo.old_client_id());
-    if (it != _connections.end()) {
-      it->second->setClientID(clientInfo.new_client_id());
+    if (it.has_value()) {
+      (*it.value())->setClientID(clientInfo.new_client_id());
     }
-    std::unique_ptr<Connection> connection = std::move(it->second);
-    _connections.erase(it);
-    _connections.insert(std::make_pair(connection->clientID(), std::move(connection)));
+    connection = std::move((*it.value()));
   }
+  _connections.erase(connection->clientID());
+  _connections.insert(std::make_pair(connection->clientID(), std::move(connection)));
 }
 void Broker::eraseConnection(const std::string &connectionID) {
-  {
-    upmq::ScopedWriteRWLock wlock(_connectionsLock);
-    _connections.erase(connectionID);
-  }
+  _connections.erase(connectionID);
   ASYNCLOG_INFORMATION(logStream, (std::string("-").append(" # => ").append(" erased ").append(connectionID)));
 }
 void Broker::onDisconnect(const AsyncTCPHandler &tcpHandler, const MessageDataContainer &sMessage, MessageDataContainer &outMessage) {
@@ -498,18 +483,13 @@ void Broker::onUndestination(const AsyncTCPHandler &tcpHandler, const MessageDat
     // NOTE : if destination not exists then do nothing
   }
 }
-bool Broker::isConnectionExists(const std::string &clientID) {
-  upmq::ScopedReadRWLock readRWLock(_connectionsLock);
-  auto it = _connections.find(clientID);
-  return (it != _connections.end());
-}
+bool Broker::isConnectionExists(const std::string &clientID) { return _connections.contains(clientID); }
 std::string Broker::currentTransaction(const std::string &clientID, const std::string &sessionID) const {
-  upmq::ScopedReadRWLock rLock(_connectionsLock);
   auto it = _connections.find(clientID);
-  if (it == _connections.end()) {
+  if (!it.has_value()) {
     throw EXCEPTION("connection not found", clientID, ERROR_CONNECTION);
   }
-  return it->second->transactionID(sessionID);
+  return (*it.value())->transactionID(sessionID);
 }
 void Broker::onWritable() {
   size_t indexNum = _writableIndexCounter++;
@@ -826,10 +806,7 @@ void Broker::putWritable(size_t queueNum, size_t num) {
   rwput(_isWritable, _writableIndexes[queueNum], num);
 }
 
-size_t Broker::connectionsSize() const {
-  upmq::ScopedReadRWLock readRWLock(_connectionsLock);
-  return _connections.size();
-}
+size_t Broker::connectionsSize() const { return _connections.size(); }
 
 void Broker::rwput(std::atomic_bool &isValid, BQIndexes &bqIndex, size_t num) {
   bool result = false;

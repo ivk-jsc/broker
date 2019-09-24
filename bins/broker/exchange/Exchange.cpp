@@ -155,12 +155,16 @@ bool Exchange::isDestinationTemporary(const std::string &id) {
 }
 
 void Exchange::dropDestination(const std::string &id, DestinationOwner *owner) {
-  auto it = _destinations.find(id);
-  if (it.has_value()) {
-    auto &dest = (*it.value());
-    if ((owner == nullptr) || (dest->hasOwner() && owner->clientID == dest->owner().clientID)) {
-      _destinations.erase(id);
+  bool needErase = false;
+  {
+    auto it = _destinations.find(id);
+    if (it.has_value()) {
+      auto &dest = (*it.value());
+      needErase = ((owner == nullptr) || (dest->hasOwner() && owner->clientID == dest->owner().clientID));
     }
+  }
+  if (needErase) {
+    _destinations.erase(id);
   }
 }
 
