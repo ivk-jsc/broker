@@ -203,8 +203,8 @@ void ProducerImpl::send(const cms::Destination *destination, cms::Message *msg, 
     }
 
     // Message
-    Pointer<cms::Message> message(msg->clone());
-    Pointer<UPMQCommand> command = message.dynamicCast<UPMQCommand>();
+
+    UPMQCommand *command = dynamic_cast<UPMQCommand *>(msg);
     if (!command) {
       throw cms::MessageFormatException("can't cast to UPMQCommand");
     }
@@ -239,7 +239,7 @@ void ProducerImpl::send(const cms::Destination *destination, cms::Message *msg, 
     }
 
     // Destination
-    message->setCMSDestination(destination);
+    msg->setCMSDestination(destination);
 
     // Send
     if (!command->_header->message().IsInitialized()) {
@@ -247,8 +247,9 @@ void ProducerImpl::send(const cms::Destination *destination, cms::Message *msg, 
     }
 
     command->getProtoMessage().set_object_id(_objectId);
+    Pointer<cms::Message> message(msg->clone());
 
-    _session->_connection->syncRequest(command.dynamicCast<Command>())->processReceipt();
+    _session->_connection->syncRequest(message.dynamicCast<Command>())->processReceipt();
   }
   CATCH_ALL_THROW_CMSEXCEPTION
 }
