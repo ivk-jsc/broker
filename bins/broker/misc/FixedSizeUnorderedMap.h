@@ -64,24 +64,34 @@ class FSReadLockedValue {
 };
 template <typename Value>
 class FSWriteLockedValue {
-  MRWLock &_rwLock;
-  Value &_value;
+  MRWLock *_rwLock;
+  Value *_value;
   std::atomic_bool _wasMoved{false};
+  void unlock() noexcept {
+    if (_rwLock->isValid()) {
+      try {
+        if (!_wasMoved) {
+          _rwLock->unlockWrite();
+        }
+      } catch (...) {
+      }
+    }
+  }
 
  public:
-  FSWriteLockedValue(MRWLock &mrwLock, Value &value) : _rwLock(mrwLock), _value(value) {}
+  FSWriteLockedValue(MRWLock &mrwLock, Value &value) : _rwLock(&mrwLock), _value(&value) {}
   FSWriteLockedValue(const FSWriteLockedValue &) = delete;
   FSWriteLockedValue(FSWriteLockedValue &&o) noexcept : _rwLock(o._rwLock), _value(o._value), _wasMoved(false) { o._wasMoved = true; }
   FSWriteLockedValue &operator=(const FSWriteLockedValue &) = delete;
-  FSWriteLockedValue &operator=(FSWriteLockedValue &&) = delete;
-  ~FSWriteLockedValue() noexcept {
-    try {
-      if (!_wasMoved) {
-        _rwLock.unlockWrite();
-      }
-    } catch (...) {
-    }
+  FSWriteLockedValue &operator=(FSWriteLockedValue &&o) noexcept {
+    unlock();
+    _rwLock = o._rwLock;
+    _value = o._value;
+    _wasMoved = false;
+    o._wasMoved = true;
+    return *this;
   }
+  ~FSWriteLockedValue() noexcept { unlock(); }
   const Value &operator*() const { return _value; }
   Value &operator*() { return _value; }
   const Value *operator->() const { return &_value; }
