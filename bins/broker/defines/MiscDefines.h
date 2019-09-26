@@ -126,7 +126,9 @@ namespace PDSQLITE = Poco::Data::SQLite;
     Poco::Thread::yield();                                                                          \
   }                                                                                                 \
   catch (PDSQLITE::InvalidSQLStatementException & issex) {                                          \
-    UNUSED_VAR(issex);                                                                              \
+    if (issex.message().find("no such table") != std::string::npos) {                               \
+      throw EXCEPTION(std::string(__info__) + " : " + (__sql__), issex.message(), (__error__));     \
+    }                                                                                               \
     locked = true;                                                                                  \
     Poco::Thread::yield();                                                                          \
   }                                                                                                 \
