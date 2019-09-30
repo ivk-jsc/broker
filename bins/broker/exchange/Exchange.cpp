@@ -72,8 +72,8 @@ Destination &Exchange::destination(const std::string &uri, Exchange::Destination
     }
     case DestinationCreationMode::CREATE: {
       auto it = _destinations.find(mainDP);
-      if (it.has_value()) {
-        auto &dest = (*it.value());
+      if (it.hasValue()) {
+        auto &dest = *it;
         if (dest->consumerMode() != Destination::makeConsumerMode(uri)) {
           std::string err = "current consumer mode is ";
           err.append(Destination::consumerModeName(dest->consumerMode()));
@@ -84,19 +84,19 @@ Destination &Exchange::destination(const std::string &uri, Exchange::Destination
 
       // FIXME: if mainDP isn't uri then createDestination throw exception
       _destinations.insert(std::make_pair(mainDP, DestinationFactory::createDestination(*this, uri)));
-      it.emplace(_destinations.find(mainDP).value());
+      it = _destinations.find(mainDP);
 
-      return *(*it.value());
+      return *(*it);
     }
   }
   throw EXCEPTION("invalid creation mode", std::to_string(static_cast<int>(creationMode)), ERROR_UNKNOWN);
 }  // namespace broker
 Destination &Exchange::getDestination(const std::string &id) const {
   auto it = _destinations.find(id);
-  if (!it.has_value()) {
+  if (!it.hasValue()) {
     throw EXCEPTION("destination not found", id, ERROR_UNKNOWN);
   }
-  return *(*it.value());
+  return *(*it);
 }
 void Exchange::deleteDestination(const std::string &uri) {
   std::string mainDP = mainDestinationPath(uri);
@@ -158,8 +158,8 @@ void Exchange::dropDestination(const std::string &id, DestinationOwner *owner) {
   bool needErase = false;
   {
     auto it = _destinations.find(id);
-    if (it.has_value()) {
-      auto &dest = (*it.value());
+    if (it.hasValue()) {
+      auto &dest = *it;
       needErase = ((owner == nullptr) || (dest->hasOwner() && owner->clientID == dest->owner().clientID));
     }
   }
@@ -255,8 +255,8 @@ void Exchange::run() {
       if (_destinationEvents.try_dequeue(queueId)) {
         if (!queueId.empty()) {
           auto item = _destinations.find(queueId);
-          if (item.has_value()) {
-            if ((*item.value())->getNexMessageForAllSubscriptions()) {
+          if (item.hasValue()) {
+            if ((*item)->getNexMessageForAllSubscriptions()) {
               _destinationEvents.enqueue(queueId);
               break;
             }

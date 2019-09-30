@@ -58,8 +58,8 @@ void QueueDestination::ack(const Session &session, const MessageDataContainer &s
   bool browser = isSubscriptionBrowser(subscriptionName);
   if (browser) {
     auto it = _subscriptions.find(subscriptionName);
-    if (it.has_value()) {
-      storage = &(it.value()->storage());
+    if (it.hasValue()) {
+      storage = &(it->storage());
     } else {
       throw EXCEPTION("can't find browser subscription", subscriptionName, ERROR_ON_ACK_MESSAGE);
     }

@@ -57,10 +57,10 @@ void TopicDestination::ack(const Session &session, const MessageDataContainer &s
     });
   } else {
     auto it = _subscriptions.find(subscriptionName);
-    if (it.has_value()) {
-      auto &subs = it.value();
-      std::vector<MessageInfo> sentMsgs = subs->storage().getMessagesBelow(session, messageID);
-      Destination::doAck(session, sMessage, subs->storage(), false, sentMsgs);
+    if (it.hasValue()) {
+      auto &subs = *it;
+      std::vector<MessageInfo> sentMsgs = subs.storage().getMessagesBelow(session, messageID);
+      Destination::doAck(session, sMessage, subs.storage(), false, sentMsgs);
     }
   }
 }

@@ -18,7 +18,6 @@
 #define FIXED_SIZE_UNORDERD_MAP_H
 #include <vector>
 #include <list>
-#include <optional.hpp>
 #include <algorithm>
 #include "MoveableRWLock.h"
 #include <Poco/Hash.h>
@@ -28,12 +27,12 @@ namespace upmq {
 
 template <typename Value>
 class FSReadLockedValue {
-  MRWLock *_rwLock;
-  const Value *_value;
+  MRWLock *_rwLock = nullptr;
+  const Value *_value = nullptr;
   std::atomic_bool _wasMoved{false};
 
   void unlock() noexcept {
-    if (_rwLock->isValid()) {
+    if (_rwLock && _rwLock->isValid()) {
       try {
         if (!_wasMoved) {
           _rwLock->unlockRead();
@@ -44,6 +43,7 @@ class FSReadLockedValue {
   }
 
  public:
+  FSReadLockedValue() = default;
   FSReadLockedValue(MRWLock &mrwLock, const Value &value) : _rwLock(&mrwLock), _value(&value) {}
   FSReadLockedValue(const FSReadLockedValue &) = delete;
   FSReadLockedValue(FSReadLockedValue &&o) noexcept : _rwLock(o._rwLock), _value(o._value), _wasMoved(false) { o._wasMoved = true; }
@@ -57,6 +57,7 @@ class FSReadLockedValue {
     return *this;
   }
   ~FSReadLockedValue() noexcept { unlock(); }
+  bool hasValue() const { return _value != nullptr; }
   const Value &operator*() const { return *_value; }
   const Value *operator->() const { return _value; }
   Value &operator*() { return const_cast<Value &>(*_value); }
@@ -64,11 +65,11 @@ class FSReadLockedValue {
 };
 template <typename Value>
 class FSWriteLockedValue {
-  MRWLock *_rwLock;
-  Value *_value;
+  MRWLock *_rwLock = nullptr;
+  Value *_value = nullptr;
   std::atomic_bool _wasMoved{false};
   void unlock() noexcept {
-    if (_rwLock->isValid()) {
+    if (_rwLock && _rwLock->isValid()) {
       try {
         if (!_wasMoved) {
           _rwLock->unlockWrite();
@@ -79,6 +80,7 @@ class FSWriteLockedValue {
   }
 
  public:
+  FSWriteLockedValue() = default;
   FSWriteLockedValue(MRWLock &mrwLock, Value &value) : _rwLock(&mrwLock), _value(&value) {}
   FSWriteLockedValue(const FSWriteLockedValue &) = delete;
   FSWriteLockedValue(FSWriteLockedValue &&o) noexcept : _rwLock(o._rwLock), _value(o._value), _wasMoved(false) { o._wasMoved = true; }
@@ -108,12 +110,12 @@ class FSUnorderedNode {
 
  public:
   FSUnorderedNode() = default;
-  nonstd::optional<FSReadLockedValue<Value>> find(const Key &key) const {
+  FSReadLockedValue<Value> find(const Key &key) const {
     _rwLock.readLock();
     auto item = std::find_if(_items.begin(), _items.end(), [&key](const KVPair &pair) { return pair.first == key; });
     if (item != _items.end()) {
       FSReadLockedValue<Value> fs(_rwLock, item->second);
-      return nonstd::optional<FSReadLockedValue<Value>>(std::move(fs));
+      return fs;
     }
     _rwLock.unlockRead();
     return {};
@@ -248,7 +250,7 @@ class FSUnorderedMap {
  public:
   explicit FSUnorderedMap(size_t size) : _items(size), _size(size) {}
   FSUnorderedMap(FSUnorderedMap &&o) noexcept : _items(std::move(o._items)), _size(std::move(o._size)), _realSize(o._realSize.load()) {}
-  nonstd::optional<FSReadLockedValue<Value>> find(const Key &key) const {
+  FSReadLockedValue<Value> find(const Key &key) const {
     size_t index = Poco::hash(key) % _size;
     return _items.at(index).find(key);
   }
