@@ -161,16 +161,16 @@ void Broker::onConnect(const AsyncTCPHandler &tcpHandler, const MessageDataConta
   const Proto::Connect &connect = sMessage.connect();
 
   auto it = _connections.find(connect.client_id());
-  if (!it.has_value()) {
+  if (!it.hasValue()) {
     _connections.insert(std::make_pair(connect.client_id(), std::make_unique<Connection>(connect.client_id())));
     it = _connections.find(connect.client_id());
   } else {
-    if ((*it.value())->isTcpConnectionExists(sMessage.handlerNum)) {
+    if ((*it)->isTcpConnectionExists(sMessage.handlerNum)) {
       throw EXCEPTION("connection already exists", connect.client_id() + " : " + std::to_string(sMessage.handlerNum), ERROR_CLIENT_ID_EXISTS);
     }
   }
-  (*it.value())->addTcpConnection(sMessage.handlerNum);
-  tcpHandler.setConnection((*it.value()).get());
+  (*it)->addTcpConnection(sMessage.handlerNum);
+  tcpHandler.setConnection((*it).get());
 
   Proto::Connected &connected = outMessage.createConnected(sMessage.objectID());
 
@@ -193,10 +193,10 @@ void Broker::removeTcpConnection(const std::string &clientID, size_t tcpConnecti
   bool needErase = false;
   {
     auto it = _connections.find(clientID);
-    if (it.has_value()) {
-      (*it.value())->removeTcpConnection(tcpConnectionNum);
+    if (it.hasValue()) {
+      (*it)->removeTcpConnection(tcpConnectionNum);
     }
-    needErase = it.has_value() && (*it.value())->tcpConnectionsCount() == 0;
+    needErase = it.hasValue() && (*it)->tcpConnectionsCount() == 0;
   }
   if (needErase) {
     eraseConnection(clientID);
@@ -229,10 +229,10 @@ void Broker::onSetClientId(const AsyncTCPHandler &tcpHandler, const MessageDataC
   std::unique_ptr<Connection> connection;
   {
     auto it = _connections.find(clientInfo.old_client_id());
-    if (it.has_value()) {
-      (*it.value())->setClientID(clientInfo.new_client_id());
+    if (it.hasValue()) {
+      (*it)->setClientID(clientInfo.new_client_id());
     }
-    connection = std::move((*it.value()));
+    connection = std::move(*it);
   }
   _connections.erase(connection->clientID());
   _connections.insert(std::make_pair(connection->clientID(), std::move(connection)));
@@ -486,10 +486,10 @@ void Broker::onUndestination(const AsyncTCPHandler &tcpHandler, const MessageDat
 bool Broker::isConnectionExists(const std::string &clientID) { return _connections.contains(clientID); }
 std::string Broker::currentTransaction(const std::string &clientID, const std::string &sessionID) const {
   auto it = _connections.find(clientID);
-  if (!it.has_value()) {
+  if (!it.hasValue()) {
     throw EXCEPTION("connection not found", clientID, ERROR_CONNECTION);
   }
-  return (*it.value())->transactionID(sessionID);
+  return (*it)->transactionID(sessionID);
 }
 void Broker::onWritable() {
   size_t indexNum = _writableIndexCounter++;
@@ -725,7 +725,7 @@ bool Broker::read(size_t num) {
           ahandler->emitCloseEvent();
           return true;
         }
-        sMessage.handlerNum = num;
+        sMessage.handlerNum = ahandler->num;
         sMessage.clientID = ((ahandler->connection() != nullptr) ? ahandler->connection()->clientID() : emptyString);
 
         switch (static_cast<int>(sMessage.type())) {

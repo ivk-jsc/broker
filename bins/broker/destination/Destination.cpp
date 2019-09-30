@@ -133,13 +133,13 @@ void Destination::subscribe(const MessageDataContainer &sMessage) {
   const std::string &name = subscribe.subscription_name();
 
   auto it = _subscriptions.find(name);
-  if (it.has_value()) {
+  if (it.hasValue()) {
     Consumer consumer = Consumer::makeFakeConsumer();
     consumer.clientID = sMessage.clientID;
     consumer.tcpNum = sMessage.handlerNum;
     consumer.session.id = subscribe.session_id();
     consumer.id = Consumer::genConsumerID(consumer.clientID, std::to_string(consumer.tcpNum), consumer.session.id, "");
-    it.value()->start(consumer);
+    it->start(consumer);
   } else {
     throw EXCEPTION("subscription not found", name, ERROR_ON_SUBSCRIBE);
   }
@@ -148,15 +148,15 @@ void Destination::unsubscribe(const MessageDataContainer &sMessage) {
   const Proto::Unsubscribe &unsubscribe = sMessage.unsubscribe();
   const std::string &name = unsubscribe.subscription_name();
   auto it = _subscriptions.find(name);
-  if (it.has_value()) {
+  if (it.hasValue()) {
     Consumer consumer = Consumer::makeFakeConsumer();
     consumer.clientID = sMessage.clientID;
     consumer.tcpNum = sMessage.handlerNum;
     consumer.session.id = unsubscribe.session_id();
     consumer.id = Consumer::genConsumerID(consumer.clientID, std::to_string(consumer.tcpNum), consumer.session.id, "");
-    auto &subs = it.value();
-    subs->stop(consumer);
-    subs->recover(consumer);
+    auto &subs = *it;
+    subs.stop(consumer);
+    subs.recover(consumer);
   }
 }
 void Destination::subscribeOnNotify(Subscription &subscription) const {
@@ -199,8 +199,8 @@ const std::string &Destination::uri() const { return _uri; }
 bool Destination::isSubscriptionExists(const std::string &name) const { return _subscriptions.contains(name); }
 bool Destination::isSubscriptionBrowser(const std::string &name) const {
   auto it = _subscriptions.find(name);
-  if (it.has_value()) {
-    return it.value()->isBrowser();
+  if (it.hasValue()) {
+    return it->isBrowser();
   }
   return false;
 }
@@ -223,27 +223,27 @@ Subscription &Destination::subscription(const Session &session, const MessageDat
   const std::string &uri = subscription.destination_uri();
 
   auto it = _subscriptions.find(name);
-  if (!it.has_value()) {
+  if (!it.hasValue()) {
     std::string routingK = routingKey(uri);
 
     _subscriptions.emplace(std::string(name), createSubscription(name, routingK, type));
     auto item = _subscriptions.find(name);
-    subscribeOnNotify(*item.value());
-    addSendersFromCache(session, sMessage, *item.value());
+    subscribeOnNotify(*item);
+    addSendersFromCache(session, sMessage, *item);
 
     addS2Subs(session.id(), name);
-    it.emplace(std::move(_subscriptions.find(name).value()));
+    it = _subscriptions.find(name);
   }
-  auto &subs = it.value();
-  if (!subs->isInited()) {
+  auto &subs = *it;
+  if (!subs.isInited()) {
     addS2Subs(session.id(), name);
-    subs->setInited(true);
+    subs.setInited(true);
   }
   if (isTopicFamily() && session.isTransactAcknowledge()) {
-    subs->storage().begin(session, subs->id());
+    subs.storage().begin(session, subs.id());
   }
-  subs->addClient(session, sMessage.handlerNum, sMessage.objectID(), subscription.selector(), localMode);
-  return *subs;
+  subs.addClient(session, sMessage.handlerNum, sMessage.objectID(), subscription.selector(), localMode);
+  return subs;
 }
 Subscription::ConsumerMode Destination::makeConsumerMode(const std::string &uri) {
   Poco::URI tURI(uri);
@@ -426,11 +426,11 @@ bool Destination::removeConsumer(const std::string &sessionID, const std::string
   bool result = false;
   {
     auto it = _subscriptions.find(subscriptionID);
-    if (it.has_value()) {
-      auto &subs = it.value();
-      result = subs->removeClient(tcpNum, sessionID);
-      if (!subs->isRunning()) {
-        if (!subs->isDurable()) {
+    if (it.hasValue()) {
+      auto &subs = *it;
+      result = subs.removeClient(tcpNum, sessionID);
+      if (!subs.isRunning()) {
+        if (!subs.isDurable()) {
           toerase = subscriptionID;
         }
         remS2Subs(sessionID, subscriptionID);
@@ -445,16 +445,16 @@ bool Destination::removeConsumer(const std::string &sessionID, const std::string
 Storage &Destination::storage() const { return _storage; }
 int64_t Destination::initBrowser(const std::string &subscriptionName) {
   auto it = _subscriptions.find(subscriptionName);
-  if (!it.has_value()) {
+  if (!it.hasValue()) {
     throw EXCEPTION("subscription not found", subscriptionName, ERROR_ON_BROWSER);
   }
-  auto &subs = it.value();
-  if (!subs->hasSnapshot()) {
-    copyMessagesTo(*subs);
-    subs->setHasSnapshot(true);
+  auto &subs = *it;
+  if (!subs.hasSnapshot()) {
+    copyMessagesTo(subs);
+    subs.setHasSnapshot(true);
   }
-  const int64_t result = subs->storage().size();
-  subs->start();
+  const int64_t result = subs.storage().size();
+  subs.start();
   postNewMessageEvent();
   return result;
 }
@@ -526,8 +526,8 @@ void Destination::loadDurableSubscriptions() {
         const std::string &rKey = (routingKey.isNull() ? emptyString : routingKey.value());
         _subscriptions.emplace(std::string(name), createSubscription(name, rKey, static_cast<Subscription::Type>(type)));
         auto item = _subscriptions.find(name);
-        subscribeOnNotify(*item.value());
-        item.value()->setInited(false);
+        subscribeOnNotify(*item);
+        item->setInited(false);
       }
     }
   }

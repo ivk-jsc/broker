@@ -105,6 +105,8 @@ AsyncTCPHandler::~AsyncTCPHandler() {
       Poco::Thread::sleep(100);
     }
 
+    _reactor.removeEventHandler(_socket, _readableCallBack);
+
     AHRegestry::Instance().deleteAHandler(num);
 
     removeConsumers();
@@ -124,7 +126,6 @@ AsyncTCPHandler::~AsyncTCPHandler() {
 void AsyncTCPHandler::onReadable(const AutoPtr<Poco::Net::ReadableNotification> &pNf) {
   if (_needErase && !_readComplete) {
     _readComplete = true;
-    _reactor.removeEventHandler(_socket, _readableCallBack);
     return;
   }
   if (_needErase && _readComplete) {
