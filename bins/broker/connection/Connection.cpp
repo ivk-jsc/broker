@@ -99,10 +99,11 @@ void Connection::setClientID(const std::string &clientID) {
   }
 }
 void Connection::addTcpConnection(size_t tcpConnectionNum) {
-  upmq::ScopedWriteRWLock writeRWLock(_tcpLock);
+  upmq::ScopedWriteRWLockWithUnlock writeRWLock(_tcpLock);
   auto it = _tcpConnections.find(tcpConnectionNum);
   if (it == _tcpConnections.end()) {
     _tcpConnections.insert(tcpConnectionNum);
+    writeRWLock.unlock();
     std::stringstream sql;
     sql << "insert into " << _tcpT << "("
         << "client_id"
@@ -120,10 +121,11 @@ void Connection::addTcpConnection(size_t tcpConnectionNum) {
   throw EXCEPTION("connection already exists", _clientID + " : " + std::to_string(tcpConnectionNum), ERROR_CLIENT_ID_EXISTS);
 }
 void Connection::removeTcpConnection(size_t tcpConnectionNum) {
-  upmq::ScopedWriteRWLock writeRWLock(_tcpLock);
+  upmq::ScopedWriteRWLockWithUnlock writeRWLock(_tcpLock);
   auto it = _tcpConnections.find(tcpConnectionNum);
   if (it != _tcpConnections.end()) {
     _tcpConnections.erase(it);
+    writeRWLock.unlock();
     std::stringstream sql;
     sql << "delete from " << _tcpT << " where tcp_id = " << tcpConnectionNum << ";";
     TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }

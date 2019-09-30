@@ -725,7 +725,7 @@ bool Broker::read(size_t num) {
           ahandler->emitCloseEvent();
           return true;
         }
-        sMessage.handlerNum = num;
+        sMessage.handlerNum = ahandler->num;
         sMessage.clientID = ((ahandler->connection() != nullptr) ? ahandler->connection()->clientID() : emptyString);
 
         switch (static_cast<int>(sMessage.type())) {

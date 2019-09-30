@@ -192,12 +192,15 @@ int MainApplication::main(const std::vector<std::string> &args) {
   waitTermination();
   //            #endif
 
+  ASYNCLOG_CRITICAL(logStream, (std::string("-").append(" * ").append("wait termination")));
+
 #ifdef ENABLE_WEB_ADMIN
   s.stop();
 #endif
 
   reactor.setTimeout(1);
   reactor.stop();
+  reactor.wakeUp();
   thread.join();
 
   BROKER::Instance().stop();
