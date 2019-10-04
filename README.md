@@ -103,8 +103,8 @@ UPMQ broker [bins/broker] is configured by the broker.xml file (can be found in 
             <autocreate>true</autocreate>
             <!-- Forward message to another server by message properties -->
             <forward by-property="false"/>
-			<!-- Maximum destinations count -->
-			<max-count>1024</max-count>
+            <!-- Maximum destinations count -->
+            <max-count>1024</max-count>
         </destinations>
         <storage>
             <!-- DBMS properties -->
