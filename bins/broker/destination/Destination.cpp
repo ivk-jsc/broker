@@ -336,11 +336,14 @@ void Destination::removeMessageOrGroup(const Session &session, Storage &storage,
     storage.removeGroupMessage(msg.tuple.get<message::field_group_id.position>().value(), session);
   }
 
+  auto &txName = msg.tuple.get<message::field_message_id.position>();
   if (session.currentDBSession == nullptr) {
     storage::DBMSSession dbmsSession = dbms::Instance().dbmsSession();
-    storage.removeMessage(msg.tuple.get<message::field_message_id.position>(), dbmsSession);
+    dbmsSession.beginTX(txName);
+    storage.removeMessage(txName, dbmsSession);
+    dbmsSession.commitTX();
   } else {
-    storage.removeMessage(msg.tuple.get<message::field_message_id.position>(), *session.currentDBSession);
+    storage.removeMessage(txName, *session.currentDBSession);
   }
 }
 void Destination::doAck(

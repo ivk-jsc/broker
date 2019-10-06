@@ -41,3 +41,4 @@ COMMIT.txt
 /cmake-build-release-wsl/
 /cmake-build-debug-msvc/
 /cmake-build-debug-wsl-clang-analyze/
+/cmake-build-relwithdebinfo/

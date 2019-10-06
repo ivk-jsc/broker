@@ -153,7 +153,7 @@ void Storage::removeMessagesBySession(const upmq::broker::Session &session) {
 
   MessageInfo messageInfo;
   TRY_POCO_DATA_EXCEPTION {
-    Poco::Data::Statement select(session.currentDBSession->operator()());
+    Poco::Data::Statement select((*session.currentDBSession)());
     select << sql.str(), Poco::Data::Keywords::into(messageInfo.tuple), Poco::Data::Keywords::range(0, 1);
     while (!select.done()) {
       select.execute();
@@ -197,6 +197,7 @@ void Storage::removeGroupMessage(const std::string &groupID, const upmq::broker:
   std::unique_ptr<storage::DBMSSession> tempDBMSSession;
   if (!externConnection) {
     tempDBMSSession = std::make_unique<storage::DBMSSession>(dbms::Instance().dbmsSession());
+    tempDBMSSession->beginTX(groupID);
   }
   storage::DBMSSession &dbSession = externConnection ? *session.currentDBSession : *tempDBMSSession;
   TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::into(result), Poco::Data::Keywords::now; }
@@ -204,6 +205,9 @@ void Storage::removeGroupMessage(const std::string &groupID, const upmq::broker:
 
   for (const auto &msgID : result) {
     removeMessage(msgID, dbSession);
+  }
+  if (tempDBMSSession) {
+    tempDBMSSession->commitTX();
   }
 }
 message::GroupStatus Storage::checkIsGroupClosed(const MessageDataContainer &sMessage, const Session &session) const {
@@ -234,15 +238,23 @@ message::GroupStatus Storage::checkIsGroupClosed(const MessageDataContainer &sMe
 int Storage::deleteMessageHeader(storage::DBMSSession &dbSession, const std::string &messageID) {
   std::stringstream sql;
   int persistent = -1;
-  sql << "select "
-      << " msgs.persistent "
-      << " FROM " << _messageTableID << " as msgs"
-      << " where message_id = \'" << messageID << "\'"
-      << ";" << non_std_endl;
+  {
+    upmq::ScopedReadRWLock readRWLock(_nonPersistentLock);
+    auto item = _nonPersistent.find(messageID);
+    if (item != _nonPersistent.end()) {
+      persistent = 0;
+    }
+  }
+  if (persistent != 0) {
+    sql << "select "
+        << " msgs.persistent "
+        << " FROM " << _messageTableID << " as msgs"
+        << " where message_id = \'" << messageID << "\'"
+        << ";" << non_std_endl;
 
-  TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::into(persistent), Poco::Data::Keywords::now; }
-  CATCH_POCO_DATA_EXCEPTION_PURE_NO_INVALIDEXCEPT_NO_EXCEPT("can't get message persistance for ack", sql.str(), ERROR_ON_ACK_MESSAGE)
-
+    TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::into(persistent), Poco::Data::Keywords::now; }
+    CATCH_POCO_DATA_EXCEPTION_PURE_NO_INVALIDEXCEPT_NO_EXCEPT("can't get message persistance for ack", sql.str(), ERROR_ON_ACK_MESSAGE)
+  }
   sql.str("");
   sql << "delete from " << _messageTableID << " where message_id = \'" << messageID << "\'"
       << ";" << non_std_endl;
@@ -263,7 +275,6 @@ int Storage::getSubscribersCount(storage::DBMSSession &dbSession, const std::str
   sql << "select subscribers_count from " << STORAGE_CONFIG.messageJournal() << " where message_id = \'" << messageID << "\';";
   TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::into(subscribersCount), Poco::Data::Keywords::now; }
   CATCH_POCO_DATA_EXCEPTION_PURE("can't get subscribers count", sql.str(), ERROR_UNKNOWN)
-
   return (--subscribersCount);
 }
 void Storage::updateSubscribersCount(storage::DBMSSession &dbSession, const std::string &messageID) {
@@ -302,20 +313,15 @@ void Storage::removeMessage(const std::string &messageID, storage::DBMSSession &
     dbSession.beginTX(messageID);
   }
 
-  try {
-    int wasPersistent = deleteMessageHeader(dbSession, messageID);
-    deleteMessageProperies(dbSession, messageID);
-    int subscribersCount = getSubscribersCount(dbSession, messageID);
-    updateSubscribersCount(dbSession, messageID);
-    if (subscribersCount <= 0) {
-      deleteMessageInfoFromJournal(dbSession, messageID);
-      deleteMessageDataIfExists(messageID, wasPersistent);
-    }
-  } catch (Exception &ex) {
-    throw Exception(ex);
-  } catch (...) {
-    throw;
+  int wasPersistent = deleteMessageHeader(dbSession, messageID);
+  deleteMessageProperies(dbSession, messageID);
+  int subscribersCount = getSubscribersCount(dbSession, messageID);
+  updateSubscribersCount(dbSession, messageID);
+  if (subscribersCount <= 0) {
+    deleteMessageInfoFromJournal(dbSession, messageID);
+    deleteMessageDataIfExists(messageID, wasPersistent);
   }
+
   if (!externConnection) {
     dbSession.commitTX();
   }
@@ -510,13 +516,17 @@ std::shared_ptr<MessageDataContainer> Storage::get(const Consumer &consumer, boo
     ttlIsOut = checkTTLIsOut(msg.screated, msg.ttl);
 
     if (ttlIsOut) {
+      dbSession.beginTX(msg.messageId);
       removeMessage(msg.messageId, dbSession);
+      dbSession.commitTX();
       msg.messageId.clear();
     }
   } while (ttlIsOut);
   if (msg.messageId.empty()) {
     return nullptr;
   }
+
+  bool needToFillProperies = true;
 
   std::shared_ptr<MessageDataContainer> sMessage = std::make_shared<MessageDataContainer>(STORAGE_CONFIG.data.get().toString());
   try {
@@ -567,11 +577,14 @@ std::shared_ptr<MessageDataContainer> Storage::get(const Consumer &consumer, boo
         upmq::ScopedReadRWLock readRWLock(_nonPersistentLock);
         item = _nonPersistent.find(msg.messageId);
         if (item != _nonPersistent.end()) {
+          needToFillProperies = item->second->message().property_size() > 0;
           sMessage->data = item->second->data;
         }
       }
       if (item == _nonPersistent.end()) {
+        dbSession.beginTX(msg.messageId);
         removeMessage(msg.messageId, dbSession);
+        dbSession.commitTX();
         return nullptr;
       }
     }
@@ -597,9 +610,13 @@ std::shared_ptr<MessageDataContainer> Storage::get(const Consumer &consumer, boo
       message.set_group_id(msg.groupID.value());
     }
     message.set_group_seq(msg.groupSeq);
-    fillProperties(message);
+    if (needToFillProperies) {
+      fillProperties(message);
+    }
   } catch (Exception &ex) {
+    dbSession.beginTX(msg.messageId);
     removeMessage(msg.messageId, dbSession);
+    dbSession.commitTX();
     throw Exception(ex);
   }
   return sMessage;
