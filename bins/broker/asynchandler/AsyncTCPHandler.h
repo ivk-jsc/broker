@@ -146,7 +146,6 @@ class AsyncTCPHandler {
  private:
   bool _wasError;
   std::atomic_bool _needErase;
-  int _writeCount;
   size_t _queueReadNum = 0;
   size_t _queueWriteNum = 0;
 

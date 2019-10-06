@@ -49,7 +49,6 @@ AsyncTCPHandler::AsyncTCPHandler(Poco::Net::StreamSocket &socket, Poco::Net::Soc
       _shutdownCallBack(*this, &AsyncTCPHandler::onShutdown),
       _wasError(false),
       _needErase(false),
-      _writeCount(0),
       _maxNotAcknowledgedMessages(0),
       _connection(nullptr),
       _readComplete(true) {

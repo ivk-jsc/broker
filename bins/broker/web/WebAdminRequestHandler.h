@@ -43,7 +43,6 @@ class WebAdminRequestHandler : public Poco::Net::HTTPRequestHandler {
   Poco::Net::HTTPServerRequest *_req;
   Poco::Net::HTTPServerResponse *_resp;
   std::string _htmlResult;
-  WebAdminApp *_myServerApp;
   std::vector<std::string> split(const std::string &s, char delim);
   std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems);
   void onAddDestination(Poco::Net::HTMLForm &form);
