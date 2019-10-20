@@ -32,7 +32,7 @@ namespace storage {
 // iterator is unchanged.
 
 std::ostream &operator<<(std::ostream &os, const Token &t) {
-  os << "T<" << t.type << ", " << t.val << ">";
+  os << "T<" << static_cast<int>(t.type) << ", " << t.val << ">";
   return os;
 }
 
@@ -67,21 +67,21 @@ inline bool operator<(const RWEntry &lhs, const RWEntry &rhs) { return caseless(
 
 bool tokeniseReservedWord(Token &tok) {
   // This must be sorted!!
-  constexpr RWEntry reserved[]{{"and", T_AND},
-                               {"between", T_BETWEEN},
-                               {"escape", T_ESCAPE},
-                               {"false", T_FALSE},
-                               {"in", T_IN},
-                               {"is", T_IS},
-                               {"like", T_LIKE},
-                               {"not", T_NOT},
-                               {"null", T_NULL},
-                               {"or", T_OR},
-                               {"true", T_TRUE}};
+  constexpr RWEntry reserved[]{{"and", TokenType::T_AND},
+                               {"between", TokenType::T_BETWEEN},
+                               {"escape", TokenType::T_ESCAPE},
+                               {"false", TokenType::T_FALSE},
+                               {"in", TokenType::T_IN},
+                               {"is", TokenType::T_IS},
+                               {"like", TokenType::T_LIKE},
+                               {"not", TokenType::T_NOT},
+                               {"null", TokenType::T_NULL},
+                               {"or", TokenType::T_OR},
+                               {"true", TokenType::T_TRUE}};
 
   const int reserved_size = sizeof(reserved) / sizeof(RWEntry);
 
-  if (tok.type != T_IDENTIFIER) {
+  if (tok.type != TokenType::T_IDENTIFIER) {
     return false;
   }
 
@@ -156,11 +156,11 @@ bool tokenise(std::string::const_iterator &s, std::string::const_iterator &e, To
     ACCEPT_NOINC
   } state = START;
 
-  TokenType tokType = T_EOS;
+  TokenType tokType = TokenType::T_EOS;
   while (true) switch (state) {
       case START:
         if (t == e) {
-          tok = Token(T_EOS, s, END);
+          tok = Token(TokenType::T_EOS, s, END);
           return true;
         } else if (std::isspace(*t)) {
           ++t;
@@ -169,56 +169,56 @@ bool tokenise(std::string::const_iterator &s, std::string::const_iterator &e, To
         } else
           switch (*t) {
             case '(':
-              tokType = T_LPAREN;
+              tokType = TokenType::T_LPAREN;
               state = ACCEPT_INC;
               continue;
             case ')':
-              tokType = T_RPAREN;
+              tokType = TokenType::T_RPAREN;
               state = ACCEPT_INC;
               continue;
             case ',':
-              tokType = T_COMMA;
+              tokType = TokenType::T_COMMA;
               state = ACCEPT_INC;
               continue;
             case '+':
-              tokType = T_PLUS;
+              tokType = TokenType::T_PLUS;
               state = ACCEPT_INC;
               continue;
             case '-':
-              tokType = T_MINUS;
+              tokType = TokenType::T_MINUS;
               state = ACCEPT_INC;
               continue;
             case '*':
-              tokType = T_MULT;
+              tokType = TokenType::T_MULT;
               state = ACCEPT_INC;
               continue;
             case '/':
-              tokType = T_DIV;
+              tokType = TokenType::T_DIV;
               state = ACCEPT_INC;
               continue;
             case '=':
-              tokType = T_EQUAL;
+              tokType = TokenType::T_EQUAL;
               state = ACCEPT_INC;
               continue;
             case '<':
               ++t;
               if (t == e || (*t != '>' && *t != '=')) {
-                tokType = T_LESS;
+                tokType = TokenType::T_LESS;
                 state = ACCEPT_NOINC;
                 continue;
               } else {
-                tokType = (*t == '>') ? T_NEQ : T_LSEQ;
+                tokType = (*t == '>') ? TokenType::T_NEQ : TokenType::T_LSEQ;
                 state = ACCEPT_INC;
                 continue;
               }
             case '>':
               ++t;
               if (t == e || *t != '=') {
-                tokType = T_GRT;
+                tokType = TokenType::T_GRT;
                 state = ACCEPT_NOINC;
                 continue;
               } else {
-                tokType = T_GREQ;
+                tokType = TokenType::T_GREQ;
                 state = ACCEPT_INC;
                 continue;
               }
@@ -229,9 +229,9 @@ bool tokenise(std::string::const_iterator &s, std::string::const_iterator &e, To
           ++t;
           state = IDENTIFIER;
         } else if (*t == '\'') {
-          return processString(s, e, '\'', T_STRING, tok);
+          return processString(s, e, '\'', TokenType::T_STRING, tok);
         } else if (*t == '\"') {
-          return processString(s, e, '\"', T_IDENTIFIER, tok);
+          return processString(s, e, '\"', TokenType::T_IDENTIFIER, tok);
         } else if (*t == '0') {
           ++t;
           state = ZERO;
@@ -290,7 +290,7 @@ bool tokenise(std::string::const_iterator &s, std::string::const_iterator &e, To
         continue;
       case ZERO:
         if (t == e) {
-          tokType = T_NUMERIC_EXACT;
+          tokType = TokenType::T_NUMERIC_EXACT;
           state = ACCEPT_NOINC;
         } else if (*t == '.') {
           ++t;
@@ -317,10 +317,10 @@ bool tokenise(std::string::const_iterator &s, std::string::const_iterator &e, To
         continue;
       case HEXDIGIT:
         if (t == e) {
-          tokType = T_NUMERIC_EXACT;
+          tokType = TokenType::T_NUMERIC_EXACT;
           state = ACCEPT_NOINC;
         } else if (*t == 'l' || *t == 'L') {
-          tokType = T_NUMERIC_EXACT;
+          tokType = TokenType::T_NUMERIC_EXACT;
           state = ACCEPT_INC;
         } else if (std::isxdigit(*t) || *t == '_') {
           ++t;
@@ -329,7 +329,7 @@ bool tokenise(std::string::const_iterator &s, std::string::const_iterator &e, To
           ++t;
           state = EXPONENT_SIGN;
         } else {
-          tokType = T_NUMERIC_EXACT;
+          tokType = TokenType::T_NUMERIC_EXACT;
           state = ACCEPT_NOINC;
         }
         continue;
@@ -345,43 +345,43 @@ bool tokenise(std::string::const_iterator &s, std::string::const_iterator &e, To
         continue;
       case BINDIGIT:
         if (t == e) {
-          tokType = T_NUMERIC_EXACT;
+          tokType = TokenType::T_NUMERIC_EXACT;
           state = ACCEPT_NOINC;
         } else if (*t == 'l' || *t == 'L') {
-          tokType = T_NUMERIC_EXACT;
+          tokType = TokenType::T_NUMERIC_EXACT;
           state = ACCEPT_INC;
         } else if (*t == '0' || *t == '1' || *t == '_') {
           ++t;
           state = BINDIGIT;
         } else {
-          tokType = T_NUMERIC_EXACT;
+          tokType = TokenType::T_NUMERIC_EXACT;
           state = ACCEPT_NOINC;
         }
         continue;
       case OCTDIGIT:
         if (t == e) {
-          tokType = T_NUMERIC_EXACT;
+          tokType = TokenType::T_NUMERIC_EXACT;
           state = ACCEPT_NOINC;
         } else if (*t == 'l' || *t == 'L') {
-          tokType = T_NUMERIC_EXACT;
+          tokType = TokenType::T_NUMERIC_EXACT;
           state = ACCEPT_INC;
         } else if ((std::isdigit(*t) && *t < '8') || *t == '_') {
           ++t;
           state = OCTDIGIT;
         } else {
-          tokType = T_NUMERIC_EXACT;
+          tokType = TokenType::T_NUMERIC_EXACT;
           state = ACCEPT_NOINC;
         }
         continue;
       case DIGIT:
         if (t == e) {
-          tokType = T_NUMERIC_EXACT;
+          tokType = TokenType::T_NUMERIC_EXACT;
           state = ACCEPT_NOINC;
         } else if (*t == 'l' || *t == 'L') {
-          tokType = T_NUMERIC_EXACT;
+          tokType = TokenType::T_NUMERIC_EXACT;
           state = ACCEPT_INC;
         } else if (*t == 'f' || *t == 'F' || *t == 'd' || *t == 'D') {
-          tokType = T_NUMERIC_APPROX;
+          tokType = TokenType::T_NUMERIC_APPROX;
           state = ACCEPT_INC;
         } else if (std::isdigit(*t) || *t == '_') {
           ++t;
@@ -393,13 +393,13 @@ bool tokenise(std::string::const_iterator &s, std::string::const_iterator &e, To
           ++t;
           state = EXPONENT_SIGN;
         } else {
-          tokType = T_NUMERIC_EXACT;
+          tokType = TokenType::T_NUMERIC_EXACT;
           state = ACCEPT_NOINC;
         }
         continue;
       case DECIMAL:
         if (t == e) {
-          tokType = T_NUMERIC_APPROX;
+          tokType = TokenType::T_NUMERIC_APPROX;
           state = ACCEPT_NOINC;
         } else if (std::isdigit(*t) || *t == '_') {
           ++t;
@@ -408,25 +408,25 @@ bool tokenise(std::string::const_iterator &s, std::string::const_iterator &e, To
           ++t;
           state = EXPONENT_SIGN;
         } else if (*t == 'f' || *t == 'F' || *t == 'd' || *t == 'D') {
-          tokType = T_NUMERIC_APPROX;
+          tokType = TokenType::T_NUMERIC_APPROX;
           state = ACCEPT_INC;
         } else {
-          tokType = T_NUMERIC_APPROX;
+          tokType = TokenType::T_NUMERIC_APPROX;
           state = ACCEPT_NOINC;
         }
         continue;
       case EXPONENT:
         if (t == e) {
-          tokType = T_NUMERIC_APPROX;
+          tokType = TokenType::T_NUMERIC_APPROX;
           state = ACCEPT_NOINC;
         } else if (std::isdigit(*t)) {
           ++t;
           state = EXPONENT;
         } else if (*t == 'f' || *t == 'F' || *t == 'd' || *t == 'D') {
-          tokType = T_NUMERIC_APPROX;
+          tokType = TokenType::T_NUMERIC_APPROX;
           state = ACCEPT_INC;
         } else {
-          tokType = T_NUMERIC_APPROX;
+          tokType = TokenType::T_NUMERIC_APPROX;
           state = ACCEPT_NOINC;
         }
         continue;
@@ -438,7 +438,7 @@ bool tokenise(std::string::const_iterator &s, std::string::const_iterator &e, To
         s = t;
         return true;
       case ACCEPT_IDENTIFIER:
-        tok = Token(T_IDENTIFIER, s, t);
+        tok = Token(TokenType::T_IDENTIFIER, s, t);
         s = t;
         tokeniseReservedWord(tok);
         return true;
@@ -464,7 +464,7 @@ const Token &Tokeniser::nextToken() {
   }
 
   // Don't extend stream of tokens further than the end of stream;
-  if (tokp > 0 && tokens[tokp - 1].type == T_EOS) {
+  if (tokp > 0 && tokens[tokp - 1].type == TokenType::T_EOS) {
     return tokens[tokp - 1];
   }
 

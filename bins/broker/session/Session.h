@@ -62,13 +62,13 @@ class Session {
       auto item = _currentSessions.find(Poco::Thread::currentTid());
       return (item != _currentSessions.end()) && (item->second != nullptr);
     }
-    void set(std::unique_ptr<storage::DBMSSession> currentDBSession) noexcept {
+    void set(std::unique_ptr<storage::DBMSSession> currDBSession) noexcept {
       upmq::ScopedWriteRWLock writeRWLock(_rwLock);
       _currentSessions.erase(Poco::Thread::currentTid());
-      _currentSessions.emplace(Poco::Thread::currentTid(), std::move(currentDBSession));
+      _currentSessions.emplace(Poco::Thread::currentTid(), std::move(currDBSession));
     }
-    CurrentDBSession &operator=(std::unique_ptr<storage::DBMSSession> currentDBSession) noexcept {
-      this->set(std::move(currentDBSession));
+    CurrentDBSession &operator=(std::unique_ptr<storage::DBMSSession> currDBSession) noexcept {
+      this->set(std::move(currDBSession));
       return *this;
     }
     storage::DBMSSession *operator->() {
@@ -84,12 +84,12 @@ class Session {
       return _currentSessions[Poco::Thread::currentTid()].get() != rhs;
     }
     storage::DBMSSession &operator*() { return get(); }
-    void reset(storage::DBMSSession *currentDBSession) {
-      if (currentDBSession == nullptr) {
+    void reset(storage::DBMSSession *currDBSession) {
+      if (currDBSession == nullptr) {
         upmq::ScopedWriteRWLock writeRWLock(_rwLock);
         _currentSessions.erase(Poco::Thread::currentTid());
       } else {
-        set(std::unique_ptr<storage::DBMSSession>(currentDBSession));
+        set(std::unique_ptr<storage::DBMSSession>(currDBSession));
       }
     }
     std::unique_ptr<storage::DBMSSession> move() {

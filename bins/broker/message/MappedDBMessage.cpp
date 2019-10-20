@@ -58,7 +58,7 @@ int64_t MappedDBMessage::expiration() const { return getPropertyValue<Poco::Int6
 
 int64_t MappedDBMessage::creationTime() const { return getPropertyValue<Poco::Int64>("created_time", _messageID, _storage); }
 
-void MappedDBMessage::processProperties(PropertyHandler &handler) const {
+void MappedDBMessage::processProperties(PropertyHandler &handler, const std::string &identifier) const {
   std::vector<MsgProperty> properties;
   std::stringstream sql;
 
@@ -74,7 +74,9 @@ void MappedDBMessage::processProperties(PropertyHandler &handler) const {
       << ", value_long"
       << ", value_float"
       << ", value_double"
-      << " from " << _storage.propertyTableID() << " where message_id = \'" << _messageID << "\';";
+      << " from " << _storage.propertyTableID() << " where message_id = \'" << _messageID << "\'"
+      << " and property_name = \'" << identifier << "\'"
+      << ";";
 
   TRY_POCO_DATA_EXCEPTION {
     *dbmsConnection << sql.str(), Poco::Data::Keywords::into(properties), Poco::Data::Keywords::now;

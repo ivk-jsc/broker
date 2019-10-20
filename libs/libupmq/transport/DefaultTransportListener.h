@@ -42,14 +42,14 @@ class UPMQCPP_API DefaultTransportListener : public TransportListener {
    *
    * @param command the received command object.
    */
-  void onCommand(Pointer<Command> command) override {}
+  void onCommand(Pointer<Command> /*command*/) override {}
 
   /**
    * Event handler for an exception from a command transport.
    *
    * @param ex The exception.
    */
-  void onException(const decaf::lang::Exception &) override {}
+  void onException(const decaf::lang::Exception & /*ex*/) override {}
 
   /**
    * The transport has suffered an interruption from which it hopes to recover

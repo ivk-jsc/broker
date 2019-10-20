@@ -696,6 +696,7 @@ void FailoverTransport::handleTransportFailure(const decaf::lang::Exception &err
 
 ////////////////////////////////////////////////////////////////////////////////
 void FailoverTransport::handleConnectionControl(Pointer<Command> control) {
+  DECAF_UNUSED_VAR(control);
   try {
     //    Pointer<ConnectionControl> ctrlCommand = control.dynamicCast<ConnectionControl>();
     //

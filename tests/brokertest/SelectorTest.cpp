@@ -163,7 +163,7 @@ void SelectorTest::assertSelector(const std::string &selector, bool expected) {
   doMessage(msg.get());
   producer->send(msg.get());
 
-  const std::unique_ptr<cms::Message> msgret(consumer->receive(5000));
+  const std::unique_ptr<cms::Message> msgret(consumer->receive(3000));
 
   if (expected) {
     EXPECT_TRUE(msgret != nullptr);
@@ -208,7 +208,7 @@ void SelectorTest::doClean() {
   consumer->start();
   // lets consume any outstanding messages from previous test runs
   cms::Message *message;
-  while ((message = consumer->receive(5000)) != nullptr) {
+  while ((message = consumer->receive(3000)) != nullptr) {
     delete message;
   }
   consumer->stop();

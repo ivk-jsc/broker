@@ -66,11 +66,11 @@ class LinkedBlockingQueue : public BlockingQueue<E> {
 
    public:
     QueueNode() : value(), unlinked(false), dequeued(false), next() {}
-    QueueNode(const U &value) : value(value), unlinked(false), dequeued(false), next() {}
+    QueueNode(const U &val) : value(val), unlinked(false), dequeued(false), next() {}
 
-    void set(Pointer<QueueNode<U> > next, const U &value) {
-      this->next = next;
-      this->value = value;
+    void set(Pointer<QueueNode<U> > nxt, const U &val) {
+      this->next = nxt;
+      this->value = val;
       this->unlinked = false;
       this->dequeued = false;
     }

@@ -172,7 +172,7 @@ class FutureTask : public RunnableFuture<T> {
       return result;
     }
 
-    void innerSet(const T &result) {
+    void innerSet(const T &res) {
       for (;;) {
         int s = getState();
         if (s == RAN) {
@@ -186,7 +186,7 @@ class FutureTask : public RunnableFuture<T> {
           return;
         }
         if (compareAndSetState(s, RAN)) {
-          this->result = result;
+          this->result = res;
           releaseShared(0);
           this->parent->done();
           return;
@@ -246,9 +246,9 @@ class FutureTask : public RunnableFuture<T> {
 
       this->runner = decaf::lang::Thread::currentThread();
       if (getState() == RUNNING) {  // recheck after setting thread
-        T result;
+        T res;
         try {
-          result = this->callable->call();
+          res = this->callable->call();
         } catch (decaf::lang::Exception &ex) {
           this->parent->setException(ex);
           return;
@@ -259,7 +259,7 @@ class FutureTask : public RunnableFuture<T> {
           this->parent->setException(decaf::lang::Exception(__FILE__, __LINE__, "FutureTask Caught Unknown exception during task execution."));
           return;
         }
-        this->parent->set(result);
+        this->parent->set(res);
       } else {
         releaseShared(0);  // cancel
       }

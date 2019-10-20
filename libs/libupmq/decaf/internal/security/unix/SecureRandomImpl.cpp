@@ -110,11 +110,11 @@ void SecureRandomImpl::providerNextBytes(unsigned char *bytes, int numBytes) {
     do {
       errno = 0;
       bytesRead += read(this->config->randFile, (void *)&bytes[bytesRead], numBytes - bytesRead);
-    } while (bytesRead < numBytes || errno != 0);
+    } while (bytesRead < static_cast<size_t>(numBytes) || errno != 0);
 
     // Since the dev random files are special OS random sources we should never get
     // an EOF or other error, if so its bad.
-    if (bytesRead != numBytes) {
+    if (bytesRead != static_cast<size_t>(numBytes)) {
       throw RuntimeException(__FILE__, __LINE__, "Unexpected error while reading random bytes from system resources.");
     }
 

@@ -17,7 +17,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 add_library(libupmqprotocol STATIC)
 
 if (WIN32)
-    target_compile_options(libupmqprotocol PUBLIC /wd4125 /wd4100)
+  target_compile_options(libupmqprotocol PUBLIC /wd4125 /wd4100)
 endif ()
 
 target_sources(libupmqprotocol PRIVATE ${PROTO_SRCS} ${PROTO_HDRS})

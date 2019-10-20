@@ -88,7 +88,7 @@ set(SOURCE_FILES
     misc/NextBindParam.h
     misc/MoveableRWLock.h
     misc/MoveableRWLock.cpp
-	misc/FixedSizeUnorderedMap.h
+    misc/FixedSizeUnorderedMap.h
     connection/Connection.cpp
     connection/Connection.h
     session/Session.cpp
@@ -122,59 +122,59 @@ set(SOURCE_FILES
     session/DBMSSession.h)
 
 if (ENABLE_WEB_ADMIN)
-    add_definitions(-DENABLE_WEB_ADMIN)
-    include_directories(web)
-    set(SOURCE_FILES ${SOURCE_FILES}
-        web/ClientsPageReplacer.cpp
-        web/ClientsPageReplacer.h
-        web/ClientsRowPageReplacer.cpp
-        web/ClientsRowPageReplacer.h
-        web/DestinationRowPageReplacer.cpp
-        web/DestinationRowPageReplacer.h
-        web/IndexPageReplacer.cpp
-        web/IndexPageReplacer.h
-        web/MainPageReplacer.cpp
-        web/MainPageReplacer.h
-        web/MessagesPageReplacer.cpp
-        web/MessagesPageReplacer.h
-        web/MessagesRowPageReplacer.cpp
-        web/MessagesRowPageReplacer.h
-        web/QueuesPageReplacer.cpp
-        web/QueuesPageReplacer.h
-        web/TemplateParamReplacer.cpp
-        web/TemplateParamReplacer.h
-        web/TopicsPageReplacer.cpp
-        web/TopicsPageReplacer.h
-        web/WebAdminRequestHandler.cpp
-        web/WebAdminRequestHandler.h
-        web/WebAdminRequestHandlerFactory.cpp
-        web/WebAdminRequestHandlerFactory.h
-        )
+  add_definitions(-DENABLE_WEB_ADMIN)
+  include_directories(web)
+  set(SOURCE_FILES ${SOURCE_FILES}
+      web/ClientsPageReplacer.cpp
+      web/ClientsPageReplacer.h
+      web/ClientsRowPageReplacer.cpp
+      web/ClientsRowPageReplacer.h
+      web/DestinationRowPageReplacer.cpp
+      web/DestinationRowPageReplacer.h
+      web/IndexPageReplacer.cpp
+      web/IndexPageReplacer.h
+      web/MainPageReplacer.cpp
+      web/MainPageReplacer.h
+      web/MessagesPageReplacer.cpp
+      web/MessagesPageReplacer.h
+      web/MessagesRowPageReplacer.cpp
+      web/MessagesRowPageReplacer.h
+      web/QueuesPageReplacer.cpp
+      web/QueuesPageReplacer.h
+      web/TemplateParamReplacer.cpp
+      web/TemplateParamReplacer.h
+      web/TopicsPageReplacer.cpp
+      web/TopicsPageReplacer.h
+      web/WebAdminRequestHandler.cpp
+      web/WebAdminRequestHandler.h
+      web/WebAdminRequestHandlerFactory.cpp
+      web/WebAdminRequestHandlerFactory.h
+      )
 endif ()
 
 if (ENABLE_USING_SENDFILE)
-    add_definitions(-DENABLE_USING_SENDFILE)
-    set(SOURCE_FILES ${SOURCE_FILES}
-        asynchandler/sendfile/SendFile.cpp
-        asynchandler/sendfile/SendFile.h
-        asynchandler/sendfile/fileno_stream.cpp
-        asynchandler/sendfile/fileno_stream.h
-        )
+  add_definitions(-DENABLE_USING_SENDFILE)
+  set(SOURCE_FILES ${SOURCE_FILES}
+      asynchandler/sendfile/SendFile.cpp
+      asynchandler/sendfile/SendFile.h
+      asynchandler/sendfile/fileno_stream.cpp
+      asynchandler/sendfile/fileno_stream.h
+      )
 endif (ENABLE_USING_SENDFILE)
 
 foreach (SOURCE IN ITEMS ${SOURCE_FILES})
-    set(SOURCE_FILES_NEW ${SOURCE_FILES_NEW} "${SOURCE}")
+  set(SOURCE_FILES_NEW ${SOURCE_FILES_NEW} "${SOURCE}")
 endforeach ()
 
 foreach (SOURCE IN ITEMS ${SOURCE_FILES_NEW})
-    get_filename_component(SOURCE_PATH "${SOURCE}" PATH)
-    string(REPLACE "/" "\\" SOURCE_PATH_MSVC "${SOURCE_PATH}")
-    source_group("${SOURCE_PATH_MSVC}" FILES "${SOURCE}")
+  get_filename_component(SOURCE_PATH "${SOURCE}" PATH)
+  string(REPLACE "/" "\\" SOURCE_PATH_MSVC "${SOURCE_PATH}")
+  source_group("${SOURCE_PATH_MSVC}" FILES "${SOURCE}")
 endforeach ()
 
 target_sources(broker PRIVATE main.cpp)
 if (WIN32)
-    target_sources(broker PRIVATE app/broker.rc)
+  target_sources(broker PRIVATE app/broker.rc)
 endif ()
 target_sources(broker PRIVATE ${SOURCE_FILES_NEW})
 
@@ -189,47 +189,47 @@ set(POCO_LIBS
 get_target_property(Poco_VERSION_MAJOR Poco::Foundation Poco_VERSION_MAJOR)
 add_definitions(-DPOCO_VERSION_MAJOR=${Poco_VERSION_MAJOR})
 if (Poco_VERSION_MAJOR GREATER 1)
-    list(APPEND POCO_LIBS Poco::SQL Poco::SQLODBC Poco::SQLSQLite)
-    if (ENABLE_POSTGRESQL)
-        add_definitions(-DHAS_POSTGRESQL)
-        list(APPEND POCO_LIBS Poco::SQLPostgreSQL)
-    endif ()
+  list(APPEND POCO_LIBS Poco::SQL #[[Poco::SQLODBC]] Poco::SQLSQLite)
+  if (ENABLE_POSTGRESQL)
+    add_definitions(-DHAS_POSTGRESQL)
+    list(APPEND POCO_LIBS Poco::SQLPostgreSQL)
+  endif ()
 else ()
-    list(APPEND POCO_LIBS Poco::Data Poco::DataSQLite Poco::DataODBC)
+  list(APPEND POCO_LIBS Poco::Data Poco::DataSQLite #[[Poco::DataODBC]])
 endif ()
 
 target_link_libraries(broker PRIVATE upmq::protocol protobuf::libprotobuf ${CMAKE_DL_LIBS} ${POCO_LIBS})
 if (NOT WIN32)
-    target_link_libraries(broker PRIVATE Threads::Threads)
+  target_link_libraries(broker PRIVATE Threads::Threads)
 else ()
-    target_link_libraries(broker PRIVATE ws2_32 mswsock iphlpapi)
+  target_link_libraries(broker PRIVATE ws2_32 mswsock iphlpapi)
 endif ()
 
 macro(copy_poco_lib APP DLL)
-    # find the release *.dll file
-    get_target_property(Poco${DLL}Location Poco::${DLL} LOCATION)
-    # find the debug *d.dll file
-    get_target_property(Poco${DLL}LocationDebug Poco::${DLL} IMPORTED_LOCATION_DEBUG)
+  # find the release *.dll file
+  get_target_property(Poco${DLL}Location Poco::${DLL} LOCATION)
+  # find the debug *d.dll file
+  get_target_property(Poco${DLL}LocationDebug Poco::${DLL} IMPORTED_LOCATION_DEBUG)
 
-    set(POCOLIB $<$<CONFIG:Debug>:${Poco${DLL}LocationDebug}> $<$<NOT:$<CONFIG:Debug>>:${Poco${DLL}Location}>)	
+  set(POCOLIB $<$<CONFIG:Debug>:${Poco${DLL}LocationDebug}> $<$<NOT:$<CONFIG:Debug>>:${Poco${DLL}Location}>)
 
-    string(FIND "${POCOLIB}" ".dll" HAS_DLL_EXT)
+  string(FIND "${POCOLIB}" ".dll" HAS_DLL_EXT)
 
-    if (${HAS_DLL_EXT} GREATER -1)
-        add_custom_command(TARGET ${APP} POST_BUILD
-                           COMMAND ${CMAKE_COMMAND} -E copy_if_different $<$<CONFIG:Debug>:${Poco${DLL}LocationDebug}> $<$<NOT:$<CONFIG:Debug>>:${Poco${DLL}Location}> $<TARGET_FILE_DIR:${APP}>)
+  if (${HAS_DLL_EXT} GREATER -1)
+    add_custom_command(TARGET ${APP} POST_BUILD
+                       COMMAND ${CMAKE_COMMAND} -E copy_if_different $<$<CONFIG:Debug>:${Poco${DLL}LocationDebug}> $<$<NOT:$<CONFIG:Debug>>:${Poco${DLL}Location}> $<TARGET_FILE_DIR:${APP}>)
 
-        install(FILES $<$<CONFIG:Debug>:${Poco${DLL}LocationDebug}> $<$<NOT:$<CONFIG:Debug>>:${Poco${DLL}Location}>
-                DESTINATION bin
-                COMPONENT server)
-    endif()
+    install(FILES $<$<CONFIG:Debug>:${Poco${DLL}LocationDebug}> $<$<NOT:$<CONFIG:Debug>>:${Poco${DLL}Location}>
+            DESTINATION bin
+            COMPONENT server)
+  endif ()
 endmacro()
 
 if (WIN32)
-    foreach (LIB IN ITEMS ${POCO_LIBS})
-        string(SUBSTRING ${LIB} 6 -1 POCO_LIB)
-        copy_poco_lib(broker ${POCO_LIB})
-    endforeach ()
+  foreach (LIB IN ITEMS ${POCO_LIBS})
+    string(SUBSTRING ${LIB} 6 -1 POCO_LIB)
+    copy_poco_lib(broker ${POCO_LIB})
+  endforeach ()
 endif ()
 install(TARGETS broker
         RUNTIME

@@ -30,11 +30,11 @@ add_library(upmq::client_static ALIAS libupmq_static)
 add_library(upmq::client ALIAS libupmq)
 
 if (WIN32)
-    add_definitions(/DNOMINMAX)
-    add_definitions(/DCMS_DLL)
-    add_definitions(/DCMS_EXPORTS)
-	add_definitions(/D_WIN32_WINNT=0x0600)
-    add_compile_options(/FS)
+  add_definitions(/DNOMINMAX)
+  add_definitions(/DCMS_DLL)
+  add_definitions(/DCMS_EXPORTS)
+  add_definitions(/D_WIN32_WINNT=0x0600)
+  add_compile_options(/FS)
 endif (WIN32)
 
 include_directories(${SHARE_DIR})
@@ -80,17 +80,17 @@ file(
 )
 
 if (WIN32)
-    list(REMOVE_ITEM DECAF_HEADER_FILES "decaf/internal/util/concurrent/unix/PlatformDefs.h")
-    list(REMOVE_ITEM DECAF_SOURCE_FILES "decaf/internal/util/concurrent/unix/Atomics.cpp")
-    list(REMOVE_ITEM DECAF_SOURCE_FILES "decaf/internal/util/concurrent/unix/PlatformThread.cpp")
-    list(REMOVE_ITEM DECAF_SOURCE_FILES "decaf/internal/security/unix/SecureRandomImpl.cpp")
-    list(REMOVE_ITEM DECAF_SOURCE_FILES "decaf/internal/security/unix/SecureRandomImpl.h")
+  list(REMOVE_ITEM DECAF_HEADER_FILES "decaf/internal/util/concurrent/unix/PlatformDefs.h")
+  list(REMOVE_ITEM DECAF_SOURCE_FILES "decaf/internal/util/concurrent/unix/Atomics.cpp")
+  list(REMOVE_ITEM DECAF_SOURCE_FILES "decaf/internal/util/concurrent/unix/PlatformThread.cpp")
+  list(REMOVE_ITEM DECAF_SOURCE_FILES "decaf/internal/security/unix/SecureRandomImpl.cpp")
+  list(REMOVE_ITEM DECAF_SOURCE_FILES "decaf/internal/security/unix/SecureRandomImpl.h")
 else (WIN32)
-    list(REMOVE_ITEM DECAF_HEADER_FILES "decaf/internal/util/concurrent/windows/PlatformDefs.h")
-    list(REMOVE_ITEM DECAF_SOURCE_FILES "decaf/internal/util/concurrent/windows/Atomics.cpp")
-    list(REMOVE_ITEM DECAF_SOURCE_FILES "decaf/internal/util/concurrent/windows/PlatformThread.cpp")
-    list(REMOVE_ITEM DECAF_SOURCE_FILES "decaf/internal/security/windows/SecureRandomImpl.cpp")
-    list(REMOVE_ITEM DECAF_SOURCE_FILES "decaf/internal/security/windows/SecureRandomImpl.h")
+  list(REMOVE_ITEM DECAF_HEADER_FILES "decaf/internal/util/concurrent/windows/PlatformDefs.h")
+  list(REMOVE_ITEM DECAF_SOURCE_FILES "decaf/internal/util/concurrent/windows/Atomics.cpp")
+  list(REMOVE_ITEM DECAF_SOURCE_FILES "decaf/internal/util/concurrent/windows/PlatformThread.cpp")
+  list(REMOVE_ITEM DECAF_SOURCE_FILES "decaf/internal/security/windows/SecureRandomImpl.cpp")
+  list(REMOVE_ITEM DECAF_SOURCE_FILES "decaf/internal/security/windows/SecureRandomImpl.h")
 endif (WIN32)
 
 # --- internal libupmq sources ---
@@ -154,149 +154,149 @@ file(
 )
 
 if (WIN32)
-    set(SOURCE_FILES ${SOURCE_FILES} libupmq.rc)
+  set(SOURCE_FILES ${SOURCE_FILES} libupmq.rc)
 endif ()
 
 # --- repack cms ---
 foreach (SOURCE IN ITEMS ${CMS_SOURCE_FILES})
-    set(CMS_SOURCE_FILES_NEW ${CMS_SOURCE_FILES_NEW} "${SOURCE}")
+  set(CMS_SOURCE_FILES_NEW ${CMS_SOURCE_FILES_NEW} "${SOURCE}")
 endforeach ()
 
 foreach (HEADER IN ITEMS ${CMS_HEADER_FILES})
-    set(CMS_HEADER_FILES_NEW ${CMS_HEADER_FILES_NEW} "${HEADER}")
-    set_target_properties(libupmq_objlib PROPERTIES PUBLIC_HEADER "${HEADER}")
+  set(CMS_HEADER_FILES_NEW ${CMS_HEADER_FILES_NEW} "${HEADER}")
+  set_target_properties(libupmq_objlib PROPERTIES PUBLIC_HEADER "${HEADER}")
 endforeach ()
 
 foreach (SOURCE IN ITEMS ${CMS_SOURCE_FILES_NEW})
-    get_filename_component(SOURCE_PATH "${SOURCE}" PATH)
-    string(REPLACE "/" "\\" SOURCE_PATH_MSVC "${SOURCE_PATH}")
-    source_group("${SOURCE_PATH_MSVC}" FILES "${SOURCE}")
+  get_filename_component(SOURCE_PATH "${SOURCE}" PATH)
+  string(REPLACE "/" "\\" SOURCE_PATH_MSVC "${SOURCE_PATH}")
+  source_group("${SOURCE_PATH_MSVC}" FILES "${SOURCE}")
 endforeach ()
 
 foreach (HEADER IN ITEMS ${CMS_HEADER_FILES_NEW})
-    get_filename_component(HEADER_PATH "${HEADER}" PATH)
-    string(REPLACE "/" "\\" HEADER_PATH_MSVC "${HEADER_PATH}")
-    source_group("${HEADER_PATH_MSVC}" FILES "${HEADER}")
+  get_filename_component(HEADER_PATH "${HEADER}" PATH)
+  string(REPLACE "/" "\\" HEADER_PATH_MSVC "${HEADER_PATH}")
+  source_group("${HEADER_PATH_MSVC}" FILES "${HEADER}")
 endforeach ()
 
 
 # --- repack cms ---
 foreach (SOURCE IN ITEMS ${DECAF_SOURCE_FILES})
-    set(DECAF_SOURCE_FILES_NEW ${DECAF_SOURCE_FILES_NEW} "${SOURCE}")
+  set(DECAF_SOURCE_FILES_NEW ${DECAF_SOURCE_FILES_NEW} "${SOURCE}")
 endforeach ()
 
 foreach (HEADER IN ITEMS ${DECAF_HEADER_FILES})
-    set(DECAF_HEADER_FILES_NEW ${DECAF_HEADER_FILES_NEW} "${HEADER}")
+  set(DECAF_HEADER_FILES_NEW ${DECAF_HEADER_FILES_NEW} "${HEADER}")
 endforeach ()
 
 foreach (SOURCE IN ITEMS ${DECAF_SOURCE_FILES_NEW})
-    get_filename_component(SOURCE_PATH "${SOURCE}" PATH)
-    string(REPLACE "/" "\\" SOURCE_PATH_MSVC "${SOURCE_PATH}")
-    source_group("${SOURCE_PATH_MSVC}" FILES "${SOURCE}")
+  get_filename_component(SOURCE_PATH "${SOURCE}" PATH)
+  string(REPLACE "/" "\\" SOURCE_PATH_MSVC "${SOURCE_PATH}")
+  source_group("${SOURCE_PATH_MSVC}" FILES "${SOURCE}")
 endforeach ()
 
 foreach (HEADER IN ITEMS ${DECAF_HEADER_FILES_NEW})
-    get_filename_component(HEADER_PATH "${HEADER}" PATH)
-    string(REPLACE "/" "\\" HEADER_PATH_MSVC "${HEADER_PATH}")
-    source_group("${HEADER_PATH_MSVC}" FILES "${HEADER}")
+  get_filename_component(HEADER_PATH "${HEADER}" PATH)
+  string(REPLACE "/" "\\" HEADER_PATH_MSVC "${HEADER_PATH}")
+  source_group("${HEADER_PATH_MSVC}" FILES "${HEADER}")
 endforeach ()
 
 # --- repack internal libupmq ---
 foreach (SOURCE IN ITEMS ${INTERNAL_LIBUPMQ_SOURCE_FILES})
-    set(INTERNAL_LIBUPMQ_SOURCE_FILES_NEW ${INTERNAL_LIBUPMQ_SOURCE_FILES_NEW} "${SOURCE}")
+  set(INTERNAL_LIBUPMQ_SOURCE_FILES_NEW ${INTERNAL_LIBUPMQ_SOURCE_FILES_NEW} "${SOURCE}")
 endforeach ()
 
 foreach (HEADER IN ITEMS ${INTERNAL_LIBUPMQ_HEADER_FILES})
-    set(INTERNAL_LIBUPMQ_HEADER_FILES_NEW ${INTERNAL_LIBUPMQ_HEADER_FILES_NEW} "${HEADER}")
+  set(INTERNAL_LIBUPMQ_HEADER_FILES_NEW ${INTERNAL_LIBUPMQ_HEADER_FILES_NEW} "${HEADER}")
 endforeach ()
 
 foreach (SOURCE IN ITEMS ${INTERNAL_LIBUPMQ_SOURCE_FILES_NEW})
-    get_filename_component(SOURCE_PATH "${SOURCE}" PATH)
-    string(REPLACE "/" "\\" SOURCE_PATH_MSVC "${SOURCE_PATH}")
-    source_group("${SOURCE_PATH_MSVC}" FILES "${SOURCE}")
+  get_filename_component(SOURCE_PATH "${SOURCE}" PATH)
+  string(REPLACE "/" "\\" SOURCE_PATH_MSVC "${SOURCE_PATH}")
+  source_group("${SOURCE_PATH_MSVC}" FILES "${SOURCE}")
 endforeach ()
 
 foreach (HEADER IN ITEMS ${INTERNAL_LIBUPMQ_HEADER_FILES_NEW})
-    get_filename_component(HEADER_PATH "${HEADER}" PATH)
-    string(REPLACE "/" "\\" HEADER_PATH_MSVC "${HEADER_PATH}")
-    source_group("${HEADER_PATH_MSVC}" FILES "${HEADER}")
+  get_filename_component(HEADER_PATH "${HEADER}" PATH)
+  string(REPLACE "/" "\\" HEADER_PATH_MSVC "${HEADER_PATH}")
+  source_group("${HEADER_PATH_MSVC}" FILES "${HEADER}")
 endforeach ()
 
 # --- repack state ---
 foreach (SOURCE IN ITEMS ${STATE_SOURCE_FILES})
-    set(STATE_SOURCE_FILES_NEW ${STATE_SOURCE_FILES_NEW} "${SOURCE}")
+  set(STATE_SOURCE_FILES_NEW ${STATE_SOURCE_FILES_NEW} "${SOURCE}")
 endforeach ()
 
 foreach (HEADER IN ITEMS ${STATE_HEADER_FILES})
-    set(STATE_HEADER_FILES_NEW ${STATE_HEADER_FILES_NEW} "${HEADER}")
+  set(STATE_HEADER_FILES_NEW ${STATE_HEADER_FILES_NEW} "${HEADER}")
 endforeach ()
 
 foreach (SOURCE IN ITEMS ${STATE_SOURCE_FILES_NEW})
-    get_filename_component(SOURCE_PATH "${SOURCE}" PATH)
-    string(REPLACE "/" "\\" SOURCE_PATH_MSVC "${SOURCE_PATH}")
-    source_group("${SOURCE_PATH_MSVC}" FILES "${SOURCE}")
+  get_filename_component(SOURCE_PATH "${SOURCE}" PATH)
+  string(REPLACE "/" "\\" SOURCE_PATH_MSVC "${SOURCE_PATH}")
+  source_group("${SOURCE_PATH_MSVC}" FILES "${SOURCE}")
 endforeach ()
 
 foreach (HEADER IN ITEMS ${STATE_HEADER_FILES_NEW})
-    get_filename_component(HEADER_PATH "${HEADER}" PATH)
-    string(REPLACE "/" "\\" HEADER_PATH_MSVC "${HEADER_PATH}")
-    source_group("${HEADER_PATH_MSVC}" FILES "${HEADER}")
+  get_filename_component(HEADER_PATH "${HEADER}" PATH)
+  string(REPLACE "/" "\\" HEADER_PATH_MSVC "${HEADER_PATH}")
+  source_group("${HEADER_PATH_MSVC}" FILES "${HEADER}")
 endforeach ()
 
 # --- repack threads ---
 foreach (SOURCE IN ITEMS ${THREADS_SOURCE_FILES})
-    set(THREADS_SOURCE_FILES_NEW ${THREADS_SOURCE_FILES_NEW} "${SOURCE}")
+  set(THREADS_SOURCE_FILES_NEW ${THREADS_SOURCE_FILES_NEW} "${SOURCE}")
 endforeach ()
 
 foreach (HEADER IN ITEMS ${THREADS_HEADER_FILES})
-    set(THREADS_HEADER_FILES_NEW ${THREADS_HEADER_FILES_NEW} "${HEADER}")
+  set(THREADS_HEADER_FILES_NEW ${THREADS_HEADER_FILES_NEW} "${HEADER}")
 endforeach ()
 
 foreach (SOURCE IN ITEMS ${THREADS_SOURCE_FILES_NEW})
-    get_filename_component(SOURCE_PATH "${SOURCE}" PATH)
-    string(REPLACE "/" "\\" SOURCE_PATH_MSVC "${SOURCE_PATH}")
-    source_group("${SOURCE_PATH_MSVC}" FILES "${SOURCE}")
+  get_filename_component(SOURCE_PATH "${SOURCE}" PATH)
+  string(REPLACE "/" "\\" SOURCE_PATH_MSVC "${SOURCE_PATH}")
+  source_group("${SOURCE_PATH_MSVC}" FILES "${SOURCE}")
 endforeach ()
 
 foreach (HEADER IN ITEMS ${THREADS_HEADER_FILES_NEW})
-    get_filename_component(HEADER_PATH "${HEADER}" PATH)
-    string(REPLACE "/" "\\" HEADER_PATH_MSVC "${HEADER_PATH}")
-    source_group("${HEADER_PATH_MSVC}" FILES "${HEADER}")
+  get_filename_component(HEADER_PATH "${HEADER}" PATH)
+  string(REPLACE "/" "\\" HEADER_PATH_MSVC "${HEADER_PATH}")
+  source_group("${HEADER_PATH_MSVC}" FILES "${HEADER}")
 endforeach ()
 
 # --- repack transport ---
 foreach (SOURCE IN ITEMS ${TRANSPORT_SOURCE_FILES})
-    set(TRANSPORT_SOURCE_FILES_NEW ${TRANSPORT_SOURCE_FILES_NEW} "${SOURCE}")
+  set(TRANSPORT_SOURCE_FILES_NEW ${TRANSPORT_SOURCE_FILES_NEW} "${SOURCE}")
 endforeach ()
 
 foreach (HEADER IN ITEMS ${TRANSPORT_HEADER_FILES})
-    set(TRANSPORT_HEADER_FILES_NEW ${TRANSPORT_HEADER_FILES_NEW} "${HEADER}")
+  set(TRANSPORT_HEADER_FILES_NEW ${TRANSPORT_HEADER_FILES_NEW} "${HEADER}")
 endforeach ()
 
 foreach (SOURCE IN ITEMS ${TRANSPORT_SOURCE_FILES_NEW})
-    get_filename_component(SOURCE_PATH "${SOURCE}" PATH)
-    string(REPLACE "/" "\\" SOURCE_PATH_MSVC "${SOURCE_PATH}")
-    source_group("${SOURCE_PATH_MSVC}" FILES "${SOURCE}")
+  get_filename_component(SOURCE_PATH "${SOURCE}" PATH)
+  string(REPLACE "/" "\\" SOURCE_PATH_MSVC "${SOURCE_PATH}")
+  source_group("${SOURCE_PATH_MSVC}" FILES "${SOURCE}")
 endforeach ()
 
 foreach (HEADER IN ITEMS ${TRANSPORT_HEADER_FILES_NEW})
-    get_filename_component(HEADER_PATH "${HEADER}" PATH)
-    string(REPLACE "/" "\\" HEADER_PATH_MSVC "${HEADER_PATH}")
-    source_group("${HEADER_PATH_MSVC}" FILES "${HEADER}")
+  get_filename_component(HEADER_PATH "${HEADER}" PATH)
+  string(REPLACE "/" "\\" HEADER_PATH_MSVC "${HEADER_PATH}")
+  source_group("${HEADER_PATH_MSVC}" FILES "${HEADER}")
 endforeach ()
 
 if (NOT WIN32)
-    set(SYS_LINK_LIBS ${CMAKE_DL_LIBS})
-    if (NOT APPLE)
-        set(SYS_LINK_LIBS ${SYS_LINK_LIBS} -lrt -lcrypt Threads::Threads)
-    endif (NOT APPLE)
+  set(SYS_LINK_LIBS ${CMAKE_DL_LIBS})
+  if (NOT APPLE)
+    set(SYS_LINK_LIBS ${SYS_LINK_LIBS} -lrt -lcrypt Threads::Threads)
+  endif (NOT APPLE)
 else (NOT WIN32)
-    set(SYS_LINK_LIBS ${SYS_LINK_LIBS}
-        ws2_32
-        mswsock
-        rpcrt4
-        iphlpapi
-        )
+  set(SYS_LINK_LIBS ${SYS_LINK_LIBS}
+      ws2_32
+      mswsock
+      rpcrt4
+      iphlpapi
+      )
 endif (NOT WIN32)
 
 target_sources(libupmq_objlib INTERFACE ${CMS_HEADER_FILES_NEW} PRIVATE ${CMS_SOURCE_FILES_NEW}

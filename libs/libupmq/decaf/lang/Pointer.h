@@ -74,7 +74,7 @@ class Pointer : public REFCOUNTER {
    * @param value -
    *      The instance of the type we are containing here.
    */
-  explicit Pointer(const PointerType value) : REFCOUNTER(), value(value) {}
+  explicit Pointer(PointerType value) : REFCOUNTER(), value(value) {}
 
   /**
    * Copy constructor. Copies the value contained in the pointer to the new
@@ -129,8 +129,6 @@ class Pointer : public REFCOUNTER {
           __FILE__, __LINE__, "Failed to cast source pointer of type %s to this type: %s.", typeid(T1).name(), typeid(T).name());
     }
   }
-
-  Pointer(PointerType value, std::function<void(void *p)> deletionFunc) : REFCOUNTER(), value(value) {}
 
   ~Pointer() override {
     if (REFCOUNTER::release() == true) {

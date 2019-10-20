@@ -37,29 +37,11 @@ namespace storage {
 
 using std::string;
 
-/**
- * Identifier  (amqp.)  | JMS...       | amqp 1.0 equivalent
- * durable              |              | durable              header section
- * delivery_mode        | DeliveryMode | [durable ? 'PERSISTENT' :
- * 'NON_PERSISTENT'] (computed value)
- * priority             | Priority     | priority             header section
- * delivery_count       |              | delivery-count       header section
- * redelivered          |[Redelivered] | (delivery_count>0)  (computed value)
- * subject              | Type         | subject              properties section
- * correlation_id       | CorrelationID| correlation-id       properties section
- * to                   |[Destination] | to                   properties section
- * absolute_expiry_time |[Expiration]  | absolute-expiry-time properties section
- * message_id           | MessageID    | message-id           properties section
- * reply_to             |[ReplyTo]     | reply-to             properties section
- * creation_time        | Timestamp    | creation-time        properties section
- * jms_type             | Type         | jms-type message-annotations section
- */
-const string EMPTY;
 constexpr char PERSISTENT[] = ("PERSISTENT");
 constexpr char NON_PERSISTENT[] = ("NON_PERSISTENT");
 
 namespace {
-using Aliases = std::map<std::string, std::string>;
+using Aliases = std::unordered_map<std::string, std::string>;
 Aliases define_aliases() {
   Aliases aliases;
   aliases["JMSType"] = "subject";
@@ -81,18 +63,17 @@ class MessageSelectorEnv : public SelectorEnv {
   const MappedDBMessage &msg;
   mutable std::vector<std::shared_ptr<std::string>> returnedStrings;
   mutable std::unordered_map<std::string, Value> returnedValues;
-  mutable bool valuesLookedup;
 
   const Value &value(const std::string &identifier) const override;
-  const Value specialValue(const std::string &id) const;
+  Value specialValue(const std::string &id) const;
 
  public:
   explicit MessageSelectorEnv(const MappedDBMessage &m);
 };
 
-MessageSelectorEnv::MessageSelectorEnv(const MappedDBMessage &m) : msg(m), valuesLookedup(false) {}
+MessageSelectorEnv::MessageSelectorEnv(const MappedDBMessage &m) : msg(m) {}
 
-const Value MessageSelectorEnv::specialValue(const std::string &id) const {
+Value MessageSelectorEnv::specialValue(const std::string &id) const {
   Value v;
   // TODO(bas): Just use a simple if chain for now - improve this later
   if (id == "delivery_mode") {
@@ -203,11 +184,10 @@ const Value &MessageSelectorEnv::value(const string &identifier) const {
     if (equivalent != aliases.end()) {
       returnedValues[identifier] = specialValue(equivalent->second);
     }
-  } else if (!valuesLookedup) {
+  } else if (returnedValues.find(identifier) == returnedValues.end()) {
     // Iterate over all the message properties
     ValueHandler handler(returnedValues, returnedStrings);
-    msg.processProperties(handler);
-    valuesLookedup = true;
+    msg.processProperties(handler, identifier);
     // Anything that wasn't found will have a void value now
   }
   const Value &v = returnedValues[identifier];

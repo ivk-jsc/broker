@@ -72,7 +72,7 @@ class MappedDBMessage {
   std::string replyTo() const;
   int64_t expiration() const;
   int64_t creationTime() const;
-  void processProperties(upmq::broker::PropertyHandler &handler) const;
+  void processProperties(upmq::broker::PropertyHandler &handler, const std::string &identifier) const;
   DBMSConnection dbmsConnection;
 };
 }  // namespace storage

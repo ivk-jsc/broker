@@ -118,7 +118,7 @@ bool SendFile::fileSizeFits_off_t() const { return _fileSize <= std::numeric_lim
 bool SendFile::sendPart() {
   sendfile_off_t offs = static_cast<sendfile_off_t>(_offset);
   std::streamoff remSize = _fileSize - _offset;
-  size_t psize = (_partSize < remSize) ? _partSize : static_cast<size_t>(remSize);
+  size_t psize = (_partSize < static_cast<size_t>(remSize)) ? _partSize : static_cast<size_t>(remSize);
   off_t sent = 0;
   sighandler_t sigPrev = signal(SIGPIPE, SIG_IGN);
   while (sent == 0) {

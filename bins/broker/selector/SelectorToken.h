@@ -27,7 +27,7 @@ namespace upmq {
 namespace broker {
 namespace storage {
 
-typedef enum {
+enum class TokenType {
   T_EOS,
   T_NULL,
   T_TRUE,
@@ -57,10 +57,10 @@ typedef enum {
   T_GRT,
   T_LSEQ,
   T_GREQ
-} TokenType;
+};
 
 struct Token {
-  TokenType type = T_EOS;
+  TokenType type = TokenType::T_EOS;
   std::string val;
   std::string::const_iterator tokenStart;
 
@@ -74,7 +74,7 @@ struct Token {
 
   Token(TokenType t, const std::string::const_iterator &s, const std::string::const_iterator &e) : type(t), val(std::string(s, e)), tokenStart(s) {}
 
-  bool operator==(const Token &r) const { return (type == T_EOS && r.type == T_EOS) || (type == r.type && val == r.val); }
+  bool operator==(const Token &r) const { return (type == TokenType::T_EOS && r.type == TokenType::T_EOS) || (type == r.type && val == r.val); }
 };
 
 std::ostream &operator<<(std::ostream &os, const Token &t);

@@ -685,7 +685,7 @@ class Parse {
   string error;
 
   Expression *selectorExpression(Tokeniser &tokeniser) {
-    if (tokeniser.nextToken().type == T_EOS) {
+    if (tokeniser.nextToken().type == TokenType::T_EOS) {
       return (new Literal(true));
     }
     tokeniser.returnTokens();
@@ -698,7 +698,7 @@ class Parse {
     if (!e) {
       return nullptr;
     }
-    while (tokeniser.nextToken().type == T_OR) {
+    while (tokeniser.nextToken().type == TokenType::T_OR) {
       std::unique_ptr<Expression> e1(std::move(e));
       std::unique_ptr<Expression> e2(andExpression(tokeniser));
       if (!e2) {
@@ -715,7 +715,7 @@ class Parse {
     if (!e) {
       return nullptr;
     }
-    while (tokeniser.nextToken().type == T_AND) {
+    while (tokeniser.nextToken().type == TokenType::T_AND) {
       std::unique_ptr<Expression> e1(std::move(e));
       std::unique_ptr<Expression> e2(comparisonExpression(tokeniser));
       if (!e2) {
@@ -729,17 +729,17 @@ class Parse {
 
   BoolExpression *specialComparisons(Tokeniser &tokeniser, std::unique_ptr<Expression> e1, bool negated = false) {
     switch (tokeniser.nextToken().type) {
-      case T_LIKE: {
+      case TokenType::T_LIKE: {
         const Token t = tokeniser.nextToken();
-        if (t.type != T_STRING) {
+        if (t.type != TokenType::T_STRING) {
           error = "expected string after LIKE";
           return nullptr;
         }
         // Check for "ESCAPE"
         std::unique_ptr<BoolExpression> l;
-        if (tokeniser.nextToken().type == T_ESCAPE) {
+        if (tokeniser.nextToken().type == TokenType::T_ESCAPE) {
           const Token e = tokeniser.nextToken();
-          if (e.type != T_STRING) {
+          if (e.type != TokenType::T_STRING) {
             error = "expected string after ESCAPE";
             return nullptr;
           }
@@ -756,12 +756,12 @@ class Parse {
         }
         return (negated ? (BoolExpression *)new UnaryBooleanExpression(&notOp, l.release()) : l.release());
       }
-      case T_BETWEEN: {
+      case TokenType::T_BETWEEN: {
         std::unique_ptr<Expression> lower(addExpression(tokeniser));
         if (!lower) {
           return nullptr;
         }
-        if (tokeniser.nextToken().type != T_AND) {
+        if (tokeniser.nextToken().type != TokenType::T_AND) {
           error = "expected AND after BETWEEN";
           return nullptr;
         }
@@ -773,8 +773,8 @@ class Parse {
         b = std::make_unique<BetweenExpression>(e1.release(), lower.release(), upper.release());
         return (negated ? (BoolExpression *)new UnaryBooleanExpression(&notOp, b.release()) : b.release());
       }
-      case T_IN: {
-        if (tokeniser.nextToken().type != T_LPAREN) {
+      case TokenType::T_IN: {
+        if (tokeniser.nextToken().type != TokenType::T_LPAREN) {
           error = "missing '(' after IN";
           return nullptr;
         }
@@ -785,9 +785,9 @@ class Parse {
             return nullptr;
           }
           list.emplace_back(e.release());
-        } while (tokeniser.nextToken().type == T_COMMA);
+        } while (tokeniser.nextToken().type == TokenType::T_COMMA);
         tokeniser.returnTokens();
-        if (tokeniser.nextToken().type != T_RPAREN) {
+        if (tokeniser.nextToken().type != TokenType::T_RPAREN) {
           error = "missing ',' or ')' after IN";
           return nullptr;
         }
@@ -805,7 +805,7 @@ class Parse {
 
   Expression *comparisonExpression(Tokeniser &tokeniser) {
     const Token t = tokeniser.nextToken();
-    if (t.type == T_NOT) {
+    if (t.type == TokenType::T_NOT) {
       std::unique_ptr<Expression> e(comparisonExpression(tokeniser));
       if (!e) {
         return nullptr;
@@ -821,13 +821,13 @@ class Parse {
 
     switch (tokeniser.nextToken().type) {
       // Check for "IS NULL" and "IS NOT NULL"
-      case T_IS:
+      case TokenType::T_IS:
         // The rest must be T_NULL or T_NOT, T_NULL
         switch (tokeniser.nextToken().type) {
-          case T_NULL:
+          case TokenType::T_NULL:
             return new UnaryBooleanExpression(&isNullOp, e1.release());
-          case T_NOT:
-            if (tokeniser.nextToken().type == T_NULL) {
+          case TokenType::T_NOT:
+            if (tokeniser.nextToken().type == TokenType::T_NULL) {
               return new UnaryBooleanExpression(&isNonNullOp, e1.release());
             }  // -V796
           // Fallthru
@@ -835,12 +835,12 @@ class Parse {
             error = "expected NULL or NOT NULL after IS";
             return nullptr;
         }
-      case T_NOT: {
+      case TokenType::T_NOT: {
         return specialComparisons(tokeniser, std::move(e1), true);
       }
-      case T_BETWEEN:
-      case T_LIKE:
-      case T_IN: {
+      case TokenType::T_BETWEEN:
+      case TokenType::T_LIKE:
+      case TokenType::T_IN: {
         tokeniser.returnTokens();
         return specialComparisons(tokeniser, std::move(e1));
       }
@@ -851,22 +851,22 @@ class Parse {
 
     ComparisonOperator *op;
     switch (tokeniser.nextToken().type) {
-      case T_EQUAL:
+      case TokenType::T_EQUAL:
         op = &eqOp;
         break;
-      case T_NEQ:
+      case TokenType::T_NEQ:
         op = &neqOp;
         break;
-      case T_LESS:
+      case TokenType::T_LESS:
         op = &lsOp;
         break;
-      case T_GRT:
+      case TokenType::T_GRT:
         op = &grOp;
         break;
-      case T_LSEQ:
+      case TokenType::T_LSEQ:
         op = &lseqOp;
         break;
-      case T_GREQ:
+      case TokenType::T_GREQ:
         op = &greqOp;
         break;
       default:
@@ -889,13 +889,13 @@ class Parse {
     }
 
     Token t = tokeniser.nextToken();
-    while (t.type == T_PLUS || t.type == T_MINUS) {
+    while (t.type == TokenType::T_PLUS || t.type == TokenType::T_MINUS) {
       ArithmeticOperator *op;
       switch (t.type) {
-        case T_PLUS:
+        case TokenType::T_PLUS:
           op = &add;
           break;
-        case T_MINUS:
+        case TokenType::T_MINUS:
           op = &sub;
           break;
         default:
@@ -922,13 +922,13 @@ class Parse {
     }
 
     Token t = tokeniser.nextToken();
-    while (t.type == T_MULT || t.type == T_DIV) {
+    while (t.type == TokenType::T_MULT || t.type == TokenType::T_DIV) {
       ArithmeticOperator *op;
       switch (t.type) {
-        case T_MULT:
+        case TokenType::T_MULT:
           op = &mult;
           break;
-        case T_DIV:
+        case TokenType::T_DIV:
           op = &div;
           break;
         default:
@@ -951,23 +951,23 @@ class Parse {
   Expression *unaryArithExpression(Tokeniser &tokeniser) {
     const Token t = tokeniser.nextToken();
     switch (t.type) {
-      case T_LPAREN: {
+      case TokenType::T_LPAREN: {
         std::unique_ptr<Expression> e(orExpression(tokeniser));
         if (!e) {
           return nullptr;
         }
-        if (tokeniser.nextToken().type != T_RPAREN) {
+        if (tokeniser.nextToken().type != TokenType::T_RPAREN) {
           error = "missing ')' after '('";
           return nullptr;
         }
         return e.release();
       }
-      case T_PLUS:
+      case TokenType::T_PLUS:
         break;  // Unary + is no op
-      case T_MINUS: {
+      case TokenType::T_MINUS: {
         const Token nt = tokeniser.nextToken();
         // Special case for negative numerics
-        if (nt.type == T_NUMERIC_EXACT) {
+        if (nt.type == TokenType::T_NUMERIC_EXACT) {
           std::unique_ptr<Expression> e(parseExactNumeric(nt, true));
           return e.release();
         } else {
@@ -1032,17 +1032,17 @@ class Parse {
   ) {
     const Token &t = tokeniser.nextToken();
     switch (t.type) {
-      case T_IDENTIFIER:
+      case TokenType::T_IDENTIFIER:
         return new Identifier(t.val);
-      case T_STRING:
+      case TokenType::T_STRING:
         return new StringLiteral(t.val);
-      case T_FALSE:
+      case TokenType::T_FALSE:
         return new Literal(false);
-      case T_TRUE:
+      case TokenType::T_TRUE:
         return new Literal(true);
-      case T_NUMERIC_EXACT:
+      case TokenType::T_NUMERIC_EXACT:
         return parseExactNumeric(t, false);
-      case T_NUMERIC_APPROX:
+      case TokenType::T_NUMERIC_APPROX:
         return parseApproxNumeric(t);
       default:
         error = "expected literal or identifier";
@@ -1060,7 +1060,7 @@ TopExpression *TopExpression::parse(const string &exp) {
   if (!b) {
     throwParseError(tokeniser, parse.error);
   }
-  if (tokeniser.nextToken().type != T_EOS) {
+  if (tokeniser.nextToken().type != TokenType::T_EOS) {
     throwParseError(tokeniser, "extra input");
   }
   return new TopBoolExpression(b.release());

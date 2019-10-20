@@ -7,20 +7,20 @@ enable_testing()
 add_executable(brokertest)
 
 if (WIN32)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /ignore:4099")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /ignore:4099")
 endif (WIN32)
 
 include_directories(${SHARE_DIR})
 
 if (WIN32)
-    set(SYS_LINK_LIBS ${SYS_LINK_LIBS}
-        ws2_32
-        mswsock
-        rpcrt4
-        user32
-        )
+  set(SYS_LINK_LIBS ${SYS_LINK_LIBS}
+      ws2_32
+      mswsock
+      rpcrt4
+      user32
+      )
 elseif (UNIX AND NOT APPLE)
-    set(SYS_LINK_LIBS ${SYS_LINK_LIBS} UUID::UUID -pthread)
+  set(SYS_LINK_LIBS ${SYS_LINK_LIBS} UUID::UUID -pthread)
 endif ()
 
 set(SOURCE_FILES
