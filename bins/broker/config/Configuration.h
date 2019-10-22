@@ -162,6 +162,7 @@ class Configuration {
   void setStorage(const Storage &storage);
 
   std::string toString() const;
+  std::vector<std::string> toStringLines() const;
 
  private:
   int _port{12345};

@@ -25,7 +25,6 @@
 #include <Poco/RunnableAdapter.h>
 #include <Poco/Net/StreamSocket.h>
 #include "AsyncLogger.h"
-#include "ThreadeSafeLogStream.h"
 #include "BlockingConcurrentQueueHeader.h"
 #include "Configuration.h"
 #include "MessageDataContainer.h"
@@ -35,6 +34,7 @@
 #include <Poco/Condition.h>
 #include <Poco/RWLock.h>
 #include <Poco/Thread.h>
+#include <Poco/Logger.h>
 
 namespace upmq {
 namespace broker {
@@ -46,7 +46,7 @@ class Consumer;
 class Broker {
  public:
   using ConnectionsList = FSUnorderedMap<std::string, std::unique_ptr<Connection>>;
-  std::unique_ptr<ThreadSafeLogStream> logStream;
+  Poco::Logger *log{nullptr};
 
  private:
   std::string _id;

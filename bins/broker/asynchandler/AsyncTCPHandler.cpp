@@ -59,20 +59,20 @@ AsyncTCPHandler::AsyncTCPHandler(Poco::Net::StreamSocket &socket, Poco::Net::Soc
   _queueReadNum = queueNum % THREADS_CONFIG.readers;
   _queueWriteNum = queueNum % THREADS_CONFIG.writers;
 
-  logStream = std::make_unique<ThreadSafeLogStream>(ASYNCLOGGER::Instance().add(std::to_string(num)));
+  log = &ASYNCLOGGER::Instance().add(std::to_string(num));
 
   _socket.setNoDelay(true);
   _socket.setBlocking(false);
 
-  ASYNCLOG_INFORMATION(logStream,
-                       (std::to_string(num)
-                            .append(" * => new asynchandler from ")
-                            .append(_peerAddress)
-                            .append(" q-num : ")
-                            .append(std::to_string(queueNum))
-                            .append(" ( ")
-                            .append(std::to_string(AHRegestry::Instance().size()))
-                            .append(" asynchandlers now )")));
+  log->information("%s",
+                   std::to_string(num)
+                       .append(" * => new asynchandler from ")
+                       .append(_peerAddress)
+                       .append(" q-num : ")
+                       .append(std::to_string(queueNum))
+                       .append(" ( ")
+                       .append(std::to_string(AHRegestry::Instance().size()))
+                       .append(" asynchandlers now )"));
 
   _reactor.addEventHandler(_socket, _readableCallBack);
   _reactor.addEventHandler(_socket, _shutdownCallBack);
@@ -116,10 +116,10 @@ AsyncTCPHandler::~AsyncTCPHandler() {
     EXCHANGE::Instance().dropOwnedDestination(_clientID);
 
   } catch (std::exception &ex) {
-    ASYNCLOG_ERROR(logStream, (std::to_string(num).append(" ! => ").append(std::string(ex.what()))));
+    log->critical("%s", std::to_string(num).append(" ! => ").append(std::string(ex.what())));
   }
 
-  ASYNCLOG_INFORMATION(logStream, (std::to_string(num).append(" * => destruct asynchandler from ").append(_peerAddress)));
+  log->information("%s", std::to_string(num).append(" * => destruct asynchandler from ").append(_peerAddress));
 }
 
 void AsyncTCPHandler::onReadable(const AutoPtr<Poco::Net::ReadableNotification> &pNf) {
@@ -151,13 +151,13 @@ void AsyncTCPHandler::put(std::shared_ptr<MessageDataContainer> sMessage) {
 
 void AsyncTCPHandler::onShutdown(const AutoPtr<Poco::Net::ShutdownNotification> &pNf) {
   UNUSED_VAR(pNf);
-  ASYNCLOG_NOTICE(logStream, (std::to_string(num).append(" ! => shutdown : ").append(_peerAddress)));
+  log->notice("%s", std::to_string(num).append(" ! => shutdown : ").append(_peerAddress));
   emitCloseEvent();
 }
 
 void AsyncTCPHandler::onError(const AutoPtr<Poco::Net::ErrorNotification> &pNf) {
   UNUSED_VAR(pNf);
-  ASYNCLOG_ERROR(logStream, (std::to_string(num).append(" ! => network error : ").append(_peerAddress)));
+  log->error("%s", std::to_string(num).append(" ! => network error : ").append(_peerAddress));
   emitCloseEvent(true);
 }
 

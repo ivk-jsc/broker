@@ -31,8 +31,8 @@
 #include "Selector.h"
 #include "SenderList.h"
 #include "Session.h"
-#include "ThreadeSafeLogStream.h"
 #include "MoveableRWLock.h"
+#include <Poco/Logger.h>
 
 namespace upmq {
 namespace broker {
@@ -83,7 +83,7 @@ class Subscription {
   std::string _consumersT;
 
   unsigned long long _messageCounter;
-  std::unique_ptr<ThreadSafeLogStream> logStream;
+  Poco::Logger *log;
   mutable bool _isSubsNotify;
   mutable bool _isDestroyed;
   mutable bool _isInited;

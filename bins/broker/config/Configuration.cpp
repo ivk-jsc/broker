@@ -109,6 +109,13 @@ std::string Configuration::toString() const {
       .append("\n- * \tstorage\t\t\t=> ")
       .append(_storage.toString());
 }
+std::vector<std::string> Configuration::toStringLines() const {
+  std::string s = toString();
+  Poco::StringTokenizer lines(s, "\n", Poco::StringTokenizer::TOK_IGNORE_EMPTY);
+  std::vector<std::string> result(lines.count());
+  std::copy(lines.begin(), lines.end(), result.begin());
+  return result;
+}
 std::string Configuration::Http::toString() const {
   return std::string("\n- * \t\tport\t\t: ").append(std::to_string(port)).append("\n- * \t\tsite\t\t: [").append(site.toString()).append("]");
 }

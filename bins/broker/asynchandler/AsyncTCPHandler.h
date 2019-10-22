@@ -41,7 +41,7 @@
 #include "AsyncLogger.h"
 #include "MessageDataContainer.h"
 #include "ConcurrentQueueHeader.h"
-#include "ThreadeSafeLogStream.h"
+#include <Poco/Logger.h>
 #ifdef __APPLE__
 #define MSG_NOSIGNAL 0
 #endif
@@ -157,7 +157,7 @@ class AsyncTCPHandler {
   std::atomic_bool _readComplete;
 
  public:
-  mutable std::unique_ptr<ThreadSafeLogStream> logStream;
+  mutable Poco::Logger *log{nullptr};
   void storeClientInfo(const MessageDataContainer &sMessage);
   void initSubscription(const MessageDataContainer &sMessage) const;
   void eraseSubscription(const MessageDataContainer &sMessage) const;

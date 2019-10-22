@@ -43,7 +43,7 @@ Subscription::Subscription(const Destination &destination, const std::string &id
       _currentConsumerNumber(0),
       _consumersT("\"" + _id + "_subscription\""),
       _messageCounter(0),
-      logStream(new ThreadSafeLogStream(ASYNCLOGGER::Instance().add(_id))),
+      log(&ASYNCLOGGER::Instance().add(_id)),
       _isSubsNotify(false),
       _isDestroyed(false),
       _isInited(true),
@@ -310,8 +310,7 @@ Subscription::ProcessMessageResult Subscription::getNextMessage() {
       sMessage = storage.get(*consumer, useFileLink);
     } catch (Exception &ex) {
       consumer->select->clear();
-      ASYNCLOG_ERROR(logStream,
-                     (std::string(consumer->clientID).append(" ! <= [").append(std::string(__FUNCTION__)).append("] ").append(ex.message())));
+      log->error("%s", std::string(consumer->clientID).append(" ! <= [").append(std::string(__FUNCTION__)).append("] ").append(ex.message()));
       _consumersLock.unlockWrite();
       return ProcessMessageResult::SOME_ERROR;
     }
@@ -331,25 +330,25 @@ Subscription::ProcessMessageResult Subscription::getNextMessage() {
         AHRegestry::Instance().put(consumer->tcpNum, std::move(sMessage));
         ++_messageCounter;
         const size_t tid = (size_t)(Poco::Thread::currentTid());
-        ASYNCLOG_INFORMATION(logStream,
-                             (std::to_string(consumer->tcpNum)
-                                  .append(" * <= from subs => ")
-                                  .append(_name)
-                                  .append(" : consumer [ tid(")
-                                  .append(std::to_string(tid))
-                                  .append(") ")
-                                  .append(std::to_string(consumer->num))
-                                  .append(":")
-                                  .append(consumer->clientID)
-                                  .append(":")
-                                  .append((useFileLink ? "use_file_link" : "standard"))
-                                  .append("] to client : ")
-                                  .append(consumer->objectID)
-                                  .append(" >> send message [")
-                                  .append(messageID)
-                                  .append("] (")
-                                  .append(std::to_string(_messageCounter))
-                                  .append(")")));
+        log->information("%s",
+                         std::to_string(consumer->tcpNum)
+                             .append(" * <= from subs => ")
+                             .append(_name)
+                             .append(" : consumer [ tid(")
+                             .append(std::to_string(tid))
+                             .append(") ")
+                             .append(std::to_string(consumer->num))
+                             .append(":")
+                             .append(consumer->clientID)
+                             .append(":")
+                             .append((useFileLink ? "use_file_link" : "standard"))
+                             .append("] to client : ")
+                             .append(consumer->objectID)
+                             .append(" >> send message [")
+                             .append(messageID)
+                             .append("] (")
+                             .append(std::to_string(_messageCounter))
+                             .append(")"));
 
         storage.setMessageToWasSent(messageID, *consumer);
         _destination.decreesNotAcknowledged(consumer->objectID);
@@ -366,7 +365,7 @@ Subscription::ProcessMessageResult Subscription::getNextMessage() {
         }
 
       } catch (Exception &ex) {
-        ASYNCLOG_ERROR(logStream, (std::to_string(consumer->tcpNum).append(" ! <= [").append(__FUNCTION__).append("] ").append(ex.message())));
+        log->error("%s", std::to_string(consumer->tcpNum).append(" ! <= [").append(__FUNCTION__).append("] ").append(ex.message()));
         if (ex.error() == ERROR_CONNECTION) {
           messageID.clear();
           removeConsumers(consumer->tcpNum);

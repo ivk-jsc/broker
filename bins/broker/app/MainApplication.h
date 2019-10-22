@@ -21,7 +21,6 @@
 #include "AsyncTCPHandler.h"
 #include "Configuration.h"
 #include "Defines.h"
-#include "ThreadeSafeLogStream.h"
 
 #include <Poco/AutoPtr.h>
 #include <Poco/Exception.h>
@@ -38,6 +37,7 @@
 #include <Poco/PatternFormatter.h>
 #include <Poco/Thread.h>
 #include <Poco/UUID.h>
+#include <Poco/Logger.h>
 #include <Poco/UUIDGenerator.h>
 #include <Poco/Util/HelpFormatter.h>
 #include <Poco/Util/Option.h>
@@ -55,7 +55,7 @@ class MainApplication : public swf::Application {
  public:
   MainApplication();
   ~MainApplication() override = default;
-  std::unique_ptr<ThreadSafeLogStream> logStream;
+  Poco::Logger *log{nullptr};
 
  protected:
   void defineOptions(Poco::Util::OptionSet &options) override;

@@ -43,8 +43,6 @@ set(SOURCE_FILES
     defines/ProtoBuf.h
     log/AsyncLogger.h
     log/AsyncLogger.cpp
-    log/ThreadeSafeLogStream.cpp
-    log/ThreadeSafeLogStream.h
     message/MessageDataContainer.h
     message/MessageDataContainer.cpp
     message/MappedDBMessage.cpp
@@ -189,13 +187,13 @@ set(POCO_LIBS
 get_target_property(Poco_VERSION_MAJOR Poco::Foundation Poco_VERSION_MAJOR)
 add_definitions(-DPOCO_VERSION_MAJOR=${Poco_VERSION_MAJOR})
 if (Poco_VERSION_MAJOR GREATER 1)
-  list(APPEND POCO_LIBS Poco::SQL #[[Poco::SQLODBC]] Poco::SQLSQLite)
+  list(APPEND POCO_LIBS Poco::SQL Poco::SQLODBC Poco::SQLSQLite)
   if (ENABLE_POSTGRESQL)
     add_definitions(-DHAS_POSTGRESQL)
     list(APPEND POCO_LIBS Poco::SQLPostgreSQL)
   endif ()
 else ()
-  list(APPEND POCO_LIBS Poco::Data Poco::DataSQLite #[[Poco::DataODBC]])
+  list(APPEND POCO_LIBS Poco::Data Poco::DataSQLite Poco::DataODBC)
 endif ()
 
 target_link_libraries(broker PRIVATE upmq::protocol protobuf::libprotobuf ${CMAKE_DL_LIBS} ${POCO_LIBS})

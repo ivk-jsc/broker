@@ -112,7 +112,7 @@ int MainApplication::main(const std::vector<std::string> &args) {
     EXCHANGE::Instance().start();
     BROKER::Instance().start();
   } catch (Exception &ex) {
-    ASYNCLOG_CRITICAL(logStream, (ex.message()));
+    log->critical("%s", ex.message());
     return Application::EXIT_CANTCREAT;
   }
 
@@ -127,10 +127,11 @@ int MainApplication::main(const std::vector<std::string> &args) {
 
 #endif
 
-  ASYNCLOG_CRITICAL(logStream, (std::string("-").append(" * ").append("<<========= start =========>>")));
-  ASYNCLOG_CRITICAL(logStream, (std::string("-").append(" * ").append("version\t\t\t: ").append(About::version())));
-  ASYNCLOG_CRITICAL(logStream, (std::string("-").append(" * ").append("configuration\t\t=> ")));
-  logStream->critical() << CONFIGURATION::Instance().toString() << non_std_endl;
+  log->critical("%s", std::string("-").append(" * ").append("<<========= start =========>>"));
+  log->critical("%s", std::string("-").append(" * ").append("version\t\t\t: ").append(About::version()));
+  log->critical("%s", std::string("-").append(" * ").append("configuration\t\t=> "));
+  auto configStrings = CONFIGURATION::Instance().toStringLines();
+  std::for_each(configStrings.begin(), configStrings.end(), [this](const std::string &line) { log->critical("%s", line); });
 
   std::string webuiStatus = "disabled";
 #ifdef ENABLE_WEB_ADMIN
@@ -138,7 +139,7 @@ int MainApplication::main(const std::vector<std::string> &args) {
     webuiStatus = "enabled";
   }
 #endif
-  ASYNCLOG_CRITICAL(logStream, (std::string("-").append(" * ").append("webui\t\t: ").append(webuiStatus)));
+  log->critical("%s", std::string("-").append(" * ").append("webui\t\t: ").append(webuiStatus));
   // TODO(bas) : refactor this
   Poco::Util::AbstractConfiguration::Keys destinationsKeys;
   std::string destinationsSection = "broker.destinations";
@@ -192,7 +193,7 @@ int MainApplication::main(const std::vector<std::string> &args) {
   waitTermination();
   //            #endif
 
-  ASYNCLOG_CRITICAL(logStream, (std::string("-").append(" * ").append("wait termination")));
+  log->critical("%s", std::string("-").append(" * ").append("wait termination"));
 
 #ifdef ENABLE_WEB_ADMIN
   s.stop();
@@ -211,8 +212,7 @@ int MainApplication::main(const std::vector<std::string> &args) {
   BROKER::destroyInstance();
   EXCHANGE::destroyInstance();
 
-  ASYNCLOG_CRITICAL(logStream, (std::string("-").append(" * ").append(">>========= stop =========<<")));
-  logStream.reset(nullptr);
+  log->critical("%s", std::string("-").append(" * ").append(">>========= stop =========<<"));
   ASYNCLOGGER::Instance().destroy(CONFIGURATION::Instance().log().name);
   return Application::EXIT_OK;
 }
@@ -280,29 +280,29 @@ void MainApplication::loadDestinationConfig() const {
   CONFIGURATION::Instance().setDestinations(destinations);
 }
 void MainApplication::loadLogConfig() {
-  Configuration::Log log;
-  log.level = config().getInt("broker.log.level", log.level) % 9;
-  log.isInteractive = config().getBool("broker.log.interactive", log.isInteractive);
-  log.name = CONFIGURATION::Instance().name();
+  Configuration::Log confLog;
+  confLog.level = config().getInt("broker.log.level", confLog.level) % 9;
+  confLog.isInteractive = config().getBool("broker.log.interactive", confLog.isInteractive);
+  confLog.name = CONFIGURATION::Instance().name();
   Poco::Path prefix;
 #ifdef _WIN32
   prefix = expandPath(config().getString("broker.log.path[@windows]", "C:/ProgramData"));
 #else
   prefix = expandPath(config().getString("broker.log.path[@_nix]", "/var/log"));
 #endif
-  log.path.assign(prefix);
-  log.path.append(expandPath(config().getString("broker.log.path", "upmq/log"))).makeDirectory();
-  CONFIGURATION::Instance().setLog(log);
+  confLog.path.assign(prefix);
+  confLog.path.append(expandPath(config().getString("broker.log.path", "upmq/log"))).makeDirectory();
+  CONFIGURATION::Instance().setLog(confLog);
 
-  ASYNCLOGGER::Instance().logPriority = log.level;
+  ASYNCLOGGER::Instance().logPriority = confLog.level;
 
   if (config().getBool("application.runAsDaemon", false)) {
     ASYNCLOGGER::Instance().isInteractive = false;
   } else {
-    ASYNCLOGGER::Instance().isInteractive = log.isInteractive;
+    ASYNCLOGGER::Instance().isInteractive = confLog.isInteractive;
   }
 
-  logStream = std::make_unique<ThreadSafeLogStream>(ASYNCLOGGER::Instance().add(log.name, log.path.toString()));
+  log = &ASYNCLOGGER::Instance().add(confLog.name, confLog.path.toString());
 }
 void MainApplication::loadThreadsConfig() const {
   Configuration::Threads threads;
