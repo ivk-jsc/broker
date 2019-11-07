@@ -20,6 +20,7 @@
 #include <Poco/RWLock.h>
 #include <Poco/ThreadPool.h>
 #include <unordered_map>
+#include <condition_variable>
 #include <Poco/RunnableAdapter.h>
 #include "DestinationFactory.h"
 #include "Singleton.h"
