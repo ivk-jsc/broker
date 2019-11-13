@@ -57,8 +57,10 @@ std::string Configuration::Storage::toString() const {
       .append("\n- * \t\tjournal\t: ")
       .append(_messageJournal);
 }
-const std::string &Configuration::Storage::messageJournal() const { return _messageJournal; }
-void Configuration::Storage::setMessageJournal(const std::string &brokerName) { _messageJournal = "\"" + brokerName + "_journal\""; }
+std::string Configuration::Storage::messageJournal(const std::string &destinationName) const {
+  return std::string("\"").append(_messageJournal).append("/").append(destinationName).append("\"");
+}
+void Configuration::Storage::setMessageJournal(const std::string &brokerName) { _messageJournal = brokerName + "_journal"; }
 Configuration::Configuration() = default;
 
 int Configuration::port() const { return _port; }

@@ -97,7 +97,7 @@ std::string MainPageReplacer::brokerStorageDataReplacer() { return Poco::replace
 
 std::string MainPageReplacer::brokerSDBMSPoolReplacer() { return std::to_string(STORAGE_CONFIG.connection.props.connectionPool); }
 std::string MainPageReplacer::brokerDestinationAutocreateReplacer() { return DESTINATION_CONFIG.autocreate ? "true" : "false"; }
-std::string MainPageReplacer::brokerJournalReplacer() { return STORAGE_CONFIG.messageJournal(); }
+std::string MainPageReplacer::brokerJournalReplacer() { return STORAGE_CONFIG.messageJournal(""); }
 std::string MainPageReplacer::brokerReadersReplacer() { return std::to_string(THREADS_CONFIG.readers); }
 std::string MainPageReplacer::brokerWritersReplacer() { return std::to_string(THREADS_CONFIG.writers); }
 std::string MainPageReplacer::brokerAcceptorsReplacer() { return std::to_string(THREADS_CONFIG.accepters); }

@@ -59,7 +59,7 @@ class Configuration {
   };
 
   struct Log {
-    int level{8};
+    int level{4};
     std::string name{"broker"};
     Poco::Path path;
     bool isInteractive{true};
@@ -123,7 +123,7 @@ class Configuration {
    public:
     Connection connection;
     Data data;
-    const std::string &messageJournal() const;
+    std::string messageJournal(const std::string &destinationName) const;
     void setMessageJournal(const std::string &brokerName);
     std::string toString() const;
 

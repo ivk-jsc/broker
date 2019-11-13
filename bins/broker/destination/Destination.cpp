@@ -40,7 +40,10 @@ Destination::Destination(const Exchange &exchange, const std::string &uri, Type 
       _consumerMode(makeConsumerMode(_uri)) {
   _storage.setParent(this);
   storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
+  dbSession.beginTX(_id);
   createSubscriptionsTable(dbSession);
+  createJournalTable(dbSession);
+  dbSession.commitTX();
 }
 Destination::~Destination() {
   try {
@@ -86,6 +89,17 @@ void Destination::createSubscriptionsTable(storage::DBMSSession &dbSession) {
 
   TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::now; }
   CATCH_POCO_DATA_EXCEPTION("can't init destination", sql.str(), dbSession.close();, ERROR_DESTINATION)
+}
+void Destination::createJournalTable(storage::DBMSSession &dbSession) {
+  std::stringstream sql;
+  sql << " create table if not exists " << STORAGE_CONFIG.messageJournal(_name) << "("
+      << "    message_id text not null primary key"
+      << "   ,uri text not null"
+      << "   ,body_type int"
+      << "   ,subscribers_count int not null default 0"
+      << ");";
+  TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::now; }
+  CATCH_POCO_DATA_EXCEPTION_PURE("can't init destination", sql.str(), ERROR_DESTINATION);
 }
 std::string Destination::getStoredDestinationID(const Exchange &exchange, const std::string &name, Destination::Type type) {
   std::string id = Poco::UUIDGenerator::defaultGenerator().createRandom().toString();
@@ -519,6 +533,7 @@ void Destination::loadDurableSubscriptions() {
       << "id, name, routing_key"
       << " from " << subscriptionsT() << " where type = " << type << ";";
   storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
+  dbSession.beginTX(_id + "ldur");
   TRY_POCO_DATA_EXCEPTION {
     Poco::Data::Statement select(dbSession());
     select << sql.str(), Poco::Data::Keywords::into(id), Poco::Data::Keywords::into(name), Poco::Data::Keywords::into(routingKey),
@@ -535,6 +550,7 @@ void Destination::loadDurableSubscriptions() {
     }
   }
   CATCH_POCO_DATA_EXCEPTION_PURE("can't create subscription", sql.str(), ERROR_ON_SUBSCRIPTION)
+  dbSession.commitTX();
 }
 void Destination::bindWithSubscriber(const std::string &clientID, bool useFileLink) {
   upmq::ScopedWriteRWLock writeRWLock(_predefSubscribersLock);

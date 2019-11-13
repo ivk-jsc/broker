@@ -104,6 +104,7 @@ class Destination {
   void addS2Subs(const std::string &sesionID, const std::string &subsID);
   void remS2Subs(const std::string &sessionID, const std::string &subsID);
   void createSubscriptionsTable(storage::DBMSSession &dbSession);
+  void createJournalTable(storage::DBMSSession &dbSession);
   static std::string getStoredDestinationID(const Exchange &exchange, const std::string &name, Destination::Type type);
   static void saveDestinationId(
       const std::string &id, storage::DBMSSession &dbSession, const Exchange &exchange, const std::string &name, Destination::Type type);

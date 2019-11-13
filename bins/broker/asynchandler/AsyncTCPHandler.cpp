@@ -59,7 +59,7 @@ AsyncTCPHandler::AsyncTCPHandler(Poco::Net::StreamSocket &socket, Poco::Net::Soc
   _queueReadNum = queueNum % THREADS_CONFIG.readers;
   _queueWriteNum = queueNum % THREADS_CONFIG.writers;
 
-  log = &ASYNCLOGGER::Instance().add(std::to_string(num));
+  log = &Poco::Logger::get(CONFIGURATION::Instance().log().name);
 
   _socket.setNoDelay(true);
   _socket.setBlocking(false);
