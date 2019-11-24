@@ -29,7 +29,7 @@ template <typename Value>
 class FSReadLockedValue {
   MRWLock *_rwLock = nullptr;
   const Value *_value = nullptr;
-  std::atomic_bool _wasMoved{false};
+  std::atomic_bool _wasMoved = {false};
 
   void unlock() noexcept {
     if (_rwLock && _rwLock->isValid()) {

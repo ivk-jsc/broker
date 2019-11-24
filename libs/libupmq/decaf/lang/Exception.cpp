@@ -55,7 +55,7 @@ class ExceptionData {
       : message(std::move(other.message)), cause(other.cause.release()), stackTrace(std::move(other.stackTrace)) {}
 
   ExceptionData &operator=(const ExceptionData &other) = default;
-  ExceptionData &operator=(ExceptionData &&other) noexcept = default;
+  ExceptionData &operator=(ExceptionData &&other) = default;
 };
 }  // namespace lang
 }  // namespace decaf
