@@ -874,11 +874,12 @@ void Storage::setMessageToWasSent(const std::string &messageID, const Consumer &
   TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str(), DBMSConnectionPool::TX::NOT_USE); }
   CATCH_POCO_DATA_EXCEPTION_PURE("can't set message to was_sent ", sql.str(), ERROR_STORAGE)
 }
-void Storage::setMessageToDelivered(const std::string &messageID) {
+void Storage::setMessageToDelivered(const upmq::broker::Session &session, const std::string &messageID) {
   std::stringstream sql;
   sql << "update " << _messageTableID << " set delivery_status = " << message::DELIVERED << " where message_id = \'" << messageID << "\'"
       << ";";
-  TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str(), DBMSConnectionPool::TX::USE); }
+  storage::DBMSSession &dbSession = session.currentDBSession.get();
+  TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::now; }
   CATCH_POCO_DATA_EXCEPTION_PURE("can't set message to delivered", sql.str(), ERROR_STORAGE)
 }
 void Storage::setMessageToLastInGroup(const Session &session, const std::string &messageID) {

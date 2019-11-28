@@ -28,12 +28,10 @@ T getPropertyValue(const std::string &propName, const std::string &messageID, co
   T result;
 
   sql << "select " << propName << " from " << storage.messageTableID() << " where message_id = \'" << messageID << "\'";
-
+  // not necessary to begin transaction, because this function always using in transaction
   storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
-  dbSession.beginTX(propName + messageID);
   TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::into(result), Poco::Data::Keywords::now; }
   CATCH_POCO_DATA_EXCEPTION_PURE("can't get message property : " + propName, sql.str(), ERROR_ON_GET_MESSAGE)
-  dbSession.commitTX();
   return result;
 }
 

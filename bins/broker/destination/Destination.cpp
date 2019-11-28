@@ -368,10 +368,10 @@ void Destination::doAck(
     if (session.isClientAcknowledge()) {
       removeMessageOrGroup(session, storage, msg, groupStatus);
     } else if (session.isTransactAcknowledge() || browser) {
-      storage.setMessageToDelivered(msg.tuple.get<message::field_message_id.position>());
+      storage.setMessageToDelivered(session, msg.tuple.get<message::field_message_id.position>());
     } else {
       if (groupStatus == message::ONE_OF_GROUP) {
-        storage.setMessageToDelivered(msg.tuple.get<message::field_message_id.position>());
+        storage.setMessageToDelivered(session, msg.tuple.get<message::field_message_id.position>());
       } else {
         removeMessageOrGroup(session, storage, msg, groupStatus);
       }
