@@ -30,11 +30,10 @@ void QueueDestination::save(const Session &session, const MessageDataContainer &
   if (session.isTransactAcknowledge() && !_storage.hasTransaction(session)) {
     begin(session);
   }
-  TRY_POCO_DATA_EXCEPTION { _storage.save(session, sMessage, *session.currentDBSession); }
+  TRY_POCO_DATA_EXCEPTION { _storage.save(session, sMessage); }
   CATCH_POCO_DATA_EXCEPTION_PURE_TROW_INVALID_SQL("can't save message", "", ERROR_ON_SAVE_MESSAGE)
 
   session.currentDBSession->commitTX();
-  session.currentDBSession.reset(nullptr);
 
   TRY_POCO_DATA_EXCEPTION {
     std::string routingK = routingKey(sMessage.message().destination_uri());

@@ -119,17 +119,17 @@ void Subscription::save(const Session &session, const MessageDataContainer &sMes
     if (session.isTransactAcknowledge() && !_storage.hasTransaction(session)) {
       _storage.begin(session);
     }
-    session.currentDBSession = dbms::Instance().dbmsSessionPtr();
+    if (!session.currentDBSession.exists()) {
+      session.currentDBSession = dbms::Instance().dbmsSessionPtr();
+    }
     session.currentDBSession->beginTX(message.sender_id());
     _senders.fixMessageInGroup(message.sender_id(), session, sMessage);
     session.currentDBSession->commitTX();
 
-    auto dbSession = session.currentDBSession.move();
-
-    dbSession->beginTX(_id + message.message_id());
-    TRY_POCO_DATA_EXCEPTION { _storage.save(session, sMessage, *dbSession); }
+    session.currentDBSession->beginTX(_id + message.message_id());
+    TRY_POCO_DATA_EXCEPTION { _storage.save(session, sMessage); }
     CATCH_POCO_DATA_EXCEPTION_PURE("can't save message", "", ERROR_ON_SAVE_MESSAGE)
-    dbSession->commitTX();
+    session.currentDBSession->commitTX();
     _destination.postNewMessageEvent();
   }
 }

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#define SQLITE_TRACE
 #include "DBMSConnectionPool.h"
 #include <Poco/File.h>
 #if POCO_VERSION_MAJOR > 1
@@ -155,7 +155,9 @@ void DBMSConnectionPool::beginTX(Poco::Data::Session &dbSession, const std::stri
   else {
 
     std::string transactionType = (_inMemory == IN_MEMORY::M_YES ? "immediate" : "exclusive");
-
+if (txName.empty()) {
+  int ii = 0;
+}
     bool locked;
     std::stringstream sql;
     sql << "begin " << transactionType << " transaction \"" << txName << Poco::Thread::currentTid() << "\";";  // immediate
@@ -172,7 +174,7 @@ void DBMSConnectionPool::beginTX(Poco::Data::Session &dbSession, const std::stri
       } catch (PDSQLITE::TableLockedException &) {
         locked = true;
         Poco::Thread::yield();
-      } catch (PDSQLITE::InvalidSQLStatementException &) {
+      } catch (PDSQLITE::InvalidSQLStatementException &iex) {
         locked = true;
         Poco::Thread::yield();
       } catch (Poco::Exception &pex) {

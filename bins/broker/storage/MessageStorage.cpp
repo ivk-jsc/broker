@@ -329,8 +329,8 @@ void Storage::removeMessage(const std::string &messageID, storage::DBMSSession &
 }
 const std::string &Storage::messageTableID() const { return _messageTableID; }
 const std::string &Storage::propertyTableID() const { return _propertyTableID; }
-void Storage::saveMessageHeader(const upmq::broker::Session &session, const MessageDataContainer &sMessage, storage::DBMSSession &dbSession) {
-  storage::DBMSSession &dbs = (session.currentDBSession.exists() ? *session.currentDBSession : dbSession);
+void Storage::saveMessageHeader(const upmq::broker::Session &session, const MessageDataContainer &sMessage) {
+  storage::DBMSSession &dbs = *session.currentDBSession;
   const Proto::Message &message = sMessage.message();
   std::string messageID = message.message_id();
   int persistent = message.persistent() ? 1 : 0;
@@ -387,7 +387,7 @@ void Storage::saveMessageHeader(const upmq::broker::Session &session, const Mess
 
   insert.execute();
 }
-void Storage::save(const upmq::broker::Session &session, const MessageDataContainer &sMessage, storage::DBMSSession &dbSession) {
+void Storage::save(const upmq::broker::Session &session, const MessageDataContainer &sMessage) {
   const Proto::Message &message = sMessage.message();
   const std::string &messageID = message.message_id();
 
@@ -396,9 +396,8 @@ void Storage::save(const upmq::broker::Session &session, const MessageDataContai
     _nonPersistent.insert(std::make_pair(messageID, std::shared_ptr<MessageDataContainer>(sMessage.clone())));
   }
   try {
-    storage::DBMSSession &dbs = ((session.currentDBSession != nullptr) ? *session.currentDBSession : dbSession);
-    saveMessageProperties(dbs, message);
-    saveMessageHeader(session, sMessage, dbs);
+    saveMessageProperties(session, message);
+    saveMessageHeader(session, sMessage);
   } catch (PDSQLITE::InvalidSQLStatementException &ioex) {
     {
       upmq::ScopedWriteRWLock writeRWLock(_nonPersistentLock);
@@ -624,7 +623,8 @@ std::shared_ptr<MessageDataContainer> Storage::get(const Consumer &consumer, boo
 }
 void Storage::setParent(const broker::Destination *parent) { _parent = parent; }
 const std::string &Storage::uri() const { return _parent ? _parent->uri() : emptyString; }
-void Storage::saveMessageProperties(storage::DBMSSession &dbSession, const Message &message) {
+void Storage::saveMessageProperties(const upmq::broker::Session &session, const Message &message) {
+  storage::DBMSSession &dbSession = *session.currentDBSession;
   std::stringstream sql;
   std::string upsert = "insert or replace";
   std::string postfix;
@@ -846,8 +846,7 @@ std::vector<MessageInfo> Storage::getMessagesBelow(const Session &session, const
   sql << "select * from " << _messageTableID << " where delivery_count > 0 "
       << " and consumer_id like \'%" << session.id() << "%'"
       << ";" << non_std_endl;
-  storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
-  dbSession.beginTX(_extParentID);
+  storage::DBMSSession &dbSession = session.currentDBSession.get();
   TRY_POCO_DATA_EXCEPTION {
     Poco::Data::Statement select(dbSession());
     MessageInfo messageInfo;
@@ -860,7 +859,6 @@ std::vector<MessageInfo> Storage::getMessagesBelow(const Session &session, const
     }
   }
   CATCH_POCO_DATA_EXCEPTION_PURE("can't get all messages below id", sql.str(), ERROR_ON_ACK_MESSAGE)
-  dbSession.commitTX();
   return result;
 }
 void Storage::setMessageToWasSent(const std::string &messageID, const Consumer &consumer) {

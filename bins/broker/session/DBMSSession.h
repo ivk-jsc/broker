@@ -57,6 +57,7 @@ class DBMSSession {
   bool isValid() const;
   const std::shared_ptr<Poco::Data::Session> &dbmsConnnectionRef() const;
   bool inTransaction() const;
+  friend bool operator==(const DBMSSession &lhs, const DBMSSession &rhs) { return lhs._lastTXName == rhs._lastTXName; }
 };
 }  // namespace storage
 }  // namespace broker

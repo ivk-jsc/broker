@@ -46,16 +46,14 @@ class Session {
 
    public:
     explicit CurrentDBSession(std::unique_ptr<storage::DBMSSession> currentDBSession)
-        : _currentSessions([&] {
-            std::unordered_map<Poco::Thread::TID, std::unique_ptr<storage::DBMSSession>> sessions;
-            sessions.emplace(Poco::Thread::currentTid(), std::move(currentDBSession));
-            return sessions;
-          }()) {}
+        : _currentSessions(THREADS_CONFIG.writers + THREADS_CONFIG.readers + THREADS_CONFIG.subscribers) {
+      _currentSessions.emplace(Poco::Thread::currentTid(), std::move(currentDBSession));
+    }
     CurrentDBSession() = default;
 
     storage::DBMSSession &get() const {
       upmq::ScopedReadRWLock readRWLock(_rwLock);
-      return *_currentSessions[Poco::Thread::currentTid()];
+      return *_currentSessions.at(Poco::Thread::currentTid());
     }
     bool exists() const {
       upmq::ScopedReadRWLock readRWLock(_rwLock);
@@ -73,16 +71,20 @@ class Session {
     }
     storage::DBMSSession *operator->() {
       upmq::ScopedReadRWLock readRWLock(_rwLock);
-      return _currentSessions[Poco::Thread::currentTid()].get();
+      return _currentSessions.at(Poco::Thread::currentTid()).get();
     }
     bool operator==(storage::DBMSSession *rhs) const {
       upmq::ScopedReadRWLock readRWLock(_rwLock);
-      return _currentSessions[Poco::Thread::currentTid()].get() == rhs;
+      auto it = _currentSessions.find(Poco::Thread::currentTid());
+      if (it == _currentSessions.end()) {
+        return false;
+      }
+      if (rhs == nullptr) {
+        return it->second.get() == rhs;
+      }
+      return *it->second == *rhs;
     }
-    bool operator!=(storage::DBMSSession *rhs) const {
-      upmq::ScopedReadRWLock readRWLock(_rwLock);
-      return _currentSessions[Poco::Thread::currentTid()].get() != rhs;
-    }
+    bool operator!=(storage::DBMSSession *rhs) const { return !(operator==(rhs)); }
     storage::DBMSSession &operator*() { return get(); }
     void reset(storage::DBMSSession *currDBSession) {
       if (currDBSession == nullptr) {
@@ -95,7 +97,7 @@ class Session {
     std::unique_ptr<storage::DBMSSession> move() {
       upmq::ScopedWriteRWLock writeRWLock(_rwLock);
       auto tid = Poco::Thread::currentTid();
-      auto pointer = std::move(_currentSessions[tid]);
+      auto pointer = std::move(_currentSessions.at(tid));
       _currentSessions.erase(tid);
       return pointer;
     }

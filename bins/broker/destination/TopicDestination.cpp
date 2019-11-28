@@ -28,7 +28,6 @@ TopicDestination::TopicDestination(const Exchange &exchange, const std::string &
 }
 void TopicDestination::save(const Session &session, const MessageDataContainer &sMessage) {
   session.currentDBSession->commitTX();
-  session.currentDBSession.reset(nullptr);
 
   TRY_POCO_DATA_EXCEPTION {
     std::string routingK = routingKey(sMessage.message().destination_uri());
