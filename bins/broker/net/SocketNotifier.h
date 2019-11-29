@@ -20,7 +20,7 @@
 #include "Poco/Net/Net.h"
 #include "Poco/Net/Socket.h"
 #include "Poco/RefCountedObject.h"
-#include "Poco/NotificationCenter.h"
+#include "NotificationCenter.h"
 #include "Poco/Observer.h"
 #include <set>
 
@@ -73,7 +73,7 @@ class SocketNotifier : public Poco::RefCountedObject
   typedef std::multiset<upmq::Net::SocketNotification*> EventSet;
 
   EventSet _events;
-  Poco::NotificationCenter _nc;
+  upmq::NotificationCenter _nc;
   Poco::Net::Socket _socket;
 };
 

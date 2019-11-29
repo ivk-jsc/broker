@@ -126,7 +126,9 @@ set(SOURCE_FILES
 	net/SocketNotifier.cpp
 	net/SocketNotifier.h
 	net/SocketNotification.cpp
-	net/SocketNotification.h)
+	net/SocketNotification.h
+	net/NotificationCenter.cpp
+	net/NotificationCenter.h)
 
 if (ENABLE_WEB_ADMIN)
   add_definitions(-DENABLE_WEB_ADMIN)
