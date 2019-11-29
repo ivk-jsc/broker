@@ -23,8 +23,8 @@
 #include "Poco/Timespan.h"
 #include "Poco/Observer.h"
 #include "Poco/AutoPtr.h"
-#include "FixedSizeUnorderedMap.h"
 #include "SocketNotifier.h"
+#include "Poco/RWLock.h"
 
 namespace Poco {
 class Thread;
@@ -32,9 +32,9 @@ namespace Net {
 class Socket;
 }  // namespace Net
 
-std::size_t hash(const Poco::Net::Socket &socket);
+std::size_t hash(const Poco::Net::Socket& socket);
 }  // namespace Poco
-
+#include "FixedSizeUnorderedMap.h"
 namespace upmq {
 
 namespace Net {
@@ -44,7 +44,7 @@ class SocketNotifier;
 
 class SocketReactor : public Poco::Runnable {
  public:
-  SocketReactor(size_t handlersSize);
+  explicit SocketReactor(size_t handlersSize);
   /// Creates the SocketReactor.
 
   explicit SocketReactor(const Poco::Timespan& timeout, size_t handlersSize);
@@ -98,6 +98,7 @@ class SocketReactor : public Poco::Runnable {
   ///     reactor.removeEventHandler(obs);
 
   size_t handlersSize() const;
+
  protected:
   virtual void onTimeout();
   /// Called if the timeout expires and no other events are available.
@@ -151,7 +152,7 @@ class SocketReactor : public Poco::Runnable {
   NotificationPtr _pErrorNotification;
   NotificationPtr _pTimeoutNotification;
   NotificationPtr _pIdleNotification;
-  NotificationPtr _pShutdownNotification;  
+  NotificationPtr _pShutdownNotification;
   Poco::Thread* _pThread;
 
   friend class SocketNotifier;

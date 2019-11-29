@@ -28,25 +28,25 @@
 using Poco::AutoPtr;
 using Poco::NObserver;
 using Poco::Thread;
-using upmq::Net::ReadableNotification;
 using Poco::Net::ServerSocket;
-using upmq::Net::ShutdownNotification;
 using Poco::Net::Socket;
 using Poco::Net::StreamSocket;
+using upmq::Net::ReadableNotification;
+using upmq::Net::ShutdownNotification;
 
 namespace upmq {
 namespace Net {
 
-template <class SR, typename ...Args>
+template <class SR, typename... Args>
 class ParallelSocketReactor : public SR {
  public:
   typedef Poco::SharedPtr<ParallelSocketReactor> Ptr;
 
-  ParallelSocketReactor(Args ...args) : SR(args...) { _thread.start(*this); }  
+  explicit ParallelSocketReactor(Args... args) : SR(args...) { _thread.start(*this); }
   ~ParallelSocketReactor() override;
 
  protected:
-  void onIdle() {
+  void onIdle() override {
     SR::onIdle();
     Poco::Thread::yield();
   }
@@ -55,7 +55,7 @@ class ParallelSocketReactor : public SR {
   Poco::Thread _thread;
 };
 
-template <class SR, typename ... Args>
+template <class SR, typename... Args>
 ParallelSocketReactor<SR, Args...>::~ParallelSocketReactor() {
   try {
     this->stop();
