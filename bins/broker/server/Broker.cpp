@@ -574,7 +574,7 @@ bool Broker::write(size_t num) {
   return true;
 }
 void Broker::onReadable() {
-  size_t indexNum = _readableIndexCounter++;
+  const size_t indexNum = _readableIndexCounter++;
   _isReadable = true;
   size_t num = 0;
   auto &blockingConcurrentQueue = _readableIndexes[indexNum];

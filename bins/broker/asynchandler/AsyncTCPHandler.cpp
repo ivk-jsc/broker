@@ -40,7 +40,7 @@ using send_size_t = size_t;
 namespace upmq {
 namespace broker {
 
-AsyncTCPHandler::AsyncTCPHandler(Poco::Net::StreamSocket &socket, Poco::Net::SocketReactor &reactor)
+AsyncTCPHandler::AsyncTCPHandler(Poco::Net::StreamSocket &socket, upmq::Net::SocketReactor &reactor)
     : _socket(socket),
       _reactor(reactor),
       _peerAddress(socket.peerAddress().toString()),
@@ -122,7 +122,7 @@ AsyncTCPHandler::~AsyncTCPHandler() {
   log->information("%s", std::to_string(num).append(" * => destruct asynchandler from ").append(_peerAddress));
 }
 
-void AsyncTCPHandler::onReadable(const AutoPtr<Poco::Net::ReadableNotification> &pNf) {
+void AsyncTCPHandler::onReadable(const AutoPtr<upmq::Net::ReadableNotification> &pNf) {
   if (_needErase && !_readComplete) {
     _readComplete = true;
     return;
@@ -149,13 +149,13 @@ void AsyncTCPHandler::put(std::shared_ptr<MessageDataContainer> sMessage) {
   BROKER::Instance().putWritable(_queueWriteNum, num);
 }
 
-void AsyncTCPHandler::onShutdown(const AutoPtr<Poco::Net::ShutdownNotification> &pNf) {
+void AsyncTCPHandler::onShutdown(const AutoPtr<upmq::Net::ShutdownNotification> &pNf) {
   UNUSED_VAR(pNf);
   log->notice("%s", std::to_string(num).append(" ! => shutdown : ").append(_peerAddress));
   emitCloseEvent();
 }
 
-void AsyncTCPHandler::onError(const AutoPtr<Poco::Net::ErrorNotification> &pNf) {
+void AsyncTCPHandler::onError(const AutoPtr<upmq::Net::ErrorNotification> &pNf) {
   UNUSED_VAR(pNf);
   log->error("%s", std::to_string(num).append(" ! => network error : ").append(_peerAddress));
   emitCloseEvent(true);

@@ -28,9 +28,9 @@
 #include <Poco/Net/HTTPServer.h>
 #include <Poco/Net/NetException.h>
 #include <Poco/Net/ServerSocket.h>
-#include <Poco/Net/ParallelSocketAcceptor.h>
-#include <Poco/Net/SocketNotification.h>
-#include <Poco/Net/ParallelSocketReactor.h>
+#include "ParallelSocketAcceptor.h"
+#include "SocketNotification.h"
+#include "ParallelSocketReactor.h"
 #include <Poco/Net/StreamSocket.h>
 #include <Poco/Notification.h>
 #include <Poco/NotificationCenter.h>

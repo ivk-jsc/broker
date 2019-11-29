@@ -22,10 +22,9 @@
 #include <Poco/FIFOEvent.h>
 #include <Poco/NObserver.h>
 #include <Poco/Net/NetException.h>
-#include <Poco/Net/SocketNotifier.h>
-#include <Poco/Net/SocketReactor.h>
-#include <Poco/Net/SocketAcceptor.h>
-#include <Poco/Net/SocketNotification.h>
+#include "SocketNotifier.h"
+#include "SocketReactor.h"
+#include "SocketNotification.h"
 #include <Poco/Net/StreamSocket.h>
 #include <Poco/RWLock.h>
 #include <Poco/Thread.h>
@@ -82,13 +81,13 @@ class AsyncTCPHandler {
 
   enum class DataStatus { AS_ERROR, TRYAGAIN, OK };
 
-  AsyncTCPHandler(Poco::Net::StreamSocket &socket, Poco::Net::SocketReactor &reactor);
+  AsyncTCPHandler(Poco::Net::StreamSocket &socket, upmq::Net::SocketReactor &reactor);
   void removeErrorShutdownHandler();
   void removeConsumers();
   virtual ~AsyncTCPHandler();
-  void onReadable(const AutoPtr<Poco::Net::ReadableNotification> &pNf);
-  void onShutdown(const AutoPtr<Poco::Net::ShutdownNotification> &pNf);
-  void onError(const AutoPtr<Poco::Net::ErrorNotification> &pNf);
+  void onReadable(const AutoPtr<upmq::Net::ReadableNotification> &pNf);
+  void onShutdown(const AutoPtr<upmq::Net::ShutdownNotification> &pNf);
+  void onError(const AutoPtr<upmq::Net::ErrorNotification> &pNf);
   void setClientID(const std::string &clientID);
   const std::string &clientID() const;
   void setConnection(Connection *connection) const;
@@ -118,7 +117,7 @@ class AsyncTCPHandler {
   enum { BUFFER_SIZE = 65536 };
 
   Poco::Net::StreamSocket _socket;
-  Poco::Net::SocketReactor &_reactor;
+  upmq::Net::SocketReactor &_reactor;
   std::string _peerAddress;
   std::atomic_bool _allowPutEvent{true};
 
@@ -137,9 +136,9 @@ class AsyncTCPHandler {
   };
   HeaderBodyLens headerBodyLens;
 
-  Poco::NObserver<AsyncTCPHandler, Poco::Net::ReadableNotification> _readableCallBack;
-  Poco::NObserver<AsyncTCPHandler, Poco::Net::ErrorNotification> _errorCallBack;
-  Poco::NObserver<AsyncTCPHandler, Poco::Net::ShutdownNotification> _shutdownCallBack;
+  Poco::NObserver<AsyncTCPHandler, upmq::Net::ReadableNotification> _readableCallBack;
+  Poco::NObserver<AsyncTCPHandler, upmq::Net::ErrorNotification> _errorCallBack;
+  Poco::NObserver<AsyncTCPHandler, upmq::Net::ShutdownNotification> _shutdownCallBack;
 
   size_t num{};
 

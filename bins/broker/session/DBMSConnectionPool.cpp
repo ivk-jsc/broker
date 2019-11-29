@@ -172,6 +172,7 @@ void DBMSConnectionPool::beginTX(Poco::Data::Session &dbSession, const std::stri
         locked = true;
         Poco::Thread::yield();
       } catch (PDSQLITE::InvalidSQLStatementException &iex) {
+        UNUSED_VAR(iex);
         locked = true;
         Poco::Thread::yield();
       } catch (Poco::Exception &pex) {
