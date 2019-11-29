@@ -29,6 +29,7 @@ include_directories(sys)
 include_directories(selector)
 include_directories(s2s_proto)
 include_directories(misc)
+include_directories(net)
 
 set(SOURCE_FILES
     version/About.cpp
@@ -117,7 +118,17 @@ set(SOURCE_FILES
     destination/DestinationOwner.h
     s2s_proto/S2SProto.h
     session/DBMSSession.cpp
-    session/DBMSSession.h)
+    session/DBMSSession.h
+	net/SocketReactor.cpp
+	net/SocketReactor.h
+	net/ParallelSocketReactor.h
+	net/ParallelSocketAcceptor.h
+	net/SocketNotifier.cpp
+	net/SocketNotifier.h
+	net/SocketNotification.cpp
+	net/SocketNotification.h
+	net/NotificationCenter.cpp
+	net/NotificationCenter.h)
 
 if (ENABLE_WEB_ADMIN)
   add_definitions(-DENABLE_WEB_ADMIN)

@@ -32,6 +32,8 @@
 #include "Exchange.h"
 #include "MainApplication.h"
 #include "Version.hpp"
+#include "ParallelSocketReactor.h"
+#include "ParallelSocketAcceptor.h"
 
 #ifdef ENABLE_WEB_ADMIN
 #include "WebAdminRequestHandlerFactory.h"
@@ -179,9 +181,11 @@ int MainApplication::main(const std::vector<std::string> &args) {
   svs.setReusePort(false);
   svs.setReuseAddress(false);
 
-  Poco::Net::SocketReactor reactor;
-  Poco::Net::ParallelSocketAcceptor<AsyncTCPHandler, Poco::Net::SocketReactor> acceptor(svs, reactor, CONFIGURATION::Instance().threads().accepters);
-
+  upmq::Net::SocketReactor reactor(CONFIGURATION::Instance().net().maxConnections);
+  // upmq::Net::ParallelSocketAcceptor<AsyncTCPHandler, upmq::Net::SocketReactor> acceptor(svs, reactor,
+  // CONFIGURATION::Instance().threads().accepters);
+  auto acceptor = std::make_unique<upmq::Net::ParallelSocketAcceptor<AsyncTCPHandler, upmq::Net::SocketReactor>>(
+      svs, reactor, CONFIGURATION::Instance().threads().accepters);
   Thread thread;
   thread.start(reactor);
 
@@ -198,11 +202,11 @@ int MainApplication::main(const std::vector<std::string> &args) {
 #ifdef ENABLE_WEB_ADMIN
   s.stop();
 #endif
-
   reactor.setTimeout(1);
   reactor.stop();
   reactor.wakeUp();
   thread.join();
+  acceptor.reset(nullptr);
 
   BROKER::Instance().stop();
   EXCHANGE::Instance().stop();

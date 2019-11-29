@@ -19,6 +19,7 @@
 #include <vector>
 #include <list>
 #include <algorithm>
+#include <set>
 #include "MoveableRWLock.h"
 #include <Poco/Hash.h>
 #include <Exception.h>
@@ -243,7 +244,7 @@ class FSUnorderedMap {
 
   void checkSize() const {
     if (_realSize + 1 == _size) {
-      throw EXCEPTION("FSUnorderedMap is full", std::to_string(_realSize), ERROR_UNKNOWN);
+      throw EXCEPTION("FSUnorderedMap is full", std::to_string(_realSize), -1);
     }
   }
 
@@ -307,6 +308,7 @@ class FSUnorderedMap {
     }
   }
   size_t size() const { return _realSize; }
+  size_t capacity() const { return _size; };
   const ItemType &at(size_t index) { return _items.at(index); }
   template <typename F>
   void applyForEach(const F &f) const {
