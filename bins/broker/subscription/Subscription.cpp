@@ -43,7 +43,7 @@ Subscription::Subscription(const Destination &destination, const std::string &id
       _currentConsumerNumber(0),
       _consumersT("\"" + _id + "_subscription\""),
       _messageCounter(0),
-      log(&ASYNCLOGGER::Instance().add(_id)),
+      log(&Poco::Logger::get(CONFIGURATION::Instance().log().name)),
       _isSubsNotify(false),
       _isDestroyed(false),
       _isInited(true),
@@ -119,15 +119,17 @@ void Subscription::save(const Session &session, const MessageDataContainer &sMes
     if (session.isTransactAcknowledge() && !_storage.hasTransaction(session)) {
       _storage.begin(session);
     }
-    session.currentDBSession = dbms::Instance().dbmsSessionPtr();
+    if (!session.currentDBSession.exists()) {
+      session.currentDBSession = dbms::Instance().dbmsSessionPtr();
+    }
+    session.currentDBSession->beginTX(message.sender_id());
     _senders.fixMessageInGroup(message.sender_id(), session, sMessage);
+    session.currentDBSession->commitTX();
 
-    auto dbSession = session.currentDBSession.move();
-
-    dbSession->beginTX(_id + message.message_id());
-    TRY_POCO_DATA_EXCEPTION { _storage.save(session, sMessage, *dbSession); }
+    session.currentDBSession->beginTX(_id + message.message_id());
+    TRY_POCO_DATA_EXCEPTION { _storage.save(session, sMessage); }
     CATCH_POCO_DATA_EXCEPTION_PURE("can't save message", "", ERROR_ON_SAVE_MESSAGE)
-    dbSession->commitTX();
+    session.currentDBSession->commitTX();
     _destination.postNewMessageEvent();
   }
 }
@@ -163,6 +165,7 @@ void Subscription::addClient(
         << ";";
 
     size_t count = 0;
+    dbSession.beginTX(objectID);
     TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::into(count), Poco::Data::Keywords::now; }
     CATCH_POCO_DATA_EXCEPTION_PURE("can't add consumer", sql.str(), ERROR_ON_SUBSCRIPTION)
 
@@ -184,7 +187,6 @@ void Subscription::addClient(
   sql << "," << nextParam();
   sql << "," << nextParam() << ");";
 
-  dbSession.beginTX(objectID);
   TRY_POCO_DATA_EXCEPTION {
     dbSession << sql.str(), Poco::Data::Keywords::use(clientID), Poco::Data::Keywords::use(tcpConnectionNum), Poco::Data::Keywords::useRef(selector),
         Poco::Data::Keywords::useRef(objectID), Poco::Data::Keywords::useRef(session.id()), Poco::Data::Keywords::use(nolocal),
@@ -499,19 +501,22 @@ void Subscription::destroy() {
 
   std::stringstream sql;
   sql << "drop table if exists " << _consumersT << ";" << non_std_endl;
-  TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
+  storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
+  dbSession.beginTX(_id);
+  TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::now; }
   CATCH_POCO_DATA_EXCEPTION_PURE_NO_INVALIDEXCEPT_NO_EXCEPT("can't erase subscription", sql.str(), ERROR_ON_UNSUBSCRIPTION)
   if (!isDurable()) {
     sql.str("");
     sql << "delete from " << _destination.subscriptionsT() << " where id = \'" << _id << "\';";
-    TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
+    TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::now; }
     CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't erase subscription", sql.str(), ERROR_ON_UNSUBSCRIPTION)
 
     sql.str("");
     sql << "update " << EXCHANGE::Instance().destinationsT() << " set subscriptions_count = " << _destination.subscriptionsTrueCount();
-    TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
+    TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::now; }
     CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't update subscriptions count", sql.str(), ERROR_ON_UNSUBSCRIPTION)
   }
+  dbSession.commitTX();
   _isDestroyed = true;
 }
 const std::string &Subscription::id() const { return _id; }

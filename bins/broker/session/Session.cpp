@@ -183,7 +183,8 @@ const std::string &Session::id() const { return _id; }
 Proto::Acknowledge Session::type() const { return _acknowledgeType; }
 void Session::processAcknowledge(const MessageDataContainer &sMessage) {
   const Proto::Ack &ack = sMessage.ack();
-
+  currentDBSession = dbms::Instance().dbmsSessionPtr();
+  currentDBSession->beginTX(ack.message_id() + "ack");
   if (isClientAcknowledge()) {
     std::vector<std::string> toerase;
     {
@@ -206,6 +207,8 @@ void Session::processAcknowledge(const MessageDataContainer &sMessage) {
   } else {
     EXCHANGE::Instance().destination(ack.destination_uri(), Exchange::DestinationCreationMode::NO_CREATE).ack(*this, sMessage);
   }
+  currentDBSession->commitTX();
+  currentDBSession.reset(nullptr);
 }
 void Session::closeSubscriptions(size_t tcpNum) {
   upmq::ScopedReadRWLock readRWLock(_destinationsLock);

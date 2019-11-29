@@ -43,15 +43,6 @@ Exchange::Exchange()
       << ";";
   TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str(), storage::DBMSConnectionPool::TX::NOT_USE); }
   CATCH_POCO_DATA_EXCEPTION_PURE("can't init exchange", sql.str(), ERROR_STORAGE);
-  sql.str("");
-  sql << " create table if not exists " << STORAGE_CONFIG.messageJournal() << "("
-      << "    message_id text not null primary key"
-      << "   ,uri text not null"
-      << "   ,body_type int"
-      << "   ,subscribers_count int not null default 0"
-      << ");";
-  TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str(), storage::DBMSConnectionPool::TX::NOT_USE); }
-  CATCH_POCO_DATA_EXCEPTION_PURE("can't init exchange", sql.str(), ERROR_STORAGE);
 }
 Exchange::~Exchange() {
   try {
@@ -110,7 +101,7 @@ void Exchange::saveMessage(const Session &session, const MessageDataContainer &s
   std::stringstream sql;
   const Proto::Message &message = sMessage.message();
   Destination &dest = destination(message.destination_uri(), DestinationCreationMode::NO_CREATE);
-  sql << "insert into " << STORAGE_CONFIG.messageJournal() << "("
+  sql << "insert into " << STORAGE_CONFIG.messageJournal(dest.name()) << "("
       << "message_id, uri, body_type, subscribers_count"
       << ")"
       << " values "

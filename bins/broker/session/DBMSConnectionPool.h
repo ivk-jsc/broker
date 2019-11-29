@@ -62,6 +62,7 @@ class DBMSConnectionPool {
   static void initDB(Poco::Data::Session &dbSessionstatic);
   std::shared_ptr<Poco::Data::Session> makeSession(DBMSType dbmsType, const std::string &connector) const;
   IN_MEMORY _inMemory{IN_MEMORY::M_NO};
+  static Poco::Timestamp _lastBegin;
 };
 }  // namespace storage
 }  // namespace broker

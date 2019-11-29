@@ -81,19 +81,19 @@ Logger &AsyncLogger::add(const std::string &name, const std::string &subdir) {
 #endif
         loggetPtr = Logger::has(name);
     if (loggetPtr == emptyLoggerPtr) {
-      if (_formattingChannel.isNull()) {
-        Poco::Path dirpath;
-        dirpath.parse(subdir);
-        if (isInteractive || !Poco::Util::Application::instance().config().getBool("application.runAsDaemon", false)) {
-          dirpath.makeAbsolute();
-        }
-        dirpath.append(name).makeFile();
-        Poco::File f(dirpath.parent());
-        if (!f.exists()) {
-          f.createDirectories();
-        }
-        _formattingChannel = createFormatter(dirpath.toString(), isInteractive);
+      // if (_formattingChannel.isNull()) {
+      Poco::Path dirpath;
+      dirpath.parse(subdir);
+      if (isInteractive || !Poco::Util::Application::instance().config().getBool("application.runAsDaemon", false)) {
+        dirpath.makeAbsolute();
       }
+      dirpath.append(name).makeFile();
+      Poco::File f(dirpath.parent());
+      if (!f.exists()) {
+        f.createDirectories();
+      }
+      _formattingChannel = createFormatter(dirpath.toString(), isInteractive);
+      //}
       return Logger::create(name, _formattingChannel, logPriority);
     }
     return *loggetPtr;

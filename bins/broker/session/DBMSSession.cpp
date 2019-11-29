@@ -30,6 +30,9 @@ void upmq::broker::storage::DBMSSession::beginTX(const std::string &txName) {
     throw EXCEPTION("dbms session was closed", txName, ERROR_WORKER);
   }
   _lastTXName = txName;
+  if (_lastTXName.find_first_of('\"') == 0) {
+    Poco::removeInPlace(_lastTXName, '\"');
+  }
   dbms::Instance().beginTX(*_session, _lastTXName);
   _inTransaction = true;
 }

@@ -57,7 +57,8 @@ class Storage {
   void updateSubscribersCount(storage::DBMSSession &dbSession, const std::string &messageID);
   void deleteMessageInfoFromJournal(storage::DBMSSession &dbSession, const std::string &messageID);
   void deleteMessageDataIfExists(const std::string &messageID, int persistent);
-  void saveMessageHeader(const upmq::broker::Session &session, const MessageDataContainer &sMessage, storage::DBMSSession &dbSession);
+  void saveMessageHeader(const upmq::broker::Session &session, const MessageDataContainer &sMessage);
+  void saveMessageProperties(const upmq::broker::Session &session, const Message &message);
   bool checkTTLIsOut(const std::string &stringMessageTime, Poco::Int64 ttl);
 
  public:
@@ -68,7 +69,7 @@ class Storage {
   void setParent(const broker::Destination *parent);
   const std::string &messageTableID() const;
   const std::string &propertyTableID() const;
-  void save(const upmq::broker::Session &session, const MessageDataContainer &sMessage, storage::DBMSSession &dbSession);
+  void save(const upmq::broker::Session &session, const MessageDataContainer &sMessage);
   std::shared_ptr<MessageDataContainer> get(const Consumer &consumer, bool useFileLink);
   void removeGroupMessage(const std::string &groupID, const upmq::broker::Session &session);
   void removeMessagesBySession(const upmq::broker::Session &session);
@@ -82,10 +83,9 @@ class Storage {
   std::string generateSQLMainTable(const std::string &tableName) const;
   std::vector<std::string> generateSQLMainTableIndexes(const std::string &tableName) const;
   std::string generateSQLProperties() const;
-  void saveMessageProperties(storage::DBMSSession &dbSession, const Message &message);
   std::vector<MessageInfo> getMessagesBelow(const upmq::broker::Session &session, const std::string &messageID) const;
   void setMessageToWasSent(const std::string &messageID, const Consumer &consumer);
-  void setMessageToDelivered(const std::string &messageID);
+  void setMessageToDelivered(const upmq::broker::Session &session, const std::string &messageID);
   void setMessagesToNotSent(const Consumer &consumer);
   void setMessageToLastInGroup(const upmq::broker::Session &session, const std::string &messageID);
   void dropTXTable(storage::DBMSSession &dbSession, const std::string &mainTXTable) const;
