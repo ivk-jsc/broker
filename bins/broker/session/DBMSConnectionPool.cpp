@@ -154,7 +154,7 @@ void DBMSConnectionPool::beginTX(Poco::Data::Session &dbSession, const std::stri
 #endif  // HAS_POSTGRESQL
   else {
 
-    std::string transactionType = (_inMemory == IN_MEMORY::M_YES ? "immediate" : "exclusive");
+    static const std::string transactionType = (_inMemory == IN_MEMORY::M_YES ? "immediate" : "exclusive");
     bool locked;
     std::stringstream sql;
     sql << "begin " << transactionType << " transaction \"" << txName << Poco::Thread::currentTid() << "\";";  // immediate
@@ -163,6 +163,10 @@ void DBMSConnectionPool::beginTX(Poco::Data::Session &dbSession, const std::stri
       try {
         if (STORAGE_CONFIG.connection.props.dbmsType == storage::SQLite) {
           dbSession.setFeature("autoCommit", false);
+        }
+        if (STORAGE_CONFIG.connection.props.dbmsType == storage::SQLiteNative && dbSession.isTransaction()) {
+          locked = true;
+          Poco::Thread::yield();
         }
         dbSession << sql.str(), Poco::Data::Keywords::now;
       } catch (PDSQLITE::DBLockedException &) {
