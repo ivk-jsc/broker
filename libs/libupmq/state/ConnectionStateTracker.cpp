@@ -76,8 +76,7 @@ Pointer<Tracked> ConnectionStateTracker::track(const Pointer<Command> &command) 
 
     if (command->isConnect()) {
       result = processConnect(command);
-    }
-    if (command->isDisconnect()) {
+    } else if (command->isDisconnect()) {
       result = processDisconnect(command);
     } else if (command->isSession()) {
       result = processSession(command);

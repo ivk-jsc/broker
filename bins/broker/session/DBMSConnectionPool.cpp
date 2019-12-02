@@ -344,7 +344,19 @@ std::shared_ptr<Poco::Data::Session> DBMSConnectionPool::makeSession(DBMSType db
     }
     *session << "PRAGMA case_sensitive_like = True;", Poco::Data::Keywords::now;
     *session << "PRAGMA synchronous = " << (STORAGE_CONFIG.connection.props.useSync ? "ON" : "OFF") << ";", Poco::Data::Keywords::now;
-    *session << "PRAGMA journal_mode = " << STORAGE_CONFIG.connection.props.journalMode << " ;", Poco::Data::Keywords::now;
+
+    if (_inMemory == IN_MEMORY::M_YES) {
+      *session << "PRAGMA journal_mode = "
+               << "MEMORY"
+               << " ;",
+          Poco::Data::Keywords::now;
+      *session << "PRAGMA locking_mode = "
+               << "EXCLUSIVE"
+               << " ;",
+          Poco::Data::Keywords::now;
+    } else {
+      *session << "PRAGMA journal_mode = " << STORAGE_CONFIG.connection.props.journalMode << " ;", Poco::Data::Keywords::now;
+    }
     *session << "PRAGMA secure_delete = FALSE;", Poco::Data::Keywords::now;
   }
   return session;
