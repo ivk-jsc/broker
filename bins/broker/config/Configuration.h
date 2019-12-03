@@ -89,7 +89,7 @@ class Configuration {
         storage::DBMSType dbmsType{storage::NO_TYPE};
         int connectionPool{64};
         bool useSync{false};
-        std::string journalMode{"WAL"};
+        std::string journalMode{"MEMORY"};
         std::string toString() const;
       };
       struct Value {
