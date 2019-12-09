@@ -26,11 +26,12 @@
 
 namespace upmq {
 
-template <typename Value>
+template <typename Key, typename Value>
 class FSReadLockedValue {
   MRWLock *_rwLock = nullptr;
   const Value *_value = nullptr;
-  std::atomic_bool _wasMoved{false};
+  const Key *_key = nullptr;
+  std::atomic_bool _wasMoved = {false};
 
   void unlock() noexcept {
     if (_rwLock && _rwLock->isValid()) {
@@ -45,14 +46,15 @@ class FSReadLockedValue {
 
  public:
   FSReadLockedValue() = default;
-  FSReadLockedValue(MRWLock &mrwLock, const Value &value) : _rwLock(&mrwLock), _value(&value) {}
+  FSReadLockedValue(MRWLock &mrwLock, const Key &key, const Value &value) : _rwLock(&mrwLock), _value(&value), _key(&key) {}
   FSReadLockedValue(const FSReadLockedValue &) = delete;
-  FSReadLockedValue(FSReadLockedValue &&o) noexcept : _rwLock(o._rwLock), _value(o._value), _wasMoved(false) { o._wasMoved = true; }
+  FSReadLockedValue(FSReadLockedValue &&o) noexcept : _rwLock(o._rwLock), _value(o._value), _key(o._key), _wasMoved(false) { o._wasMoved = true; }
   FSReadLockedValue &operator=(const FSReadLockedValue &) = delete;
   FSReadLockedValue &operator=(FSReadLockedValue &&o) noexcept {
     unlock();
     _rwLock = o._rwLock;
     _value = o._value;
+    _key = o._key;
     _wasMoved = false;
     o._wasMoved = true;
     return *this;
@@ -63,11 +65,13 @@ class FSReadLockedValue {
   const Value *operator->() const { return _value; }
   Value &operator*() { return const_cast<Value &>(*_value); }
   Value *operator->() { return const_cast<Value *>(_value); }
+  const Key &key() const { return *_key; }
 };
-template <typename Value>
+template <typename Key, typename Value>
 class FSWriteLockedValue {
   MRWLock *_rwLock = nullptr;
   Value *_value = nullptr;
+  const Key *_key = nullptr;
   std::atomic_bool _wasMoved{false};
   void unlock() noexcept {
     if (_rwLock && _rwLock->isValid()) {
@@ -82,23 +86,25 @@ class FSWriteLockedValue {
 
  public:
   FSWriteLockedValue() = default;
-  FSWriteLockedValue(MRWLock &mrwLock, Value &value) : _rwLock(&mrwLock), _value(&value) {}
+  FSWriteLockedValue(MRWLock &mrwLock, const Key &key, Value &value) : _rwLock(&mrwLock), _value(&value), _key(&key) {}
   FSWriteLockedValue(const FSWriteLockedValue &) = delete;
-  FSWriteLockedValue(FSWriteLockedValue &&o) noexcept : _rwLock(o._rwLock), _value(o._value), _wasMoved(false) { o._wasMoved = true; }
+  FSWriteLockedValue(FSWriteLockedValue &&o) noexcept : _rwLock(o._rwLock), _value(o._value), _key(o._key), _wasMoved(false) { o._wasMoved = true; }
   FSWriteLockedValue &operator=(const FSWriteLockedValue &) = delete;
   FSWriteLockedValue &operator=(FSWriteLockedValue &&o) noexcept {
     unlock();
     _rwLock = o._rwLock;
     _value = o._value;
+    _key = o._key;
     _wasMoved = false;
     o._wasMoved = true;
     return *this;
   }
   ~FSWriteLockedValue() noexcept { unlock(); }
-  const Value &operator*() const { return _value; }
-  Value &operator*() { return _value; }
-  const Value *operator->() const { return &_value; }
-  Value *operator->() { return &_value; }
+  const Value &operator*() const { return *_value; }
+  Value &operator*() { return *_value; }
+  const Value *operator->() const { return _value; }
+  Value *operator->() { return _value; }
+  const Key &key() const { return *_key; }
 };
 template <typename Key, typename Value>
 class FSUnorderedNode {
@@ -111,11 +117,22 @@ class FSUnorderedNode {
 
  public:
   FSUnorderedNode() = default;
-  FSReadLockedValue<Value> find(const Key &key) const {
+  FSReadLockedValue<Key, Value> find(const Key &key) const {
     _rwLock.readLock();
     auto item = std::find_if(_items.begin(), _items.end(), [&key](const KVPair &pair) { return pair.first == key; });
     if (item != _items.end()) {
-      FSReadLockedValue<Value> fs(_rwLock, item->second);
+      FSReadLockedValue<Key, Value> fs(_rwLock, item->first, item->second);
+      return fs;
+    }
+    _rwLock.unlockRead();
+    return {};
+  }
+  template <typename F>
+  FSReadLockedValue<Key, Value> findIf(const F &f) const {
+    _rwLock.readLock();
+    auto item = std::find_if(_items.begin(), _items.end(), f);
+    if (item != _items.end()) {
+      FSReadLockedValue<Key, Value> fs(_rwLock, item->first, item->second);
       return fs;
     }
     _rwLock.unlockRead();
@@ -251,9 +268,21 @@ class FSUnorderedMap {
  public:
   explicit FSUnorderedMap(size_t size) : _items(size), _size(size) {}
   FSUnorderedMap(FSUnorderedMap &&o) noexcept : _items(std::move(o._items)), _size(std::move(o._size)), _realSize(o._realSize.load()) {}
-  FSReadLockedValue<Value> find(const Key &key) const {
+  FSReadLockedValue<Key, Value> find(const Key &key) const {
     size_t index = Poco::hash(key) % _size;
     return _items.at(index).find(key);
+  }
+  template <typename F>
+  FSReadLockedValue<Key, Value> findIf(const F &f) const {
+    upmq::ScopedReadRWLock readRWLock(_validIndexesLock);
+    FSReadLockedValue<Key, Value> result;
+    for (const auto &item : _validIndexes) {
+      result = _items.at(item).findIf(f);
+      if (result.hasValue()) {
+        return result;
+      }
+    }
+    return result;
   }
   bool contains(const Key &key) const {
     size_t index = Poco::hash(key) % _size;
