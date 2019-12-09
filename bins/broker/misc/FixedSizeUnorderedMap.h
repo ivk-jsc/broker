@@ -110,6 +110,8 @@ template <typename Key, typename Value>
 class FSUnorderedNode {
  public:
   using KVPair = std::pair<Key, Value>;
+  using KeyType = Key;
+  using ValueType = Value;
 
  private:
   mutable MRWLock _rwLock;
