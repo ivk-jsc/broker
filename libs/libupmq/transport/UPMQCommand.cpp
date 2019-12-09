@@ -379,13 +379,13 @@ std::vector<char> UPMQCommand::serialize() const {
   return result;
 }
 void UPMQCommand::serializeToOstream(std::ostream &outStream) const {
-  int hSize = 0;
-  if (_header && _header->ByteSize()) {
-    hSize = _header->ByteSize();
+  uint32_t hSize = 0;
+  if (_header && _header->ByteSizeLong()) {
+    hSize = static_cast<uint32_t>(_header->ByteSizeLong());
   }
-  long long bSize = 0;
-  if (_body && _body->ByteSize()) {
-    bSize = _body->ByteSize();
+  unsigned long long bSize = 0;
+  if (_body && _body->ByteSizeLong()) {
+    bSize = _body->ByteSizeLong();
   }
   outStream.write((char *)&hSize, sizeof(hSize));
   outStream.write((char *)&bSize, sizeof(bSize));
@@ -394,7 +394,7 @@ void UPMQCommand::serializeToOstream(std::ostream &outStream) const {
 }
 string UPMQCommand::serializeHeader() const {
   if (_header) {
-    _headerSize = _header->ByteSize();
+    _headerSize = static_cast<int>(_header->ByteSizeLong());
     if (_headerSize) {
       _headerString = _header->SerializeAsString();
     } else {
@@ -405,7 +405,7 @@ string UPMQCommand::serializeHeader() const {
   return emptyString;
 }
 void UPMQCommand::serializeHeaderToOstream(std::ostream &outStream) const {
-  if (_header && _header->ByteSize()) {
+  if (_header && _header->ByteSizeLong()) {
     _header->SerializeToOstream(&outStream);
     _header->SerializeToString(&_headerString);
   }
@@ -415,7 +415,7 @@ string UPMQCommand::serializeBody() const {
     return std::string(reinterpret_cast<char *>(_bodyBuff), static_cast<size_t>(_bodyBuffSize));
   }
   if (_body) {
-    _bodySize = _body->ByteSize();
+    _bodySize = static_cast<int>(_body->ByteSizeLong());  // FIXME: body size type must be uint64_t
     if (_bodySize) {
       _bodyString = _body->SerializeAsString();
     } else {
@@ -426,7 +426,7 @@ string UPMQCommand::serializeBody() const {
   return emptyString;
 }
 void UPMQCommand::serializeBodyToOstream(std::ostream &outStream) const {
-  if (_body && _body->ByteSize()) {
+  if (_body && _body->ByteSizeLong()) {
     _body->SerializeToOstream(&outStream);
   }
 }

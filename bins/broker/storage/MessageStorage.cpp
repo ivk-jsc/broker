@@ -313,9 +313,9 @@ void Storage::removeMessage(const std::string &messageID, storage::DBMSSession &
     dbSession.beginTX(messageID);
   }
 
-  int wasPersistent = deleteMessageHeader(dbSession, messageID);
+  const int wasPersistent = deleteMessageHeader(dbSession, messageID);
   deleteMessageProperies(dbSession, messageID);
-  int subscribersCount = getSubscribersCount(dbSession, messageID);
+  const int subscribersCount = getSubscribersCount(dbSession, messageID);
   if (subscribersCount <= 0) {
     deleteMessageInfoFromJournal(dbSession, messageID);
     deleteMessageDataIfExists(messageID, wasPersistent);
