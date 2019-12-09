@@ -160,12 +160,23 @@ void Exchange::dropDestination(const std::string &id, DestinationOwner *owner) {
 }
 
 void Exchange::dropOwnedDestination(const std::string &clientId) {
-  _destinations.eraseIf([&clientId](const DestinationsList::ItemType::KVPair &pair) {
-    if (pair.second->isTemporary() && pair.second->hasOwner()) {
-      return pair.second->owner().clientID == clientId;
+  DestinationsList::ItemType::KeyType key;
+  bool needErase = false;
+  {
+    auto dest = _destinations.findIf([&clientId](const DestinationsList::ItemType::KVPair &pair) {
+      if (pair.second->isTemporary() && pair.second->hasOwner()) {
+        return pair.second->owner().clientID == clientId;
+      }
+      return false;
+    });
+    if (dest.hasValue()) {
+      needErase = true;
+      key = dest.key();
     }
-    return false;
-  });
+  }
+  if (needErase) {
+    _destinations.erase(key);
+  }
 }
 
 void Exchange::addSubscription(const upmq::broker::Session &session, const MessageDataContainer &sMessage) {
