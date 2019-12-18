@@ -43,17 +43,17 @@ class DECAF_API URIHelper {
    * are used in the validation process.  The defaults are overridden by
    * these values.
    *
-   * @param unreserved - characters not reserved for use.
-   * @param punct - allowable punctuation symbols.
-   * @param reserved - characters not allowed for general use in the URI.
-   * @param someLegal - characters that are legal in certain cases.
-   * @param allLegal - characters that are always legal.
+   * @param unreserved_ - characters not reserved for use.
+   * @param punct_ - allowable punctuation symbols.
+   * @param reserved_ - characters not allowed for general use in the URI.
+   * @param someLegal_ - characters that are legal in certain cases.
+   * @param allLegal_ - characters that are always legal.
    */
-  URIHelper(const std::string &unreserved,
-            const std::string &punct,
-            const std::string &reserved,
-            const std::string &someLegal,
-            const std::string &allLegal);
+  URIHelper(const std::string &unreserved_,
+            const std::string &punct_,
+            const std::string &reserved_,
+            const std::string &someLegal_,
+            const std::string &allLegal_);
 
   /**
    * Sets up the filter strings with sane defaults.

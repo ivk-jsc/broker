@@ -19,21 +19,21 @@
 #include "DestinationRowPageReplacer.h"
 
 DestinationRowPageReplacer::DestinationRowPageReplacer(std::string pageName,
-                                                       std::string destination,
-                                                       int type,
-                                                       int subscriptions,
-                                                       std::string creationTime,
-                                                       std::string dataPath,
-                                                       std::string connectionString,
-                                                       uint64_t messages)
+                                                       std::string destination_,
+                                                       int type_,
+                                                       int subscriptions_,
+                                                       std::string creationTime_,
+                                                       std::string dataPath_,
+                                                       std::string connectionString_,
+                                                       uint64_t messages_)
     : TemplateParamReplacer(std::move(pageName)),
-      _destination(std::move(destination)),
-      _type(type),
-      _subscriptions(subscriptions),
-      _creationTime(std::move(creationTime)),
-      _dataPath(std::move(dataPath)),
-      _connectionString(std::move(connectionString)),
-      _messages(messages) {
+      _destination(std::move(destination_)),
+      _type(type_),
+      _subscriptions(subscriptions_),
+      _creationTime(std::move(creationTime_)),
+      _dataPath(std::move(dataPath_)),
+      _connectionString(std::move(connectionString_)),
+      _messages(messages_) {
   addReplacer(MakeStringify(destination), (TemplateParamReplacer::Callback)&DestinationRowPageReplacer::destinationReplacer);
   addReplacer(MakeStringify(type), (TemplateParamReplacer::Callback)&DestinationRowPageReplacer::typeReplacer);
   addReplacer(MakeStringify(subscriptions), (TemplateParamReplacer::Callback)&DestinationRowPageReplacer::subscriptionsReplacer);

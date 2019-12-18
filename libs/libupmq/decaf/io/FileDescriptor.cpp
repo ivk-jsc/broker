@@ -28,7 +28,7 @@ FileDescriptor FileDescriptor::err(2, false);
 FileDescriptor::FileDescriptor() : descriptor(-1), readonly(false) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-FileDescriptor::FileDescriptor(long long value, bool readonly) : descriptor(value), readonly(readonly) {}
+FileDescriptor::FileDescriptor(long long value_, bool readonly_) : descriptor(value_), readonly(readonly_) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 FileDescriptor::~FileDescriptor() = default;

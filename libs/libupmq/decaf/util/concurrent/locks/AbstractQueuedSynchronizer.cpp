@@ -193,11 +193,11 @@ class Node {
 
  public:
   Node() : waitStatus(0), prev(nullptr), next(nullptr), thread(nullptr), nextWaiter(nullptr), nextFree(nullptr) {}
-  Node(Thread *thread, Node *node) : waitStatus(0), prev(nullptr), next(nullptr), thread(thread), nextWaiter(node), nextFree(nullptr) {}
-  Node(Thread *thread, int waitStatus)
-      : waitStatus(waitStatus), prev(nullptr), next(nullptr), thread(thread), nextWaiter(nullptr), nextFree(nullptr) {}
-  Node(Thread *thread, int waitStatus, Node *node)
-      : waitStatus(waitStatus), prev(nullptr), next(nullptr), thread(thread), nextWaiter(node), nextFree(nullptr) {}
+  Node(Thread *thread_, Node *node_) : waitStatus(0), prev(nullptr), next(nullptr), thread(thread_), nextWaiter(node_), nextFree(nullptr) {}
+  Node(Thread *thread_, int waitStatus_)
+      : waitStatus(waitStatus_), prev(nullptr), next(nullptr), thread(thread_), nextWaiter(nullptr), nextFree(nullptr) {}
+  Node(Thread *thread_, int waitStatus_, Node *node_)
+      : waitStatus(waitStatus_), prev(nullptr), next(nullptr), thread(thread_), nextWaiter(node_), nextFree(nullptr) {}
 
   ~Node() {}
 
@@ -342,7 +342,7 @@ class SynchronizerState {
   SynchronizerState &operator=(const SynchronizerState &);
 
  public:
-  SynchronizerState(AbstractQueuedSynchronizer *parent) : parent(parent), state(0), head(), tail(), nodePool() {}
+  SynchronizerState(AbstractQueuedSynchronizer *parent_) : parent(parent_), state(0), head(), tail(), nodePool() {}
 
   virtual ~SynchronizerState() {
     while (tail.get() != nullptr) {
@@ -1051,7 +1051,7 @@ class DefaultConditionObject : public AbstractQueuedSynchronizer::ConditionObjec
   DefaultConditionObject &operator=(const DefaultConditionObject &);
 
  public:
-  DefaultConditionObject(SynchronizerState *impl) : ConditionObject(), impl(impl), head(nullptr), tail(nullptr) {}
+  DefaultConditionObject(SynchronizerState *impl_) : ConditionObject(), impl(impl_), head(nullptr), tail(nullptr) {}
   virtual ~DefaultConditionObject() {
     try {
       unlinkCancelledWaiters();

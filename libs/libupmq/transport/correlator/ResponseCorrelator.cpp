@@ -23,6 +23,8 @@
 
 #include <transport/FutureResponse.h>
 #include <transport/Response.h>
+
+#include <utility>
 #include "transport/UPMQCommand.h"
 
 using namespace std;
@@ -50,8 +52,8 @@ class ResponseFinalizer {
   HashMap<unsigned int, Pointer<FutureResponse> > *map;
 
  public:
-  ResponseFinalizer(Mutex *mutex, int commandId, HashMap<unsigned int, Pointer<FutureResponse> > *map)
-      : mutex(mutex), commandId(commandId), map(map) {}
+  ResponseFinalizer(Mutex *mutex_, int commandId_, HashMap<unsigned int, Pointer<FutureResponse> > *map_)
+      : mutex(mutex_), commandId(commandId_), map(map_) {}
 
   ~ResponseFinalizer() {
     synchronized(mutex) {
@@ -93,7 +95,7 @@ class CorrelatorData {
 }  // namespace upmq
 
 ////////////////////////////////////////////////////////////////////////////////
-ResponseCorrelator::ResponseCorrelator(Pointer<Transport> next) : TransportFilter(next), impl(new CorrelatorData) {}
+ResponseCorrelator::ResponseCorrelator(Pointer<Transport> next_) : TransportFilter(std::move(next_)), impl(new CorrelatorData) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 ResponseCorrelator::~ResponseCorrelator() {

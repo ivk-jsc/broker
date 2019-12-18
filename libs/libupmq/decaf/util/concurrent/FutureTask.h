@@ -72,11 +72,11 @@ class FutureTask : public RunnableFuture<T> {
     FutureTaskAdapter operator=(const FutureTaskAdapter &);
 
    public:
-    FutureTaskAdapter(decaf::lang::Runnable *task, const T &result, bool owns = true)
-        : decaf::util::concurrent::Callable<T>(), task(task), callable(nullptr), owns(owns), result(result) {}
+    FutureTaskAdapter(decaf::lang::Runnable *task_, const T &result_, bool owns_ = true)
+        : decaf::util::concurrent::Callable<T>(), task(task_), callable(nullptr), owns(owns_), result(result_) {}
 
-    FutureTaskAdapter(decaf::util::concurrent::Callable<T> *task, bool owns = true)
-        : decaf::util::concurrent::Callable<T>(), task(nullptr), callable(task), owns(owns), result(T()) {}
+    FutureTaskAdapter(decaf::util::concurrent::Callable<T> *task_, bool owns_ = true)
+        : decaf::util::concurrent::Callable<T>(), task(nullptr), callable(task_), owns(owns_), result(T()) {}
 
     virtual ~FutureTaskAdapter() {
       try {
@@ -139,8 +139,8 @@ class FutureTask : public RunnableFuture<T> {
     FutureTaskSync operator=(const FutureTaskSync &);
 
    public:
-    FutureTaskSync(FutureTask *parent, Callable<T> *callable)
-        : AbstractQueuedSynchronizer(), callable(callable), result(), exception(), parent(parent), runner(nullptr) {}
+    FutureTaskSync(FutureTask *parent_, Callable<T> *callable_)
+        : AbstractQueuedSynchronizer(), callable(callable_), result(), exception(), parent(parent_), runner(nullptr) {}
 
     virtual ~FutureTaskSync() {}
 

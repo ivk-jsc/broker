@@ -66,12 +66,12 @@ class TcpTransportImpl {
   int soSendBufferSize;
   bool tcpNoDelay;
 
-  TcpTransportImpl(const decaf::net::URI &location)
+  TcpTransportImpl(const decaf::net::URI &location_)
       : connectTimeout(0),
         socket(),
         dataInputStream(),
         dataOutputStream(),
-        location(location),
+        location(location_),
         outputBufferSize(8192),
         inputBufferSize(8192),
         trace(false),
@@ -86,8 +86,8 @@ class TcpTransportImpl {
 }  // namespace upmq
 
 ////////////////////////////////////////////////////////////////////////////////
-TcpTransport::TcpTransport(Pointer<Transport> next, const decaf::net::URI &location)
-    : TransportFilter(std::move(next)), impl(new TcpTransportImpl(location)) {}
+TcpTransport::TcpTransport(Pointer<Transport> next_, const decaf::net::URI &location_)
+    : TransportFilter(std::move(next_)), impl(new TcpTransportImpl(location_)) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 TcpTransport::~TcpTransport() {

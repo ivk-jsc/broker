@@ -52,8 +52,8 @@ class IOTransportImpl {
 
   IOTransportImpl() : wireFormat(), listener(nullptr), inputStream(nullptr), outputStream(nullptr), thread(), closed(false) {}
 
-  IOTransportImpl(Pointer<WireFormat> wireFormat)
-      : wireFormat(std::move(wireFormat)), listener(nullptr), inputStream(nullptr), outputStream(nullptr), thread(), closed(false) {}
+  IOTransportImpl(Pointer<WireFormat> wireFormat_)
+      : wireFormat(std::move(wireFormat_)), listener(nullptr), inputStream(nullptr), outputStream(nullptr), thread(), closed(false) {}
 };
 }  // namespace transport
 }  // namespace upmq
@@ -62,7 +62,7 @@ class IOTransportImpl {
 IOTransport::IOTransport() : impl(new IOTransportImpl()) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-IOTransport::IOTransport(Pointer<WireFormat> wireFormat) : impl(new IOTransportImpl(std::move(wireFormat))) {}
+IOTransport::IOTransport(Pointer<WireFormat> wireFormat_) : impl(new IOTransportImpl(std::move(wireFormat_))) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 IOTransport::~IOTransport() {
@@ -177,7 +177,7 @@ void IOTransport::close() {
     Pointer<Thread> target;
 
    public:
-    Finalizer(Pointer<Thread> target) : target(target) {}
+    Finalizer(Pointer<Thread> target_) : target(std::move(target_)) {}
 
     ~Finalizer() {
       try {

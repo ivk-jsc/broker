@@ -52,10 +52,10 @@ class DECAF_API SecureRandom : public decaf::util::Random {
    * The SecureRandom instance created by this constructor is seeded using the passed
    * byte array.
    *
-   * @param seed
+   * @param seed_
    *      The seed bytes to use to seed this secure random number generator.
    */
-  explicit SecureRandom(const std::vector<unsigned char> &seed);
+  explicit SecureRandom(const std::vector<unsigned char> &seed_);
 
   /**
    * Creates a new instance of a secure random number generator that implements the
@@ -64,7 +64,7 @@ class DECAF_API SecureRandom : public decaf::util::Random {
    * The SecureRandom instance created by this constructor is seeded using the passed
    * byte array.
    *
-   * @param seed
+   * @param seed_
    *      The seed bytes to use to seed this secure random number generator.
    * @param size
    *      The number of bytes in the seed buffer.
@@ -72,7 +72,7 @@ class DECAF_API SecureRandom : public decaf::util::Random {
    * @throw NullPointerException if the seed buffer is NULL.
    * @throw IllegalArgumentException if the size value is negative.
    */
-  SecureRandom(const unsigned char *seed, int size);
+  SecureRandom(const unsigned char *seed_, int size);
 
   ~SecureRandom() override;
 

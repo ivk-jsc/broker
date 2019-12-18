@@ -56,20 +56,20 @@ class DECAF_API URI : public lang::Comparable<URI> {
   /**
    * Constructs a URI as a copy of another URI
    *
-   * @param uri - uri to copy
+   * @param uri_ - uri to copy
    *
    * @throws URISyntaxException if the URI passed is malformed.
    */
-  URI(const URI &uri);
+  URI(const URI &uri_);
 
   /**
    * Constructs a URI from the given string.
    *
-   * @param uri - string uri to parse.
+   * @param uri_ - string uri to parse.
    *
    * @throws URISyntaxException if the URI passed is malformed.
    */
-  URI(const std::string &uri);
+  URI(const std::string &uri_);
 
   /**
    * Constructs a URI from the given components.

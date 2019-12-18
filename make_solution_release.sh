@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./make_solution.sh Release
+./make_solution.sh RelWithDebInfo

@@ -55,10 +55,10 @@ class PushbackInputStream : public FilterInputStream {
    *
    * @param stream
    *      The InputStream instance to wrap.
-   * @param
+   * @param own_
    *      Boolean value indicating if this FilterInputStream owns the wrapped stream.
    */
-  PushbackInputStream(InputStream *stream, bool own = false);
+  PushbackInputStream(InputStream *stream, bool own_ = false);
 
   /**
    * Creates a PushbackInputStream  and saves its argument, the input stream in, for later
@@ -68,12 +68,12 @@ class PushbackInputStream : public FilterInputStream {
    *      The InputStream instance to wrap.
    * @param bufSize
    *      The number of byte to allocate for pushback into this stream.
-   * @param
+   * @param own_
    *      Boolean value indicating if this FilterInputStream owns the wrapped stream.
    *
    * @throws IllegalArgumentException if the bufSize argument is < zero.
    */
-  PushbackInputStream(InputStream *stream, int bufSize, bool own = false);
+  PushbackInputStream(InputStream *stream, int bufSize, bool own_ = false);
 
   virtual ~PushbackInputStream();
 

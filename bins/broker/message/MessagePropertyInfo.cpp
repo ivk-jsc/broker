@@ -52,8 +52,8 @@ MessagePropertyInfo::MessagePropertyInfo(const std::string &messageID,
             isNull) {}
 
 MessagePropertyInfo::MessagePropertyInfo(const std::string &messageID) { tuple.set<message::field_prop_message_id.position>(messageID); }
-MessagePropertyInfo::MessagePropertyInfo(const MessagePropertyInfo::MsgTuple &tuple) : tuple(tuple) {}
-MessagePropertyInfo::MessagePropertyInfo(MessagePropertyInfo::MsgTuple &&tuple) : tuple(std::move(tuple)) {}
+MessagePropertyInfo::MessagePropertyInfo(const MessagePropertyInfo::MsgTuple &tuple_) : tuple(tuple_) {}
+MessagePropertyInfo::MessagePropertyInfo(MessagePropertyInfo::MsgTuple &&tuple_) : tuple(std::move(tuple_)) {}
 const std::string &MessagePropertyInfo::messageID() const { return tuple.get<message::field_prop_message_id.position>(); }
 const std::string &MessagePropertyInfo::propertyName() const { return tuple.get<message::field_prop_name.position>(); }
 int MessagePropertyInfo::propertyType() const { return (tuple.get<message::field_prop_type.position>()) + static_cast<int>(Field::property_type); }

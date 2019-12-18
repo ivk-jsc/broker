@@ -79,7 +79,7 @@ class NonConfigurableExecutorService : public AbstractExecutorService {
   NonConfigurableExecutorService &operator=(const NonConfigurableExecutorService &);
 
  public:
-  NonConfigurableExecutorService(ExecutorService *service) : AbstractExecutorService(), service(service) {}
+  NonConfigurableExecutorService(ExecutorService *service_) : AbstractExecutorService(), service(service_) {}
 
   virtual ~NonConfigurableExecutorService() {
     try {

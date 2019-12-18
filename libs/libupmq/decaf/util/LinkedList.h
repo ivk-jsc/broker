@@ -67,9 +67,9 @@ class LinkedList : public AbstractSequentialList<E>, public Deque<E> {
    public:
     ListNode() : value(), prev(nullptr), next(nullptr) {}
 
-    ListNode(const U &value) : value(value), prev(nullptr), next(nullptr) {}
+    ListNode(const U &value_) : value(value_), prev(nullptr), next(nullptr) {}
 
-    ListNode(ListNode<U> *prev, ListNode<U> *next, const U &value) : value(value), prev(prev), next(next) {}
+    ListNode(ListNode<U> *prev_, ListNode<U> *next_, const U &value_) : value(value_), prev(prev_), next(next_) {}
   };
 
  private:
@@ -418,30 +418,30 @@ class LinkedList : public AbstractSequentialList<E>, public Deque<E> {
     LinkedListIterator operator=(const LinkedListIterator &);
 
    public:
-    LinkedListIterator(LinkedList<E> *list, int index)
-        : ListIterator<E>(), list(list), current(nullptr), lastReturned(nullptr), index(index), expectedModCount(0) {
-      if (list == nullptr) {
+    LinkedListIterator(LinkedList<E> *list_, int index_)
+        : ListIterator<E>(), list(list_), current(nullptr), lastReturned(nullptr), index(index_), expectedModCount(0) {
+      if (list_ == nullptr) {
         throw decaf::lang::exceptions::NullPointerException(__FILE__, __LINE__, "Parent LinkedList pointer was Null.");
       }
 
-      if (index < 0 || index > list->listSize) {
+      if (index_ < 0 || index_ > list_->listSize) {
         throw decaf::lang::exceptions::IndexOutOfBoundsException(__FILE__, __LINE__, "Given index {%d} is out of range.", index);
       }
 
-      this->expectedModCount = list->modCount;
+      this->expectedModCount = list_->modCount;
 
       // index starts at -1 to indicate that we are before begin or that the
       // list is empty.  We always want to start out one before so that the call
       // to next moves us onto the element in question;
 
-      if (index < this->list->listSize / 2) {
+      if (index_ < this->list->listSize / 2) {
         this->current = &this->list->head;
-        for (this->index = -1; this->index + 1 < index; ++this->index) {
+        for (this->index = -1; this->index + 1 < index_; ++this->index) {
           this->current = this->current->next;
         }
       } else {
         this->current = &this->list->tail;
-        for (this->index = this->list->listSize; this->index >= index; --this->index) {
+        for (this->index = this->list->listSize; this->index >= index_; --this->index) {
           this->current = this->current->prev;
         }
       }
@@ -563,13 +563,13 @@ class LinkedList : public AbstractSequentialList<E>, public Deque<E> {
     ConstLinkedListIterator operator=(const ConstLinkedListIterator &);
 
    public:
-    ConstLinkedListIterator(const LinkedList<E> *list, int index)
-        : ListIterator<E>(), list(list), current(nullptr), lastReturned(nullptr), index(index) {
-      if (list == nullptr) {
+    ConstLinkedListIterator(const LinkedList<E> *list_, int index_)
+        : ListIterator<E>(), list(list_), current(nullptr), lastReturned(nullptr), index(index_) {
+      if (list_ == nullptr) {
         throw decaf::lang::exceptions::NullPointerException(__FILE__, __LINE__, "Parent LinkedList pointer was Null.");
       }
 
-      if (index < 0 || index > list->listSize) {
+      if (index_ < 0 || index_ > list_->listSize) {
         throw decaf::lang::exceptions::IndexOutOfBoundsException(__FILE__, __LINE__, "Given index {%d} is out of range.", index);
       }
 
@@ -577,14 +577,14 @@ class LinkedList : public AbstractSequentialList<E>, public Deque<E> {
       // list is empty.  We always want to start out one before so that the call
       // to next moves us onto the element in question;
 
-      if (index < this->list->listSize / 2) {
+      if (index_ < this->list->listSize / 2) {
         this->current = &this->list->head;
-        for (this->index = -1; this->index + 1 < index; ++this->index) {
+        for (this->index = -1; this->index + 1 < index_; ++this->index) {
           this->current = this->current->next;
         }
       } else {
         this->current = &this->list->tail;
-        for (this->index = this->list->listSize; this->index >= index; --this->index) {
+        for (this->index = this->list->listSize; this->index >= index_; --this->index) {
           this->current = this->current->prev;
         }
       }
@@ -649,13 +649,13 @@ class LinkedList : public AbstractSequentialList<E>, public Deque<E> {
     ReverseIterator operator=(const ReverseIterator &);
 
    public:
-    ReverseIterator(LinkedList<E> *list) : Iterator<E>(), list(list), current(nullptr), expectedModCount(0), canRemove(false) {
-      if (list == nullptr) {
+    ReverseIterator(LinkedList<E> *list_) : Iterator<E>(), list(list_), current(nullptr), expectedModCount(0), canRemove(false) {
+      if (list_ == nullptr) {
         throw decaf::lang::exceptions::NullPointerException(__FILE__, __LINE__, "Parent LinkedList pointer was Null.");
       }
 
       this->expectedModCount = this->list->modCount;
-      this->current = &list->tail;
+      this->current = &list_->tail;
     }
 
     virtual ~ReverseIterator() {}
@@ -713,12 +713,12 @@ class LinkedList : public AbstractSequentialList<E>, public Deque<E> {
     ConstReverseIterator operator=(const ConstReverseIterator &);
 
    public:
-    ConstReverseIterator(const LinkedList<E> *list) : Iterator<E>(), list(list), current(nullptr) {
-      if (list == nullptr) {
+    ConstReverseIterator(const LinkedList<E> *list_) : Iterator<E>(), list(list_), current(nullptr) {
+      if (list_ == nullptr) {
         throw decaf::lang::exceptions::NullPointerException(__FILE__, __LINE__, "Parent LinkedList pointer was Null.");
       }
 
-      this->current = &list->tail;
+      this->current = &list_->tail;
     }
 
     virtual ~ConstReverseIterator() {}

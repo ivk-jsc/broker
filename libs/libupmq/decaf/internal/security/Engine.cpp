@@ -30,7 +30,7 @@ using namespace decaf::internal;
 using namespace decaf::internal::security;
 
 ////////////////////////////////////////////////////////////////////////////////
-Engine::Engine(const std::string &serviceName) : serviceName(serviceName), provider(nullptr) {}
+Engine::Engine(const std::string &serviceName_) : serviceName(serviceName_), provider(nullptr) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 Engine::~Engine() {}

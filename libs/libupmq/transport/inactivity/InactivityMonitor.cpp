@@ -109,7 +109,7 @@ class AsyncWriteTask : public CompositeTask {
   AsyncWriteTask operator=(const AsyncWriteTask &);
 
  public:
-  AsyncWriteTask(InactivityMonitor *parent) : parent(parent) {}
+  AsyncWriteTask(InactivityMonitor *parent_) : parent(parent_) {}
 
   void setWrite(bool newWrite) { this->write.set(newWrite); }
 
@@ -138,13 +138,13 @@ class AsyncWriteTask : public CompositeTask {
 }  // namespace upmq
 
 ////////////////////////////////////////////////////////////////////////////////
-InactivityMonitor::InactivityMonitor(Pointer<Transport> next, Pointer<transport::WireFormat> wireFormat, long long delay, long long period)
-    : TransportFilter(std::move(next)), members(new InactivityMonitorData(std::move(wireFormat), delay, period)) {}
+InactivityMonitor::InactivityMonitor(Pointer<Transport> next_, Pointer<transport::WireFormat> wireFormat, long long delay, long long period)
+    : TransportFilter(std::move(next_)), members(new InactivityMonitorData(std::move(wireFormat), delay, period)) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 InactivityMonitor::InactivityMonitor(
-    Pointer<Transport> next, const decaf::util::Properties &properties, Pointer<transport::WireFormat> wireFormat, long long delay, long long period)
-    : TransportFilter(std::move(next)), members(new InactivityMonitorData(std::move(wireFormat), delay, period)) {
+    Pointer<Transport> next_, const decaf::util::Properties &properties, Pointer<transport::WireFormat> wireFormat, long long delay, long long period)
+    : TransportFilter(std::move(next_)), members(new InactivityMonitorData(std::move(wireFormat), delay, period)) {
   DECAF_UNUSED_VAR(properties);
   // this->members->keepAliveResponseRequired =
   // Boolean::parseBoolean(properties.getProperty("keepAliveResponseRequired", "false"));

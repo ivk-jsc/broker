@@ -29,8 +29,8 @@ using namespace decaf::internal::security;
 using namespace decaf::internal::security::provider;
 
 ////////////////////////////////////////////////////////////////////////////////
-DefaultSecureRandomProviderService::DefaultSecureRandomProviderService(const Provider *provider, const std::string &algorithmName)
-    : ProviderService(provider, "SecureRandom", algorithmName) {}
+DefaultSecureRandomProviderService::DefaultSecureRandomProviderService(const Provider *provider_, const std::string &algorithmName)
+    : ProviderService(provider_, "SecureRandom", algorithmName) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 DefaultSecureRandomProviderService::~DefaultSecureRandomProviderService() {}

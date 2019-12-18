@@ -60,7 +60,7 @@ class ArrayPointer {
     decaf::util::concurrent::atomic::AtomicInteger refs;
 
     ArrayData() : value(nullptr), length(0), refs(1) {}
-    ArrayData(T *value, int length) : value(value), length(length), refs(1) {
+    ArrayData(T *value_, int length_) : value(value_), length(length_), refs(1) {
       if (value != nullptr && length <= 0) {
         throw decaf::lang::exceptions::IllegalArgumentException(__FILE__, __LINE__, "Non-NULL array pointer cannot have a size <= zero");
       }
@@ -70,12 +70,7 @@ class ArrayPointer {
       }
     }
 
-    bool release() {
-      if (this->refs.decrementAndGet() < 1) {
-        return true;
-      }
-      return false;
-    }
+    bool release() { return this->refs.decrementAndGet() < 1; }
   };
 
  private:

@@ -38,11 +38,11 @@ class UPMQCPP_API FailoverTransportListener : public TransportListener {
   // The Transport that created this listener
   FailoverTransport *parent;
 
-public:
+ public:
   FailoverTransportListener(const FailoverTransportListener &) = delete;
   FailoverTransportListener &operator=(const FailoverTransportListener &) = delete;
 
-  FailoverTransportListener(FailoverTransport *parent);
+  FailoverTransportListener(FailoverTransport *parent_);
 
   ~FailoverTransportListener() override;
 

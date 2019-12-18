@@ -43,7 +43,7 @@ class SessionState {
   SessionState(const SessionState &) = delete;
   SessionState &operator=(const SessionState &) = delete;
 
-  SessionState(Pointer<Command> info);
+  SessionState(Pointer<Command> info_);
   virtual ~SessionState();
 
   Pointer<Command> getInfo() const;

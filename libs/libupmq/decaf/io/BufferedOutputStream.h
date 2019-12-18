@@ -59,10 +59,10 @@ class DECAF_API BufferedOutputStream : public FilterOutputStream {
    *
    * @param stream
    *      The target output stream.
-   * @param own
+   * @param own_
    *      Indicates if this class owns the stream pointer.
    */
-  BufferedOutputStream(OutputStream *stream, bool own = false);
+  BufferedOutputStream(OutputStream *stream, bool own_ = false);
 
   /**
    * Constructor.
@@ -71,12 +71,12 @@ class DECAF_API BufferedOutputStream : public FilterOutputStream {
    *      The target output stream.
    * @param bufferSize
    *      The size for the internal buffer.
-   * @param own
+   * @param own_
    *      Indicates if this class owns the stream pointer.
    *
    * @throws IllegalArgumentException if the bufferSize given is negative.
    */
-  BufferedOutputStream(OutputStream *stream, int bufferSize, bool own = false);
+  BufferedOutputStream(OutputStream *stream, int bufferSize, bool own_ = false);
 
   virtual ~BufferedOutputStream();
 

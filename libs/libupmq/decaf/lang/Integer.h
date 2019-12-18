@@ -44,22 +44,22 @@ class DECAF_API Integer : public Number, public Comparable<Integer>, public Comp
 
  public:
   /**
-   * @param value
+   * @param value_
    *      The primitive value to wrap in an <code>Integer</code> instance.
    */
-  Integer(int value);
+  Integer(int value_);
 
   /**
    * Constructs a new Integer and attempts to convert the given string to an int
    * value, assigning it to the new object is successful or throwing a
    * NumberFormatException if the string is not a properly formatted int.
    *
-   * @param value
+   * @param value_
    *      The string to convert to a primitive type to wrap.
    *
    * @throws NumberFormatException if the string is not a a valid integer.
    */
-  Integer(const std::string &value);
+  Integer(const std::string &value_);
 
   virtual ~Integer();
 

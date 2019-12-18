@@ -49,7 +49,7 @@ class MutexProperties {
     this->name.append(idStr);
   }
 
-  MutexProperties(const std::string &name) : monitor(nullptr), name(name) {
+  MutexProperties(const std::string &name_) : monitor(nullptr), name(name_) {
     if (this->name.empty()) {
       std::string idStr = Integer::toString(++id);
       this->name.reserve(DEFAULT_NAME_PREFIX.length() + idStr.length());

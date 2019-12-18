@@ -68,7 +68,7 @@ class UnownedTaskWrapper : public Runnable {
   UnownedTaskWrapper &operator=(const UnownedTaskWrapper &);
 
  public:
-  UnownedTaskWrapper(Runnable *task) : Runnable(), task(task) {}
+  UnownedTaskWrapper(Runnable *task_) : Runnable(), task(task_) {}
 
   virtual ~UnownedTaskWrapper() {}
 
@@ -152,8 +152,8 @@ class ExecutorKernel {
     Worker &operator=(const Worker &);
 
    public:
-    Worker(ExecutorKernel *kernel, Runnable *task)
-        : AbstractQueuedSynchronizer(), Runnable(), thread(), firstTask(task), kernel(kernel), completedTasks(0) {
+    Worker(ExecutorKernel *kernel_, Runnable *task_)
+        : AbstractQueuedSynchronizer(), Runnable(), thread(), firstTask(task_), kernel(kernel_), completedTasks(0) {
       if (kernel == nullptr) {
         throw IllegalArgumentException(__FILE__, __LINE__, "ThreadPoolExecutor Worker requires non-NULL pointer to parent ExecutorKernel");
       }
@@ -211,7 +211,7 @@ class ExecutorKernel {
     WorkerKiller &operator=(const WorkerKiller &);
 
    public:
-    explicit WorkerKiller(ExecutorKernel *kernel) : kernel(kernel) {}
+    explicit WorkerKiller(ExecutorKernel *kernel_) : kernel(kernel_) {}
 
     virtual ~WorkerKiller() {}
 
@@ -322,21 +322,21 @@ class ExecutorKernel {
   Pointer<RejectedExecutionHandler> rejectionHandler;
 
  public:
-  ExecutorKernel(ThreadPoolExecutor *parent,
-                 int corePoolSize,
-                 int maxPoolSize,
-                 long long keepAliveTime,
-                 BlockingQueue<decaf::lang::Runnable *> *workQueue,
-                 ThreadFactory *threadFactory,
-                 RejectedExecutionHandler *handler)
+  ExecutorKernel(ThreadPoolExecutor *parent_,
+                 int corePoolSize_,
+                 int maxPoolSize_,
+                 long long keepAliveTime_,
+                 BlockingQueue<decaf::lang::Runnable *> *workQueue_,
+                 ThreadFactory *threadFactory_,
+                 RejectedExecutionHandler *handler_)
       : ctl(ctlOf(RUNNING, 0)),
-        parent(parent),
+        parent(parent_),
         workers(),
         deadWorkers(),
         cleanupTimer(),
-        maxPoolSize(maxPoolSize),
-        corePoolSize(corePoolSize),
-        keepAliveTime(keepAliveTime),
+        maxPoolSize(maxPoolSize_),
+        corePoolSize(corePoolSize_),
+        keepAliveTime(keepAliveTime_),
         coreThreadsCanTimeout(false),
         workQueue(),
         mainLock(),
@@ -349,15 +349,15 @@ class ExecutorKernel {
       throw IllegalArgumentException(__FILE__, __LINE__, "Argument out of range.");
     }
 
-    if (workQueue == nullptr || threadFactory == nullptr || handler == nullptr) {
+    if (workQueue == nullptr || threadFactory_ == nullptr || handler_ == nullptr) {
       throw NullPointerException(__FILE__, __LINE__, "Required parameter was NULL");
     }
 
     this->cleanupTimer.scheduleAtFixedRate(new WorkerKiller(this), TimeUnit::SECONDS.toMillis(10), TimeUnit::SECONDS.toMillis(10));
 
-    this->workQueue.reset(workQueue);
-    this->factory.reset(threadFactory);
-    this->rejectionHandler.reset(handler);
+    this->workQueue.reset(workQueue_);
+    this->factory.reset(threadFactory_);
+    this->rejectionHandler.reset(handler_);
     this->termination.reset(this->mainLock.newCondition());
   }
 
@@ -1250,6 +1250,10 @@ class ExecutorKernel {
 
 const bool ExecutorKernel::ONLY_ONE = true;
 
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshift-negative-value"
+#endif
 const int ExecutorKernel::COUNT_BITS = Integer::SIZE - 3;
 const int ExecutorKernel::CAPACITY = (1 << COUNT_BITS) - 1;
 
@@ -1259,6 +1263,11 @@ const int ExecutorKernel::SHUTDOWN = 0 << ExecutorKernel::COUNT_BITS;
 const int ExecutorKernel::STOP = 1 << ExecutorKernel::COUNT_BITS;
 const int ExecutorKernel::TIDYING = 2 << ExecutorKernel::COUNT_BITS;
 const int ExecutorKernel::TERMINATED = 3 << ExecutorKernel::COUNT_BITS;
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
+
 }  // namespace concurrent
 }  // namespace util
 }  // namespace decaf

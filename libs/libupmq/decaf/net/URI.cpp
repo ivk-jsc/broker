@@ -43,10 +43,10 @@ const std::string URI::allLegal = unreserved + reserved;
 URI::URI() {}
 
 ////////////////////////////////////////////////////////////////////////////////
-URI::URI(const URI &uri) : uri(uri.uri), uriString(uri.uriString) {}
+URI::URI(const URI &uri_) : uri(uri_.uri), uriString(uri_.uriString) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-URI::URI(const std::string &uri) : uriString(uri) { this->parseURI(uri, false); }
+URI::URI(const std::string &uri_) : uriString(uri_) { this->parseURI(uri_, false); }
 
 ////////////////////////////////////////////////////////////////////////////////
 URI::URI(const std::string &scheme, const std::string &ssp, const std::string &fragment) {

@@ -38,7 +38,7 @@ class DECAF_API DefaultSecureRandomProviderService : public decaf::security::Pro
   DefaultSecureRandomProviderService &operator=(const DefaultSecureRandomProviderService &);
 
  public:
-  DefaultSecureRandomProviderService(const decaf::security::Provider *provider, const std::string &algorithmName);
+  DefaultSecureRandomProviderService(const decaf::security::Provider *provider_, const std::string &algorithmName);
 
   virtual ~DefaultSecureRandomProviderService();
 

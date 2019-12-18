@@ -55,7 +55,7 @@ class DECAF_API Provider {
   Provider &operator=(const Provider &);
 
  protected:
-  Provider(const std::string &name, double version, const std::string &info);
+  Provider(const std::string &name_, double version_, const std::string &info_);
 
  public:
   virtual ~Provider();

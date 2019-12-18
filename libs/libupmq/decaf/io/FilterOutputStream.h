@@ -63,11 +63,11 @@ class DECAF_API FilterOutputStream : public OutputStream {
  public:
   /**
    * Constructor, creates a wrapped output stream
-   * @param outputStream the OutputStream to wrap
-   * @param own If true, this object will control the lifetime of the
+   * @param outputStream_ the OutputStream to wrap
+   * @param own_ If true, this object will control the lifetime of the
    * output stream that it encapsulates.
    */
-  FilterOutputStream(OutputStream *outputStream, bool own = false);
+  FilterOutputStream(OutputStream *outputStream_, bool own_ = false);
 
   ~FilterOutputStream() override;
 

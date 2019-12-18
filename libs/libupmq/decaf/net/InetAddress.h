@@ -42,7 +42,7 @@ class DECAF_API InetAddress {
  protected:
   InetAddress();
   InetAddress(const unsigned char *ipAddress, int numBytes);
-  InetAddress(const std::string &hostname, const unsigned char *ipAddress, int numBytes);
+  InetAddress(const std::string &hostname_, const unsigned char *ipAddress, int numBytes);
 
  public:
   virtual ~InetAddress();

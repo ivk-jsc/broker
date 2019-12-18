@@ -27,10 +27,10 @@ const long long Long::MAX_VALUE = (long long)0x7FFFFFFFFFFFFFFFLL;
 const long long Long::MIN_VALUE = (long long)0x8000000000000000LL;
 
 ////////////////////////////////////////////////////////////////////////////////
-Long::Long(long long value) : value(value) {}
+Long::Long(long long value_) : value(value_) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-Long::Long(const String &value) : value(0) { this->value = parseLong(value); }
+Long::Long(const String &value_) : value(0) { this->value = parseLong(value_); }
 
 ////////////////////////////////////////////////////////////////////////////////
 Long::~Long() {}

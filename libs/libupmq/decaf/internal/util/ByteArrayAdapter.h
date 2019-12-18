@@ -68,124 +68,124 @@ class DECAF_API ByteArrayAdapter {
    * and deleted when this object is deleted.  The array is initially created
    * with all elements initialized to zero.
    *
-   * @param size
+   * @param size_
    *      The size of the array, this is the limit we read and write to.
    *
    * @throws IllegalArgumentException if size is negative.
    */
-  ByteArrayAdapter(int size);
+  ByteArrayAdapter(int size_);
 
   /**
    * Creates a byte array object that wraps the given array.  If the own flag
    * is set then it will delete this array when this object is deleted.
    *
-   * @param array
+   * @param array_
    *      The physical array to wrap.
-   * @param size
+   * @param size_
    *      The size of the array, this is the limit we read and write to.
-   * @param own
+   * @param own_
    *      Indicates if this class is now the owner of the pointer.
    *
    * @throws NullPointerException if buffer is NULL
    * @throws IndexOutOfBoundsException if the size is negative.
    */
-  ByteArrayAdapter(unsigned char *array, int size, bool own = false);
+  ByteArrayAdapter(unsigned char *array_, int size_, bool own_ = false);
 
   /**
    * Creates a byte array object that wraps the given array.  If the own flag
    * is set then it will delete this array when this object is deleted.
    *
-   * @param array
+   * @param array_
    *      The physical array to wrap.
-   * @param size
+   * @param size_
    *      The size of the array, this is the limit we read and write to.
-   * @param own
+   * @param own_
    *      Indicates if this class is now the owner of the pointer.
    *
    * @throws NullPointerException if buffer is NULL
    * @throws IndexOutOfBoundsException if the size is negative.
    */
-  ByteArrayAdapter(char *array, int size, bool own = false);
+  ByteArrayAdapter(char *array_, int size_, bool own_ = false);
 
   /**
    * Creates a byte array object that wraps the given array.  If the own flag
    * is set then it will delete this array when this object is deleted.
    *
-   * @param array
+   * @param array_
    *      The physical array to wrap.
-   * @param size
+   * @param size_
    *      The size of the array, this is the limit we read and write to.
-   * @param own
+   * @param own_
    *      Indicates if this class is now the owner of the pointer.
    *
    * @throws NullPointerException if buffer is NULL
    * @throws IndexOutOfBoundsException if the size is negative.
    */
-  ByteArrayAdapter(double *array, int size, bool own = false);
+  ByteArrayAdapter(double *array_, int size_, bool own_ = false);
 
   /**
    * Creates a byte array object that wraps the given array.  If the own flag
    * is set then it will delete this array when this object is deleted.
    *
-   * @param array
+   * @param array_
    *      The physical array to wrap.
-   * @param size
+   * @param size_
    *      The size of the array, this is the limit we read and write to.
-   * @param own
+   * @param own_
    *      Indicates if this class is now the owner of the pointer.
    *
    * @throws NullPointerException if buffer is NULL
    * @throws IndexOutOfBoundsException if the size is negative.
    */
-  ByteArrayAdapter(float *array, int size, bool own = false);
+  ByteArrayAdapter(float *array_, int size_, bool own_ = false);
 
   /**
    * Creates a byte array object that wraps the given array.  If the own flag
    * is set then it will delete this array when this object is deleted.
    *
-   * @param array
+   * @param array_
    *      The physical array to wrap.
-   * @param size
+   * @param size_
    *      The size of the array, this is the limit we read and write to.
-   * @param own
+   * @param own_
    *      Indicates if this class is now the owner of the pointer.
    *
    * @throws NullPointerException if buffer is NULL
    * @throws IndexOutOfBoundsException if the size is negative.
    */
-  ByteArrayAdapter(long long *array, int size, bool own = false);
+  ByteArrayAdapter(long long *array_, int size_, bool own_ = false);
 
   /**
    * Creates a byte array object that wraps the given array.  If the own flag
    * is set then it will delete this array when this object is deleted.
    *
-   * @param array
+   * @param array_
    *      The physical array to wrap.
-   * @param size
+   * @param size_
    *      The size of the array, this is the limit we read and write to.
-   * @param own
+   * @param own_
    *      Indicates if this class is now the owner of the pointer.
    *
    * @throws NullPointerException if buffer is NULL
    * @throws IndexOutOfBoundsException if the size is negative.
    */
-  ByteArrayAdapter(int *array, int size, bool own = false);
+  ByteArrayAdapter(int *array_, int size_, bool own_ = false);
 
   /**
    * Creates a byte array object that wraps the given array.  If the own flag
    * is set then it will delete this array when this object is deleted.
    *
-   * @param array
+   * @param array_
    *      The physical array to wrap.
-   * @param size
+   * @param size_
    *      The size of the array, this is the limit we read and write to.
-   * @param own
+   * @param own_
    *      Indicates if this class is now the owner of the pointer.
    *
    * @throws NullPointerException if buffer is NULL
    * @throws IndexOutOfBoundsException if the size is negative.
    */
-  ByteArrayAdapter(short *array, int size, bool own = false);
+  ByteArrayAdapter(short *array_, int size_, bool own_ = false);
 
   virtual ~ByteArrayAdapter();
 

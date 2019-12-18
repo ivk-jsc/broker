@@ -94,7 +94,7 @@ class UPMQCPP_API IOTransport : public Transport, public decaf::lang::Runnable {
    * @param wireFormat
    *        Data encoder / decoder to use when reading and writing.
    */
-  IOTransport(Pointer<transport::WireFormat> wireFormat);
+  IOTransport(Pointer<transport::WireFormat> wireFormat_);
 
   ~IOTransport() override;
 

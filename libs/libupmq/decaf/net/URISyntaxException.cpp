@@ -71,8 +71,8 @@ URISyntaxException::URISyntaxException(const char *file, const int lineNumber, c
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-URISyntaxException::URISyntaxException(const char *file, const int lineNumber, const std::string &input, const std::string &reason)
-    : reason(reason), input(input) {
+URISyntaxException::URISyntaxException(const char *file, const int lineNumber, const std::string &input_, const std::string &reason_)
+    : reason(reason_), input(input_) {
   const char *message = "Input: %s, Reason it failed: %s";
   this->Exception::setMessage(message, input.c_str(), reason.c_str());
 
@@ -81,8 +81,8 @@ URISyntaxException::URISyntaxException(const char *file, const int lineNumber, c
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-URISyntaxException::URISyntaxException(const char *file, const int lineNumber, const std::string &input, const std::string &reason, int index)
-    : reason(reason), input(input), index(index) {
+URISyntaxException::URISyntaxException(const char *file, const int lineNumber, const std::string &input_, const std::string &reason_, int index_)
+    : reason(reason_), input(input_), index(index_) {
   const char *message = "Input: %s, Index %d resulted in this error: %s";
   this->Exception::setMessage(message, input.c_str(), index, reason.c_str());
 

@@ -26,7 +26,7 @@ using namespace decaf::util;
 using namespace decaf::lang::exceptions;
 
 ////////////////////////////////////////////////////////////////////////////////
-DataOutputStream::DataOutputStream(OutputStream *outputStream, bool own) : FilterOutputStream(outputStream, own), written(0) {}
+DataOutputStream::DataOutputStream(OutputStream *outputStream_, bool own_) : FilterOutputStream(outputStream_, own_), written(0) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 DataOutputStream::~DataOutputStream() {}

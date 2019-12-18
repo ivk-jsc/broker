@@ -39,72 +39,72 @@
   }
 
 #define CATCH_ALL_THROW_CMSEXCEPTION                                                                                                          \
-  catch (cms::CMSSecurityException & ex) {                                                                                                    \
-    ex.setMark(__FUNCTION__, __FILE__, __LINE__);                                                                                             \
+  catch (cms::CMSSecurityException & secex) {                                                                                                 \
+    secex.setMark(__FUNCTION__, __FILE__, __LINE__);                                                                                          \
     throw;                                                                                                                                    \
   }                                                                                                                                           \
-  catch (cms::IllegalStateException & ex) {                                                                                                   \
-    ex.setMark(__FUNCTION__, __FILE__, __LINE__);                                                                                             \
+  catch (cms::IllegalStateException & illstex) {                                                                                              \
+    illstex.setMark(__FUNCTION__, __FILE__, __LINE__);                                                                                        \
     throw;                                                                                                                                    \
   }                                                                                                                                           \
-  catch (cms::InvalidClientIdException & ex) {                                                                                                \
-    ex.setMark(__FUNCTION__, __FILE__, __LINE__);                                                                                             \
+  catch (cms::InvalidClientIdException & invidex) {                                                                                           \
+    invidex.setMark(__FUNCTION__, __FILE__, __LINE__);                                                                                        \
     throw;                                                                                                                                    \
   }                                                                                                                                           \
-  catch (cms::InvalidDestinationException & ex) {                                                                                             \
-    ex.setMark(__FUNCTION__, __FILE__, __LINE__);                                                                                             \
+  catch (cms::InvalidDestinationException & invdestex) {                                                                                      \
+    invdestex.setMark(__FUNCTION__, __FILE__, __LINE__);                                                                                      \
     throw;                                                                                                                                    \
   }                                                                                                                                           \
-  catch (cms::InvalidSelectorException & ex) {                                                                                                \
-    ex.setMark(__FUNCTION__, __FILE__, __LINE__);                                                                                             \
+  catch (cms::InvalidSelectorException & invselex) {                                                                                          \
+    invselex.setMark(__FUNCTION__, __FILE__, __LINE__);                                                                                       \
     throw;                                                                                                                                    \
   }                                                                                                                                           \
-  catch (cms::MessageEOFException & ex) {                                                                                                     \
-    ex.setMark(__FUNCTION__, __FILE__, __LINE__);                                                                                             \
+  catch (cms::MessageEOFException & eofex) {                                                                                                  \
+    eofex.setMark(__FUNCTION__, __FILE__, __LINE__);                                                                                          \
     throw;                                                                                                                                    \
   }                                                                                                                                           \
-  catch (cms::MessageFormatException & ex) {                                                                                                  \
-    ex.setMark(__FUNCTION__, __FILE__, __LINE__);                                                                                             \
+  catch (cms::MessageFormatException & formex) {                                                                                              \
+    formex.setMark(__FUNCTION__, __FILE__, __LINE__);                                                                                         \
     throw;                                                                                                                                    \
   }                                                                                                                                           \
-  catch (cms::MessageNotReadableException & ex) {                                                                                             \
-    ex.setMark(__FUNCTION__, __FILE__, __LINE__);                                                                                             \
+  catch (cms::MessageNotReadableException & nreadex) {                                                                                        \
+    nreadex.setMark(__FUNCTION__, __FILE__, __LINE__);                                                                                        \
     throw;                                                                                                                                    \
   }                                                                                                                                           \
-  catch (cms::MessageNotWriteableException & ex) {                                                                                            \
-    ex.setMark(__FUNCTION__, __FILE__, __LINE__);                                                                                             \
+  catch (cms::MessageNotWriteableException & nwritex) {                                                                                       \
+    nwritex.setMark(__FUNCTION__, __FILE__, __LINE__);                                                                                        \
     throw;                                                                                                                                    \
   }                                                                                                                                           \
-  catch (cms::NullFormatException & ex) {                                                                                                     \
-    ex.setMark(__FUNCTION__, __FILE__, __LINE__);                                                                                             \
+  catch (cms::NullFormatException & nullformex) {                                                                                             \
+    nullformex.setMark(__FUNCTION__, __FILE__, __LINE__);                                                                                     \
     throw;                                                                                                                                    \
   }                                                                                                                                           \
-  catch (cms::NumberFormatException & ex) {                                                                                                   \
-    ex.setMark(__FUNCTION__, __FILE__, __LINE__);                                                                                             \
+  catch (cms::NumberFormatException & nbformex) {                                                                                             \
+    nbformex.setMark(__FUNCTION__, __FILE__, __LINE__);                                                                                       \
     throw;                                                                                                                                    \
   }                                                                                                                                           \
-  catch (cms::ResourceAllocationException & ex) {                                                                                             \
-    ex.setMark(__FUNCTION__, __FILE__, __LINE__);                                                                                             \
+  catch (cms::ResourceAllocationException & resalcex) {                                                                                       \
+    resalcex.setMark(__FUNCTION__, __FILE__, __LINE__);                                                                                       \
     throw;                                                                                                                                    \
   }                                                                                                                                           \
-  catch (cms::TransactionInProgressException & ex) {                                                                                          \
-    ex.setMark(__FUNCTION__, __FILE__, __LINE__);                                                                                             \
+  catch (cms::TransactionInProgressException & txprogex) {                                                                                    \
+    txprogex.setMark(__FUNCTION__, __FILE__, __LINE__);                                                                                       \
     throw;                                                                                                                                    \
   }                                                                                                                                           \
-  catch (cms::TransactionRolledBackException & ex) {                                                                                          \
-    ex.setMark(__FUNCTION__, __FILE__, __LINE__);                                                                                             \
+  catch (cms::TransactionRolledBackException & txrbex) {                                                                                      \
+    txrbex.setMark(__FUNCTION__, __FILE__, __LINE__);                                                                                         \
     throw;                                                                                                                                    \
   }                                                                                                                                           \
-  catch (cms::UnsupportedOperationException & ex) {                                                                                           \
-    ex.setMark(__FUNCTION__, __FILE__, __LINE__);                                                                                             \
+  catch (cms::UnsupportedOperationException & unopex) {                                                                                       \
+    unopex.setMark(__FUNCTION__, __FILE__, __LINE__);                                                                                         \
     throw;                                                                                                                                    \
   }                                                                                                                                           \
-  catch (cms::CMSException & ex) {                                                                                                            \
-    ex.setMark(__FUNCTION__, __FILE__, __LINE__);                                                                                             \
+  catch (cms::CMSException & cmsex) {                                                                                                         \
+    cmsex.setMark(__FUNCTION__, __FILE__, __LINE__);                                                                                          \
     throw;                                                                                                                                    \
   }                                                                                                                                           \
-  catch (std::exception & ex) {                                                                                                               \
-    throw cms::CMSException(ex.what(),                                                                                                        \
+  catch (std::exception & stdex) {                                                                                                            \
+    throw cms::CMSException(stdex.what(),                                                                                                     \
                             nullptr,                                                                                                          \
                             std::vector<triplet<std::string, std::string, int> >(                                                             \
                                 1, make_triplet<std::string, std::string, int>(std::string(__FUNCTION__), std::string(__FILE__), __LINE__))); \

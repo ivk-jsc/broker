@@ -40,10 +40,10 @@ const long long Double::DOUBLE_MANTISSA_MASK = 0x000FFFFFFFFFFFFFLL;
 const long long Double::DOUBLE_NAN_BITS = DOUBLE_EXPONENT_MASK | 0x0008000000000000LL;
 
 ////////////////////////////////////////////////////////////////////////////////
-Double::Double(double value) : value(value) {}
+Double::Double(double value_) : value(value_) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-Double::Double(const String &value) : value(0) { this->value = Double::parseDouble(value); }
+Double::Double(const String &value_) : value(0) { this->value = Double::parseDouble(value_); }
 
 ////////////////////////////////////////////////////////////////////////////////
 int Double::compareTo(const Double &d) const { return Double::compare(this->value, d.value); }

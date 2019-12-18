@@ -21,7 +21,7 @@ using namespace upmq::state;
 using namespace decaf::lang;
 
 ////////////////////////////////////////////////////////////////////////////////
-SenderState::SenderState(Pointer<Command> info) : info(std::move(info)) {}
+SenderState::SenderState(Pointer<Command> info_) : info(std::move(info_)) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 SenderState::~SenderState() {}

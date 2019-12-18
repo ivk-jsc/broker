@@ -25,15 +25,15 @@ using namespace decaf::internal::util;
 using namespace decaf::nio;
 
 ///////////////////////////////////////////////////////////////////////////////
-IntArrayBuffer::IntArrayBuffer(int size, bool readOnly) : IntBuffer(size), _array(), offset(0), length(size), readOnly(readOnly) {
+IntArrayBuffer::IntArrayBuffer(int size, bool readOnly_) : IntBuffer(size), _array(), offset(0), length(size), readOnly(readOnly_) {
   // Allocate using the ByteArray, not read-only initially.  Take a reference to it.
   // The size is the given size times the size of the stored datatype
   this->_array.reset(new ByteArrayAdapter(size * (int)sizeof(int)));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-IntArrayBuffer::IntArrayBuffer(int *array, int size, int offset, int length, bool readOnly)
-    : IntBuffer(length), _array(), offset(offset), length(length), readOnly(readOnly) {
+IntArrayBuffer::IntArrayBuffer(int *array, int size, int offset_, int length_, bool readOnly_)
+    : IntBuffer(length_), _array(), offset(offset_), length(length_), readOnly(readOnly_) {
   try {
     if (offset < 0 || offset > size) {
       throw IndexOutOfBoundsException(__FILE__, __LINE__, "Offset parameter if out of bounds, %d", offset);
@@ -53,8 +53,8 @@ IntArrayBuffer::IntArrayBuffer(int *array, int size, int offset, int length, boo
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-IntArrayBuffer::IntArrayBuffer(const Pointer<ByteArrayAdapter> &array, int offset, int length, bool readOnly)
-    : IntBuffer(length), _array(array), offset(offset), length(length), readOnly(readOnly) {
+IntArrayBuffer::IntArrayBuffer(const Pointer<ByteArrayAdapter> &array, int offset_, int length_, bool readOnly_)
+    : IntBuffer(length_), _array(array), offset(offset_), length(length_), readOnly(readOnly_) {
   try {
     if (offset < 0 || offset > array->getCapacity()) {
       throw IndexOutOfBoundsException(__FILE__, __LINE__, "Offset parameter if out of bounds, %d", offset);

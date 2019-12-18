@@ -23,7 +23,7 @@ using namespace upmq::transport;
 using namespace upmq::transport::failover;
 
 ////////////////////////////////////////////////////////////////////////////////
-BackupTransport::BackupTransport(BackupTransportPool *parent) : parent(parent), closed(true), priority(false) {}
+BackupTransport::BackupTransport(BackupTransportPool *parent_) : parent(parent_), closed(true), priority(false) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 BackupTransport::~BackupTransport() {}

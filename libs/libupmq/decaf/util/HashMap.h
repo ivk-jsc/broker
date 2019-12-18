@@ -102,13 +102,15 @@ class HashMap : public AbstractMap<K, V> {
     HashMapEntry(const HashMapEntry &) = delete;
     HashMapEntry &operator=(const HashMapEntry &) = delete;
 
-    HashMapEntry(const K &key, const V &value, int hash) : MapEntry<K, V>(), origKeyHash(hash), next(nullptr) {
-      this->setKey(key);
-      this->setValue(value);
-      this->origKeyHash = hash;
+    HashMapEntry(const K &key_, const V &value_, int hash_) : MapEntry<K, V>(), origKeyHash(hash_), next(nullptr) {
+      this->setKey(key_);
+      this->setValue(value_);
+      this->origKeyHash = hash_;
     }
 
-    HashMapEntry(const K &key, const V &value) : MapEntry<K, V>(key, value), origKeyHash(0), next(nullptr) { this->origKeyHash = HASHCODE()(key); }
+    HashMapEntry(const K &key_, const V &value_) : MapEntry<K, V>(key_, value_), origKeyHash(0), next(nullptr) {
+      this->origKeyHash = HASHCODE()(key_);
+    }
   };
 
  private:
@@ -681,7 +683,7 @@ class HashMap : public AbstractMap<K, V> {
    *
    * @throws IllegalArgumentException when the capacity is less than zero.
    */
-  HashMap(int capacity, float loadFactor)
+  HashMap(int capacity, float loadFactor_)
       : AbstractMap<K, V>(),
         hashFunc(),
         elementCount(0),
@@ -695,11 +697,11 @@ class HashMap : public AbstractMap<K, V> {
         cachedConstEntrySet(),
         cachedConstKeySet(),
         cachedConstValueCollection() {
-    if (capacity >= 0 && loadFactor > 0) {
+    if (capacity >= 0 && loadFactor_ > 0) {
       capacity = calculateCapacity(capacity);
       elementCount = 0;
       elementData = decaf::lang::ArrayPointer<HashMapEntry *>(capacity);
-      this->loadFactor = loadFactor;
+      this->loadFactor = loadFactor_;
       computeThreshold();
     } else {
       throw decaf::lang::exceptions::IllegalArgumentException(__FILE__, __LINE__, "Invalid configuration");

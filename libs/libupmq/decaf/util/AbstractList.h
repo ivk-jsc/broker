@@ -78,7 +78,7 @@ class AbstractList : public decaf::util::List<E>, public decaf::util::AbstractCo
     SimpleListIterator operator=(const SimpleListIterator &);
 
    public:
-    SimpleListIterator(AbstractList<E> *parent, int start) : ListIterator<E>(), parent(parent), numLeft(0), expectedModCount(0), lastPosition(-1) {
+    SimpleListIterator(AbstractList<E> *parent_, int start) : ListIterator<E>(), parent(parent_), numLeft(0), expectedModCount(0), lastPosition(-1) {
       if (parent == nullptr) {
         throw decaf::lang::exceptions::NullPointerException(__FILE__, __LINE__, "List Iterator constructed with NULL parent");
       }
@@ -88,7 +88,7 @@ class AbstractList : public decaf::util::List<E>, public decaf::util::AbstractCo
       }
 
       this->numLeft = parent->size() - start;
-      this->parent = parent;
+      this->parent = parent_;
       this->expectedModCount = parent->modCount;
     }
 
@@ -199,8 +199,8 @@ class AbstractList : public decaf::util::List<E>, public decaf::util::AbstractCo
     ConstSimpleListIterator operator=(const ConstSimpleListIterator &);
 
    public:
-    ConstSimpleListIterator(const AbstractList<E> *parent, int start)
-        : ListIterator<E>(), parent(parent), numLeft(0), expectedModCount(0), lastPosition(-1) {
+    ConstSimpleListIterator(const AbstractList<E> *parent_, int start)
+        : ListIterator<E>(), parent(parent_), numLeft(0), expectedModCount(0), lastPosition(-1) {
       if (parent == nullptr) {
         throw decaf::lang::exceptions::NullPointerException(__FILE__, __LINE__, "List Iterator constructed with NULL parent");
       }
@@ -210,7 +210,7 @@ class AbstractList : public decaf::util::List<E>, public decaf::util::AbstractCo
       }
 
       this->numLeft = parent->size() - start;
-      this->parent = parent;
+      this->parent = parent_;
       this->expectedModCount = parent->modCount;
     }
 

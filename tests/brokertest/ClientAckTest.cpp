@@ -25,7 +25,7 @@ class MyMessageListener : public cms::MessageListener {
   bool dontAck;
 
  public:
-  explicit MyMessageListener(bool dontAck = false) : MessageListener(), dontAck(dontAck) {}
+  explicit MyMessageListener(bool dontAck_ = false) : MessageListener(), dontAck(dontAck_) {}
 
   ~MyMessageListener() override = default;
 

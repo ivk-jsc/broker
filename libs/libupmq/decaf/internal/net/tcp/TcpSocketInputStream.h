@@ -54,7 +54,7 @@ class DECAF_API TcpSocketInputStream : public decaf::io::InputStream {
    * @param socket
    *      The parent SocketImpl for this stream.
    */
-  TcpSocketInputStream(TcpSocket *socket);
+  TcpSocketInputStream(TcpSocket *socket_);
 
   virtual ~TcpSocketInputStream();
 

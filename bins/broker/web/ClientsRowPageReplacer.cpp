@@ -20,14 +20,14 @@
 #include "Subscription.h"
 
 ClientsRowPageReplacer::ClientsRowPageReplacer(
-    std::string pageName, std::string id, int type, int msgCount, std::string subscription, int status, std::string selector)
+    std::string pageName, std::string id_, int type_, int msgCount_, std::string subscription_, int status_, std::string selector_)
     : TemplateParamReplacer(std::move(pageName)),
-      _id(std::move(id)),
-      _type(type),
-      _msgCount(msgCount),
-      _subscription(std::move(subscription)),
-      _status(status),
-      _selector(std::move(selector)) {
+      _id(std::move(id_)),
+      _type(type_),
+      _msgCount(msgCount_),
+      _subscription(std::move(subscription_)),
+      _status(status_),
+      _selector(std::move(selector_)) {
   addReplacer(MakeStringify(type), (TemplateParamReplacer::Callback)&ClientsRowPageReplacer::typeReplacer);
   addReplacer(MakeStringify(id), (TemplateParamReplacer::Callback)&ClientsRowPageReplacer::idReplacer);
   addReplacer(MakeStringify(msgCount), (TemplateParamReplacer::Callback)&ClientsRowPageReplacer::msgCountReplacer);

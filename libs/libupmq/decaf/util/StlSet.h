@@ -51,7 +51,7 @@ class StlSet : public decaf::util::AbstractSet<E> {
     SetIterator operator=(const SetIterator &);
 
    public:
-    SetIterator(typename std::set<E> *set) : Iterator<E>(), current(set->begin()), previous(set->begin()), set(set) {}
+    SetIterator(typename std::set<E> *set_) : Iterator<E>(), current(set_->begin()), previous(set_->begin()), set(set_) {}
 
     virtual ~SetIterator() {}
 
@@ -87,7 +87,7 @@ class StlSet : public decaf::util::AbstractSet<E> {
     ConstSetIterator operator=(const ConstSetIterator &);
 
    public:
-    ConstSetIterator(const typename std::set<E> *set) : Iterator<E>(), current(set->begin()), previous(set->begin()), set(set) {}
+    ConstSetIterator(const typename std::set<E> *set_) : Iterator<E>(), current(set_->begin()), previous(set_->begin()), set(set_) {}
 
     virtual ~ConstSetIterator() {}
 

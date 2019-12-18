@@ -26,7 +26,8 @@ Inet6Address::Inet6Address() = default;
 Inet6Address::Inet6Address(const unsigned char *ipAddress, int numBytes) : InetAddress(ipAddress, numBytes) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-Inet6Address::Inet6Address(const std::string &hostname, const unsigned char *ipAddress, int numBytes) : InetAddress(hostname, ipAddress, numBytes) {}
+Inet6Address::Inet6Address(const std::string &hostname_, const unsigned char *ipAddress, int numBytes)
+    : InetAddress(hostname_, ipAddress, numBytes) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 Inet6Address::~Inet6Address() = default;

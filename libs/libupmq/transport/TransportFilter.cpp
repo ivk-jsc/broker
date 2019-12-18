@@ -47,7 +47,7 @@ class TransportFilterImpl {
 }  // namespace upmq
 
 ////////////////////////////////////////////////////////////////////////////////
-TransportFilter::TransportFilter(Pointer<Transport> next) : impl(new TransportFilterImpl()), next(std::move(next)), listener(nullptr) {
+TransportFilter::TransportFilter(Pointer<Transport> next_) : impl(new TransportFilterImpl()), next(std::move(next_)), listener(nullptr) {
   // Observe the nested transport for events.
   this->next->setTransportListener(this);
 }

@@ -29,7 +29,7 @@ class DECAF_API SimpleLogger {
   /**
    * Constructor
    */
-  SimpleLogger(const std::string &name);
+  SimpleLogger(const std::string &name_);
 
   /**
    * Destructor

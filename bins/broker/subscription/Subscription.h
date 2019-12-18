@@ -52,8 +52,8 @@ class Subscription {
   SenderList _senders;
 
   struct Info {
-    Info(std::string id, std::string name, Type type, int consumers, uint64_t messages, bool running)
-        : id(std::move(id)), name(std::move(name)), type(type), consumers(consumers), messages(messages), running(running) {}
+    Info(std::string id_, std::string name_, Type type_, int consumers_, uint64_t messages_, bool running_)
+        : id(std::move(id_)), name(std::move(name_)), type(type_), consumers(consumers_), messages(messages_), running(running_) {}
     Info() = default;
     Info(Info &&) = default;
     Info(const Info &) = default;

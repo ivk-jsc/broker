@@ -25,7 +25,7 @@ using namespace decaf::util;
 using namespace decaf::util::logging;
 
 ////////////////////////////////////////////////////////////////////////////////
-SimpleLogger::SimpleLogger(const std::string &name) : name(name) {}
+SimpleLogger::SimpleLogger(const std::string &name_) : name(name_) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 SimpleLogger::~SimpleLogger() {}

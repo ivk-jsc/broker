@@ -25,7 +25,7 @@ using namespace decaf;
 using namespace decaf::lang;
 
 ////////////////////////////////////////////////////////////////////////////////
-SessionState::SessionState(Pointer<Command> info) : info(std::move(info)), producers(), consumers() {}
+SessionState::SessionState(Pointer<Command> info_) : info(std::move(info_)), producers(), consumers() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 Pointer<Command> SessionState::getInfo() const { return this->info; }

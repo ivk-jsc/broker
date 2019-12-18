@@ -58,8 +58,8 @@ class UUIDImpl {
 
   UUIDImpl() : variant(0), version(0), clockSequence(0), hash(0), node(0), timestamp(0), mostSigBits(0), leastSigBits(0) {}
 
-  UUIDImpl(long long mostSigBits, long long leastSigBits)
-      : variant(0), version(0), clockSequence(0), hash(0), node(0), timestamp(0), mostSigBits(mostSigBits), leastSigBits(leastSigBits) {
+  UUIDImpl(long long mostSigBits_, long long leastSigBits_)
+      : variant(0), version(0), clockSequence(0), hash(0), node(0), timestamp(0), mostSigBits(mostSigBits_), leastSigBits(leastSigBits_) {
     init();
   }
 

@@ -27,8 +27,8 @@ using namespace decaf::lang;
 using namespace decaf::lang::exceptions;
 
 ////////////////////////////////////////////////////////////////////////////////
-BufferedInputStream::BufferedInputStream(InputStream *stream, bool own)
-    : FilterInputStream(stream, own),
+BufferedInputStream::BufferedInputStream(InputStream *stream, bool own_)
+    : FilterInputStream(stream, own_),
       pos(0),
       count(0),
       markLimit(-1),
@@ -38,8 +38,8 @@ BufferedInputStream::BufferedInputStream(InputStream *stream, bool own)
       proxyBuffer(buff) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-BufferedInputStream::BufferedInputStream(InputStream *stream, int bufferSize, bool own)
-    : FilterInputStream(stream, own), pos(0), count(0), markLimit(-1), markPos(-1), bufferSize(bufferSize), buff(nullptr), proxyBuffer(nullptr) {
+BufferedInputStream::BufferedInputStream(InputStream *stream, int bufferSize_, bool own_)
+    : FilterInputStream(stream, own_), pos(0), count(0), markLimit(-1), markPos(-1), bufferSize(bufferSize_), buff(nullptr), proxyBuffer(nullptr) {
   if (bufferSize < 0) {
     throw IllegalArgumentException(__FILE__, __LINE__, "Size must be greater than zero");
   }

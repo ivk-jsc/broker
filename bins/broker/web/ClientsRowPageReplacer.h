@@ -23,7 +23,8 @@ class ClientsRowPageReplacer : public TemplateParamReplacer {
  public:
   enum RowParam { id = 0, type, msgCount, subscription, status, selector };
 
-  ClientsRowPageReplacer(std::string pageName, std::string id, int type, int msgCount, std::string subscription, int status, std::string selector);
+  ClientsRowPageReplacer(
+      std::string pageName_, std::string id_, int type_, int msgCount_, std::string subscription_, int status_, std::string selector_);
 
   std::string typeReplacer();
 

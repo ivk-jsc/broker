@@ -21,8 +21,8 @@ using namespace decaf::internal;
 using namespace decaf::internal::net;
 
 ////////////////////////////////////////////////////////////////////////////////
-URIType::URIType(const std::string &source)
-    : source(source),
+URIType::URIType(const std::string &source_)
+    : source(source_),
       scheme(),
       schemeSpecificPart(),
       authority(),

@@ -35,7 +35,7 @@ class SubscribeState {
   SubscribeState &operator=(const SubscribeState &);
 
  public:
-  SubscribeState(Pointer<Command> info);
+  SubscribeState(Pointer<Command> info_);
   virtual ~SubscribeState();
 
   Pointer<Command> getInfo() const;

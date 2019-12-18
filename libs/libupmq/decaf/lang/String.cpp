@@ -58,15 +58,15 @@ class Contents {
    * Contents created with the given length, the array is length + 1 to add the
    * null terminating character.
    */
-  Contents(int length) : value(length + 1), length(length), offset(0), hashCode(0) {
-    value[length] = 0;  // Null terminated
+  Contents(int length_) : value(length_ + 1), length(length_), offset(0), hashCode(0) {
+    value[length_] = 0;  // Null terminated
   }
 
   /**
    * Contents is a view of some other String which can either be all or a
    * window allowing for substring methods to not need to copy the contents.
    */
-  Contents(int offset, int length, const ArrayPointer<char> &value) : value(value), length(length), offset(offset), hashCode(0) {}
+  Contents(int offset_, int length_, const ArrayPointer<char> &value_) : value(value_), length(length_), offset(offset_), hashCode(0) {}
 };
 }  // namespace lang
 }  // namespace decaf

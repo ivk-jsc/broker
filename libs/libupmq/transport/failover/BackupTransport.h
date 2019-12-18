@@ -53,7 +53,7 @@ class UPMQCPP_API BackupTransport : public DefaultTransportListener {
   BackupTransport &operator=(const BackupTransport &);
 
  public:
-  BackupTransport(BackupTransportPool *failover);
+  BackupTransport(BackupTransportPool *parent_);
 
   ~BackupTransport() override;
 

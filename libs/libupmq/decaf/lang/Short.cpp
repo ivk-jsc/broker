@@ -30,10 +30,10 @@ const short Short::MAX_VALUE = SHRT_MAX;
 const short Short::MIN_VALUE = SHRT_MIN;
 
 ////////////////////////////////////////////////////////////////////////////////
-Short::Short(short value) : value(value) {}
+Short::Short(short value_) : value(value_) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-Short::Short(const String &value) : value(0) { Short::parseShort(value); }
+Short::Short(const String &value_) : value(0) { Short::parseShort(value_); }
 
 ////////////////////////////////////////////////////////////////////////////////
 Short::~Short() {}

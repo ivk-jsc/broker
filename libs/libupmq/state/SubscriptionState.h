@@ -40,7 +40,7 @@ class SubscriptionState {
   SubscriptionState &operator=(const SubscriptionState &);
 
  public:
-  SubscriptionState(Pointer<Command> info);
+  SubscriptionState(Pointer<Command> info_);
   virtual ~SubscriptionState();
 
   Pointer<Command> getInfo() const;

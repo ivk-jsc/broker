@@ -53,19 +53,19 @@ class DECAF_API Float : public Number, public Comparable<Float>, public Comparab
 
  public:
   /**
-   * @param value - the primitive type to wrap
+   * @param value_ - the primitive type to wrap
    */
-  Float(float value);
+  Float(float value_);
 
   /**
-   * @param value - the primitive type to wrap
+   * @param value_ - the primitive type to wrap
    */
-  Float(double value);
+  Float(double value_);
 
   /**
    * @param value - the string to convert to a primitive type to wrap
    */
-  Float(const String &value);
+  Float(const String &value_);
 
   virtual ~Float() {}
 

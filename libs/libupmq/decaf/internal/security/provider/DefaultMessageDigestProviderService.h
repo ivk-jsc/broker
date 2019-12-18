@@ -38,7 +38,7 @@ class DECAF_API DefaultMessageDigestProviderService : public decaf::security::Pr
   DefaultMessageDigestProviderService &operator=(const DefaultMessageDigestProviderService &);
 
  public:
-  DefaultMessageDigestProviderService(const decaf::security::Provider *provider, const std::string &algorithmName);
+  DefaultMessageDigestProviderService(const decaf::security::Provider *provider_, const std::string &algorithmName);
 
   virtual ~DefaultMessageDigestProviderService();
 

@@ -28,7 +28,7 @@ using namespace decaf::lang;
 using namespace decaf::lang::exceptions;
 
 ////////////////////////////////////////////////////////////////////////////////
-FailoverTransportListener::FailoverTransportListener(FailoverTransport *parent) : parent(parent) {
+FailoverTransportListener::FailoverTransportListener(FailoverTransport *parent_) : parent(parent_) {
   if (this->parent == nullptr) {
     throw NullPointerException(__FILE__, __LINE__, "Pointer to Parent Transport was NULL");
   }

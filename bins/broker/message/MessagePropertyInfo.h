@@ -53,7 +53,7 @@ class MessagePropertyInfo {
     is_null
   };
   struct FieldInfo {
-    constexpr explicit FieldInfo(Field ec) : ec(ec), position(static_cast<int>(ec)) {}
+    constexpr explicit FieldInfo(Field ec_) : ec(ec_), position(static_cast<int>(ec)) {}
     const Field ec;
     const int position;
   };
@@ -79,8 +79,8 @@ class MessagePropertyInfo {
   MsgTuple tuple{};
 
   explicit MessagePropertyInfo();
-  explicit MessagePropertyInfo(const MsgTuple &tuple);
-  explicit MessagePropertyInfo(MsgTuple &&tuple);
+  explicit MessagePropertyInfo(const MsgTuple &tuple_);
+  explicit MessagePropertyInfo(MsgTuple &&tuple_);
   explicit MessagePropertyInfo(const std::string &messageID);
   MessagePropertyInfo(const std::string &messageID,
                       const std::string &propertyName,

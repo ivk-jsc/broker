@@ -88,7 +88,7 @@ class DECAF_API URLConnection {
   URLConnection &operator=(const URLConnection &);
 
  protected:
-  URLConnection(const URL &url);
+  URLConnection(const URL &url_);
 
  public:
   virtual ~URLConnection();

@@ -53,24 +53,24 @@ class DECAF_API BufferedInputStream : public FilterInputStream {
    *
    * @param stream
    *      The target input stream to buffer.
-   * @param own
+   * @param own_
    *      Indicates if we own the stream object, defaults to false.
    */
-  BufferedInputStream(InputStream *stream, bool own = false);
+  BufferedInputStream(InputStream *stream, bool own_ = false);
 
   /**
    * Constructor
    *
    * @param stream
    *      The target input stream to buffer.
-   * @param bufferSize
+   * @param bufferSize_
    *      The size in bytes to allocate for the internal buffer.
-   * @param own
+   * @param own_
    *      Indicates if we own the stream object, defaults to false.
    *
    * @throws IllegalArgumentException is the size is zero or negative.
    */
-  BufferedInputStream(InputStream *stream, int bufferSize, bool own = false);
+  BufferedInputStream(InputStream *stream, int bufferSize_, bool own_ = false);
 
   virtual ~BufferedInputStream();
 

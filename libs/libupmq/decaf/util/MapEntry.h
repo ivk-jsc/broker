@@ -33,7 +33,7 @@ class MapEntry {
 
   MapEntry(const MapEntry &other) : key(other.getKey()), value(other.getValue()) {}
 
-  MapEntry(const K &key, const V &value) : key(key), value(value) {}
+  MapEntry(const K &key_, const V &value_) : key(key_), value(value_) {}
 
   MapEntry &operator=(const MapEntry &other) {
     this->key = other.getKey();

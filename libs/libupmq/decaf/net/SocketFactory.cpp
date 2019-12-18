@@ -39,7 +39,7 @@ class ShutdownTask : public decaf::lang::Runnable {
   ShutdownTask &operator=(const ShutdownTask &);
 
  public:
-  ShutdownTask(SocketFactory **defaultRef) : defaultRef(defaultRef) {}
+  ShutdownTask(SocketFactory **defaultRef_) : defaultRef(defaultRef_) {}
   ~ShutdownTask() override {}
 
   void run() override { *defaultRef = nullptr; }

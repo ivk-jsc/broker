@@ -33,10 +33,10 @@ const int Integer::MAX_VALUE = (int)0x7FFFFFFF;
 const int Integer::MIN_VALUE = (int)0x80000000;
 
 ////////////////////////////////////////////////////////////////////////////////
-Integer::Integer(int value) : value(value) {}
+Integer::Integer(int value_) : value(value_) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-Integer::Integer(const std::string &value) : value() { this->value = parseInt(value); }
+Integer::Integer(const std::string &value_) : value() { this->value = parseInt(value_); }
 
 ////////////////////////////////////////////////////////////////////////////////
 int Integer::compareTo(const Integer &i) const { return this->value < i.value ? -1 : this->value == i.value ? 0 : 1; }

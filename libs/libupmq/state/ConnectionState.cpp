@@ -23,8 +23,8 @@ using namespace upmq::state;
 using namespace upmq::transport;
 
 ////////////////////////////////////////////////////////////////////////////////
-ConnectionState::ConnectionState(Pointer<Command> info)
-    : info(info), sessions(), tempDestinations(), disposed(false), connectionInterruptProcessingComplete(true) {}
+ConnectionState::ConnectionState(Pointer<Command> info_)
+    : info(std::move(info_)), sessions(), tempDestinations(), disposed(false), connectionInterruptProcessingComplete(true) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 ConnectionState::~ConnectionState() {

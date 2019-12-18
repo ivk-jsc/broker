@@ -52,14 +52,14 @@ class Destination {
   using PredefinedClients = std::unordered_map<std::string, bool>;
 
   struct Info {
-    Info(std::string uri, std::string id, std::string name, Type type, std::string created, std::string dataPath, uint64_t messages)
-        : uri(std::move(uri)),
-          id(std::move(id)),
-          name(std::move(name)),
-          type(type),
-          created(std::move(created)),
-          dataPath(std::move(dataPath)),
-          messages(messages) {}
+    Info(std::string uri_, std::string id_, std::string name_, Type type_, std::string created_, std::string dataPath_, uint64_t messages_)
+        : uri(std::move(uri_)),
+          id(std::move(id_)),
+          name(std::move(name_)),
+          type(type_),
+          created(std::move(created_)),
+          dataPath(std::move(dataPath_)),
+          messages(messages_) {}
     Info() = default;
     Info(Info &&) = default;
     Info(const Info &) = default;

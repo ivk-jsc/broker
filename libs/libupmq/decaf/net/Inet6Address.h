@@ -31,7 +31,7 @@ class DECAF_API Inet6Address : public InetAddress {
  protected:
   Inet6Address();
   Inet6Address(const unsigned char *ipAddress, int numBytes);
-  Inet6Address(const std::string &hostname, const unsigned char *ipAddress, int numBytes);
+  Inet6Address(const std::string &hostname_, const unsigned char *ipAddress, int numBytes);
 
  public:
   ~Inet6Address() override;

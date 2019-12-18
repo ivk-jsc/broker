@@ -32,7 +32,7 @@ unsigned long long Random::multiplier = 0x5deece66dLL;
 Random::Random() : haveNextNextGaussian(false), seed(0), nextNextGaussian(0) { setSeed(System::currentTimeMillis()); }
 
 ////////////////////////////////////////////////////////////////////////////////
-Random::Random(unsigned long long seed) : haveNextNextGaussian(false), seed(0), nextNextGaussian(0) { setSeed(seed); }
+Random::Random(unsigned long long seed_) : haveNextNextGaussian(false), seed(0), nextNextGaussian(0) { setSeed(seed_); }
 
 ////////////////////////////////////////////////////////////////////////////////
 Random::~Random() {}

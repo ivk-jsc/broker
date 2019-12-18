@@ -32,7 +32,14 @@ using floating_seconds = std::chrono::duration<double>;
 
 #define OPTPARSE_IMPLEMENTATION
 #define OPTPARSE_API static
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+#endif
 #include "optparse.h"
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 #include <iomanip>
 
 void usage(const struct optparse_long *opt_option, size_t count) {
@@ -47,7 +54,7 @@ void usage(const struct optparse_long *opt_option, size_t count) {
 struct IntProperty {
   std::string key{};
   int value{0};
-  IntProperty(std::string key, int value) : key(std::move(key)), value(value) {}
+  IntProperty(std::string key_, int value_) : key(std::move(key_)), value(value_) {}
   IntProperty() = default;
   IntProperty(const IntProperty &) = default;
   IntProperty(IntProperty &&) = default;
@@ -89,8 +96,8 @@ class SimpleProducer {
  public:
   std::chrono::steady_clock::time_point t0{perf_clock::now()};
 
-  SimpleProducer(std::string brokerURI, long numMessages, std::string destURI, bool useTopic)
-      : brokerURI(std::move(brokerURI)), destURI(std::move(destURI)), numMessages(numMessages), useTopic(useTopic) {}
+  SimpleProducer(std::string brokerURI_, long numMessages_, std::string destURI_, bool useTopic_)
+      : brokerURI(std::move(brokerURI_)), destURI(std::move(destURI_)), numMessages(numMessages_), useTopic(useTopic_) {}
 
   ~SimpleProducer() {
     try {
