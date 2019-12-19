@@ -97,7 +97,7 @@ class SimpleProducer {
  public:
   std::chrono::steady_clock::time_point t0{perf_clock::now()};
 
-  SimpleProducer(std::string brokerURI_, long numMessages_, std::string destURI_, bool useTopic_)
+  SimpleProducer(std::string brokerURI_, long numMessages_, std::string destURI_, bool useTopic_, long logMod)
       : brokerURI(std::move(brokerURI_)), destURI(std::move(destURI_)), numMessages(numMessages_), useTopic(useTopic_), mod(logMod) {}
 
   ~SimpleProducer() {

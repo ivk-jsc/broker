@@ -69,8 +69,12 @@ class SimpleConsumer : public cms::ExceptionListener {
  public:
   std::chrono::steady_clock::time_point t0{perf_clock::now()};
 
-  SimpleConsumer(std::string brokerURI_, std::string destURI_, bool useTopic_, std::string consMode_)
-      : brokerURI(std::move(brokerURI_)), destURI(std::move(destURI_)), useTopic(useTopic_), isStoped(false), consMode(std::move(consMode_)),
+  SimpleConsumer(std::string brokerURI_, std::string destURI_, bool useTopic_, std::string consMode_, long logMod)
+      : brokerURI(std::move(brokerURI_)),
+        destURI(std::move(destURI_)),
+        useTopic(useTopic_),
+        isStoped(false),
+        consMode(std::move(consMode_)),
         mod(logMod) {}
 
   ~SimpleConsumer() override {
