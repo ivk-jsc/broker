@@ -44,7 +44,7 @@
             <max-count>1024</max-count>
         </destinations>
         <storage>
-            <!--file::memory:?cache=shared-->
+            <!-- file::memory:?cache=shared -->
             <!--:memory:-->
             <connection dbms="sqlite-native" pool="64" sync="false" journal-mode="WAL">
                 <value use-path="true">upmq.db</value>

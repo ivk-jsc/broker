@@ -53,12 +53,12 @@ class DECAF_API FilterInputStream : public InputStream {
   /**
    * Constructor to create a wrapped InputStream
    *
-   * @param inputStream
+   * @param inputStream_
    *      The stream to wrap and filter.
-   * @param own
+   * @param own_
    *      Indicates if we own the stream object, defaults to false.
    */
-  FilterInputStream(InputStream *inputStream, bool own = false);
+  FilterInputStream(InputStream *inputStream_, bool own_ = false);
 
   ~FilterInputStream() override;
 

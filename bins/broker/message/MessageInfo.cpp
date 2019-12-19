@@ -63,7 +63,7 @@ MessageInfo::MessageInfo(const std::string &messageID) {
   tuple.set<message::field_num.position>(-1);
   tuple.set<message::field_message_id.position>(messageID);
 }
-MessageInfo::MessageInfo(const MessageInfo::MsgTuple &tuple) : tuple(tuple) {}
-MessageInfo::MessageInfo(MessageInfo::MsgTuple &&tuple) : tuple(std::move(tuple)) {}
+MessageInfo::MessageInfo(const MessageInfo::MsgTuple &tuple_) : tuple(tuple_) {}
+MessageInfo::MessageInfo(MessageInfo::MsgTuple &&tuple_) : tuple(std::move(tuple_)) {}
 }  // namespace broker
 }  // namespace upmq

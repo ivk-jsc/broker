@@ -28,10 +28,10 @@ const Boolean Boolean::_FALSE(false);
 const Boolean Boolean::_TRUE(true);
 
 ////////////////////////////////////////////////////////////////////////////////
-Boolean::Boolean(bool value) : value(value) {}
+Boolean::Boolean(bool value_) : value(value_) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-Boolean::Boolean(const String &value) : value(false) { this->value = parseBoolean(value); }
+Boolean::Boolean(const String &value_) : value(false) { this->value = parseBoolean(value_); }
 
 ////////////////////////////////////////////////////////////////////////////////
 int Boolean::compareTo(const Boolean &b) const {

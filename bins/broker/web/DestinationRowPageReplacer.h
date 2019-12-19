@@ -24,13 +24,13 @@ class DestinationRowPageReplacer : public TemplateParamReplacer {
   enum RowParam { destination = 0, type, subscriptions, creationTime, dataPath, connectionString, messages };
 
   DestinationRowPageReplacer(std::string pageName,
-                             std::string destination,
-                             int type,
-                             int subscriptions,
-                             std::string creationTime,
-                             std::string dataPath,
-                             std::string connectionString,
-                             uint64_t messages);
+                             std::string destination_,
+                             int type_,
+                             int subscriptions_,
+                             std::string creationTime_,
+                             std::string dataPath_,
+                             std::string connectionString_,
+                             uint64_t messages_);
 
   std::string destinationReplacer();
 

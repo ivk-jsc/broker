@@ -45,7 +45,7 @@ class DECAF_API Boolean : public Comparable<Boolean>, public Comparable<bool> {
   /**
    * @param value - primitive boolean to wrap.
    */
-  Boolean(bool value);
+  Boolean(bool value_);
 
   /**
    * @param value - String value to convert to a boolean.

@@ -36,15 +36,15 @@ using namespace decaf::internal::security;
 SecureRandom::SecureRandom() : secureRandom(new SecureRandomImpl()) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-SecureRandom::SecureRandom(const std::vector<unsigned char> &seed) : secureRandom(new SecureRandomImpl()) {
-  if (!seed.empty()) {
-    this->secureRandom->providerSetSeed(&seed[0], (int)seed.size());
+SecureRandom::SecureRandom(const std::vector<unsigned char> &seed_) : secureRandom(new SecureRandomImpl()) {
+  if (!seed_.empty()) {
+    this->secureRandom->providerSetSeed(&seed_[0], (int)seed_.size());
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-SecureRandom::SecureRandom(const unsigned char *seed, int size) : secureRandom(new SecureRandomImpl()) {
-  if (seed == nullptr) {
+SecureRandom::SecureRandom(const unsigned char *seed_, int size) : secureRandom(new SecureRandomImpl()) {
+  if (seed_ == nullptr) {
     throw NullPointerException(__FILE__, __LINE__, "Seed buffer pointer passed was NULL");
   }
 
@@ -53,7 +53,7 @@ SecureRandom::SecureRandom(const unsigned char *seed, int size) : secureRandom(n
   }
 
   if (size > 0) {
-    this->secureRandom->providerSetSeed(seed, size);
+    this->secureRandom->providerSetSeed(seed_, size);
   }
 }
 

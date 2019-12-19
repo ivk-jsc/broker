@@ -104,7 +104,7 @@ class LinkedBlockingQueue : public BlockingQueue<E> {
     const LinkedBlockingQueue<E> *parent;
 
    public:
-    TotalLock(const LinkedBlockingQueue<E> *parent) : parent(parent) {
+    TotalLock(const LinkedBlockingQueue<E> *parent_) : parent(parent_) {
       parent->putLock.lock();
       parent->takeLock.lock();
     }
@@ -156,13 +156,13 @@ class LinkedBlockingQueue : public BlockingQueue<E> {
   /**
    * Create a new instance with the given initial capacity value.
    *
-   * @param capacity
+   * @param capacity_
    *      The initial capacity value to assign to this Queue.
    *
    * @throws IllegalArgumentException if the specified capacity is not greater than zero.
    */
-  LinkedBlockingQueue(int capacity)
-      : BlockingQueue<E>(), capacity(capacity), count(), takeLock(), notEmpty(), putLock(), notFull(), head(new QueueNode<E>()), tail() {
+  LinkedBlockingQueue(int capacity_)
+      : BlockingQueue<E>(), capacity(capacity_), count(), takeLock(), notEmpty(), putLock(), notFull(), head(new QueueNode<E>()), tail() {
     if (capacity <= 0) {
       throw decaf::lang::exceptions::IllegalArgumentException(__FILE__, __LINE__, "Capacity value must be greater than zero.");
     }
@@ -635,10 +635,10 @@ class LinkedBlockingQueue : public BlockingQueue<E> {
     LinkedIterator &operator=(const LinkedIterator &);
 
    public:
-    LinkedIterator(LinkedBlockingQueue<E> *parent) : current(), last(), currentElement(), parent(parent) {
-      TotalLock lock(parent);
+    LinkedIterator(LinkedBlockingQueue<E> *parent_) : current(), last(), currentElement(), parent(parent_) {
+      TotalLock lock(parent_);
 
-      this->current = parent->head->next;
+      this->current = parent_->head->next;
       if (this->current != nullptr) {
         this->currentElement = current->get();
       }
@@ -714,10 +714,10 @@ class LinkedBlockingQueue : public BlockingQueue<E> {
     ConstLinkedIterator &operator=(const ConstLinkedIterator &);
 
    public:
-    ConstLinkedIterator(const LinkedBlockingQueue<E> *parent) : current(), last(), currentElement(), parent(parent) {
-      TotalLock lock(parent);
+    ConstLinkedIterator(const LinkedBlockingQueue<E> *parent_) : current(), last(), currentElement(), parent(parent_) {
+      TotalLock lock(parent_);
 
-      this->current = parent->head->next;
+      this->current = parent_->head->next;
       if (this->current != nullptr) {
         this->currentElement = current->get();
       }

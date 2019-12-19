@@ -26,15 +26,15 @@ using namespace decaf::lang;
 using namespace decaf::lang::exceptions;
 
 ////////////////////////////////////////////////////////////////////////////////
-BufferedOutputStream::BufferedOutputStream(OutputStream *stream, bool own)
-    : FilterOutputStream(stream, own), buffer(nullptr), bufferSize(0), head(0), tail(0) {
+BufferedOutputStream::BufferedOutputStream(OutputStream *stream, bool own_)
+    : FilterOutputStream(stream, own_), buffer(nullptr), bufferSize(0), head(0), tail(0) {
   // Default to 1k buffer.
   init(8192);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-BufferedOutputStream::BufferedOutputStream(OutputStream *stream, int bufSize, bool own)
-    : FilterOutputStream(stream, own), buffer(nullptr), bufferSize(0), head(0), tail(0) {
+BufferedOutputStream::BufferedOutputStream(OutputStream *stream, int bufSize, bool own_)
+    : FilterOutputStream(stream, own_), buffer(nullptr), bufferSize(0), head(0), tail(0) {
   try {
     this->init(bufSize);
   }

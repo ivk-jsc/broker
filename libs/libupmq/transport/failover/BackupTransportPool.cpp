@@ -61,19 +61,19 @@ class BackupTransportPoolImpl {
 }  // namespace upmq
 
 ////////////////////////////////////////////////////////////////////////////////
-BackupTransportPool::BackupTransportPool(FailoverTransport *parent,
-                                         Pointer<CompositeTaskRunner> taskRunner,
-                                         Pointer<CloseTransportsTask> closeTask,
-                                         Pointer<URIPool> uriPool,
-                                         Pointer<URIPool> updates,
-                                         Pointer<URIPool> priorityUriPool)
+BackupTransportPool::BackupTransportPool(FailoverTransport *parent_,
+                                         Pointer<CompositeTaskRunner> taskRunner_,
+                                         Pointer<CloseTransportsTask> closeTask_,
+                                         Pointer<URIPool> uriPool_,
+                                         Pointer<URIPool> updates_,
+                                         Pointer<URIPool> priorityUriPool_)
     : impl(nullptr),
-      parent(parent),
-      taskRunner(std::move(taskRunner)),
-      closeTask(std::move(closeTask)),
-      uriPool(std::move(uriPool)),
-      updates(std::move(updates)),
-      priorityUriPool(std::move(priorityUriPool)),
+      parent(parent_),
+      taskRunner(std::move(taskRunner_)),
+      closeTask(std::move(closeTask_)),
+      uriPool(std::move(uriPool_)),
+      updates(std::move(updates_)),
+      priorityUriPool(std::move(priorityUriPool_)),
       backupPoolSize(1),
       enabled(false),
       maxReconnectDelay(0) {
@@ -105,21 +105,21 @@ BackupTransportPool::BackupTransportPool(FailoverTransport *parent,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-BackupTransportPool::BackupTransportPool(FailoverTransport *parent,
-                                         int backupPoolSize,
-                                         Pointer<CompositeTaskRunner> taskRunner,
-                                         Pointer<CloseTransportsTask> closeTask,
-                                         Pointer<URIPool> uriPool,
-                                         Pointer<URIPool> updates,
-                                         Pointer<URIPool> priorityUriPool)
+BackupTransportPool::BackupTransportPool(FailoverTransport *parent_,
+                                         int backupPoolSize_,
+                                         Pointer<CompositeTaskRunner> taskRunner_,
+                                         Pointer<CloseTransportsTask> closeTask_,
+                                         Pointer<URIPool> uriPool_,
+                                         Pointer<URIPool> updates_,
+                                         Pointer<URIPool> priorityUriPool_)
     : impl(nullptr),
-      parent(parent),
-      taskRunner(std::move(taskRunner)),
-      closeTask(std::move(closeTask)),
-      uriPool(std::move(uriPool)),
-      updates(std::move(updates)),
-      priorityUriPool(std::move(priorityUriPool)),
-      backupPoolSize(backupPoolSize),
+      parent(parent_),
+      taskRunner(std::move(taskRunner_)),
+      closeTask(std::move(closeTask_)),
+      uriPool(std::move(uriPool_)),
+      updates(std::move(updates_)),
+      priorityUriPool(std::move(priorityUriPool_)),
+      backupPoolSize(backupPoolSize_),
       enabled(false),
       maxReconnectDelay(0) {
   if (this->parent == nullptr) {

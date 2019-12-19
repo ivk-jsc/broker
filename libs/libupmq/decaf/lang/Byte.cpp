@@ -28,10 +28,10 @@ const unsigned char Byte::MAX_VALUE = 0x80;
 const int Byte::SIZE = 8;
 
 ////////////////////////////////////////////////////////////////////////////////
-Byte::Byte(unsigned char value) : value(value) {}
+Byte::Byte(unsigned char value_) : value(value_) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-Byte::Byte(const String &value) : value(0) { this->value = parseByte(value); }
+Byte::Byte(const String &value_) : value(0) { this->value = parseByte(value_); }
 
 ////////////////////////////////////////////////////////////////////////////////
 std::string Byte::toString() const { return Integer::toString(value); }

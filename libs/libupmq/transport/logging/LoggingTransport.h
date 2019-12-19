@@ -34,9 +34,9 @@ class UPMQCPP_API LoggingTransport : public TransportFilter {
  public:
   /**
    * Constructor.
-   * @param next - the next Transport in the chain
+   * @param next_ - the next Transport in the chain
    */
-  LoggingTransport(Pointer<Transport> next);
+  LoggingTransport(Pointer<Transport> next_);
 
   ~LoggingTransport() override {}
 

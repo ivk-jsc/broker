@@ -52,8 +52,8 @@ InetAddress::InetAddress(const unsigned char *ipAddress, int numBytes) : hostnam
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-InetAddress::InetAddress(const std::string &hostname, const unsigned char *ipAddress, int numBytes)
-    : hostname(hostname), reached(false), addressBytes() {
+InetAddress::InetAddress(const std::string &hostname_, const unsigned char *ipAddress, int numBytes)
+    : hostname(hostname_), reached(false), addressBytes() {
   if (ipAddress == nullptr) {
     throw NullPointerException(__FILE__, __LINE__, "InetAddress constructor called with null address array.");
   }

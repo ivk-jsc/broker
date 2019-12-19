@@ -44,8 +44,8 @@ Socket::Socket() : impl(nullptr), created(false), connected(false), closed(false
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Socket::Socket(SocketImpl *impl)
-    : impl(impl), created(false), connected(false), closed(false), bound(false), inputShutdown(false), outputShutdown(false) {
+Socket::Socket(SocketImpl *impl_)
+    : impl(impl_), created(false), connected(false), closed(false), bound(false), inputShutdown(false), outputShutdown(false) {
   if (impl == nullptr) {
     throw NullPointerException(__FILE__, __LINE__, "SocketImpl pointer passed was Null.");
   }

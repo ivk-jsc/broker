@@ -46,7 +46,7 @@ class StateTrackerImpl {
   const Pointer<Tracked> TRACKED_RESPONSE_MARKER;
   Pointer<ConnectionState> connectionState;
 
-  StateTrackerImpl(ConnectionStateTracker *parent) : parent(parent) {}
+  StateTrackerImpl(ConnectionStateTracker *parent_) : parent(parent_) {}
 
   Pointer<Command> markerAsCommand() const {
     return (TRACKED_RESPONSE_MARKER != nullptr ? TRACKED_RESPONSE_MARKER.dynamicCast<Command>() : Pointer<Command>());

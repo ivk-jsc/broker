@@ -40,18 +40,18 @@ class MessagesRowPageReplacer : public TemplateParamReplacer {
   };
 
   MessagesRowPageReplacer(std::string pageName,
-                          std::string messageId,
-                          int deliveryMode,
-                          int64_t expiration,
-                          int priority,
-                          std::string created,
-                          std::string correlationId,
-                          int type,
-                          std::string clientId,
-                          std::string consumerId,
-                          int error,
-                          int num,
-                          std::string delivered);
+                          std::string messageId_,
+                          int deliveryMode_,
+                          int64_t expiration_,
+                          int priority_,
+                          std::string created_,
+                          std::string correlationId_,
+                          int type_,
+                          std::string clientId_,
+                          std::string consumerId_,
+                          int error_,
+                          int num_,
+                          std::string delivered_);
 
   ~MessagesRowPageReplacer() override;
 

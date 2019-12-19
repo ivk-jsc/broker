@@ -26,7 +26,8 @@ Inet4Address::Inet4Address() = default;
 Inet4Address::Inet4Address(const unsigned char *ipAddress, int numBytes) : InetAddress(ipAddress, numBytes) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-Inet4Address::Inet4Address(const std::string &hostname, const unsigned char *ipAddress, int numBytes) : InetAddress(hostname, ipAddress, numBytes) {}
+Inet4Address::Inet4Address(const std::string &hostname_, const unsigned char *ipAddress, int numBytes)
+    : InetAddress(hostname_, ipAddress, numBytes) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 Inet4Address::~Inet4Address() = default;

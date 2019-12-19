@@ -74,7 +74,7 @@ class Pointer : public REFCOUNTER {
    * @param value -
    *      The instance of the type we are containing here.
    */
-  explicit Pointer(PointerType value) : REFCOUNTER(), value(value) {}
+  explicit Pointer(PointerType value_) : REFCOUNTER(), value(value_) {}
 
   /**
    * Copy constructor. Copies the value contained in the pointer to the new
@@ -83,9 +83,9 @@ class Pointer : public REFCOUNTER {
    * @param value
    *      Another instance of a Pointer<T> that this Pointer will copy.
    */
-  Pointer(const Pointer &value) : REFCOUNTER(value), value(value.value) {}
+  Pointer(const Pointer &value_) : REFCOUNTER(value_), value(value_.value) {}
 
-  Pointer(Pointer &&value) noexcept : REFCOUNTER(std::forward<REFCOUNTER>(value)), value(value.release()) {}
+  Pointer(Pointer &&value_) noexcept : REFCOUNTER(std::forward<REFCOUNTER>(value_)), value(value_.release()) {}
 
   /**
    * Copy constructor. Copies the value contained in the pointer to the new
@@ -95,7 +95,7 @@ class Pointer : public REFCOUNTER {
    *      A different but compatible Pointer instance that this Pointer will copy.
    */
   template <typename T1, typename R1>
-  explicit Pointer(const Pointer<T1, R1> &value) : REFCOUNTER(value), value(value.get()) {}
+  explicit Pointer(const Pointer<T1, R1> &value_) : REFCOUNTER(value_), value(value_.get()) {}
 
   /**
    * Static Cast constructor. Copies the value contained in the pointer to the new
@@ -106,7 +106,7 @@ class Pointer : public REFCOUNTER {
    *      Pointer instance to cast to this type using a static_cast.
    */
   template <typename T1, typename R1>
-  Pointer(const Pointer<T1, R1> &value, const STATIC_CAST_TOKEN &) : REFCOUNTER(value), value(static_cast<T *>(value.get())) {}
+  Pointer(const Pointer<T1, R1> &value_, const STATIC_CAST_TOKEN &) : REFCOUNTER(value_), value(static_cast<T *>(value_.get())) {}
 
   /**
    * Dynamic Cast constructor. Copies the value contained in the pointer to the new
@@ -120,7 +120,7 @@ class Pointer : public REFCOUNTER {
    * @throw ClassCastException if the dynamic cast returns NULL
    */
   template <typename T1, typename R1>
-  Pointer(const Pointer<T1, R1> &value, const DYNAMIC_CAST_TOKEN &) : REFCOUNTER(value), value(dynamic_cast<T *>(value.get())) {
+  Pointer(const Pointer<T1, R1> &value_, const DYNAMIC_CAST_TOKEN &) : REFCOUNTER(value_), value(dynamic_cast<T *>(value_.get())) {
     if (this->value == nullptr) {
       // Remove the reference we took in the Reference Counter's ctor since we
       // didn't actually create one as the dynamic cast failed.

@@ -98,10 +98,10 @@ class DECAF_API URISyntaxException : public lang::Exception {
    *
    * @param file The file name where exception occurs.
    * @param lineNumber The line number where the exception occurred.
-   * @param input The URL that caused the exception.
-   * @param reason The reason for the failure.
+   * @param input_ The URL that caused the exception.
+   * @param reason_ The reason for the failure.
    */
-  URISyntaxException(const char *file, const int lineNumber, const std::string &input, const std::string &reason);
+  URISyntaxException(const char *file, const int lineNumber, const std::string &input_, const std::string &reason_);
 
   /**
    * Constructor - Initializes the file name and line number where
@@ -110,11 +110,11 @@ class DECAF_API URISyntaxException : public lang::Exception {
    *
    * @param file The file name where exception occurs
    * @param lineNumber The line number where the exception occurred.
-   * @param input The input URI that caused the exception
-   * @param reason The reason for the failure.
-   * @param index The index in the URI string where the error occurred.
+   * @param input_ The input URI that caused the exception
+   * @param reason_ The reason for the failure.
+   * @param index_ The index in the URI string where the error occurred.
    */
-  URISyntaxException(const char *file, const int lineNumber, const std::string &input, const std::string &reason, int index);
+  URISyntaxException(const char *file, const int lineNumber, const std::string &input_, const std::string &reason_, int index_);
 
   /**
    * Clones this exception.  This is useful for cases where you need

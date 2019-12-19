@@ -47,7 +47,7 @@ class DECAF_API URIType {
 
  public:
   URIType();
-  URIType(const std::string &source);
+  URIType(const std::string &source_);
 
   virtual ~URIType();
 

@@ -122,12 +122,12 @@ class DECAF_API ByteArrayBuffer : public decaf::nio::ByteBuffer {
    *
    * @param capacity
    *      The size of the array, this is the limit we read and write to.
-   * @param readOnly
+   * @param readOnly_
    *      Should this buffer be read-only, default as false
    *
    * @throws IllegalArguementException if the capacity value is negative.
    */
-  ByteArrayBuffer(int capacity, bool readOnly = false);
+  ByteArrayBuffer(int capacity, bool readOnly_ = false);
 
   /**
    * Creates a ByteArrayBuffer object that wraps the given array.
@@ -136,18 +136,18 @@ class DECAF_API ByteArrayBuffer : public decaf::nio::ByteBuffer {
    *      The array to wrap.
    * @param size
    *      The size of the array passed.
-   * @param offset
+   * @param offset_
    *      The position that is this buffers start position.
-   * @param length
+   * @param length_
    *      The size of the sub-array, this is the limit we read and write to.
-   * @param readOnly
+   * @param readOnly_
    *      Should this buffer be read-only, default as false.
    *
    * @throws NullPointerException if buffer is NULL
    * @throws IndexOutOfBoundsException if the preconditions of size, offset and
    *         length are violated.
    */
-  ByteArrayBuffer(unsigned char *array, int size, int offset, int length, bool readOnly = false);
+  ByteArrayBuffer(unsigned char *array, int size, int offset_, int length_, bool readOnly_ = false);
 
   /**
    * Creates a byte buffer that wraps the passed ByteArrayAdapter and
@@ -156,17 +156,17 @@ class DECAF_API ByteArrayBuffer : public decaf::nio::ByteBuffer {
    *
    * @param array
    *      The ByteArrayAdapter to wrap
-   * @param offset
+   * @param offset_
    *      The offset into array where the buffer starts
-   * @param length
+   * @param length_
    *      The length of the array we are wrapping or limit.
-   * @param readOnly
+   * @param readOnly_
    *      Boolean indicating if this a readOnly buffer.
    *
    * @throws NullPointerException if array is NULL
    * @throws IndexOutOfBoundsException if offset is greater than array capacity.
    */
-  ByteArrayBuffer(const decaf::lang::Pointer<ByteArrayAdapter> &array, int offset, int length, bool readOnly = false);
+  ByteArrayBuffer(const decaf::lang::Pointer<ByteArrayAdapter> &array, int offset_, int length_, bool readOnly_ = false);
 
   /**
    * Create a ByteArrayBuffer that mirrors this one, meaning it shares a

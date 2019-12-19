@@ -179,7 +179,7 @@ AsyncTCPHandler::DataStatus AsyncTCPHandler::sendHeaderAndData(MessageDataContai
   send_size_t allSize = static_cast<send_size_t>(sSize.size());
 
   do {
-    send_size_t tmpDataSize = (allSize < BUFFER_SIZE) ? allSize : BUFFER_SIZE;
+    send_size_t tmpDataSize = (allSize < static_cast<send_size_t>(BUFFER_SIZE)) ? allSize : static_cast<send_size_t>(BUFFER_SIZE);
     errno = 0;
     do {
       n = ::send(_socket.impl()->sockfd(), &sSize.c_str()[sent], tmpDataSize, MSG_NOSIGNAL);
@@ -357,7 +357,8 @@ AsyncTCPHandler::DataStatus AsyncTCPHandler::fillHeaderBodyLens() {
 AsyncTCPHandler::DataStatus AsyncTCPHandler::fillHeader(MessageDataContainer &sMessage) {
   ptrdiff_t n = 0;
   do {
-    send_size_t tmpHeaderSize = (headerBodyLens.headerLen < INT_MAX) ? static_cast<send_size_t>(headerBodyLens.headerLen) : BUFFER_SIZE;
+    send_size_t tmpHeaderSize =
+        (headerBodyLens.headerLen < INT_MAX) ? static_cast<send_size_t>(headerBodyLens.headerLen) : static_cast<send_size_t>(BUFFER_SIZE);
     errno = 0;
     do {
       n = ::recv(_socket.impl()->sockfd(), pBuffer, std::min<send_size_t>(BUFFER_SIZE, tmpHeaderSize), MSG_NOSIGNAL);
@@ -382,7 +383,8 @@ AsyncTCPHandler::DataStatus AsyncTCPHandler::fillBody(MessageDataContainer &sMes
   ptrdiff_t n = 0;
   sMessage.initPersistentDataFileLink();
   do {
-    send_size_t tmpDataSize = (headerBodyLens.bodyLen < INT_MAX) ? static_cast<send_size_t>(headerBodyLens.bodyLen) : BUFFER_SIZE;
+    send_size_t tmpDataSize =
+        (headerBodyLens.bodyLen < INT_MAX) ? static_cast<send_size_t>(headerBodyLens.bodyLen) : static_cast<send_size_t>(BUFFER_SIZE);
     errno = 0;
     do {
       n = ::recv(_socket.impl()->sockfd(), pBuffer, std::min<send_size_t>(BUFFER_SIZE, tmpDataSize), MSG_NOSIGNAL);

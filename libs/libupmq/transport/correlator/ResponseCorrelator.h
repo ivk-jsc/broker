@@ -53,12 +53,12 @@ class UPMQCPP_API ResponseCorrelator : public TransportFilter {
   /**
    * Creates a new ResponseCorrelator transport filter that wraps the given transport.
    *
-   * @param next
+   * @param next_
    *      the next transport in the chain
    *
    * @throws NullPointerException if next if NULL.
    */
-  ResponseCorrelator(Pointer<Transport> next);
+  ResponseCorrelator(Pointer<Transport> next_);
 
   ~ResponseCorrelator() override;
 

@@ -32,9 +32,12 @@ using namespace decaf::internal;
 using namespace decaf::internal::net;
 
 ////////////////////////////////////////////////////////////////////////////////
-URIHelper::URIHelper(
-    const std::string &unreserved, const std::string &punct, const std::string &reserved, const std::string &someLegal, const std::string &allLegal)
-    : unreserved(unreserved), punct(punct), reserved(reserved), someLegal(someLegal), allLegal(allLegal) {}
+URIHelper::URIHelper(const std::string &unreserved_,
+                     const std::string &punct_,
+                     const std::string &reserved_,
+                     const std::string &someLegal_,
+                     const std::string &allLegal_)
+    : unreserved(unreserved_), punct(punct_), reserved(reserved_), someLegal(someLegal_), allLegal(allLegal_) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 URIHelper::URIHelper()

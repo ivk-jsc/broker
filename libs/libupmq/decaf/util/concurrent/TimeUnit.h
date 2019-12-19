@@ -85,10 +85,10 @@ class DECAF_API TimeUnit : public decaf::lang::Comparable<TimeUnit> {
  protected:
   /**
    * Hidden Constructor, this class can not be instantiated directly.
-   * @param index - Index into the Time Unit set.
-   * @param name - Name of the unit type being represented.
+   * @param index_ - Index into the Time Unit set.
+   * @param name_ - Name of the unit type being represented.
    */
-  TimeUnit(int index, const std::string &name);
+  TimeUnit(int index_, const std::string &name_);
 
  public:
   virtual ~TimeUnit() {}

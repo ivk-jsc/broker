@@ -40,7 +40,7 @@ class AtomicReference {
 
  public:
   AtomicReference() : value(nullptr) {}
-  AtomicReference(T *value) : value((void *)value) {}
+  AtomicReference(T *value_) : value((void *)value_) {}
 
   virtual ~AtomicReference() {}
 

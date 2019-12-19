@@ -21,6 +21,7 @@
 #include <transport/Config.h>
 #include <transport/UPMQException.h>
 #include <typeinfo>
+#include <utility>
 
 using namespace upmq;
 using namespace upmq::transport;
@@ -36,7 +37,8 @@ using namespace decaf::util::concurrent;
 FutureResponse::FutureResponse() : responseLatch(1), response(), responseCallback() {}
 
 ////////////////////////////////////////////////////////////////////////////////
-FutureResponse::FutureResponse(Pointer<ResponseCallback> responseCallback) : responseLatch(1), response(), responseCallback(responseCallback) {}
+FutureResponse::FutureResponse(Pointer<ResponseCallback> responseCallback_)
+    : responseLatch(1), response(), responseCallback(std::move(responseCallback_)) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 FutureResponse::~FutureResponse() {}

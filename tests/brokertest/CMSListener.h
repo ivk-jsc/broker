@@ -32,7 +32,7 @@ class CMSListener : public cms::MessageListener, public cms::ExceptionListener {
   std::deque<std::pair<std::string, std::string>> inputMessges;
 
  public:
-  explicit CMSListener(cms::Session *session);
+  explicit CMSListener(cms::Session *session_);
 
   CMSListener(const CMSListener &) = delete;
 

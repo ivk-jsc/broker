@@ -76,12 +76,12 @@ class DECAF_API Socket : public decaf::io::Closeable {
    * considered unconnected.  The Socket class takes ownership of this SocketImpl
    * pointer and will delete it when the Socket class is destroyed.
    *
-   * @param impl
+   * @param impl_
    *      The SocketImpl instance to wrap.
    *
    * @throws NullPointerException if the passed SocketImpl is Null.
    */
-  Socket(SocketImpl *impl);
+  Socket(SocketImpl *impl_);
 
   /**
    * Creates a new Socket instance and connects it to the given address and port.  If

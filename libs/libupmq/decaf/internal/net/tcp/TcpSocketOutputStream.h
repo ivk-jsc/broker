@@ -49,7 +49,7 @@ class DECAF_API TcpSocketOutputStream : public decaf::io::OutputStream {
    * @param socket
    *      The socket to use to write out the data.
    */
-  TcpSocketOutputStream(TcpSocket *socket);
+  TcpSocketOutputStream(TcpSocket *socket_);
 
   virtual ~TcpSocketOutputStream();
 

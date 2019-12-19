@@ -29,7 +29,7 @@
 template <typename T1, typename T2, typename T3>
 struct triplet {
   triplet() {}
-  triplet(T1 &&first, T2 &&second, T3 third) : first(std::forward<T1>(first)), second(std::forward<T2>(second)), third(third) {}
+  triplet(T1 &&first_, T2 &&second_, T3 third_) : first(std::forward<T1>(first_)), second(std::forward<T2>(second_)), third(third_) {}
   triplet(const triplet &) = default;
   triplet(triplet &&) = default;
   triplet &operator=(const triplet &) = default;

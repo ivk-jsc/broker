@@ -44,7 +44,7 @@ class ConnectionState {
   bool connectionInterruptProcessingComplete;
 
  public:
-  ConnectionState(Pointer<Command> info);
+  ConnectionState(Pointer<Command> info_);
   virtual ~ConnectionState();
 
   Pointer<Command> getInfo() const;

@@ -55,22 +55,22 @@ class DECAF_API Double : public Number, public Comparable<Double>, public Compar
   /**
    * Constructs a new instance of a Double object and assigns it the given value.
    *
-   * @param value
+   * @param value_
    *      The primitive type to wrap.
    */
-  Double(double value);
+  Double(double value_);
 
   /**
    * Constructs a new Double and attempts to convert the given string to a double
    * value, assigning it to the new object is successful or throwing a
    * NumberFormatException if the string is not a properly formatted double.
    *
-   * @param value
+   * @param value_
    *      The string to convert to a primitive type to wrap.
    *
    * @throws NumberFormatException if the string is not a a valid double.
    */
-  Double(const String &value);
+  Double(const String &value_);
 
   virtual ~Double() {}
 

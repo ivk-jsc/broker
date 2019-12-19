@@ -46,10 +46,10 @@ class DECAF_API DataOutputStream : public FilterOutputStream {
   /**
    * Creates a new data output stream to write data to the specified
    * underlying output stream.
-   * @param outputStream a stream to wrap with this one.
-   * @param own true if this objects owns the stream that it wraps.
+   * @param outputStream_ a stream to wrap with this one.
+   * @param own_ true if this objects owns the stream that it wraps.
    */
-  DataOutputStream(OutputStream *outputStream, bool own = false);
+  DataOutputStream(OutputStream *outputStream_, bool own_ = false);
 
   virtual ~DataOutputStream();
 

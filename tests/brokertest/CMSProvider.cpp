@@ -48,9 +48,9 @@ void cmsSleep(unsigned milliseconds) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-CMSProvider::CMSProvider(std::string brokerURL, cms::Session::AcknowledgeMode ackMode)
-    : brokerURL(std::move(brokerURL)),
-      ackMode(ackMode),
+CMSProvider::CMSProvider(std::string brokerURL_, cms::Session::AcknowledgeMode ackMode_)
+    : brokerURL(std::move(brokerURL_)),
+      ackMode(ackMode_),
       username(),
       password(),
       clientId(),
@@ -70,12 +70,12 @@ CMSProvider::CMSProvider(std::string brokerURL, cms::Session::AcknowledgeMode ac
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-CMSProvider::CMSProvider(std::string brokerURL, std::string subscription, cms::Session::AcknowledgeMode ackMode)
-    : brokerURL(std::move(brokerURL)),
-      ackMode(ackMode),
+CMSProvider::CMSProvider(std::string brokerURL_, std::string subscription_, cms::Session::AcknowledgeMode ackMode_)
+    : brokerURL(std::move(brokerURL_)),
+      ackMode(ackMode_),
       topic(paramIsTopic),
       durable(paramIsDurable),
-      subscription(std::move(subscription)),
+      subscription(std::move(subscription_)),
       connectionFactory(),
       connection(),
       session(),

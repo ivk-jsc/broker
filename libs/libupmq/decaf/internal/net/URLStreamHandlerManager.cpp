@@ -52,7 +52,7 @@ class ShutdownTask : public decaf::lang::Runnable {
   ShutdownTask &operator=(const ShutdownTask &);
 
  public:
-  ShutdownTask(URLStreamHandlerManager **defaultRef) : defaultRef(defaultRef) {}
+  ShutdownTask(URLStreamHandlerManager **defaultRef_) : defaultRef(defaultRef_) {}
   virtual ~ShutdownTask() {}
 
   virtual void run() override { *defaultRef = nullptr; }

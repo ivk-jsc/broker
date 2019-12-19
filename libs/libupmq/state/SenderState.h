@@ -35,7 +35,7 @@ class SenderState {
   SenderState &operator=(const SenderState &);
 
  public:
-  SenderState(Pointer<Command> info);
+  SenderState(Pointer<Command> info_);
   virtual ~SenderState();
 
   Pointer<Command> getInfo() const;

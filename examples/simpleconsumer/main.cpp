@@ -30,7 +30,14 @@ using floating_seconds = std::chrono::duration<double>;
 
 #define OPTPARSE_IMPLEMENTATION
 #define OPTPARSE_API static
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+#endif
 #include "optparse.h"
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 #include <iomanip>
 
 void usage(const struct optparse_long *opt_option, size_t count) {
@@ -62,12 +69,8 @@ class SimpleConsumer : public cms::ExceptionListener {
  public:
   std::chrono::steady_clock::time_point t0{perf_clock::now()};
 
-  SimpleConsumer(std::string brokerURI, std::string destURI, bool useTopic, std::string consMode, long logMod)
-      : brokerURI(std::move(brokerURI)),
-        destURI(std::move(destURI)),
-        useTopic(useTopic),
-        isStoped(false),
-        consMode(std::move(consMode)),
+  SimpleConsumer(std::string brokerURI_, std::string destURI_, bool useTopic_, std::string consMode_)
+      : brokerURI(std::move(brokerURI_)), destURI(std::move(destURI_)), useTopic(useTopic_), isStoped(false), consMode(std::move(consMode_)),
         mod(logMod) {}
 
   ~SimpleConsumer() override {

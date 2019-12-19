@@ -13,12 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 4127)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
 #endif
 #include "concurrentqueue.h"
 #ifdef _MSC_VER
 #pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
 #endif

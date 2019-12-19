@@ -28,7 +28,7 @@ using namespace decaf::lang;
 Tracked::Tracked() : transport::Response(), runnable() {}
 
 ////////////////////////////////////////////////////////////////////////////////
-Tracked::Tracked(Pointer<Runnable> runnable) : transport::Response(), runnable(runnable) {}
+Tracked::Tracked(Pointer<Runnable> runnable_) : transport::Response(), runnable(runnable_) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 void Tracked::onResponse() {

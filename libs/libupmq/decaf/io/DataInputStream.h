@@ -56,11 +56,11 @@ class DECAF_API DataInputStream : public FilterInputStream {
   /**
    * Creates a DataInputStream that uses the specified underlying
    * InputStream.
-   * @param inputStream the InputStream instance to wrap.
-   * @param own indicates if this class owns the wrapped string
+   * @param inputStream_ the InputStream instance to wrap.
+   * @param own_ indicates if this class owns the wrapped string
    * defaults to false.
    */
-  DataInputStream(InputStream *inputStream, bool own = false);
+  DataInputStream(InputStream *inputStream_, bool own_ = false);
 
   virtual ~DataInputStream();
 

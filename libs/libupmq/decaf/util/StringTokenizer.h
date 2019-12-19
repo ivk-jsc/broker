@@ -58,11 +58,11 @@ class DECAF_API StringTokenizer {
    * Note that if delim is "", this constructor does not throw an
    * exception. However, trying to invoke other methods on the resulting
    * StringTokenizer may result in an Exception.
-   * @param str - The string to tokenize
-   * @param delim - String containing the delimiters
-   * @param returnDelims - boolean indicating if the delimiters are returned as tokens
+   * @param str_ - The string to tokenize
+   * @param delim_ - String containing the delimiters
+   * @param returnDelims_ - boolean indicating if the delimiters are returned as tokens
    */
-  StringTokenizer(const std::string &str, const std::string &delim = " \t\n\r\f", bool returnDelims = false);
+  StringTokenizer(const std::string &str_, const std::string &delim_ = " \t\n\r\f", bool returnDelims_ = false);
 
   virtual ~StringTokenizer();
 

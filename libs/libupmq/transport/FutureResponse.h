@@ -50,7 +50,7 @@ class UPMQCPP_API FutureResponse {
  public:
   FutureResponse();
 
-  FutureResponse(Pointer<ResponseCallback> responseCallback);
+  FutureResponse(Pointer<ResponseCallback> responseCallback_);
 
   virtual ~FutureResponse();
 

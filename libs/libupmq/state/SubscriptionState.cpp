@@ -21,7 +21,7 @@ using namespace upmq::state;
 using namespace decaf::lang;
 
 ////////////////////////////////////////////////////////////////////////////////
-SubscriptionState::SubscriptionState(Pointer<Command> info) : info(info) {}
+SubscriptionState::SubscriptionState(Pointer<Command> info_) : info(std::move(info_)) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 SubscriptionState::~SubscriptionState() {}

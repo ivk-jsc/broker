@@ -34,7 +34,7 @@ class DECAF_API ProviderService {
   std::string algorithm;
 
  public:
-  ProviderService(const Provider *provider, const std::string &type, const std::string &algorithm);
+  ProviderService(const Provider *provider_, const std::string &type_, const std::string &algorithm_);
 
   virtual ~ProviderService();
 

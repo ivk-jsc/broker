@@ -48,7 +48,7 @@ class DECAF_API Engine {
   Engine operator=(const Engine &);
 
  public:
-  Engine(const std::string &serviceName);
+  Engine(const std::string &serviceName_);
 
   virtual ~Engine();
 

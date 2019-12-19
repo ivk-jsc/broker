@@ -29,12 +29,12 @@ using namespace decaf::lang::exceptions;
 using namespace decaf::internal::nio;
 
 ////////////////////////////////////////////////////////////////////////////////
-ByteArrayBuffer::ByteArrayBuffer(int size, bool readOnly)
-    : decaf::nio::ByteBuffer(size), _array(new ByteArrayAdapter(size)), offset(0), length(size), readOnly(readOnly) {}
+ByteArrayBuffer::ByteArrayBuffer(int size, bool readOnly_)
+    : decaf::nio::ByteBuffer(size), _array(new ByteArrayAdapter(size)), offset(0), length(size), readOnly(readOnly_) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-ByteArrayBuffer::ByteArrayBuffer(unsigned char *array, int size, int offset, int length, bool readOnly)
-    : decaf::nio::ByteBuffer(length), _array(), offset(offset), length(length), readOnly(readOnly) {
+ByteArrayBuffer::ByteArrayBuffer(unsigned char *array, int size, int offset_, int length_, bool readOnly_)
+    : decaf::nio::ByteBuffer(length_), _array(), offset(offset_), length(length_), readOnly(readOnly_) {
   try {
     if (offset < 0 || offset > size) {
       throw IndexOutOfBoundsException(__FILE__, __LINE__, "Offset parameter if out of bounds, %d", offset);
@@ -54,8 +54,8 @@ ByteArrayBuffer::ByteArrayBuffer(unsigned char *array, int size, int offset, int
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-ByteArrayBuffer::ByteArrayBuffer(const Pointer<ByteArrayAdapter> &array, int offset, int length, bool readOnly)
-    : decaf::nio::ByteBuffer(length), _array(array), offset(offset), length(length), readOnly(readOnly) {
+ByteArrayBuffer::ByteArrayBuffer(const Pointer<ByteArrayAdapter> &array, int offset_, int length_, bool readOnly_)
+    : decaf::nio::ByteBuffer(length_), _array(array), offset(offset_), length(length_), readOnly(readOnly_) {
   try {
     if (offset < 0 || offset > array->getCapacity()) {
       throw IndexOutOfBoundsException(__FILE__, __LINE__, "Offset parameter if out of bounds, %d", offset);

@@ -60,7 +60,7 @@ std::string TemplateParamReplacer::replace() {
 }
 
 void TemplateParamReplacer::replaceStringInPlace(std::string &subject, const std::string &search, const std::string &replace) {
-  size_t pos = 0;
+  size_t position = 0;
 
   auto getFirstBrace = [&subject](size_t pos) {
     while (pos > 0) {
@@ -81,21 +81,21 @@ void TemplateParamReplacer::replaceStringInPlace(std::string &subject, const std
     return pos;
   };
 
-  while ((pos = subject.find(search, pos)) != std::string::npos) {
-    if (std::isalpha(subject[pos + search.length()])) {
-      pos += search.length();
+  while ((position = subject.find(search, position)) != std::string::npos) {
+    if (std::isalpha(subject[position + search.length()])) {
+      position += search.length();
       continue;
     }
-    size_t firstBracePosition = getFirstBrace(pos);
+    size_t firstBracePosition = getFirstBrace(position);
     if (firstBracePosition > 0) {
-      size_t lastBracePosition = getLastBrace(pos);
+      size_t lastBracePosition = getLastBrace(position);
       if (lastBracePosition < subject.length()) {
         size_t length = lastBracePosition - firstBracePosition + 1;
         subject.replace(firstBracePosition, length, replace);
-        pos = lastBracePosition;
+        position = lastBracePosition;
       }
     } else {
-      ++pos;
+      ++position;
     }
   }
 }

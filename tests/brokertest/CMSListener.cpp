@@ -22,7 +22,7 @@
 using namespace cms;
 
 ////////////////////////////////////////////////////////////////////////////////
-CMSListener::CMSListener(cms::Session *session) : numReceived(), session(session) {  // mutex(),
+CMSListener::CMSListener(cms::Session *session_) : numReceived(), session(session_) {  // mutex(),
   this->reset();
 }
 

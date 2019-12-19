@@ -27,8 +27,8 @@ using namespace decaf::lang;
 using namespace decaf::lang::exceptions;
 
 ////////////////////////////////////////////////////////////////////////////////
-FilterOutputStream::FilterOutputStream(OutputStream *outputStream, bool own)
-    : OutputStream(), outputStream(outputStream), own(own), closed(outputStream == nullptr ? true : false) {}
+FilterOutputStream::FilterOutputStream(OutputStream *outputStream_, bool own_)
+    : OutputStream(), outputStream(outputStream_), own(own_), closed(outputStream == nullptr) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 FilterOutputStream::~FilterOutputStream() {

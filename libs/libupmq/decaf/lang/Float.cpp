@@ -38,13 +38,13 @@ const unsigned int Float::SINGLE_MANTISSA_MASK = 0x007FFFFF;
 const unsigned int Float::SINGLE_NAN_BITS = (SINGLE_EXPONENT_MASK | 0x00400000);
 
 ////////////////////////////////////////////////////////////////////////////////
-Float::Float(float value) : value(value) {}
+Float::Float(float value_) : value(value_) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-Float::Float(double value) : value((float)value) {}
+Float::Float(double value_) : value((float)value_) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-Float::Float(const String &value) : value(0) { this->value = Float::parseFloat(value); }
+Float::Float(const String &value_) : value(0) { this->value = Float::parseFloat(value_); }
 
 ////////////////////////////////////////////////////////////////////////////////
 int Float::compareTo(const Float &f) const { return Float::compare(this->value, f.value); }

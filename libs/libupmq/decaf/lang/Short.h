@@ -44,9 +44,9 @@ class DECAF_API Short : public Number, public Comparable<Short>, public Comparab
 
  public:
   /**
-   * @param value - short to wrap
+   * @param value_ - short to wrap
    */
-  Short(short value);
+  Short(short value_);
 
   /**
    * @param value
@@ -54,7 +54,7 @@ class DECAF_API Short : public Number, public Comparable<Short>, public Comparab
    *
    * @throws NumberFormatException if the string is not well formed number value.
    */
-  Short(const String &value);
+  Short(const String &value_);
 
   virtual ~Short();
 

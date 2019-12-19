@@ -57,7 +57,7 @@ class SuspendedCompletionCondition : public CompletionCondition {
   SuspendedCompletionCondition &operator=(const SuspendedCompletionCondition &);
 
  public:
-  SuspendedCompletionCondition(ThreadHandle *thread) : thread(thread) {}
+  SuspendedCompletionCondition(ThreadHandle *thread_) : thread(thread_) {}
 
   virtual bool operator()() { return !thread->suspended; }
 
@@ -73,7 +73,7 @@ class MonitorWaitCompletionCondition : public CompletionCondition {
   MonitorWaitCompletionCondition &operator=(const MonitorWaitCompletionCondition &);
 
  public:
-  MonitorWaitCompletionCondition(ThreadHandle *handle) : handle(handle) {}
+  MonitorWaitCompletionCondition(ThreadHandle *handle_) : handle(handle_) {}
 
   virtual bool operator()(bool timedOut) {
     PlatformThread::lockMutex(handle->mutex);
@@ -1014,7 +1014,7 @@ class JoinCompletionCondition : public CompletionCondition {
   JoinCompletionCondition &operator=(const JoinCompletionCondition &);
 
  public:
-  JoinCompletionCondition(ThreadHandle *self, ThreadHandle *target) : self(self), target(target) {}
+  JoinCompletionCondition(ThreadHandle *self_, ThreadHandle *target_) : self(self_), target(target_) {}
 
   virtual bool operator()() {
     if (target != nullptr) {
@@ -1135,7 +1135,7 @@ class SleepCompletionCondition : public CompletionCondition {
   SleepCompletionCondition &operator=(const SleepCompletionCondition &);
 
  public:
-  SleepCompletionCondition(ThreadHandle *handle) : handle(handle) {}
+  SleepCompletionCondition(ThreadHandle *handle_) : handle(handle_) {}
 
   bool operator()() {
     if (handle->interrupted) {
@@ -1259,7 +1259,7 @@ class ParkCompletionCondition : public CompletionCondition {
   ParkCompletionCondition &operator=(const ParkCompletionCondition &);
 
  public:
-  ParkCompletionCondition(ThreadHandle *handle) : handle(handle) {}
+  ParkCompletionCondition(ThreadHandle *handle_) : handle(handle_) {}
 
   virtual bool operator()() {
     if (handle->unparked == true) {

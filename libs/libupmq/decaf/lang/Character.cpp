@@ -29,7 +29,7 @@ const char Character::MAX_VALUE = SCHAR_MAX;
 const int Character::SIZE = 8;
 
 ////////////////////////////////////////////////////////////////////////////////
-Character::Character(char value) : value(value) {}
+Character::Character(char value_) : value(value_) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 std::string Character::toString() const { return string(1, this->value); }

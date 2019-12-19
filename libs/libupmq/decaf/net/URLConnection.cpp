@@ -55,8 +55,8 @@ class URLConnectionImpl {
 }  // namespace decaf
 
 ////////////////////////////////////////////////////////////////////////////////
-URLConnection::URLConnection(const URL &url)
-    : impl(new URLConnectionImpl), url(url), ifModifiedSince(), useCaches(), connected(), doOutput(), doInput(true), allowUserInteraction() {}
+URLConnection::URLConnection(const URL &url_)
+    : impl(new URLConnectionImpl), url(url_), ifModifiedSince(), useCaches(), connected(), doOutput(), doInput(true), allowUserInteraction() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 URLConnection::~URLConnection() {

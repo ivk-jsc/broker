@@ -50,7 +50,7 @@ class MessageInfo {
     transaction_id
   };
   struct FieldInfo {
-    constexpr explicit FieldInfo(Field ec) : ec(ec), position(static_cast<int>(ec)) {}
+    constexpr explicit FieldInfo(Field ec_) : ec(ec_), position(static_cast<int>(ec)) {}
     const Field ec;
     const int position;
   };

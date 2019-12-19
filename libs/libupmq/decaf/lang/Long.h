@@ -43,21 +43,21 @@ class DECAF_API Long : public Number, public Comparable<Long>, public Comparable
 
  public:
   /**
-   * @param value - the primitive long long to wrap
+   * @param value_ - the primitive long long to wrap
    */
-  Long(long long value);
+  Long(long long value_);
 
   /**
    * Constructs a new Long and attempts to convert the given string to an long long
    * value, assigning it to the new object is successful or throwing a
    * NumberFormatException if the string is not a properly formatted long long.
    *
-   * @param value
+   * @param value_
    *      The string to convert to a primitive type to wrap.
    *
    * @throws NumberFormatException if the string is not a a valid 64bit long.
    */
-  Long(const String &value);
+  Long(const String &value_);
 
   virtual ~Long();
 

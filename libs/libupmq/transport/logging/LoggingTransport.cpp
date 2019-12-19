@@ -26,7 +26,7 @@ using namespace decaf::lang;
 using namespace decaf::lang::exceptions;
 
 ////////////////////////////////////////////////////////////////////////////////
-LoggingTransport::LoggingTransport(Pointer<Transport> next) : TransportFilter(std::move(next)) {}
+LoggingTransport::LoggingTransport(Pointer<Transport> next_) : TransportFilter(std::move(next_)) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 void LoggingTransport::onCommand(Pointer<Command> command) {

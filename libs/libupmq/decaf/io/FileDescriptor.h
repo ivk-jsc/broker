@@ -53,7 +53,7 @@ class DECAF_API FileDescriptor {
   bool readonly;
 
  protected:
-  FileDescriptor(long long value, bool readonly);
+  FileDescriptor(long long value_, bool readonly_);
 
  public:
   FileDescriptor();

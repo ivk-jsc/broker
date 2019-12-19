@@ -34,7 +34,7 @@ using namespace decaf::lang::exceptions;
 using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////
-TcpSocketOutputStream::TcpSocketOutputStream(TcpSocket *socket) : OutputStream(), socket(socket), closed(false) {
+TcpSocketOutputStream::TcpSocketOutputStream(TcpSocket *socket_) : OutputStream(), socket(socket_), closed(false) {
   if (socket == nullptr) {
     throw NullPointerException(__FILE__, __LINE__, "TcpSocket instance passed was NULL.");
   }

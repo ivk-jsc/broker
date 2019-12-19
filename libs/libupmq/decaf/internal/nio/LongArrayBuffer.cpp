@@ -25,15 +25,15 @@ using namespace decaf::internal::util;
 using namespace decaf::nio;
 
 ///////////////////////////////////////////////////////////////////////////////
-LongArrayBuffer::LongArrayBuffer(int size, bool readOnly) : LongBuffer(size), _array(), offset(0), length(size), readOnly(readOnly) {
+LongArrayBuffer::LongArrayBuffer(int size, bool readOnly_) : LongBuffer(size), _array(), offset(0), length(size), readOnly(readOnly_) {
   // Allocate using the ByteArray, not read-only initially.  Take a reference to it.
   // The capacity is the given capacity times the size of the stored datatype
   this->_array.reset(new ByteArrayAdapter(size * (int)sizeof(long long)));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-LongArrayBuffer::LongArrayBuffer(long long *array, int size, int offset, int length, bool readOnly)
-    : LongBuffer(length), _array(), offset(offset), length(length), readOnly(readOnly) {
+LongArrayBuffer::LongArrayBuffer(long long *array, int size, int offset_, int length_, bool readOnly_)
+    : LongBuffer(length_), _array(), offset(offset_), length(length_), readOnly(readOnly_) {
   try {
     if (offset < 0 || offset > size) {
       throw IndexOutOfBoundsException(__FILE__, __LINE__, "Offset parameter if out of bounds, %d", offset);
@@ -53,8 +53,8 @@ LongArrayBuffer::LongArrayBuffer(long long *array, int size, int offset, int len
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-LongArrayBuffer::LongArrayBuffer(const Pointer<ByteArrayAdapter> &array, int offset, int length, bool readOnly)
-    : LongBuffer(length), _array(array), offset(offset), length(length), readOnly(readOnly) {
+LongArrayBuffer::LongArrayBuffer(const Pointer<ByteArrayAdapter> &array, int offset_, int length_, bool readOnly_)
+    : LongBuffer(length_), _array(array), offset(offset_), length(length_), readOnly(readOnly_) {
   try {
     if (offset < 0 || offset > array->getCapacity()) {
       throw IndexOutOfBoundsException(__FILE__, __LINE__, "Offset parameter if out of bounds, %d", offset);

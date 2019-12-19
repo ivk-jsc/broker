@@ -65,12 +65,12 @@ class DECAF_API Random {
    * Construct a random generator with the given <code>seed</code>
    * as the initial state.
    *
-   * @param seed the seed that will determine the initial state of
+   * @param seed_ the seed that will determine the initial state of
    * this random number generator
    *
    * @see #setSeed
    */
-  explicit Random(unsigned long long seed);
+  explicit Random(unsigned long long seed_);
 
   virtual ~Random();
 
