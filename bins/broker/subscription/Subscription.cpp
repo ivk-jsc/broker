@@ -53,7 +53,7 @@ Subscription::Subscription(const Destination &destination, const std::string &id
 
   std::stringstream sql;
   sql << "drop table if exists " << _consumersT << ";" << non_std_endl;
-  TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str(), storage::DBMSConnectionPool::TX::NOT_USE); }
+  TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
   CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't init consumers table for subscription", sql.str(), ERROR_UNKNOWN)
   sql.str("");
   sql << "create table if not exists " << _consumersT << "("
@@ -67,7 +67,7 @@ Subscription::Subscription(const Destination &destination, const std::string &id
       << ",constraint \"" << _id << "_tcp_index\" unique (client_id, tcp_id, session, selector)"
       << ")"
       << ";";
-  TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str(), storage::DBMSConnectionPool::TX::NOT_USE); }
+  TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
   CATCH_POCO_DATA_EXCEPTION_PURE("can't init destination", sql.str(), ERROR_DESTINATION)
   sql.str("");
   std::string ignorsert = "insert or ignore";
@@ -292,16 +292,16 @@ void Subscription::recover(const Consumer &consumer) {
 Subscription::ProcessMessageResult Subscription::getNextMessage() {
   std::string groupID;
   std::string messageID;
-
-  if (_consumersLock.tryWriteLock()) {
+  ScopedWriteTryLocker swTryLocker(_consumersLock, false);
+  if (swTryLocker.tryLock()) {
     const Consumer *consumer = at(_currentConsumerNumber);
     if ((consumer == nullptr) || !consumer->isRunning) {
       changeCurrentConsumerNumber();
-      _consumersLock.unlockWrite();
+      swTryLocker.unlock();
       return ProcessMessageResult::CONSUMER_NOT_RAN;
     }
     if (!_destination.canSendNextMessages(consumer->objectID)) {
-      _consumersLock.unlockWrite();
+      swTryLocker.unlock();
       return ProcessMessageResult::CONSUMER_CANT_SEND;
     }
 
@@ -313,7 +313,12 @@ Subscription::ProcessMessageResult Subscription::getNextMessage() {
     } catch (Exception &ex) {
       consumer->select->clear();
       log->error("%s", std::string(consumer->clientID).append(" ! <= [").append(std::string(__FUNCTION__)).append("] ").append(ex.message()));
-      _consumersLock.unlockWrite();
+      swTryLocker.unlock();
+      return ProcessMessageResult::SOME_ERROR;
+    } catch (std::exception &stdex) {
+      consumer->select->clear();
+      log->error("%s", std::string(consumer->clientID).append(" ! <= [").append(std::string(__FUNCTION__)).append("] ").append(stdex.what()));
+      swTryLocker.unlock();
       return ProcessMessageResult::SOME_ERROR;
     }
     if (sMessage) {
@@ -375,7 +380,7 @@ Subscription::ProcessMessageResult Subscription::getNextMessage() {
             *_isRunning = false;
           }
         }
-        _consumersLock.unlockWrite();
+        swTryLocker.unlock();
         return ProcessMessageResult::SOME_ERROR;
       }
     } else {
@@ -383,10 +388,10 @@ Subscription::ProcessMessageResult Subscription::getNextMessage() {
       if (consumersWithSelectorsOnly()) {
         changeCurrentConsumerNumber();
       }
-      _consumersLock.unlockWrite();
+      swTryLocker.unlock();
       return ProcessMessageResult::NO_MESSAGE;
     }
-    _consumersLock.unlockWrite();
+    swTryLocker.unlock();
     return ProcessMessageResult::OK_COMPLETE;
   }
   return ProcessMessageResult::CONSUMER_LOCKED;

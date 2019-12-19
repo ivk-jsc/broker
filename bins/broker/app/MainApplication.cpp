@@ -189,13 +189,13 @@ int MainApplication::main(const std::vector<std::string> &args) {
   Thread thread;
   thread.start(reactor);
 
-  //            #ifdef _DEBUG
-  //                  while (true) {
-  //                    Poco::Thread::sleep(100000);
-  //                  }
-  //            #else
+#ifdef _DEBUG
+  while (true) {
+    Poco::Thread::sleep(100000);
+  }
+#else
   waitTermination();
-  //            #endif
+#endif
 
   log->critical("%s", std::string("-").append(" * ").append("wait termination"));
 

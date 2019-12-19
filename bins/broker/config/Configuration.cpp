@@ -133,6 +133,7 @@ std::string Configuration::Threads::toString() const {
       .append("\n- * \t\twrite\t\t: ")
       .append(std::to_string(writers));
 }
+uint32_t Configuration::Threads::all() const { return accepters + readers + writers + subscribers; }
 std::string Configuration::Log::toString() const {
   return std::string("\n- * \t\tlevel\t\t: ")
       .append(std::to_string(level))

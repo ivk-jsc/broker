@@ -50,7 +50,7 @@ class Storage {
 
  private:
   std::string saveTableName(const upmq::broker::Session &session) const;
-  void fillProperties(Proto::Message &message);
+  void fillProperties(storage::DBMSSession &dbSession, Proto::Message &message);
   int deleteMessageHeader(storage::DBMSSession &dbSession, const std::string &messageID);
   void deleteMessageProperies(storage::DBMSSession &dbSession, const std::string &messageID);
   int getSubscribersCount(storage::DBMSSession &dbSession, const std::string &messageID);

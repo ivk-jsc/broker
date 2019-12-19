@@ -533,7 +533,7 @@ void Destination::loadDurableSubscriptions() {
       << "id, name, routing_key"
       << " from " << subscriptionsT() << " where type = " << type << ";";
   storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
-  dbSession.beginTX(_id + "ldur");
+  dbSession.beginTX(_id + "ldur", storage::DBMSSession::TransactionMode::READ);
   TRY_POCO_DATA_EXCEPTION {
     Poco::Data::Statement select(dbSession());
     select << sql.str(), Poco::Data::Keywords::into(id), Poco::Data::Keywords::into(name), Poco::Data::Keywords::into(routingKey),

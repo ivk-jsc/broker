@@ -70,7 +70,7 @@ class ParallelSocketAcceptor
   /// number of threads, populates the reactors vector and registers itself
   /// with the given SocketReactor.
   {
-    if (_threads > 0) {
+    if (_threads > 0 && _threads != 1) {
       --_threads;
     }
     init(_pReactor->handlersSize());

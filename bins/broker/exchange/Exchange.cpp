@@ -41,7 +41,7 @@ Exchange::Exchange()
       << ",constraint \"" << BROKER::Instance().id() << "_destinations_index\" unique (name, type)"
       << ")"
       << ";";
-  TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str(), storage::DBMSConnectionPool::TX::NOT_USE); }
+  TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
   CATCH_POCO_DATA_EXCEPTION_PURE("can't init exchange", sql.str(), ERROR_STORAGE);
 }
 Exchange::~Exchange() {
@@ -258,9 +258,13 @@ void Exchange::run() {
         if (!queueId.empty()) {
           auto item = _destinations.find(queueId);
           if (item.hasValue()) {
-            if ((*item)->getNexMessageForAllSubscriptions()) {
-              _destinationEvents.enqueue(queueId);
-              break;
+            try {
+              if ((*item)->getNexMessageForAllSubscriptions()) {
+                _destinationEvents.enqueue(queueId);
+                break;
+              }
+            } catch (Poco::Exception &pex) {
+              std::cerr << "!!! " << pex.message() << " " << pex.className() << " " << pex.code() << std::endl;
             }
           }
         }

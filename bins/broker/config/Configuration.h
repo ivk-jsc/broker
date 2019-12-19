@@ -56,6 +56,7 @@ class Configuration {
     uint32_t writers{8};
     uint32_t subscribers{8};
     std::string toString() const;
+    uint32_t all() const;
   };
 
   struct Log {

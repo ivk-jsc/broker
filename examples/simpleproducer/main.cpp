@@ -85,12 +85,13 @@ class SimpleProducer {
   IntProperty intProperty;
   int priority = cms::Message::DEFAULT_MSG_PRIORITY;
   cms::DeliveryMode::DELIVERY_MODE deliveryMode = cms::DeliveryMode::PERSISTENT;
+  long mod = 1000;
 
  public:
   std::chrono::steady_clock::time_point t0{perf_clock::now()};
 
-  SimpleProducer(std::string brokerURI, long numMessages, std::string destURI, bool useTopic)
-      : brokerURI(std::move(brokerURI)), destURI(std::move(destURI)), numMessages(numMessages), useTopic(useTopic) {}
+  SimpleProducer(std::string brokerURI, long numMessages, std::string destURI, bool useTopic, long logMod)
+      : brokerURI(std::move(brokerURI)), destURI(std::move(destURI)), numMessages(numMessages), useTopic(useTopic), mod(logMod) {}
 
   ~SimpleProducer() {
     try {
@@ -156,7 +157,7 @@ class SimpleProducer {
         producer->send(destination.get(), message.get(), deliveryMode, priority, cms::Message::DEFAULT_TIME_TO_LIVE);
 
         message->setReadable();
-        if ((ix == 1 || (ix % 1000 == 0))) {
+        if ((ix == 1 || (ix % mod == 0))) {
           std::cout << "sent => "
                     << ": " << message->getText() << " elapsed [" << floating_seconds(perf_clock::now() - t0).count() << "]" << '\n';
         }
@@ -192,6 +193,7 @@ int main(int argc, char *argv[]) {
   cms::DeliveryMode::DELIVERY_MODE deliveryMode = cms::DeliveryMode::PERSISTENT;
   IntProperty intProperty;
   std::string text;
+  long logMod = 1000;
 
   /* API is data structure driven */
   static const struct optparse_long opt_option[] = {
@@ -204,6 +206,7 @@ int main(int argc, char *argv[]) {
       {"priority", 'p', OPTPARSE_OPTIONAL, true, "message priority [0..9], default is 4"},
       {"int-property", 'i', OPTPARSE_OPTIONAL, true, "message int property, set with key=value pattern, for ex., --int-property=\"a=10\""},
       {"uri", 'u', OPTPARSE_OPTIONAL, true, "uri - broker connection string, default is tcp://localhost:12345?transport.trace=false"},
+      {"log_mod", 'l', OPTPARSE_OPTIONAL, true, "log_mod - a number of skipped messages before log, default is 1000"},
       {"help", 'h', OPTPARSE_OPTIONAL, false, "show help"},
       {nullptr, 0, OPTPARSE_NONE, 0, nullptr}, /* end (a.k.a. sentinel) */
   };
@@ -241,14 +244,17 @@ int main(int argc, char *argv[]) {
       case 'b':
         processOptionResult = processOption(option, options.optarg, [&text](const char *arg) { text = std::string(arg); });
         break;
+      case 'l':
+        processOptionResult = processOption(option, options.optarg, [&logMod](const char *arg) { logMod = strtol(arg, nullptr, 10); });
+        break;
       case 'h':
-        usage(opt_option, 9);
+        usage(opt_option, 10);
         return 0;
       default:
         break;
     }
     if (processOptionResult != 0) {
-      usage(opt_option, 9);
+      usage(opt_option, 10);
       return -1;
     }
   }
@@ -264,7 +270,7 @@ int main(int argc, char *argv[]) {
   std::cout << "=====================================================\n";
 
   try {
-    SimpleProducer producer(brokerURI, numMessages, destURI, useTopics);
+    SimpleProducer producer(brokerURI, numMessages, destURI, useTopics, logMod);
     if (!intProperty.isEmpty()) {
       producer.setIntProperty(intProperty);
     }

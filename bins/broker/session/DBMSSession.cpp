@@ -25,7 +25,7 @@ upmq::broker::storage::DBMSSession::~DBMSSession() {
   } catch (...) {
   }
 }
-void upmq::broker::storage::DBMSSession::beginTX(const std::string &txName) {
+void upmq::broker::storage::DBMSSession::beginTX(const std::string &txName, TransactionMode mode) {
   if (!_session) {
     throw EXCEPTION("dbms session was closed", txName, ERROR_WORKER);
   }
@@ -33,7 +33,7 @@ void upmq::broker::storage::DBMSSession::beginTX(const std::string &txName) {
   if (_lastTXName.find_first_of('\"') == 0) {
     Poco::removeInPlace(_lastTXName, '\"');
   }
-  dbms::Instance().beginTX(*_session, _lastTXName);
+  dbms::Instance().beginTX(*_session, _lastTXName, mode);
   _inTransaction = true;
 }
 void upmq::broker::storage::DBMSSession::commitTX() {
