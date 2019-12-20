@@ -162,7 +162,7 @@ void DBMSConnectionPool::beginTX(Poco::Data::Session &dbSession, const std::stri
 #endif  // HAS_POSTGRESQL
   else {
 
-    std::string transactionType = "exclusive";  // (_inMemory == IN_MEMORY::M_YES ? "immediate" : "exclusive");
+    std::string transactionType = "immediate";
     if (mode == storage::DBMSSession::TransactionMode::READ) {
       transactionType.clear();
     }
@@ -172,10 +172,6 @@ void DBMSConnectionPool::beginTX(Poco::Data::Session &dbSession, const std::stri
     do {
       locked = false;
       try {
-        //        if (STORAGE_CONFIG.connection.props.dbmsType == storage::SQLiteNative && dbSession.isTransaction()) {
-        //          locked = true;
-        //          Poco::Thread::yield();
-        //        }
         dbSession << sql.str(), Poco::Data::Keywords::now;
       } catch (PDSQLITE::DBLockedException &) {
         locked = true;

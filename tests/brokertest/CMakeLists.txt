@@ -3,6 +3,8 @@ project(brokertest
         VERSION 3.4
         DESCRIPTION "C++ MQ-Tests")
 
+cmake_policy(SET CMP0069 NEW)
+
 enable_testing()
 add_executable(brokertest)
 

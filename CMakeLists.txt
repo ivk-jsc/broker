@@ -43,6 +43,12 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_C_STANDARD 11)
 
+include(CheckIPOSupported)
+check_ipo_supported(RESULT result)
+if (result)
+  set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+endif ()
+
 if (WIN32)
   set(VER_SCRIPT "${CMAKE_SOURCE_DIR}/version.bat")
 else (WIN32)
