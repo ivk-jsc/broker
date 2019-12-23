@@ -724,7 +724,8 @@ void Storage::saveMessageProperties(const upmq::broker::Session &session, const 
         sql << "NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, " << nextParam();
         sql << ", NULL, " << nextParam();
         sql << ")" << postfix << ";" << non_std_endl;
-        Poco::Data::BLOB blob((const unsigned char *const)it->second.value_bytes().c_str(), it->second.value_bytes().size());
+        const auto *bytes = reinterpret_cast<const unsigned char *>(it->second.value_bytes().c_str());
+        Poco::Data::BLOB blob(bytes, it->second.value_bytes().size());
         dbSession << sql.str(), Poco::Data::Keywords::use(blob), Poco::Data::Keywords::use(isNull), Poco::Data::Keywords::now;
       } break;
 
@@ -732,7 +733,8 @@ void Storage::saveMessageProperties(const upmq::broker::Session &session, const 
         sql << "NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, " << nextParam();
         sql << ", " << nextParam();
         sql << ")" << postfix << ";" << non_std_endl;
-        Poco::Data::BLOB blob((const unsigned char *const)it->second.value_object().c_str(), it->second.value_object().size());
+        const auto *object = reinterpret_cast<const unsigned char *>(it->second.value_object().c_str());
+        Poco::Data::BLOB blob(object, it->second.value_object().size());
         dbSession << sql.str(), Poco::Data::Keywords::use(blob), Poco::Data::Keywords::use(isNull), Poco::Data::Keywords::now;
       } break;
 
