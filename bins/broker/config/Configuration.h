@@ -90,12 +90,12 @@ class Configuration {
         storage::DBMSType dbmsType{storage::NO_TYPE};
         int connectionPool{64};
         bool useSync{false};
-        std::string journalMode{"MEMORY"};
+        std::string journalMode{"WAL"};
         std::string toString() const;
       };
       struct Value {
        private:
-        std::string _v{":memory:"};
+        std::string _v{"file::memory:?cache=shared"};
 
        public:
         const std::string &get() const;
@@ -117,6 +117,10 @@ class Configuration {
       void set(const std::string &path);
       std::string toString() const;
     };
+    struct Messages {
+      size_t nonPresistentSize{100000};
+      std::string toString() const;
+    };
 
    private:
     std::string _messageJournal;
@@ -124,6 +128,7 @@ class Configuration {
    public:
     Connection connection;
     Data data;
+    Messages messages;
     std::string messageJournal(const std::string &destinationName) const;
     void setMessageJournal(const std::string &brokerName);
     std::string toString() const;

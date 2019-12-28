@@ -33,3 +33,8 @@ std::string MessagesPageReplacer::rowsReplacer() {
   ss << rowPageReplacer.replace();
   return ss.str();
 }
+
+std::string MessagesPageReplacer::type() const {
+  // FIXME : replace with destination typename
+  return std::to_string(_type);
+}

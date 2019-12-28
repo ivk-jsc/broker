@@ -36,8 +36,11 @@ using upmq::broker::storage::DBMSConnectionPool;
 namespace upmq {
 namespace broker {
 
-Storage::Storage(const std::string &messageTableID)
-    : _messageTableID("\"" + messageTableID + "\""), _propertyTableID("\"" + messageTableID + "_property" + "\""), _parent(nullptr) {
+Storage::Storage(const std::string &messageTableID, size_t nonPersistentSize)
+    : _messageTableID("\"" + messageTableID + "\""),
+      _propertyTableID("\"" + messageTableID + "_property" + "\""),
+      _parent(nullptr),
+      _nonPersistent(nonPersistentSize) {
   std::string mainTsql = generateSQLMainTable(messageTableID);
   auto mainTXsqlIndexes = generateSQLMainTableIndexes(messageTableID);
   TRY_POCO_DATA_EXCEPTION {
@@ -50,7 +53,6 @@ Storage::Storage(const std::string &messageTableID)
   std::string propTsql = generateSQLProperties();
   TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(propTsql); }
   CATCH_POCO_DATA_EXCEPTION_PURE("can't init storage", mainTsql, ERROR_STORAGE)
-  _nonPersistent.reserve(100);
 }
 Storage::~Storage() = default;
 std::string Storage::generateSQLMainTable(const std::string &tableName) const {
@@ -237,14 +239,7 @@ message::GroupStatus Storage::checkIsGroupClosed(const MessageDataContainer &sMe
 }
 int Storage::deleteMessageHeader(storage::DBMSSession &dbSession, const std::string &messageID) {
   std::stringstream sql;
-  int persistent = -1;
-  {
-    upmq::ScopedReadRWLock readRWLock(_nonPersistentLock);
-    auto item = _nonPersistent.find(messageID);
-    if (item != _nonPersistent.end()) {
-      persistent = 0;
-    }
-  }
+  int persistent = static_cast<int>(_nonPersistent.contains(messageID));
   if (persistent != 0) {
     sql << "select "
         << " msgs.persistent "
@@ -262,7 +257,7 @@ int Storage::deleteMessageHeader(storage::DBMSSession &dbSession, const std::str
   CATCH_POCO_DATA_EXCEPTION_PURE("can't erase message", sql.str(), ERROR_UNKNOWN)
   return persistent;
 }
-void Storage::deleteMessageProperies(storage::DBMSSession &dbSession, const std::string &messageID) {
+void Storage::deleteMessageProperties(storage::DBMSSession &dbSession, const std::string &messageID) {
   std::stringstream sql;
   sql << "delete from " << _propertyTableID << " where message_id = \'" << messageID << "\'"
       << ";" << non_std_endl;
@@ -298,7 +293,6 @@ void Storage::deleteMessageDataIfExists(const std::string &messageID, int persis
     msgFile.append(mID).makeFile();
     ::remove(msgFile.toString().c_str());
   } else {
-    upmq::ScopedWriteRWLock writeRWLock(_nonPersistentLock);
     _nonPersistent.erase(messageID);
   }
 }
@@ -314,7 +308,7 @@ void Storage::removeMessage(const std::string &messageID, storage::DBMSSession &
   }
 
   const int wasPersistent = deleteMessageHeader(dbSession, messageID);
-  deleteMessageProperies(dbSession, messageID);
+  deleteMessageProperties(dbSession, messageID);
   const int subscribersCount = getSubscribersCount(dbSession, messageID);
   if (subscribersCount <= 0) {
     deleteMessageInfoFromJournal(dbSession, messageID);
@@ -392,27 +386,21 @@ void Storage::save(const upmq::broker::Session &session, const MessageDataContai
   const std::string &messageID = message.message_id();
 
   if (!message.persistent()) {
-    upmq::ScopedWriteRWLock writeRWLock(_nonPersistentLock);
     _nonPersistent.insert(std::make_pair(messageID, std::shared_ptr<MessageDataContainer>(sMessage.clone())));
   }
   try {
     saveMessageProperties(session, message);
     saveMessageHeader(session, sMessage);
   } catch (PDSQLITE::InvalidSQLStatementException &ioex) {
-    {
-      upmq::ScopedWriteRWLock writeRWLock(_nonPersistentLock);
-      _nonPersistent.erase(messageID);
-    }
+    _nonPersistent.erase(messageID);
     if (ioex.message().find("no such table") != std::string::npos) {
       throw EXCEPTION(ioex.message(), _messageTableID + " or " + _propertyTableID, ERROR_ON_SAVE_MESSAGE);
     }
     ioex.rethrow();
   } catch (Poco::Exception &pex) {
-    upmq::ScopedWriteRWLock writeRWLock(_nonPersistentLock);
     _nonPersistent.erase(messageID);
     pex.rethrow();
   } catch (...) {
-    upmq::ScopedWriteRWLock writeRWLock(_nonPersistentLock);
     _nonPersistent.erase(messageID);
     throw;
   }
@@ -572,16 +560,11 @@ std::shared_ptr<MessageDataContainer> Storage::get(const Consumer &consumer, boo
         sMessage->data = data;
       }
     } else {
-      NonPersistentMessagesListType::iterator item;
-      {
-        upmq::ScopedReadRWLock readRWLock(_nonPersistentLock);
-        item = _nonPersistent.find(msg.messageId);
-        if (item != _nonPersistent.end()) {
-          needToFillProperies = item->second->message().property_size() > 0;
-          sMessage->data = item->second->data;
-        }
-      }
-      if (item == _nonPersistent.end()) {
+      auto item = _nonPersistent.find(msg.messageId);
+      if (item.hasValue()) {
+        needToFillProperies = (*item)->message().property_size() > 0;
+        sMessage->data = (*item)->data;
+      } else {
         dbSession.beginTX(msg.messageId);
         removeMessage(msg.messageId, dbSession);
         dbSession.commitTX();
@@ -922,10 +905,8 @@ void Storage::setMessagesToNotSent(const Consumer &consumer) {
   CATCH_POCO_DATA_EXCEPTION_PURE_NO_INVALIDEXCEPT_NO_EXCEPT("can't set messages to not-sent", sql.str(), ERROR_STORAGE)
 }
 void Storage::copyTo(Storage &storage, const Consumer &consumer) {
-  {
-    upmq::ScopedReadRWLock readRWLock(_nonPersistentLock);
-    storage.resetNonPersistent(_nonPersistent);
-  }
+  storage.resetNonPersistent(_nonPersistent);
+
   bool withSelector = (consumer.selector && !consumer.selector->expression().empty());
   std::stringstream sql;
 

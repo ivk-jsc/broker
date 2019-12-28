@@ -42,3 +42,5 @@ COMMIT.txt
 /cmake-build-debug-msvc/
 /cmake-build-debug-wsl-clang-analyze/
 /cmake-build-relwithdebinfo/
+/cmake-build-debug-xcode/
+/cmake-build-xcode/

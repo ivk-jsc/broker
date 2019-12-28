@@ -37,7 +37,7 @@ Subscription::Subscription(const Destination &destination, const std::string &id
       _name(std::move(name)),
       _type(type),
       _routingKey(std::move(routingKey)),
-      _storage(_id),
+      _storage(_id, STORAGE_CONFIG.messages.nonPresistentSize),
       _destination(destination),
       _isRunning(new std::atomic_bool(false)),
       _currentConsumerNumber(0),

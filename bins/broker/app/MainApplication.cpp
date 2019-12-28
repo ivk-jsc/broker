@@ -274,6 +274,7 @@ void MainApplication::loadStorageConfig() const {
   storage.data.set(prefix.append(expandPath(config().getString("broker.storage.data", "upmq/data"))).toString());
 
   storage.setMessageJournal(CONFIGURATION::Instance().name());
+  storage.messages.nonPresistentSize = config().getUInt("broker.storage.messages.non-persistent-size", 100000);
   CONFIGURATION::Instance().setStorage(storage);
 }
 void MainApplication::loadDestinationConfig() const {
