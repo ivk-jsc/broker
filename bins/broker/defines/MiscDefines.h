@@ -178,15 +178,15 @@ namespace PDSQLITE = Poco::Data::SQLite;
     locked = true;                                                                                  \
     Poco::Thread::yield();                                                                          \
   }                                                                                                 \
+  catch (PDSQLITE::InvalidSQLStatementException & issex) {                                          \
+    throw EXCEPTION(std::string(__info__) + " : " + (__sql__), issex.message(), (__error__));       \
+  }                                                                                                 \
   catch (PDSQLITE::SQLiteException & sqlex) {                                                       \
     if (sqlex.message().find("locked") == std::string::npos) {                                      \
       throw EXCEPTION(std::string(__info__) + " : " + (__sql__), sqlex.message(), (__error__));     \
     }                                                                                               \
     locked = true;                                                                                  \
     Poco::Thread::yield();                                                                          \
-  }                                                                                                 \
-  catch (PDSQLITE::InvalidSQLStatementException & issex) {                                          \
-    throw EXCEPTION(std::string(__info__) + " : " + (__sql__), issex.message(), (__error__));       \
   }                                                                                                 \
   catch (Poco::Data::ExecutionException & pdex) {                                                   \
     throw EXCEPTION(std::string(__info__) + " : " + (__sql__), pdex.message(), (__error__));        \
@@ -213,15 +213,15 @@ namespace PDSQLITE = Poco::Data::SQLite;
     locked = true;                                                                              \
     Poco::Thread::yield();                                                                      \
   }                                                                                             \
+  catch (PDSQLITE::InvalidSQLStatementException & issex) {                                      \
+    UNUSED_VAR(issex);                                                                          \
+    locked = true;                                                                              \
+    Poco::Thread::yield();                                                                      \
+  }                                                                                             \
   catch (PDSQLITE::SQLiteException & sqlex) {                                                   \
     if (sqlex.message().find("locked") == std::string::npos) {                                  \
       throw EXCEPTION(std::string(__info__) + " : " + (__sql__), sqlex.message(), (__error__)); \
     }                                                                                           \
-    locked = true;                                                                              \
-    Poco::Thread::yield();                                                                      \
-  }                                                                                             \
-  catch (PDSQLITE::InvalidSQLStatementException & issex) {                                      \
-    UNUSED_VAR(issex);                                                                          \
     locked = true;                                                                              \
     Poco::Thread::yield();                                                                      \
   }                                                                                             \
@@ -255,15 +255,15 @@ namespace PDSQLITE = Poco::Data::SQLite;
     locked = true;                                                                              \
     Poco::Thread::yield();                                                                      \
   }                                                                                             \
+  catch (PDSQLITE::InvalidSQLStatementException & issex) {                                      \
+    do_cerr(__info__, __sql__, issex.message(), __error__);                                     \
+  }                                                                                             \
   catch (PDSQLITE::SQLiteException & sqlex) {                                                   \
     if (sqlex.message().find("locked") == std::string::npos) {                                  \
       throw EXCEPTION(std::string(__info__) + " : " + (__sql__), sqlex.message(), (__error__)); \
     }                                                                                           \
     locked = true;                                                                              \
     Poco::Thread::yield();                                                                      \
-  }                                                                                             \
-  catch (PDSQLITE::InvalidSQLStatementException & issex) {                                      \
-    do_cerr(__info__, __sql__, issex.message(), __error__);                                     \
   }                                                                                             \
   catch (Poco::InvalidAccessException & invaccex) {                                             \
     UNUSED_VAR(invaccex);                                                                       \
