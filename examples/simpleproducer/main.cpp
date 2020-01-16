@@ -51,30 +51,46 @@ void usage(const struct optparse_long *opt_option, size_t count) {
   }
 }
 
-struct IntProperty {
+template <typename T>
+struct Property {
   std::string key{};
-  int value{0};
-  IntProperty(std::string key_, int value_) : key(std::move(key_)), value(value_) {}
-  IntProperty() = default;
-  IntProperty(const IntProperty &) = default;
-  IntProperty(IntProperty &&) = default;
-  IntProperty &operator=(const IntProperty &) = default;
-  IntProperty &operator=(IntProperty &&) = default;
-  ~IntProperty() = default;
+  T value{};
+  Property(std::string key_, T &&value_) : key(std::move(key_)), value(std::forward<T>(value_)) {}
+  Property() = default;
+  Property(const Property &) = default;
+  Property(Property &&) = default;
+  Property &operator=(const Property &) = default;
+  Property &operator=(Property &&) = default;
+  virtual ~Property() = default;
   bool isEmpty() const { return key.empty(); };
-  static IntProperty fromString(const std::string &line) {
-    std::string::size_type pos = line.find('=');
-    if (pos == std::string::npos) {
-      std::cerr << "invalid int-property " << std::endl;
-      throw std::runtime_error(line);
-    }
-    IntProperty intProperty;
-    intProperty.key = line.substr(0, pos);
-    intProperty.value = std::stoi(line.substr(pos + 1));
-    return intProperty;
-  }
+
+  static T makeValue(const std::string &s);
 };
 
+template <>
+int Property<int>::makeValue(const std::string &s) {
+  return std::stoi(s);
+}
+
+template <>
+std::string Property<std::string>::makeValue(const std::string &s) {
+  return s;
+}
+
+namespace property {
+template <typename T>
+Property<T> fromString(const std::string &line) {
+  std::string::size_type pos = line.find('=');
+  if (pos == std::string::npos) {
+    std::cerr << "invalid property " << std::endl;
+    throw std::runtime_error(line);
+  }
+  Property<T> property;
+  property.key = line.substr(0, pos);
+  property.value = property.makeValue(line.substr(pos + 1));
+  return property;
+}
+}  // namespace property
 ////////////////////////////////////////////////////////////////////////////////
 class SimpleProducer {
  private:
@@ -89,7 +105,8 @@ class SimpleProducer {
   long numMessages;
   bool useTopic;
   std::string text;
-  IntProperty intProperty;
+  Property<int> intProperty;
+  Property<std::string> stringProperty;
   int priority = cms::Message::DEFAULT_MSG_PRIORITY;
   cms::DeliveryMode::DELIVERY_MODE deliveryMode = cms::DeliveryMode::PERSISTENT;
 
@@ -111,7 +128,8 @@ class SimpleProducer {
   }
 
   void setText(const std::string &newText) { text = newText; }
-  void setIntProperty(const IntProperty &newIntProperty) { intProperty = newIntProperty; }
+  void setIntProperty(const Property<int> &newIntProperty) { intProperty = newIntProperty; }
+  void setStringProperty(const Property<std::string> &newStringProperty) { stringProperty = newStringProperty; }
   void setDeliveryMode(cms::DeliveryMode::DELIVERY_MODE newDeliveryMode) { deliveryMode = newDeliveryMode; }
 
   void open() {
@@ -151,6 +169,9 @@ class SimpleProducer {
       std::string messageText;
       if (!intProperty.isEmpty()) {
         message->setIntProperty(intProperty.key, intProperty.value);
+      }
+      if (!stringProperty.isEmpty()) {
+        message->setStringProperty(stringProperty.key, stringProperty.value);
       }
       for (long ix = 1; ix <= numMessages; ++ix) {
         if (text.empty()) {
@@ -197,7 +218,8 @@ int main(int argc, char *argv[]) {
   long numMessages = 1;
   bool useTopics = false;
   cms::DeliveryMode::DELIVERY_MODE deliveryMode = cms::DeliveryMode::PERSISTENT;
-  IntProperty intProperty;
+  Property<int> intProperty;
+  Property<std::string> stringProperty;
   std::string text;
 
   /* API is data structure driven */
@@ -210,6 +232,11 @@ int main(int argc, char *argv[]) {
       {"body-text", 'b', OPTPARSE_OPTIONAL, true, "message body text, default is digit which is message sequence number"},
       {"priority", 'p', OPTPARSE_OPTIONAL, true, "message priority [0..9], default is 4"},
       {"int-property", 'i', OPTPARSE_OPTIONAL, true, "message int property, set with key=value pattern, for ex., --int-property=\"a=10\""},
+      {"string-property",
+       's',
+       OPTPARSE_OPTIONAL,
+       true,
+       "message string property, set with key=value pattern, for ex., --string-property=\"b=my-property\""},
       {"uri", 'u', OPTPARSE_OPTIONAL, true, "uri - broker connection string, default is tcp://localhost:12345?transport.trace=false"},
       {"help", 'h', OPTPARSE_OPTIONAL, false, "show help"},
       {nullptr, 0, OPTPARSE_NONE, 0, nullptr}, /* end (a.k.a. sentinel) */
@@ -243,7 +270,12 @@ int main(int argc, char *argv[]) {
         processOptionResult = processOption(option, options.optarg, [&priority](const char *arg) { priority = std::stoi(arg); });
         break;
       case 'i':
-        processOptionResult = processOption(option, options.optarg, [&intProperty](const char *arg) { intProperty = IntProperty::fromString(arg); });
+        processOptionResult =
+            processOption(option, options.optarg, [&intProperty](const char *arg) { intProperty = property::fromString<int>(arg); });
+        break;
+      case 's':
+        processOptionResult =
+            processOption(option, options.optarg, [&stringProperty](const char *arg) { stringProperty = property::fromString<std::string>(arg); });
         break;
       case 'b':
         processOptionResult = processOption(option, options.optarg, [&text](const char *arg) { text = std::string(arg); });
@@ -274,6 +306,9 @@ int main(int argc, char *argv[]) {
     SimpleProducer producer(brokerURI, numMessages, destURI, useTopics);
     if (!intProperty.isEmpty()) {
       producer.setIntProperty(intProperty);
+    }
+    if (!stringProperty.isEmpty()) {
+      producer.setStringProperty(stringProperty);
     }
     producer.setDeliveryMode(deliveryMode);
     producer.setText(text);
