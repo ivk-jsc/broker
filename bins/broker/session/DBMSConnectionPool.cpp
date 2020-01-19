@@ -157,7 +157,14 @@ void DBMSConnectionPool::beginTX(Poco::Data::Session &dbSession, const std::stri
   }
 #ifdef HAS_POSTGRESQL
   else if (STORAGE_CONFIG.connection.props.dbmsType == storage::Postgresql) {
-    dbSession << "BEGIN TRANSACTION;", Poco::Data::Keywords::now;
+    std::stringstream sql;
+    sql << "BEGIN TRANSACTION";
+    if (mode == storage::DBMSSession::TransactionMode::READ) {
+      sql << " READ ONLY";
+    } else {
+      sql << " READ WRITE";
+    }
+    dbSession << sql.str(), Poco::Data::Keywords::now;
   }
 #endif  // HAS_POSTGRESQL
   else {
@@ -204,7 +211,6 @@ void DBMSConnectionPool::commitTX(Poco::Data::Session &dbSession, const std::str
 #ifdef HAS_POSTGRESQL
   else if (STORAGE_CONFIG.connection.props.dbmsType == storage::Postgresql) {
     dbSession << "COMMIT;", Poco::Data::Keywords::now;
-    //    dbSession.setFeature("autoCommit", true);
   }
 #endif  // HAS_POSTGRESQL
   else {
@@ -243,7 +249,6 @@ void DBMSConnectionPool::rollbackTX(Poco::Data::Session &dbSession, const std::s
 #ifdef HAS_POSTGRESQL
   else if (STORAGE_CONFIG.connection.props.dbmsType == storage::Postgresql) {
     dbSession << "ROLLBACK;", Poco::Data::Keywords::now;
-    //    dbSession.setFeature("autoCommit", true);
   }
 #endif  // HAS_POSTGRESQL
   else {

@@ -326,11 +326,7 @@ const std::string &Storage::propertyTableID() const { return _propertyTableID; }
 void Storage::saveMessageHeader(const upmq::broker::Session &session, const MessageDataContainer &sMessage) {
   storage::DBMSSession &dbs = *session.currentDBSession;
   const Proto::Message &message = sMessage.message();
-  std::string messageID = message.message_id();
   int persistent = message.persistent() ? 1 : 0;
-  std::string correlationID = message.correlation_id();
-  std::string reply_to = message.reply_to();
-  std::string type = message.type();
   int bodyType = message.body_type();
   int priority = message.priority();
   Poco::Int64 timestamp = message.timestamp();
@@ -363,12 +359,12 @@ void Storage::saveMessageHeader(const upmq::broker::Session &session, const Mess
   // Save header
 
   Poco::Data::Statement insert(dbs());
-  insert.addBind(Poco::Data::Keywords::use(messageID))
+  insert.addBind(Poco::Data::Keywords::useRef(message.message_id()))
       .addBind(Poco::Data::Keywords::use(priority))
       .addBind(Poco::Data::Keywords::use(persistent))
-      .addBind(Poco::Data::Keywords::use(correlationID))
-      .addBind(Poco::Data::Keywords::use(reply_to))
-      .addBind(Poco::Data::Keywords::use(type))
+      .addBind(Poco::Data::Keywords::useRef(message.correlation_id()))
+      .addBind(Poco::Data::Keywords::useRef(message.reply_to()))
+      .addBind(Poco::Data::Keywords::useRef(message.type()))
       .addBind(Poco::Data::Keywords::use(timestamp))
       .addBind(Poco::Data::Keywords::use(ttl))
       .addBind(Poco::Data::Keywords::use(expiration))
