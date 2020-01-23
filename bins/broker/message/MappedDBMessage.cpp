@@ -35,7 +35,7 @@ T getPropertyValue(const std::string &propName, const std::string &messageID, co
   return result;
 }
 
-MappedDBMessage::MappedDBMessage(const std::string &messageID, Storage &storage) : _messageID(messageID), _storage(storage) {}
+MappedDBMessage::MappedDBMessage(std::string messageID, Storage &storage) : _messageID(std::move(messageID)), _storage(storage) {}
 
 bool MappedDBMessage::persistent() const { return getPropertyValue<bool>("persistent", _messageID, _storage); }
 

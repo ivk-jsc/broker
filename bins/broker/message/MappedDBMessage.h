@@ -60,7 +60,7 @@ class MappedDBMessage {
   Storage &_storage;
 
  public:
-  MappedDBMessage(const std::string &messageID, Storage &storage);
+  MappedDBMessage(std::string messageID, Storage &storage);
   virtual ~MappedDBMessage() = default;
   bool persistent() const;
   std::string type() const;

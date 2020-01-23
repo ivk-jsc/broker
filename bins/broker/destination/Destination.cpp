@@ -230,7 +230,7 @@ Subscription &Destination::subscription(const Session &session, const MessageDat
   } else if (subscription.browse()) {
     type = Subscription::Type::BROWSER;
   }
-  std::string name = subscription.subscription_name();
+  const std::string &name = subscription.subscription_name();
   if (name.empty()) {
     throw EXCEPTION("subscription name is empty", "subscription", ERROR_ON_SUBSCRIPTION);
   }

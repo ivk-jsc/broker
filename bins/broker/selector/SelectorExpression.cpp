@@ -128,9 +128,8 @@ class Expression {
     Value v = eval(env);
     if (v.type == Value::T_BOOL) {
       return BoolOrNone(v.b);
-    } else {
-      return BN_UNKNOWN;
     }
+    return BN_UNKNOWN;
   }
 };
 
@@ -237,9 +236,8 @@ class OrExpression : public BoolExpression {
     }
     if (bn1 == BN_FALSE && bn2 == BN_FALSE) {
       return BN_FALSE;
-    } else {
-      return BN_UNKNOWN;
     }
+    return BN_UNKNOWN;
   }
 };
 
@@ -263,9 +261,8 @@ class AndExpression : public BoolExpression {
     }
     if (bn1 == BN_TRUE && bn2 == BN_TRUE) {
       return BN_TRUE;
-    } else {
-      return BN_UNKNOWN;
     }
+    return BN_UNKNOWN;
   }
 };
 
@@ -601,9 +598,8 @@ class Not : public UnaryBooleanOperator {
     BoolOrNone bn = e.eval_bool(env);
     if (bn == BN_UNKNOWN) {
       return bn;
-    } else {
-      return BoolOrNone(!bn);
     }
+    return BoolOrNone(!bn);
   }
 };
 
@@ -793,9 +789,8 @@ class Parse {
         }
         if (negated) {
           return new NotInExpression(e1.release(), list);
-        } else {
-          return new InExpression(e1.release(), list);
         }
+        return new InExpression(e1.release(), list);
       }
       default:
         error = "expected LIKE, IN or BETWEEN";
@@ -970,14 +965,13 @@ class Parse {
         if (nt.type == TokenType::T_NUMERIC_EXACT) {
           std::unique_ptr<Expression> e(parseExactNumeric(nt, true));
           return e.release();
-        } else {
-          tokeniser.returnTokens();
-          std::unique_ptr<Expression> e(unaryArithExpression(tokeniser));
-          if (!e) {
-            return nullptr;
-          }
-          return new UnaryArithExpression(&negate, e.release());
         }
+        tokeniser.returnTokens();
+        std::unique_ptr<Expression> e(unaryArithExpression(tokeniser));
+        if (!e) {
+          return nullptr;
+        }
+        return new UnaryArithExpression(&negate, e.release());
       }
       default:
         tokeniser.returnTokens();
