@@ -16,6 +16,7 @@
 
 #ifndef FIXED_SIZE_UNORDERD_MAP_H
 #define FIXED_SIZE_UNORDERD_MAP_H
+#include <utility>
 #include <vector>
 #include <list>
 #include <algorithm>
@@ -32,12 +33,13 @@ class FSReadLockedValue {
   const Value *_value = nullptr;
   const Key *_key = nullptr;
   std::atomic_bool _wasMoved = {false};
+  std::string _parentFunc;
 
-  void unlock() noexcept {
+  void unlock(const std::string &parentFunc = __builtin_FUNCTION()) noexcept {
     if (_rwLock && _rwLock->isValid()) {
       try {
         if (!_wasMoved) {
-          _rwLock->unlockRead();
+          _rwLock->unlockRead(parentFunc);
         }
       } catch (...) {
       }
@@ -45,21 +47,27 @@ class FSReadLockedValue {
   }
 
  public:
-  FSReadLockedValue() = default;
-  FSReadLockedValue(MRWLock &mrwLock, const Key &key, const Value &value) : _rwLock(&mrwLock), _value(&value), _key(&key) {}
+  //  FSReadLockedValue() = default;
+  explicit FSReadLockedValue(std::string parentFunc = __builtin_FUNCTION()) : _parentFunc(std::move(parentFunc)) {}
+  FSReadLockedValue(MRWLock &mrwLock, const Key &key, const Value &value, std::string parentFunc = __builtin_FUNCTION())
+      : _rwLock(&mrwLock), _value(&value), _key(&key), _parentFunc(std::move(parentFunc)) {}
   FSReadLockedValue(const FSReadLockedValue &) = delete;
-  FSReadLockedValue(FSReadLockedValue &&o) noexcept : _rwLock(o._rwLock), _value(o._value), _key(o._key), _wasMoved(false) { o._wasMoved = true; }
+  FSReadLockedValue(FSReadLockedValue &&o) noexcept
+      : _rwLock(o._rwLock), _value(o._value), _key(o._key), _wasMoved(false), _parentFunc(std::move(o._parentFunc)) {
+    o._wasMoved = true;
+  }
   FSReadLockedValue &operator=(const FSReadLockedValue &) = delete;
   FSReadLockedValue &operator=(FSReadLockedValue &&o) noexcept {
-    unlock();
+    unlock(_parentFunc);
     _rwLock = o._rwLock;
     _value = o._value;
     _key = o._key;
     _wasMoved = false;
+    _parentFunc = std::move(o._parentFunc);
     o._wasMoved = true;
     return *this;
   }
-  ~FSReadLockedValue() noexcept { unlock(); }
+  ~FSReadLockedValue() noexcept { unlock(_parentFunc); }
   bool hasValue() const { return _value != nullptr; }
   const Value &operator*() const { return *_value; }
   const Value *operator->() const { return _value; }
@@ -127,31 +135,31 @@ class FSUnorderedNode {
     _items = o._items;
   }
   FSUnorderedNode &operator=(const FSUnorderedNode &o) {
-    upmq::ScopedReadRWLock oRWLock(o._rwLock);
-    upmq::ScopedWriteRWLock thisRWLock(_rwLock);
-    _items = o._items;
+    if (this != &o) {
+      upmq::ScopedReadRWLock oRWLock(o._rwLock);
+      upmq::ScopedWriteRWLock thisRWLock(_rwLock);
+      _items = o._items;
+    }
     return *this;
   }
-  FSReadLockedValue<Key, Value> find(const Key &key) const {
+  FSReadLockedValue<Key, Value> find(const Key &key, const std::string &parentFunc = __builtin_FUNCTION()) const {
     _rwLock.readLock();
     auto item = std::find_if(_items.begin(), _items.end(), [&key](const KVPair &pair) { return pair.first == key; });
     if (item != _items.end()) {
-      FSReadLockedValue<Key, Value> fs(_rwLock, item->first, item->second);
-      return fs;
+      return FSReadLockedValue<Key, Value>(_rwLock, item->first, item->second, parentFunc);
     }
     _rwLock.unlockRead();
-    return {};
+    return FSReadLockedValue<Key, Value>(parentFunc);
   }
   template <typename F>
-  FSReadLockedValue<Key, Value> findIf(const F &f) const {
+  FSReadLockedValue<Key, Value> findIf(const F &f, const std::string &parentFunc = __builtin_FUNCTION()) const {
     _rwLock.readLock();
     auto item = std::find_if(_items.begin(), _items.end(), f);
     if (item != _items.end()) {
-      FSReadLockedValue<Key, Value> fs(_rwLock, item->first, item->second);
-      return fs;
+      return FSReadLockedValue<Key, Value>(_rwLock, item->first, item->second, parentFunc);
     }
     _rwLock.unlockRead();
-    return {};
+    return FSReadLockedValue<Key, Value>(parentFunc);
   }
   bool contains(const Key &key) const {
     ScopedReadRWLock readRWLock(_rwLock);
@@ -284,9 +292,9 @@ class FSUnorderedMap {
   explicit FSUnorderedMap(size_t size) : _items(size), _size(size) {}
   FSUnorderedMap(FSUnorderedMap &&o) noexcept
       : _items(std::move(o._items)), _size(std::move(o._size)), _realSize(o._realSize.load()), _validIndexes(o._validIndexes) {}
-  FSReadLockedValue<Key, Value> find(const Key &key) const {
+  FSReadLockedValue<Key, Value> find(const Key &key, const std::string &parentFunc = __builtin_FUNCTION()) const {
     size_t index = Poco::hash(key) % _size;
-    return _items.at(index).find(key);
+    return _items.at(index).find(key, parentFunc);
   }
   FSUnorderedMap &operator=(FSUnorderedMap &&o) noexcept {
     upmq::ScopedWriteRWLock thisRWLock(_validIndexesLock);
@@ -297,13 +305,15 @@ class FSUnorderedMap {
     return *this;
   }
   FSUnorderedMap &operator=(const FSUnorderedMap &o) {
-    clear();
-    upmq::ScopedReadRWLock oRWLock(o._validIndexesLock);
-    upmq::ScopedWriteRWLock thisRWLock(_validIndexesLock);
-    _items = o._items;
-    _size = o._size;
-    _realSize = o._realSize.load();
-    _validIndexes = o._validIndexes;
+    if (this != &o) {
+      clear();
+      upmq::ScopedReadRWLock oRWLock(o._validIndexesLock);
+      upmq::ScopedWriteRWLock thisRWLock(_validIndexesLock);
+      _items = o._items;
+      _size = o._size;
+      _realSize = o._realSize.load();
+      _validIndexes = o._validIndexes;
+    }
     return *this;
   }
   template <typename F>

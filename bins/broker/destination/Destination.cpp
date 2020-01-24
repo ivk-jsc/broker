@@ -49,11 +49,11 @@ Destination::~Destination() {
   try {
     std::stringstream sql;
     if (!isTemporary()) {
-      sql << "update " << _exchange.destinationsT() << " set subscriptions_count = 0"
-          << " where id = \'" << _id << "\'"
-          << ";";
-      TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
-      CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't update subscription count", sql.str(), ERROR_UNKNOWN)
+      //      sql << "update " << _exchange.destinationsT() << " set subscriptions_count = 0"
+      //          << " where id = \'" << _id << "\'"
+      //          << ";";
+      //      TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
+      //      CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't update subscription count", sql.str(), ERROR_UNKNOWN)
     }
     {
       _subscriptions.changeForEach([this](SubscriptionsList::ItemType::KVPair &pair) {

@@ -15,6 +15,7 @@
  */
 
 #include "MoveableRWLock.h"
+#include <stdexcept>
 
 #ifdef _WIN32
 
@@ -38,6 +39,7 @@ MRWLock::MRWLock() : _rwLock(new SRWLOCK) {
 MRWLock::MRWLock(MRWLock&& o) noexcept = default;
 
 void MRWLock::readLock() {
+  _tmRead.update();
 #ifdef _WIN32
   AcquireSRWLockShared(_rwLock.get());
 #else
@@ -46,6 +48,7 @@ void MRWLock::readLock() {
 }
 
 bool MRWLock::tryReadLock() {
+  _tmRead.update();
 #ifdef _WIN32
   return static_cast<bool>(TryAcquireSRWLockShared(_rwLock.get()));
 #else
@@ -54,6 +57,7 @@ bool MRWLock::tryReadLock() {
 }
 
 void MRWLock::writeLock() {
+  _tmWrite.update();
 #ifdef _WIN32
   AcquireSRWLockExclusive(_rwLock.get());
 #else
@@ -62,6 +66,7 @@ void MRWLock::writeLock() {
 }
 
 bool MRWLock::tryWriteLock() {
+  _tmWrite.update();
 #ifdef _WIN32
   return static_cast<bool>(TryAcquireSRWLockExclusive(_rwLock.get()));
 #else
@@ -69,55 +74,95 @@ bool MRWLock::tryWriteLock() {
 #endif
 }
 
-void MRWLock::unlockRead() {
+void MRWLock::unlockRead(const std::string& parentFunc) noexcept {
 #ifdef _WIN32
   ReleaseSRWLockShared(_rwLock.get());
 #else
-  _rwLock->unlock();
+  try {
+    auto tmp = _tmRead.elapsed();
+    if (tmp > _tmDiffRead) {
+      _tmDiffRead = tmp;
+      _parentFunc = parentFunc;
+      if (_tmDiffRead > 100) {
+        std::string s = "read max : ";
+        s += std::to_string(_tmDiffRead).append(" ").append(_parentFunc);
+        puts(s.c_str());
+      }
+      if (_parentFunc.empty()) {
+        int ii = 0;
+      }
+    }
+    _rwLock->unlock();
+  } catch (...) {
+  }
 #endif
 }
 
-void MRWLock::unlockWrite() {
+void MRWLock::unlockWrite(const std::string& parentFunc) noexcept {
 #ifdef _WIN32
   ReleaseSRWLockExclusive(_rwLock.get());
 #else
-  _rwLock->unlock();
+  try {
+    auto tmp = _tmWrite.elapsed();
+    if (tmp > _tmDiffWrite) {
+      _tmDiffWrite = tmp;
+      _parentFunc = parentFunc;
+      if (_tmDiffWrite > 100) {
+        std::string s = "write max : ";
+        s += std::to_string(_tmDiffWrite).append(" ").append(_parentFunc);
+        puts(s.c_str());
+      }
+    }
+    _rwLock->unlock();
+  } catch (...) {
+  }
 #endif
 }
 
 bool MRWLock::isValid() const { return _rwLock != nullptr; }
 
-ScopedReadRWLock::ScopedReadRWLock(MRWLock& mrwLock) : _rwLock(mrwLock) { _rwLock.readLock(); }
+ScopedReadRWLock::ScopedReadRWLock(MRWLock& mrwLock, std::string parentFunc) : _rwLock(mrwLock), _parentFunc(std::move(parentFunc)) {
+  _rwLock.readLock();
+}
 
-ScopedReadRWLock::~ScopedReadRWLock() noexcept { _rwLock.unlockRead(); }
+ScopedReadRWLock::~ScopedReadRWLock() noexcept { _rwLock.unlockRead(_parentFunc); }
 
-ScopedReadRWLockWithUnlock::ScopedReadRWLockWithUnlock(MRWLock& mrwLock) : _rwLock(mrwLock) { _rwLock.readLock(); }
+ScopedReadRWLockWithUnlock::ScopedReadRWLockWithUnlock(MRWLock& mrwLock, std::string parentFunc)
+    : _rwLock(mrwLock), _parentFunc(std::move(parentFunc)) {
+  _rwLock.readLock();
+}
 
 ScopedReadRWLockWithUnlock::~ScopedReadRWLockWithUnlock() noexcept { unlock(); }
 
 void ScopedReadRWLockWithUnlock::unlock() noexcept {
   if (_locked) {
     _locked = false;
-    _rwLock.unlockRead();
+    _rwLock.unlockRead(_parentFunc);
   }
 }
 
-ScopedWriteRWLock::ScopedWriteRWLock(MRWLock& mrwLock) : _rwLock(mrwLock) { _rwLock.writeLock(); }
+ScopedWriteRWLock::ScopedWriteRWLock(MRWLock& mrwLock, std::string parentFunc) : _rwLock(mrwLock), _parentFunc(std::move(parentFunc)) {
+  _rwLock.writeLock();
+}
 
-ScopedWriteRWLock::~ScopedWriteRWLock() noexcept { _rwLock.unlockWrite(); }
+ScopedWriteRWLock::~ScopedWriteRWLock() noexcept { _rwLock.unlockWrite(_parentFunc); }
 
-ScopedWriteRWLockWithUnlock::ScopedWriteRWLockWithUnlock(MRWLock& mrwLock) : _rwLock(mrwLock) { _rwLock.writeLock(); }
+ScopedWriteRWLockWithUnlock::ScopedWriteRWLockWithUnlock(MRWLock& mrwLock, std::string parentFunc)
+    : _rwLock(mrwLock), _parentFunc(std::move(parentFunc)) {
+  _rwLock.writeLock();
+}
 
 ScopedWriteRWLockWithUnlock::~ScopedWriteRWLockWithUnlock() noexcept { unlock(); }
 
 void ScopedWriteRWLockWithUnlock::unlock() noexcept {
   if (_locked) {
     _locked = false;
-    _rwLock.unlockWrite();
+    _rwLock.unlockWrite(_parentFunc);
   }
 }
 
-ScopedWriteTryLocker::ScopedWriteTryLocker(MRWLock& mrwLock, bool locked) : _rwLock(mrwLock), _locked(locked) {}
+ScopedWriteTryLocker::ScopedWriteTryLocker(MRWLock& mrwLock, bool locked, std::string parentFunc)
+    : _rwLock(mrwLock), _parentFunc(std::move(parentFunc)), _locked(locked) {}
 ScopedWriteTryLocker::~ScopedWriteTryLocker() noexcept { unlock(); }
 bool ScopedWriteTryLocker::tryLock() {
   _locked = _rwLock.tryWriteLock();
@@ -126,7 +171,7 @@ bool ScopedWriteTryLocker::tryLock() {
 void ScopedWriteTryLocker::unlock() noexcept {
   if (_locked) {
     _locked = false;
-    _rwLock.unlockWrite();
+    _rwLock.unlockWrite(_parentFunc);
   }
 }
 }  // namespace upmq

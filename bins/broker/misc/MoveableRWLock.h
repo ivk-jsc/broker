@@ -19,6 +19,7 @@
 
 #include <memory>
 #include <atomic>
+#include <Poco/Timestamp.h>
 
 #ifdef _WIN32
 struct _RTL_SRWLOCK;
@@ -34,6 +35,11 @@ namespace upmq {
 
 class MRWLock {
   std::unique_ptr<SRWLOCK> _rwLock;
+  std::string _parentFunc;
+  Poco::Timestamp _tmRead;
+  Poco::Timestamp _tmWrite;
+  Poco::Timestamp::TimeDiff _tmDiffRead = 0;
+  Poco::Timestamp::TimeDiff _tmDiffWrite = 0;
 
  public:
   MRWLock();
@@ -52,55 +58,60 @@ class MRWLock {
 
   bool tryWriteLock();
 
-  void unlockRead();
+  void unlockRead(const std::string &parentFunc = __builtin_FUNCTION()) noexcept;
 
-  void unlockWrite();
+  void unlockWrite(const std::string &parentFunc = __builtin_FUNCTION()) noexcept;
 
   bool isValid() const;
 };
 
 class ScopedReadRWLock {
   MRWLock &_rwLock;
+  std::string _parentFunc;
 
  public:
-  explicit ScopedReadRWLock(MRWLock &mrwLock);
+  explicit ScopedReadRWLock(MRWLock &mrwLock, std::string parentFunc = __builtin_FUNCTION());
   ~ScopedReadRWLock() noexcept;
 };
 
 class ScopedReadRWLockWithUnlock {
   MRWLock &_rwLock;
+  std::string _parentFunc;
   std::atomic_bool _locked{true};
 
  public:
-  explicit ScopedReadRWLockWithUnlock(MRWLock &mrwLock);
+  explicit ScopedReadRWLockWithUnlock(MRWLock &mrwLock, std::string parentFunc = __builtin_FUNCTION());
   ~ScopedReadRWLockWithUnlock() noexcept;
   void unlock() noexcept;
 };
 
 class ScopedWriteRWLock {
   MRWLock &_rwLock;
+  std::string _parentFunc;
 
  public:
-  explicit ScopedWriteRWLock(MRWLock &mrwLock);
+  explicit ScopedWriteRWLock(MRWLock &mrwLock, std::string parentFunc = __builtin_FUNCTION());
   ~ScopedWriteRWLock() noexcept;
 };
 
 class ScopedWriteRWLockWithUnlock {
   MRWLock &_rwLock;
+  std::string _parentFunc;
   std::atomic_bool _locked{true};
 
  public:
-  explicit ScopedWriteRWLockWithUnlock(MRWLock &mrwLock);
+  explicit ScopedWriteRWLockWithUnlock(MRWLock &mrwLock, std::string parentFunc = __builtin_FUNCTION());
   ~ScopedWriteRWLockWithUnlock() noexcept;
   void unlock() noexcept;
 };
 
 class ScopedWriteTryLocker {
   MRWLock &_rwLock;
+  std::string _parentFunc;
   std::atomic_bool _locked{false};
 
  public:
-  explicit ScopedWriteTryLocker(MRWLock &mrwLock, bool locked = false);
+  explicit ScopedWriteTryLocker(MRWLock &mrwLock, bool locked = false, std::string parentFunc = __builtin_FUNCTION());
   ~ScopedWriteTryLocker() noexcept;
   bool tryLock();
   void unlock() noexcept;
