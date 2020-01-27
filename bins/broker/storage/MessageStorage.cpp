@@ -413,7 +413,7 @@ bool Storage::checkTTLIsOut(const std::string &stringMessageTime, Poco::Int64 tt
 
   return ((messageDateTime + ttlTimespan).timestamp() < currentDateTime.timestamp());
 }
-std::shared_ptr<MessageDataContainer> Storage::get(const Consumer &consumer, bool useFileLink) {
+std::vector<std::shared_ptr<MessageDataContainer>> Storage::get(const Consumer &consumer, bool useFileLink) {
   std::stringstream sql;
   bool ttlIsOut;
   storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
@@ -423,184 +423,193 @@ std::shared_ptr<MessageDataContainer> Storage::get(const Consumer &consumer, boo
     consumer.select->clear();
     consumer.abort = false;
   }
-  do {
-    msg.reset();
 
-    bool needFiltered = false;
-    if (consumer.select->empty()) {
-      sql.str("");
-      sql << "select "
-          << " msgs.num, "
-          << " msgs.message_id,"
-          << " msgs.priority, "
-          << " msgs.persistent, "
-          << " msgs.correlation_id, "
-          << " msgs.reply_to, "
-          << " msgs.type, "
-          << " msgs.client_timestamp, "
-          << " msgs.ttl, "
-          << " msgs.expiration, "
-          << " msgs.created_time, "
-          << " msgs.body_type,"
-          << " msgs.delivery_count, "
-          << " msgs.group_id, "
-          << " msgs.group_seq "
-          << " FROM " << _messageTableID << " as msgs"
-          << " where delivery_status = " << message::NOT_SENT;
-      if (consumer.noLocal) {
-        sql << " and msgs.client_id <> \'" << consumer.clientID << "\'";
-      }
-      sql << " order by msgs.priority desc, msgs.num";
+  msg.reset();
 
-      if (consumer.selector && !consumer.browser) {
-        needFiltered = true;
-        sql << ";";
-      } else {
-        sql << " limit ";
-        sql << consumer.maxNotAckMsg << ";";
-      }
+  bool needFiltered = false;
+  if (consumer.select->empty()) {
+    sql.str("");
+    sql << "select "
+        << " msgs.num, "
+        << " msgs.message_id,"
+        << " msgs.priority, "
+        << " msgs.persistent, "
+        << " msgs.correlation_id, "
+        << " msgs.reply_to, "
+        << " msgs.type, "
+        << " msgs.client_timestamp, "
+        << " msgs.ttl, "
+        << " msgs.expiration, "
+        << " msgs.created_time, "
+        << " msgs.body_type,"
+        << " msgs.delivery_count, "
+        << " msgs.group_id, "
+        << " msgs.group_seq "
+        << " FROM " << _messageTableID << " as msgs"
+        << " where delivery_status = " << message::NOT_SENT;
+    if (consumer.noLocal) {
+      sql << " and msgs.client_id <> \'" << consumer.clientID << "\'";
+    }
+    sql << " order by msgs.priority desc, msgs.num";
 
-      Consumer::Msg tempMsg;
-      dbSession.beginTX(_extParentID, storage::DBMSSession::TransactionMode::READ);
-      TRY_POCO_DATA_EXCEPTION {
-        Poco::Data::Statement select(dbSession());
+    if (consumer.selector && !consumer.browser) {
+      needFiltered = true;
+      sql << ";";
+    } else {
+      sql << " limit ";
+      sql << consumer.maxNotAckMsg << ";";
+    }
 
-        select << sql.str(), Poco::Data::Keywords::into(tempMsg.num), Poco::Data::Keywords::into(tempMsg.messageId),
-            Poco::Data::Keywords::into(tempMsg.priority), Poco::Data::Keywords::into(tempMsg.persistent),
-            Poco::Data::Keywords::into(tempMsg.correlationID), Poco::Data::Keywords::into(tempMsg.replyTo), Poco::Data::Keywords::into(tempMsg.type),
-            Poco::Data::Keywords::into(tempMsg.timestamp), Poco::Data::Keywords::into(tempMsg.ttl), Poco::Data::Keywords::into(tempMsg.expiration),
-            Poco::Data::Keywords::into(tempMsg.screated), Poco::Data::Keywords::into(tempMsg.bodyType),
-            Poco::Data::Keywords::into(tempMsg.deliveryCount), Poco::Data::Keywords::into(tempMsg.groupID),
-            Poco::Data::Keywords::into(tempMsg.groupSeq), Poco::Data::Keywords::range(0, 1);
+    Consumer::Msg tempMsg;
+    dbSession.beginTX(_extParentID, storage::DBMSSession::TransactionMode::READ);
+    TRY_POCO_DATA_EXCEPTION {
+      Poco::Data::Statement select(dbSession());
 
-        while (!select.done()) {
-          tempMsg.reset();
-          select.execute();
-          if (!tempMsg.messageId.empty() && needFiltered) {
-            storage::MappedDBMessage mappedDBMessage(tempMsg.messageId, *this);
-            mappedDBMessage.dbmsConnection = dbSession.dbmsConnnectionRef();
-            if (consumer.selector->filter(mappedDBMessage)) {
-              consumer.select->push_back(tempMsg);
-            }
-          } else if (!tempMsg.messageId.empty() && !needFiltered) {
+      select << sql.str(), Poco::Data::Keywords::into(tempMsg.num), Poco::Data::Keywords::into(tempMsg.messageId),
+          Poco::Data::Keywords::into(tempMsg.priority), Poco::Data::Keywords::into(tempMsg.persistent),
+          Poco::Data::Keywords::into(tempMsg.correlationID), Poco::Data::Keywords::into(tempMsg.replyTo), Poco::Data::Keywords::into(tempMsg.type),
+          Poco::Data::Keywords::into(tempMsg.timestamp), Poco::Data::Keywords::into(tempMsg.ttl), Poco::Data::Keywords::into(tempMsg.expiration),
+          Poco::Data::Keywords::into(tempMsg.screated), Poco::Data::Keywords::into(tempMsg.bodyType),
+          Poco::Data::Keywords::into(tempMsg.deliveryCount), Poco::Data::Keywords::into(tempMsg.groupID),
+          Poco::Data::Keywords::into(tempMsg.groupSeq), Poco::Data::Keywords::range(0, 1);
+
+      while (!select.done()) {
+        tempMsg.reset();
+        select.execute();
+        if (!tempMsg.messageId.empty() && needFiltered) {
+          storage::MappedDBMessage mappedDBMessage(tempMsg.messageId, *this);
+          mappedDBMessage.dbmsConnection = dbSession.dbmsConnnectionRef();
+          if (consumer.selector->filter(mappedDBMessage)) {
             consumer.select->push_back(tempMsg);
           }
+        } else if (!tempMsg.messageId.empty() && !needFiltered) {
+          consumer.select->push_back(tempMsg);
         }
       }
-      CATCH_POCO_DATA_EXCEPTION_PURE("get message", sql.str(), ERROR_ON_GET_MESSAGE)
     }
+    CATCH_POCO_DATA_EXCEPTION_PURE("get message", sql.str(), ERROR_ON_GET_MESSAGE)
     dbSession.commitTX();
-    if (consumer.select->empty()) {
-      return nullptr;
-    }
+  }
 
-    msg = std::move(consumer.select->front());
-    consumer.select->pop_front();
-
-    ttlIsOut = checkTTLIsOut(msg.screated, msg.ttl);
-
-    if (ttlIsOut) {
-      dbSession.beginTX(msg.messageId);
-      removeMessage(msg.messageId, dbSession);
-      dbSession.commitTX();
-      msg.messageId.clear();
-    }
-  } while (ttlIsOut);
-  if (msg.messageId.empty()) {
+  if (consumer.select->empty()) {
     return nullptr;
   }
 
-  bool needToFillProperies = true;
+  for (auto it = consumer.select->begin(); it != consumer.select->end();) {
+    ttlIsOut = checkTTLIsOut(it->screated, it->ttl);
 
-  std::shared_ptr<MessageDataContainer> sMessage = std::make_shared<MessageDataContainer>(STORAGE_CONFIG.data.get().toString());
-  try {
-    Proto::Message &message = sMessage->createMessageHeader(consumer.objectID);
-    sMessage->clientID = Poco::replace(consumer.clientID, "-browser", "");
-    sMessage->handlerNum = consumer.tcpNum;
-
-    message.set_message_id(msg.messageId);
-    message.set_destination_uri(_parent->uri());
-    message.set_priority(msg.priority);
-    message.set_persistent(msg.persistent == 1);
-    message.set_sender_id(BROKER::Instance().id());
-    sMessage->data.clear();
-    if (msg.persistent == 1) {
-      std::string data = sMessage->message().message_id();
-      data[2] = '_';
-      data = Exchange::mainDestinationPath(sMessage->message().destination_uri()) + "/" + data;
-      auto &pmap = *message.mutable_property();
-      if (useFileLink) {
-        Poco::Path path = STORAGE_CONFIG.data.get();
-        path.append(data);
-        pmap[s2s::proto::upmq_data_link].set_value_string(path.toString());
-        pmap[s2s::proto::upmq_data_link].set_is_null(false);
-
-        pmap[s2s::proto::upmq_data_parts_number].set_value_int(0);
-        pmap[s2s::proto::upmq_data_parts_number].set_is_null(false);
-
-        pmap[s2s::proto::upmq_data_parts_count].set_value_int(0);
-        pmap[s2s::proto::upmq_data_parts_count].set_is_null(false);
-
-        pmap[s2s::proto::upmq_data_part_size].set_value_int(0);
-        pmap[s2s::proto::upmq_data_part_size].set_is_null(false);
-      } else {
-        pmap.erase(s2s::proto::upmq_data_link);
-
-        pmap.erase(s2s::proto::upmq_data_parts_number);
-
-        pmap.erase(s2s::proto::upmq_data_parts_count);
-
-        pmap.erase(s2s::proto::upmq_data_part_size);
-
-        sMessage->setWithFile(true);
-        sMessage->data = data;
-      }
-    } else {
-      auto item = _nonPersistent.find(msg.messageId);
-      if (item.hasValue()) {
-        needToFillProperies = (*item)->message().property_size() > 0;
-        sMessage->data = (*item)->data;
-      } else {
-        dbSession.beginTX(msg.messageId);
-        removeMessage(msg.messageId, dbSession);
-        dbSession.commitTX();
-        return nullptr;
-      }
-    }
-    if (!msg.correlationID.isNull()) {
-      message.set_correlation_id(msg.correlationID.value());
-    }
-    if (!msg.replyTo.isNull()) {
-      message.set_reply_to(msg.replyTo);
-    }
-    message.set_type(msg.type);
-    message.set_timestamp(msg.timestamp);
-    message.set_timetolive(msg.ttl);
-    message.set_expiration(msg.expiration);
-    if (sMessage) {
-      sMessage->setDeliveryCount(msg.deliveryCount);
-    }
-    message.set_body_type(msg.bodyType);
-    message.set_session_id(consumer.session.id);
-    if (!msg.groupID.value().empty()) {
-      Poco::StringTokenizer groupIDAll(msg.groupID, "+", Poco::StringTokenizer::TOK_TRIM);
-      message.set_group_id(groupIDAll[0]);
-    } else {
-      message.set_group_id(msg.groupID.value());
-    }
-    message.set_group_seq(msg.groupSeq);
-    if (needToFillProperies) {
-      dbSession.beginTX(message.message_id() + "props", storage::DBMSSession::TransactionMode::READ);
-      fillProperties(dbSession, message);
+    if (ttlIsOut) {
+      dbSession.beginTX(it->messageId);
+      removeMessage(it->messageId, dbSession);
       dbSession.commitTX();
+      consumer.select->erase(it++);
+    } else {
+      ++it;
     }
-  } catch (Exception &ex) {
-    dbSession.beginTX(msg.messageId);
-    removeMessage(msg.messageId, dbSession);
-    dbSession.commitTX();
-    throw Exception(ex);
   }
-  return sMessage;
+
+  std::vector<std::shared_ptr<MessageDataContainer>> msgResults(consumer.select->size());
+  do {
+    msg = std::move(consumer.select->front());
+    consumer.select->pop_front();
+
+    if (msg.messageId.empty()) {
+      continue;
+    }
+
+    bool needToFillProperies = true;
+
+    std::shared_ptr<MessageDataContainer> sMessage = std::make_shared<MessageDataContainer>(STORAGE_CONFIG.data.get().toString());
+    try {
+      Proto::Message &message = sMessage->createMessageHeader(consumer.objectID);
+      sMessage->clientID = Poco::replace(consumer.clientID, "-browser", "");
+      sMessage->handlerNum = consumer.tcpNum;
+
+      message.set_message_id(msg.messageId);
+      message.set_destination_uri(_parent->uri());
+      message.set_priority(msg.priority);
+      message.set_persistent(msg.persistent == 1);
+      message.set_sender_id(BROKER::Instance().id());
+      sMessage->data.clear();
+      if (msg.persistent == 1) {
+        std::string data = sMessage->message().message_id();
+        data[2] = '_';
+        data = Exchange::mainDestinationPath(sMessage->message().destination_uri()) + "/" + data;
+        auto &pmap = *message.mutable_property();
+        if (useFileLink) {
+          Poco::Path path = STORAGE_CONFIG.data.get();
+          path.append(data);
+          pmap[s2s::proto::upmq_data_link].set_value_string(path.toString());
+          pmap[s2s::proto::upmq_data_link].set_is_null(false);
+
+          pmap[s2s::proto::upmq_data_parts_number].set_value_int(0);
+          pmap[s2s::proto::upmq_data_parts_number].set_is_null(false);
+
+          pmap[s2s::proto::upmq_data_parts_count].set_value_int(0);
+          pmap[s2s::proto::upmq_data_parts_count].set_is_null(false);
+
+          pmap[s2s::proto::upmq_data_part_size].set_value_int(0);
+          pmap[s2s::proto::upmq_data_part_size].set_is_null(false);
+        } else {
+          pmap.erase(s2s::proto::upmq_data_link);
+
+          pmap.erase(s2s::proto::upmq_data_parts_number);
+
+          pmap.erase(s2s::proto::upmq_data_parts_count);
+
+          pmap.erase(s2s::proto::upmq_data_part_size);
+
+          sMessage->setWithFile(true);
+          sMessage->data = data;
+        }
+      } else {
+        auto item = _nonPersistent.find(msg.messageId);
+        if (item.hasValue()) {
+          needToFillProperies = (*item)->message().property_size() > 0;
+          sMessage->data = (*item)->data;
+        } else {
+          dbSession.beginTX(msg.messageId);
+          removeMessage(msg.messageId, dbSession);
+          dbSession.commitTX();
+          continue;
+        }
+      }
+      if (!msg.correlationID.isNull()) {
+        message.set_correlation_id(msg.correlationID.value());
+      }
+      if (!msg.replyTo.isNull()) {
+        message.set_reply_to(msg.replyTo);
+      }
+      message.set_type(msg.type);
+      message.set_timestamp(msg.timestamp);
+      message.set_timetolive(msg.ttl);
+      message.set_expiration(msg.expiration);
+      if (sMessage) {
+        sMessage->setDeliveryCount(msg.deliveryCount);
+      }
+      message.set_body_type(msg.bodyType);
+      message.set_session_id(consumer.session.id);
+      if (!msg.groupID.value().empty()) {
+        Poco::StringTokenizer groupIDAll(msg.groupID, "+", Poco::StringTokenizer::TOK_TRIM);
+        message.set_group_id(groupIDAll[0]);
+      } else {
+        message.set_group_id(msg.groupID.value());
+      }
+      message.set_group_seq(msg.groupSeq);
+      if (needToFillProperies) {
+        dbSession.beginTX(message.message_id() + "props", storage::DBMSSession::TransactionMode::READ);
+        fillProperties(dbSession, message);
+        dbSession.commitTX();
+      }
+    } catch (Exception &ex) {
+      dbSession.beginTX(msg.messageId);
+      removeMessage(msg.messageId, dbSession);
+      dbSession.commitTX();
+      throw Exception(ex);
+    }
+    msgResults.push_back(std::move(sMessage));
+  } while (!consumer.select->empty());
+  return msgResults;
 }
 void Storage::setParent(const broker::Destination *parent) { _parent = parent; }
 const std::string &Storage::uri() const { return _parent ? _parent->uri() : emptyString; }

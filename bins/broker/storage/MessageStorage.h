@@ -69,7 +69,7 @@ class Storage {
   const std::string &messageTableID() const;
   const std::string &propertyTableID() const;
   void save(const upmq::broker::Session &session, const MessageDataContainer &sMessage);
-  std::shared_ptr<MessageDataContainer> get(const Consumer &consumer, bool useFileLink);
+  std::vector<std::shared_ptr<MessageDataContainer>> get(const Consumer &consumer, bool useFileLink);
   void removeGroupMessage(const std::string &groupID, const upmq::broker::Session &session);
   void removeMessagesBySession(const upmq::broker::Session &session);
   void resetMessagesBySession(const upmq::broker::Session &session);

@@ -168,7 +168,9 @@ void DBMSConnectionPool::beginTX(Poco::Data::Session &dbSession, const std::stri
   }
 #endif  // HAS_POSTGRESQL
   else {
-
+    while (dbSession.isTransaction()) {
+      Poco::Thread::yield();
+    }
     std::string transactionType = "immediate";
     if (mode == storage::DBMSSession::TransactionMode::READ) {
       transactionType.clear();
