@@ -69,19 +69,25 @@ bool MRWLock::tryWriteLock() {
 #endif
 }
 
-void MRWLock::unlockRead() {
+void MRWLock::unlockRead() noexcept {
 #ifdef _WIN32
   ReleaseSRWLockShared(_rwLock.get());
 #else
-  _rwLock->unlock();
+  try {
+    _rwLock->unlock();
+  } catch (...) {
+  }
 #endif
 }
 
-void MRWLock::unlockWrite() {
+void MRWLock::unlockWrite() noexcept {
 #ifdef _WIN32
   ReleaseSRWLockExclusive(_rwLock.get());
 #else
-  _rwLock->unlock();
+  try {
+    _rwLock->unlock();
+  } catch (...) {
+  }
 #endif
 }
 

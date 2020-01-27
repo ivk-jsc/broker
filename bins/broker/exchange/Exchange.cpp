@@ -183,10 +183,10 @@ void Exchange::addSubscription(const upmq::broker::Session &session, const Messa
   Destination &dest = destination(sMessage.subscription().destination_uri(), DestinationCreationMode::NO_CREATE);
   if (dest.isBindToSubscriber(sMessage.clientID)) {
     dest.subscription(session, sMessage);
-    std::stringstream sql;
-    sql << "update " << _destinationsT << " set subscriptions_count = " << dest.subscriptionsTrueCount() << ";";
-    TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
-    CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't update subscriptions count", sql.str(), ERROR_ON_SUBSCRIPTION)
+    //    std::stringstream sql;
+    //    sql << "update " << _destinationsT << " set subscriptions_count = " << dest.subscriptionsTrueCount() << ";";
+    //    TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
+    //    CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't update subscriptions count", sql.str(), ERROR_ON_SUBSCRIPTION)
   } else {
     throw EXCEPTION("this destination was bound to another subscriber", dest.name() + " : " + sMessage.clientID, ERROR_ON_SUBSCRIPTION);
   }

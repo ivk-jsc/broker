@@ -52,9 +52,9 @@ class MRWLock {
 
   bool tryWriteLock();
 
-  void unlockRead();
+  void unlockRead() noexcept;
 
-  void unlockWrite();
+  void unlockWrite() noexcept;
 
   bool isValid() const;
 };

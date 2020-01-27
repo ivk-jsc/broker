@@ -127,17 +127,18 @@ class FSUnorderedNode {
     _items = o._items;
   }
   FSUnorderedNode &operator=(const FSUnorderedNode &o) {
-    upmq::ScopedReadRWLock oRWLock(o._rwLock);
-    upmq::ScopedWriteRWLock thisRWLock(_rwLock);
-    _items = o._items;
+    if (this != &o) {
+      upmq::ScopedReadRWLock oRWLock(o._rwLock);
+      upmq::ScopedWriteRWLock thisRWLock(_rwLock);
+      _items = o._items;
+    }
     return *this;
   }
   FSReadLockedValue<Key, Value> find(const Key &key) const {
     _rwLock.readLock();
     auto item = std::find_if(_items.begin(), _items.end(), [&key](const KVPair &pair) { return pair.first == key; });
     if (item != _items.end()) {
-      FSReadLockedValue<Key, Value> fs(_rwLock, item->first, item->second);
-      return fs;
+      return FSReadLockedValue<Key, Value>(_rwLock, item->first, item->second);
     }
     _rwLock.unlockRead();
     return {};
@@ -147,8 +148,7 @@ class FSUnorderedNode {
     _rwLock.readLock();
     auto item = std::find_if(_items.begin(), _items.end(), f);
     if (item != _items.end()) {
-      FSReadLockedValue<Key, Value> fs(_rwLock, item->first, item->second);
-      return fs;
+      return FSReadLockedValue<Key, Value>(_rwLock, item->first, item->second);
     }
     _rwLock.unlockRead();
     return {};
@@ -297,13 +297,15 @@ class FSUnorderedMap {
     return *this;
   }
   FSUnorderedMap &operator=(const FSUnorderedMap &o) {
-    clear();
-    upmq::ScopedReadRWLock oRWLock(o._validIndexesLock);
-    upmq::ScopedWriteRWLock thisRWLock(_validIndexesLock);
-    _items = o._items;
-    _size = o._size;
-    _realSize = o._realSize.load();
-    _validIndexes = o._validIndexes;
+    if (this != &o) {
+      clear();
+      upmq::ScopedReadRWLock oRWLock(o._validIndexesLock);
+      upmq::ScopedWriteRWLock thisRWLock(_validIndexesLock);
+      _items = o._items;
+      _size = o._size;
+      _realSize = o._realSize.load();
+      _validIndexes = o._validIndexes;
+    }
     return *this;
   }
   template <typename F>

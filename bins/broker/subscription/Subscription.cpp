@@ -516,10 +516,10 @@ void Subscription::destroy() {
     TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::now; }
     CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't erase subscription", sql.str(), ERROR_ON_UNSUBSCRIPTION)
 
-    sql.str("");
-    sql << "update " << EXCHANGE::Instance().destinationsT() << " set subscriptions_count = " << _destination.subscriptionsTrueCount();
-    TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::now; }
-    CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't update subscriptions count", sql.str(), ERROR_ON_UNSUBSCRIPTION)
+    //    sql.str("");
+    //    sql << "update " << EXCHANGE::Instance().destinationsT() << " set subscriptions_count = " << _destination.subscriptionsTrueCount();
+    //    TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::now; }
+    //    CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't update subscriptions count", sql.str(), ERROR_ON_UNSUBSCRIPTION)
   }
   dbSession.commitTX();
   _isDestroyed = true;

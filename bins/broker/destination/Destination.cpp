@@ -49,11 +49,11 @@ Destination::~Destination() {
   try {
     std::stringstream sql;
     if (!isTemporary()) {
-      sql << "update " << _exchange.destinationsT() << " set subscriptions_count = 0"
-          << " where id = \'" << _id << "\'"
-          << ";";
-      TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
-      CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't update subscription count", sql.str(), ERROR_UNKNOWN)
+      //      sql << "update " << _exchange.destinationsT() << " set subscriptions_count = 0"
+      //          << " where id = \'" << _id << "\'"
+      //          << ";";
+      //      TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
+      //      CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't update subscription count", sql.str(), ERROR_UNKNOWN)
     }
     {
       _subscriptions.changeForEach([this](SubscriptionsList::ItemType::KVPair &pair) {
@@ -242,7 +242,9 @@ Subscription &Destination::subscription(const Session &session, const MessageDat
 
     _subscriptions.emplace(std::string(name), createSubscription(name, routingK, type));
     auto item = _subscriptions.find(name);
-    subscribeOnNotify(*item);
+    if (isTopicFamily()) {
+      subscribeOnNotify(*item);
+    }
     addSendersFromCache(session, sMessage, *item);
 
     addS2Subs(session.id(), name);
@@ -565,7 +567,7 @@ bool Destination::isBindToSubscriber(const std::string &clientID) const {
   if (_predefinedSubscribers.empty()) {
     return true;
   }
-  return (_predefinedSubscribers.count(clientID) > 0);
+  return (_predefinedSubscribers.find(clientID) != _predefinedPublisher.end());
 }
 bool Destination::isSubscriberUseFileLink(const std::string &clientID) const {
   upmq::ScopedReadRWLock readRWLock(_predefSubscribersLock);
