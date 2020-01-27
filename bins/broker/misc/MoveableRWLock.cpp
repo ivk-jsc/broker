@@ -83,7 +83,7 @@ void MRWLock::unlockRead(const std::string& parentFunc) noexcept {
     if (tmp > _tmDiffRead) {
       _tmDiffRead = tmp;
       _parentFunc = parentFunc;
-      if (_tmDiffRead > 100) {
+      if (_tmDiffRead > 1000) {
         std::string s = "read max : ";
         s += std::to_string(_tmDiffRead).append(" ").append(_parentFunc);
         puts(s.c_str());
@@ -107,7 +107,7 @@ void MRWLock::unlockWrite(const std::string& parentFunc) noexcept {
     if (tmp > _tmDiffWrite) {
       _tmDiffWrite = tmp;
       _parentFunc = parentFunc;
-      if (_tmDiffWrite > 100) {
+      if (_tmDiffWrite > 1000) {
         std::string s = "write max : ";
         s += std::to_string(_tmDiffWrite).append(" ").append(_parentFunc);
         puts(s.c_str());
