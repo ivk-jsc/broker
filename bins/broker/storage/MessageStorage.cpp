@@ -30,6 +30,7 @@
 #include "MiscDefines.h"
 #include "S2SProto.h"
 #include "Defines.h"
+#include "MessageStorage.h"
 
 using upmq::broker::storage::DBMSConnectionPool;
 
@@ -239,18 +240,7 @@ message::GroupStatus Storage::checkIsGroupClosed(const MessageDataContainer &sMe
 }
 int Storage::deleteMessageHeader(storage::DBMSSession &dbSession, const std::string &messageID) {
   std::stringstream sql;
-  int persistent = static_cast<int>(_nonPersistent.contains(messageID));
-  if (persistent != 0) {
-    sql << "select "
-        << " msgs.persistent "
-        << " FROM " << _messageTableID << " as msgs"
-        << " where message_id = \'" << messageID << "\'"
-        << ";" << non_std_endl;
-
-    TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::into(persistent), Poco::Data::Keywords::now; }
-    CATCH_POCO_DATA_EXCEPTION_PURE_NO_INVALIDEXCEPT_NO_EXCEPT("can't get message persistance for ack", sql.str(), ERROR_ON_ACK_MESSAGE)
-  }
-  sql.str("");
+  int persistent = static_cast<int>(!_nonPersistent.contains(messageID));
   sql << "delete from " << _messageTableID << " where message_id = \'" << messageID << "\'"
       << ";" << non_std_endl;
   TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::now; }
@@ -413,18 +403,15 @@ bool Storage::checkTTLIsOut(const std::string &stringMessageTime, Poco::Int64 tt
 
   return ((messageDateTime + ttlTimespan).timestamp() < currentDateTime.timestamp());
 }
-std::vector<std::shared_ptr<MessageDataContainer>> Storage::get(const Consumer &consumer, bool useFileLink) {
+std::shared_ptr<MessageDataContainer> Storage::get(const Consumer &consumer, bool useFileLink) {
   std::stringstream sql;
-  bool ttlIsOut;
   storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
-  Consumer::Msg msg;
 
   if (consumer.abort) {
     consumer.select->clear();
+    consumer.sentCache.clear();
     consumer.abort = false;
   }
-
-  msg.reset();
 
   bool needFiltered = false;
   if (consumer.select->empty()) {
@@ -460,8 +447,8 @@ std::vector<std::shared_ptr<MessageDataContainer>> Storage::get(const Consumer &
       sql << consumer.maxNotAckMsg << ";";
     }
 
-    Consumer::Msg tempMsg;
-    dbSession.beginTX(_extParentID, storage::DBMSSession::TransactionMode::READ);
+    consumer::Msg tempMsg;
+    dbSession.beginTX(_extParentID);
     TRY_POCO_DATA_EXCEPTION {
       Poco::Data::Statement select(dbSession());
 
@@ -480,136 +467,31 @@ std::vector<std::shared_ptr<MessageDataContainer>> Storage::get(const Consumer &
           storage::MappedDBMessage mappedDBMessage(tempMsg.messageId, *this);
           mappedDBMessage.dbmsConnection = dbSession.dbmsConnnectionRef();
           if (consumer.selector->filter(mappedDBMessage)) {
-            consumer.select->push_back(tempMsg);
+            auto sMessage = makeMessage(dbSession, tempMsg, consumer, useFileLink);
+            if (sMessage) {
+              consumer.select->push_back(std::move(sMessage));
+            }
           }
         } else if (!tempMsg.messageId.empty() && !needFiltered) {
-          consumer.select->push_back(tempMsg);
+          auto sMessage = makeMessage(dbSession, tempMsg, consumer, useFileLink);
+          if (sMessage) {
+            consumer.select->push_back(std::move(sMessage));
+          }
         }
       }
+      consumer.sentCache.reserve(consumer.select->size());
     }
     CATCH_POCO_DATA_EXCEPTION_PURE("get message", sql.str(), ERROR_ON_GET_MESSAGE)
     dbSession.commitTX();
   }
 
-  if (consumer.select->empty()) {
-    return nullptr;
-  }
-
-  for (auto it = consumer.select->begin(); it != consumer.select->end();) {
-    ttlIsOut = checkTTLIsOut(it->screated, it->ttl);
-
-    if (ttlIsOut) {
-      dbSession.beginTX(it->messageId);
-      removeMessage(it->messageId, dbSession);
-      dbSession.commitTX();
-      consumer.select->erase(it++);
-    } else {
-      ++it;
-    }
-  }
-
-  std::vector<std::shared_ptr<MessageDataContainer>> msgResults(consumer.select->size());
-  do {
-    msg = std::move(consumer.select->front());
+  std::shared_ptr<MessageDataContainer> msgResult;
+  if (!consumer.select->empty()) {
+    msgResult = std::move(consumer.select->front());
     consumer.select->pop_front();
+  }
 
-    if (msg.messageId.empty()) {
-      continue;
-    }
-
-    bool needToFillProperies = true;
-
-    std::shared_ptr<MessageDataContainer> sMessage = std::make_shared<MessageDataContainer>(STORAGE_CONFIG.data.get().toString());
-    try {
-      Proto::Message &message = sMessage->createMessageHeader(consumer.objectID);
-      sMessage->clientID = Poco::replace(consumer.clientID, "-browser", "");
-      sMessage->handlerNum = consumer.tcpNum;
-
-      message.set_message_id(msg.messageId);
-      message.set_destination_uri(_parent->uri());
-      message.set_priority(msg.priority);
-      message.set_persistent(msg.persistent == 1);
-      message.set_sender_id(BROKER::Instance().id());
-      sMessage->data.clear();
-      if (msg.persistent == 1) {
-        std::string data = sMessage->message().message_id();
-        data[2] = '_';
-        data = Exchange::mainDestinationPath(sMessage->message().destination_uri()) + "/" + data;
-        auto &pmap = *message.mutable_property();
-        if (useFileLink) {
-          Poco::Path path = STORAGE_CONFIG.data.get();
-          path.append(data);
-          pmap[s2s::proto::upmq_data_link].set_value_string(path.toString());
-          pmap[s2s::proto::upmq_data_link].set_is_null(false);
-
-          pmap[s2s::proto::upmq_data_parts_number].set_value_int(0);
-          pmap[s2s::proto::upmq_data_parts_number].set_is_null(false);
-
-          pmap[s2s::proto::upmq_data_parts_count].set_value_int(0);
-          pmap[s2s::proto::upmq_data_parts_count].set_is_null(false);
-
-          pmap[s2s::proto::upmq_data_part_size].set_value_int(0);
-          pmap[s2s::proto::upmq_data_part_size].set_is_null(false);
-        } else {
-          pmap.erase(s2s::proto::upmq_data_link);
-
-          pmap.erase(s2s::proto::upmq_data_parts_number);
-
-          pmap.erase(s2s::proto::upmq_data_parts_count);
-
-          pmap.erase(s2s::proto::upmq_data_part_size);
-
-          sMessage->setWithFile(true);
-          sMessage->data = data;
-        }
-      } else {
-        auto item = _nonPersistent.find(msg.messageId);
-        if (item.hasValue()) {
-          needToFillProperies = (*item)->message().property_size() > 0;
-          sMessage->data = (*item)->data;
-        } else {
-          dbSession.beginTX(msg.messageId);
-          removeMessage(msg.messageId, dbSession);
-          dbSession.commitTX();
-          continue;
-        }
-      }
-      if (!msg.correlationID.isNull()) {
-        message.set_correlation_id(msg.correlationID.value());
-      }
-      if (!msg.replyTo.isNull()) {
-        message.set_reply_to(msg.replyTo);
-      }
-      message.set_type(msg.type);
-      message.set_timestamp(msg.timestamp);
-      message.set_timetolive(msg.ttl);
-      message.set_expiration(msg.expiration);
-      if (sMessage) {
-        sMessage->setDeliveryCount(msg.deliveryCount);
-      }
-      message.set_body_type(msg.bodyType);
-      message.set_session_id(consumer.session.id);
-      if (!msg.groupID.value().empty()) {
-        Poco::StringTokenizer groupIDAll(msg.groupID, "+", Poco::StringTokenizer::TOK_TRIM);
-        message.set_group_id(groupIDAll[0]);
-      } else {
-        message.set_group_id(msg.groupID.value());
-      }
-      message.set_group_seq(msg.groupSeq);
-      if (needToFillProperies) {
-        dbSession.beginTX(message.message_id() + "props", storage::DBMSSession::TransactionMode::READ);
-        fillProperties(dbSession, message);
-        dbSession.commitTX();
-      }
-    } catch (Exception &ex) {
-      dbSession.beginTX(msg.messageId);
-      removeMessage(msg.messageId, dbSession);
-      dbSession.commitTX();
-      throw Exception(ex);
-    }
-    msgResults.push_back(std::move(sMessage));
-  } while (!consumer.select->empty());
-  return msgResults;
+  return msgResult;
 }
 void Storage::setParent(const broker::Destination *parent) { _parent = parent; }
 const std::string &Storage::uri() const { return _parent ? _parent->uri() : emptyString; }
@@ -864,6 +746,25 @@ void Storage::setMessageToWasSent(const std::string &messageID, const Consumer &
   TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
   CATCH_POCO_DATA_EXCEPTION_PURE("can't set message to was_sent ", sql.str(), ERROR_STORAGE)
 }
+void Storage::setMessagesToWasSent(const std::vector<std::string> &messages, const Consumer &consumer) {
+  std::stringstream sql;
+  sql << "update " << _messageTableID << " set delivery_status = " << message::WAS_SENT << ",    consumer_id = \'" << consumer.id << "\'"
+      << ",    delivery_count  = delivery_count + 1";
+  if (consumer.session.type == SESSION_TRANSACTED) {
+    consumer.session.txName = BROKER::Instance().currentTransaction(consumer.clientID, consumer.session.id);
+    sql << ",  transaction_id = \'" << consumer.session.txName << "\'";
+  }
+  sql << " where ";
+  for (size_t i = 0; i < messages.size(); ++i) {
+    if (i > 0) {
+      sql << " or ";
+    }
+    sql << "message_id = \'" << messages[i] << "\'";
+  }
+  sql << ";";
+  TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
+  CATCH_POCO_DATA_EXCEPTION_PURE("can't set message to was_sent ", sql.str(), ERROR_STORAGE)
+}
 void Storage::setMessageToDelivered(const upmq::broker::Session &session, const std::string &messageID) {
   std::stringstream sql;
   sql << "update " << _messageTableID << " set delivery_status = " << message::DELIVERED << " where message_id = \'" << messageID << "\'"
@@ -1030,6 +931,114 @@ int64_t Storage::size() {
   CATCH_POCO_DATA_EXCEPTION_PURE_NO_INVALIDEXCEPT_NO_EXCEPT("can't get queue size", sql.str(), ERROR_STORAGE)
   dbSession.commitTX();
   return result;
+}
+std::shared_ptr<MessageDataContainer> Storage::makeMessage(storage::DBMSSession &dbSession,
+                                                           const consumer::Msg &msgInfo,
+                                                           const Consumer &consumer,
+                                                           bool useFileLink) {
+  std::shared_ptr<MessageDataContainer> sMessage;
+  if (!msgInfo.messageId.empty()) {
+    bool ttlIsOut = checkTTLIsOut(msgInfo.screated, msgInfo.ttl);
+
+    if (ttlIsOut) {
+      // dbSession.beginTX(it->messageId);
+      removeMessage(msgInfo.messageId, dbSession);
+      // dbSession.commitTX();
+      return {};
+    }
+
+    bool needToFillProperties = true;
+
+    sMessage = std::make_shared<MessageDataContainer>(STORAGE_CONFIG.data.get().toString());
+    try {
+      Proto::Message &message = sMessage->createMessageHeader(consumer.objectID);
+      sMessage->clientID = Poco::replace(consumer.clientID, "-browser", "");
+      sMessage->handlerNum = consumer.tcpNum;
+
+      message.set_message_id(msgInfo.messageId);
+      message.set_destination_uri(_parent->uri());
+      message.set_priority(msgInfo.priority);
+      message.set_persistent(msgInfo.persistent == 1);
+      message.set_sender_id(BROKER::Instance().id());
+      sMessage->data.clear();
+      if (msgInfo.persistent == 1) {
+        std::string data = sMessage->message().message_id();
+        data[2] = '_';
+        data = Exchange::mainDestinationPath(sMessage->message().destination_uri()) + "/" + data;
+        auto &pmap = *message.mutable_property();
+        if (useFileLink) {
+          Poco::Path path = STORAGE_CONFIG.data.get();
+          path.append(data);
+          pmap[s2s::proto::upmq_data_link].set_value_string(path.toString());
+          pmap[s2s::proto::upmq_data_link].set_is_null(false);
+
+          pmap[s2s::proto::upmq_data_parts_number].set_value_int(0);
+          pmap[s2s::proto::upmq_data_parts_number].set_is_null(false);
+
+          pmap[s2s::proto::upmq_data_parts_count].set_value_int(0);
+          pmap[s2s::proto::upmq_data_parts_count].set_is_null(false);
+
+          pmap[s2s::proto::upmq_data_part_size].set_value_int(0);
+          pmap[s2s::proto::upmq_data_part_size].set_is_null(false);
+        } else {
+          pmap.erase(s2s::proto::upmq_data_link);
+
+          pmap.erase(s2s::proto::upmq_data_parts_number);
+
+          pmap.erase(s2s::proto::upmq_data_parts_count);
+
+          pmap.erase(s2s::proto::upmq_data_part_size);
+
+          sMessage->setWithFile(true);
+          sMessage->data = data;
+        }
+      } else {
+        auto item = _nonPersistent.find(msgInfo.messageId);
+        if (item.hasValue()) {
+          needToFillProperties = (*item)->message().property_size() > 0;
+          sMessage->data = (*item)->data;
+        } else {
+          // dbSession.beginTX(msgInfo.messageId);
+          removeMessage(msgInfo.messageId, dbSession);
+          // dbSession.commitTX();
+          return {};
+        }
+      }
+      if (!msgInfo.correlationID.isNull()) {
+        message.set_correlation_id(msgInfo.correlationID.value());
+      }
+      if (!msgInfo.replyTo.isNull()) {
+        message.set_reply_to(msgInfo.replyTo);
+      }
+      message.set_type(msgInfo.type);
+      message.set_timestamp(msgInfo.timestamp);
+      message.set_timetolive(msgInfo.ttl);
+      message.set_expiration(msgInfo.expiration);
+      if (sMessage) {
+        sMessage->setDeliveryCount(msgInfo.deliveryCount);
+      }
+      message.set_body_type(msgInfo.bodyType);
+      message.set_session_id(consumer.session.id);
+      if (!msgInfo.groupID.value().empty()) {
+        Poco::StringTokenizer groupIDAll(msgInfo.groupID, "+", Poco::StringTokenizer::TOK_TRIM);
+        message.set_group_id(groupIDAll[0]);
+      } else {
+        message.set_group_id(msgInfo.groupID.value());
+      }
+      message.set_group_seq(msgInfo.groupSeq);
+      if (needToFillProperties) {
+        // dbSession.beginTX(message.message_id() + "props", storage::DBMSSession::TransactionMode::READ);
+        fillProperties(dbSession, message);
+        // dbSession.commitTX();
+      }
+    } catch (Exception &ex) {
+      // dbSession.beginTX(msgInfo.messageId);
+      removeMessage(msgInfo.messageId, dbSession);
+      // dbSession.commitTX();
+      throw Exception(ex);
+    }
+  }
+  return sMessage;
 }
 void Storage::fillProperties(storage::DBMSSession &dbSession, Proto::Message &message) {
   std::stringstream sql;

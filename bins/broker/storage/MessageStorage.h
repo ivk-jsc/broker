@@ -31,6 +31,9 @@ namespace broker {
 class Session;
 class Destination;
 class Consumer;
+namespace consumer {
+struct Msg;
+}
 
 class Storage {
  public:
@@ -49,6 +52,10 @@ class Storage {
 
  private:
   std::string saveTableName(const upmq::broker::Session &session) const;
+  std::shared_ptr<MessageDataContainer> makeMessage(storage::DBMSSession &dbSession,
+                                                    const consumer::Msg &msgInfo,
+                                                    const Consumer &consumer,
+                                                    bool useFileLink);
   void fillProperties(storage::DBMSSession &dbSession, Proto::Message &message);
   int deleteMessageHeader(storage::DBMSSession &dbSession, const std::string &messageID);
   void deleteMessageProperties(storage::DBMSSession &dbSession, const std::string &messageID);
@@ -69,7 +76,7 @@ class Storage {
   const std::string &messageTableID() const;
   const std::string &propertyTableID() const;
   void save(const upmq::broker::Session &session, const MessageDataContainer &sMessage);
-  std::vector<std::shared_ptr<MessageDataContainer>> get(const Consumer &consumer, bool useFileLink);
+  std::shared_ptr<MessageDataContainer> get(const Consumer &consumer, bool useFileLink);
   void removeGroupMessage(const std::string &groupID, const upmq::broker::Session &session);
   void removeMessagesBySession(const upmq::broker::Session &session);
   void resetMessagesBySession(const upmq::broker::Session &session);
@@ -84,6 +91,7 @@ class Storage {
   std::string generateSQLProperties() const;
   std::vector<MessageInfo> getMessagesBelow(const upmq::broker::Session &session, const std::string &messageID) const;
   void setMessageToWasSent(const std::string &messageID, const Consumer &consumer);
+  void setMessagesToWasSent(const std::vector<std::string> &messages, const Consumer &consumer);
   void setMessageToDelivered(const upmq::broker::Session &session, const std::string &messageID);
   void setMessagesToNotSent(const Consumer &consumer);
   void setMessageToLastInGroup(const upmq::broker::Session &session, const std::string &messageID);

@@ -29,7 +29,7 @@ upmq::broker::Consumer::Consumer(int _num,
                                  bool _noLocal,
                                  bool _browser,
                                  int _maxNotAxkMsg,
-                                 std::shared_ptr<std::deque<Consumer::Msg>> selectCache)
+                                 std::shared_ptr<std::deque<std::shared_ptr<MessageDataContainer>>> selectCache)
     : num(_num),
       selector((_selector.empty() ? nullptr : (new storage::Selector(_selector)))),
       objectID(std::move(_objectID)),
@@ -46,7 +46,17 @@ upmq::broker::Consumer::~Consumer() {}
 void upmq::broker::Consumer::stop() const { isRunning = false; }
 void upmq::broker::Consumer::start() const { isRunning = true; }
 upmq::broker::Consumer upmq::broker::Consumer::makeFakeConsumer() {
-  return Consumer(0, "", 0, "", "", Proto::Acknowledge::AUTO_ACKNOWLEDGE, "", false, false, 0, std::make_shared<std::deque<Consumer::Msg>>());
+  return Consumer(0,
+                  "",
+                  0,
+                  "",
+                  "",
+                  Proto::Acknowledge::AUTO_ACKNOWLEDGE,
+                  "",
+                  false,
+                  false,
+                  0,
+                  std::make_shared<std::deque<std::shared_ptr<MessageDataContainer>>>());
 }
 std::string upmq::broker::Consumer::genConsumerID(const std::string &_clientID,
                                                   const std::string &_tcpID,

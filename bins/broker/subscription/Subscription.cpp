@@ -48,7 +48,7 @@ Subscription::Subscription(const Destination &destination, const std::string &id
       _isDestroyed(false),
       _isInited(true),
       _hasSnapshot(false),
-      _roundRobinCache(new std::deque<Consumer::Msg>) {
+      _roundRobinCache(new std::deque<std::shared_ptr<MessageDataContainer>>) {
   _storage.setParent(&destination);
 
   std::stringstream sql;
@@ -195,11 +195,11 @@ void Subscription::addClient(
   CATCH_POCO_DATA_EXCEPTION_PURE("can't add consumer", sql.str(), ERROR_ON_SUBSCRIPTION)
   dbSession.commitTX();
 
-  std::shared_ptr<std::deque<Consumer::Msg>> selectCache;
+  std::shared_ptr<std::deque<std::shared_ptr<MessageDataContainer>>> selectCache;
   if (_destination.isQueueFamily() && _destination.consumerMode() == ConsumerMode::ROUND_ROBIN) {
     selectCache = _roundRobinCache;
   } else {
-    selectCache = std::make_shared<std::deque<Consumer::Msg>>();
+    selectCache = std::make_shared<std::deque<std::shared_ptr<MessageDataContainer>>>();
   }
 
   _destination.addToNotAckList(objectID, session.connection().maxNotAcknowledgedMessages(tcpConnectionNum));
@@ -305,23 +305,24 @@ Subscription::ProcessMessageResult Subscription::getNextMessage() {
       return ProcessMessageResult::CONSUMER_CANT_SEND;
     }
 
-    std::vector<std::shared_ptr<MessageDataContainer>> sMessages;
+    std::shared_ptr<MessageDataContainer> sMessage;
     Storage &storage = (_destination.isQueueFamily() && !isBrowser()) ? _destination.storage() : _storage;
     const bool useFileLink = _destination.isSubscriberUseFileLink(consumer->clientID);
-    try {
-      sMessages = storage.get(*consumer, useFileLink);
-    } catch (Exception &ex) {
-      consumer->select->clear();
-      log->error("%s", std::string(consumer->clientID).append(" ! <= [").append(std::string(__FUNCTION__)).append("] ").append(ex.message()));
-      swTryLocker.unlock();
-      return ProcessMessageResult::SOME_ERROR;
-    } catch (std::exception &stdex) {
-      consumer->select->clear();
-      log->error("%s", std::string(consumer->clientID).append(" ! <= [").append(std::string(__FUNCTION__)).append("] ").append(stdex.what()));
-      swTryLocker.unlock();
-      return ProcessMessageResult::SOME_ERROR;
-    }
-    for (const auto &sMessage : sMessages) {
+    size_t consumersSize = _consumers.size();
+    do {
+      try {
+        sMessage = storage.get(*consumer, useFileLink);
+      } catch (Exception &ex) {
+        consumer->select->clear();
+        log->error("%s", std::string(consumer->clientID).append(" ! <= [").append(std::string(__FUNCTION__)).append("] ").append(ex.message()));
+        swTryLocker.unlock();
+        return ProcessMessageResult::SOME_ERROR;
+      } catch (std::exception &stdex) {
+        consumer->select->clear();
+        log->error("%s", std::string(consumer->clientID).append(" ! <= [").append(std::string(__FUNCTION__)).append("] ").append(stdex.what()));
+        swTryLocker.unlock();
+        return ProcessMessageResult::SOME_ERROR;
+      }
       if (sMessage) {
         if (!sMessage->message().has_group_id()) {
           changeCurrentConsumerNumber();
@@ -357,8 +358,15 @@ Subscription::ProcessMessageResult Subscription::getNextMessage() {
                                .append("] (")
                                .append(std::to_string(_messageCounter))
                                .append(")"));
-
-          storage.setMessageToWasSent(messageID, *consumer);
+          if (consumersSize > 1) {
+            storage.setMessageToWasSent(messageID, *consumer);
+          } else {
+            consumer->sentCache.push_back(messageID);
+            if (consumer->select->empty()) {
+              storage.setMessagesToWasSent(consumer->sentCache, *consumer);
+              consumer->sentCache.clear();
+            }
+          }
           _destination.decreesNotAcknowledged(consumer->objectID);
           if (consumer->session.type == Proto::Acknowledge::CLIENT_ACKNOWLEDGE || !consumer->select->empty()) {
             EXCHANGE::Instance().addNewMessageEvent(_destination.name());
@@ -392,7 +400,7 @@ Subscription::ProcessMessageResult Subscription::getNextMessage() {
         swTryLocker.unlock();
         return ProcessMessageResult::NO_MESSAGE;
       }
-    }
+    } while (consumersSize == 1 && !consumer->select->empty());
     swTryLocker.unlock();
     return ProcessMessageResult::OK_COMPLETE;
   }
