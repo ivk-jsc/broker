@@ -65,9 +65,13 @@ void SocketReactor::run() {
 
   while (!_stop) {
     try {
+      size_t cnt = _handlers.size();
       readable.clear();
+      readable.reserve(cnt);
       writable.clear();
+      writable.reserve(cnt);
       except.clear();
+      writable.reserve(cnt);
       int nSockets = 0;
 
       _handlers.applyForEach([&readable, &writable, &except, &nSockets, this](const EventHandlerMap::ItemType::KVPair& it) {
