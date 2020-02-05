@@ -409,7 +409,6 @@ std::shared_ptr<MessageDataContainer> Storage::get(const Consumer &consumer, boo
 
   if (consumer.abort) {
     consumer.select->clear();
-    consumer.sentCache.clear();
     consumer.abort = false;
   }
 
@@ -479,7 +478,7 @@ std::shared_ptr<MessageDataContainer> Storage::get(const Consumer &consumer, boo
           }
         }
       }
-      consumer.sentCache.reserve(consumer.select->size());
+      setMessagesToWasSent(dbSession, consumer);
     }
     CATCH_POCO_DATA_EXCEPTION_PURE("get message", sql.str(), ERROR_ON_GET_MESSAGE)
     dbSession.commitTX();
@@ -746,24 +745,27 @@ void Storage::setMessageToWasSent(const std::string &messageID, const Consumer &
   TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
   CATCH_POCO_DATA_EXCEPTION_PURE("can't set message to was_sent ", sql.str(), ERROR_STORAGE)
 }
-void Storage::setMessagesToWasSent(const std::vector<std::string> &messages, const Consumer &consumer) {
-  std::stringstream sql;
-  sql << "update " << _messageTableID << " set delivery_status = " << message::WAS_SENT << ",    consumer_id = \'" << consumer.id << "\'"
-      << ",    delivery_count  = delivery_count + 1";
-  if (consumer.session.type == SESSION_TRANSACTED) {
-    consumer.session.txName = BROKER::Instance().currentTransaction(consumer.clientID, consumer.session.id);
-    sql << ",  transaction_id = \'" << consumer.session.txName << "\'";
-  }
-  sql << " where ";
-  for (size_t i = 0; i < messages.size(); ++i) {
-    if (i > 0) {
-      sql << " or ";
+void Storage::setMessagesToWasSent(storage::DBMSSession &dbSession, const Consumer &consumer) {
+  if (!consumer.select->empty()) {
+    std::stringstream sql;
+    sql << "update " << _messageTableID << " set delivery_status = " << message::WAS_SENT << ",    consumer_id = \'" << consumer.id << "\'"
+        << ",    delivery_count  = delivery_count + 1";
+    if (consumer.session.type == SESSION_TRANSACTED) {
+      consumer.session.txName = BROKER::Instance().currentTransaction(consumer.clientID, consumer.session.id);
+      sql << ",  transaction_id = \'" << consumer.session.txName << "\'";
     }
-    sql << "message_id = \'" << messages[i] << "\'";
+    sql << " where ";
+    const std::deque<std::shared_ptr<MessageDataContainer>> &messages = *consumer.select;
+    for (size_t i = 0; i < messages.size(); ++i) {
+      if (i > 0) {
+        sql << " or ";
+      }
+      sql << "message_id = \'" << messages[i]->message().message_id() << "\'";
+    }
+    sql << ";";
+    TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::now; }
+    CATCH_POCO_DATA_EXCEPTION_PURE("can't set message to was_sent ", sql.str(), ERROR_STORAGE)
   }
-  sql << ";";
-  TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
-  CATCH_POCO_DATA_EXCEPTION_PURE("can't set message to was_sent ", sql.str(), ERROR_STORAGE)
 }
 void Storage::setMessageToDelivered(const upmq::broker::Session &session, const std::string &messageID) {
   std::stringstream sql;
@@ -941,9 +943,7 @@ std::shared_ptr<MessageDataContainer> Storage::makeMessage(storage::DBMSSession 
     bool ttlIsOut = checkTTLIsOut(msgInfo.screated, msgInfo.ttl);
 
     if (ttlIsOut) {
-      // dbSession.beginTX(it->messageId);
       removeMessage(msgInfo.messageId, dbSession);
-      // dbSession.commitTX();
       return {};
     }
 
@@ -998,9 +998,7 @@ std::shared_ptr<MessageDataContainer> Storage::makeMessage(storage::DBMSSession 
           needToFillProperties = (*item)->message().property_size() > 0;
           sMessage->data = (*item)->data;
         } else {
-          // dbSession.beginTX(msgInfo.messageId);
           removeMessage(msgInfo.messageId, dbSession);
-          // dbSession.commitTX();
           return {};
         }
       }
@@ -1027,14 +1025,10 @@ std::shared_ptr<MessageDataContainer> Storage::makeMessage(storage::DBMSSession 
       }
       message.set_group_seq(msgInfo.groupSeq);
       if (needToFillProperties) {
-        // dbSession.beginTX(message.message_id() + "props", storage::DBMSSession::TransactionMode::READ);
         fillProperties(dbSession, message);
-        // dbSession.commitTX();
       }
     } catch (Exception &ex) {
-      // dbSession.beginTX(msgInfo.messageId);
       removeMessage(msgInfo.messageId, dbSession);
-      // dbSession.commitTX();
       throw Exception(ex);
     }
   }

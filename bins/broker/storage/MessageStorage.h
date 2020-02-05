@@ -91,7 +91,7 @@ class Storage {
   std::string generateSQLProperties() const;
   std::vector<MessageInfo> getMessagesBelow(const upmq::broker::Session &session, const std::string &messageID) const;
   void setMessageToWasSent(const std::string &messageID, const Consumer &consumer);
-  void setMessagesToWasSent(const std::vector<std::string> &messages, const Consumer &consumer);
+  void setMessagesToWasSent(storage::DBMSSession &dbSession, const Consumer &consumer);
   void setMessageToDelivered(const upmq::broker::Session &session, const std::string &messageID);
   void setMessagesToNotSent(const Consumer &consumer);
   void setMessageToLastInGroup(const upmq::broker::Session &session, const std::string &messageID);

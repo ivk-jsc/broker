@@ -358,15 +358,7 @@ Subscription::ProcessMessageResult Subscription::getNextMessage() {
                                .append("] (")
                                .append(std::to_string(_messageCounter))
                                .append(")"));
-          if (consumersSize > 1) {
-            storage.setMessageToWasSent(messageID, *consumer);
-          } else {
-            consumer->sentCache.push_back(messageID);
-            if (consumer->select->empty()) {
-              storage.setMessagesToWasSent(consumer->sentCache, *consumer);
-              consumer->sentCache.clear();
-            }
-          }
+
           _destination.decreesNotAcknowledged(consumer->objectID);
           if (consumer->session.type == Proto::Acknowledge::CLIENT_ACKNOWLEDGE || !consumer->select->empty()) {
             EXCHANGE::Instance().addNewMessageEvent(_destination.name());

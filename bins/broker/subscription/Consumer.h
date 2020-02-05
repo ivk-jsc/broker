@@ -90,7 +90,6 @@ class Consumer {
   mutable bool abort = false;
 
   mutable std::shared_ptr<std::deque<std::shared_ptr<MessageDataContainer>>> select;
-  mutable std::vector<std::string> sentCache;
 
   Consumer(int _num,
            std::string _clientID,

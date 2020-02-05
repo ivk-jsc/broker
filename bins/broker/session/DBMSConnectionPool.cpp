@@ -171,10 +171,8 @@ void DBMSConnectionPool::beginTX(Poco::Data::Session &dbSession, const std::stri
     while (dbSession.isTransaction()) {
       Poco::Thread::yield();
     }
-    std::string transactionType = "immediate";
-    if (mode == storage::DBMSSession::TransactionMode::READ) {
-      transactionType.clear();
-    }
+    std::string transactionType = (mode == storage::DBMSSession::TransactionMode::WRITE) ? "immediate" : "";
+
     bool locked;
     std::stringstream sql;
     sql << "begin " << transactionType << " transaction \"" << txName << Poco::Thread::currentTid() << "\";";  // immediate
@@ -199,7 +197,7 @@ void DBMSConnectionPool::beginTX(Poco::Data::Session &dbSession, const std::stri
       }
     } while (locked);
   }
-}
+}  // namespace storage
 void DBMSConnectionPool::commitTX(Poco::Data::Session &dbSession, const std::string &txName) {
   if ((STORAGE_CONFIG.connection.props.dbmsType != storage::SQLiteNative) && (STORAGE_CONFIG.connection.props.dbmsType != storage::SQLite)
 #ifdef HAS_POSTGRESQL
