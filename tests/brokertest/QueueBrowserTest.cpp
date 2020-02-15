@@ -42,7 +42,7 @@ TEST_F(QueueBrowserTest, testReceiveBrowseReceive) {
 
   // Get the first.
   std::unique_ptr<cms::TextMessage> inbound;
-  EXPECT_NO_THROW(inbound.reset(dynamic_cast<cms::TextMessage *>(consumer->receive(5000))));
+  EXPECT_NO_THROW(inbound.reset(dynamic_cast<cms::TextMessage *>(consumer->receive(3000))));
   EXPECT_TRUE(inbound != nullptr);
   message1->setReadable();
   EXPECT_EQ(message1->getText(), inbound->getText());
@@ -92,11 +92,11 @@ TEST_F(QueueBrowserTest, testReceiveBrowseReceive) {
   // Re-open the consumer
   EXPECT_NO_THROW(consumer.reset(session->createConsumer(queue.get())));
   // Receive the second.
-  EXPECT_NO_THROW(inbound.reset(dynamic_cast<cms::TextMessage *>(consumer->receive(5000))));
+  EXPECT_NO_THROW(inbound.reset(dynamic_cast<cms::TextMessage *>(consumer->receive(3000))));
   EXPECT_TRUE(inbound != nullptr);
   EXPECT_EQ(message2->getText(), inbound->getText());
   // Receive the third.
-  EXPECT_NO_THROW(inbound.reset(dynamic_cast<cms::TextMessage *>(consumer->receive(5000))));
+  EXPECT_NO_THROW(inbound.reset(dynamic_cast<cms::TextMessage *>(consumer->receive(3000))));
   EXPECT_TRUE(inbound != nullptr);
   EXPECT_EQ(message3->getText(), inbound->getText());
 
@@ -131,7 +131,7 @@ TEST_F(QueueBrowserTest, testBrowseReceive) {
   EXPECT_EQ(message1->getText(), inbound->getText());
 
   // Receive the first message.
-  inbound.reset(dynamic_cast<cms::TextMessage *>(consumer->receive(5000)));
+  inbound.reset(dynamic_cast<cms::TextMessage *>(consumer->receive(3000)));
   EXPECT_TRUE(inbound.get() != nullptr);
   EXPECT_EQ(message1->getText(), inbound->getText());
 
@@ -183,7 +183,7 @@ TEST_F(QueueBrowserTest, testQueueBrowserWith2Consumers) {
 
   std::vector<std::unique_ptr<cms::Message>> messages;
   for (int i = 0; i < numMessages; i++) {
-    std::unique_ptr<cms::Message> m1(consumer->receive(5000));
+    std::unique_ptr<cms::Message> m1(consumer->receive(3000));
     sstr.str("");
     sstr << "m1 is null for index: " << i;
     EXPECT_TRUE(m1 != nullptr) << sstr.str();

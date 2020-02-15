@@ -23,6 +23,7 @@
 #include <cms/Session.h>
 #include <fake_cpp14.h>
 #include <list>
+#include <array>
 
 using namespace cms;
 ////////////////////////////////////////////////////////////////////////////////
@@ -167,7 +168,7 @@ TEST_F(SimpleTest, testSyncReceive) {
   // Send some text messages
   producer->send(txtMessage.get());
 
-  std::unique_ptr<cms::Message> message(consumer->receive(5000));
+  std::unique_ptr<cms::Message> message(consumer->receive(3000));
   EXPECT_TRUE(message != nullptr);
 }
 
@@ -187,7 +188,7 @@ TEST_F(SimpleTest, testSyncReceiveClientAck) {
   // Send some text messages
   producer->send(txtMessage.get());
 
-  std::unique_ptr<cms::Message> message(consumer->receive(5000));
+  std::unique_ptr<cms::Message> message(consumer->receive(3000));
   message->acknowledge();
   EXPECT_TRUE(message.get() != nullptr);
 }
@@ -224,11 +225,11 @@ TEST_F(SimpleTest, testMultipleConnections) {
   cms::Message *msg2 = nullptr;
 
   // message.reset( consumer1->receive( 2000 ) );
-  msg1 = consumer1->receive(5000);
+  msg1 = consumer1->receive(3000);
   EXPECT_TRUE(msg1 != nullptr);
 
   // message.reset( consumer2->receive( 2000 ) );
-  msg2 = consumer2->receive(5000);
+  msg2 = consumer2->receive(3000);
   EXPECT_TRUE(msg2 != nullptr);
 
   delete msg1;
@@ -266,12 +267,12 @@ TEST_F(SimpleTest, testMultipleSessions) {
 
   // std::unique_ptr<cms::Message> message( consumer1->receive( 2000 ) );
   // EXPECT_TRUE( message.get() != NULL );
-  msg1 = consumer1->receive(5000);
+  msg1 = consumer1->receive(3000);
   EXPECT_TRUE(msg1 != nullptr);
 
   // message.reset( consumer2->receive( 2000 ) );
   // EXPECT_TRUE( message.get() != NULL );
-  msg2 = consumer2->receive(5000);
+  msg2 = consumer2->receive(3000);
   EXPECT_TRUE(msg2 != nullptr);
 
   delete msg1;
@@ -586,7 +587,7 @@ TEST_F(SimpleTest, testServerTimeToLive) {
 
   cmsSleep(static_cast<unsigned int>(timeToLive * 2));
 
-  message.reset(consumer->receive(5000));
+  message.reset(consumer->receive(3000));
   EXPECT_TRUE(message.get() == nullptr);
 
   consumer->close();
@@ -607,7 +608,7 @@ TEST_F(SimpleTest, testPriority) {
   std::unique_ptr<MessageConsumer> consumer(cmsProvider->getSession()->createConsumer(queue.get()));
 
   for (int j = 9; j >= 0; j--) {
-    message.reset(consumer->receive(5000));
+    message.reset(consumer->receive(3000));
     EXPECT_TRUE(message.get() != nullptr);
     EXPECT_EQ(message->getCMSPriority(), j) << "invalid order msg : " << message->getCMSMessageID();
   }
@@ -616,6 +617,45 @@ TEST_F(SimpleTest, testPriority) {
   producer->close();
   queue->destroy();
   cmsProvider->getSession()->close();
+}
+TEST_F(SimpleTest, testRoundRobin) {
+  std::unique_ptr<TemporaryQueue> queue(cmsProvider->getSession()->createTemporaryQueue());
+  std::unique_ptr<MessageProducer> producer(cmsProvider->getSession()->createProducer(queue.get()));
+  std::unique_ptr<MessageConsumer> consumer1(cmsProvider->getSession()->createConsumer(queue.get()));
+
+  std::unique_ptr<cms::ConnectionFactory> connFactory(cmsProvider->getConnectionFactory()->createCMSConnectionFactory(cmsProvider->getBrokerURL()));
+  std::unique_ptr<cms::Connection> connection(connFactory->createConnection());
+  connection->start();
+  std::unique_ptr<cms::Session> session(connection->createSession(cms::Session::AUTO_ACKNOWLEDGE));
+  std::unique_ptr<MessageConsumer> consumer2(session->createConsumer(queue.get()));
+
+  for (int i = 0; i < 10; i++) {
+    std::unique_ptr<Message> message(cmsProvider->getSession()->createMessage());
+    message->setIntProperty("num", i);
+    producer->send(message.get());
+  }
+
+  std::unique_ptr<Message> in1;
+  std::unique_ptr<Message> in2;
+  std::array<int, 5> items = {0, 2, 4, 6, 8};
+  for (const auto &j : items) {
+    in1.reset(consumer2->receive(3000));
+    in2.reset(consumer1->receive(3000));
+    EXPECT_TRUE(in1.get() != nullptr);
+    EXPECT_TRUE(in2.get() != nullptr);
+
+    EXPECT_EQ(in1->getIntProperty("num"), j) << "invalid order msg : " << in1->getCMSMessageID();
+    EXPECT_EQ(in2->getIntProperty("num"), j + 1) << "invalid order msg : " << in2->getCMSMessageID();
+  }
+
+  consumer1->close();
+  consumer2->close();
+  producer->close();
+  queue->destroy();
+  cmsProvider->getSession()->close();
+  session.reset();
+  connection.reset();
+  connFactory.reset();
 }
 ///////////////////////////////////////////////////////////////////////////////
 TEST_F(SimpleTest, DISABLED_testConnectionCount) {

@@ -139,7 +139,7 @@ public class SimpleConsumer {
                 MessageConsumer consumer = session.createConsumer(destination);
 
                 while (running.get()) {
-                    Message message = consumer.receive(5000);
+                    Message message = consumer.receive(3000);
                     if (message != null) {
                         if (message instanceof TextMessage) {
                             TextMessage textMessage = (TextMessage) message;

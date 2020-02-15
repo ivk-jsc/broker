@@ -55,7 +55,7 @@ TEST_F(MapMessageTest, testSendRecvCloneMapMessage) {
 
   producer->send(message.get());
 
-  message.reset((cms::MapMessage *)consumer->receive(5000));
+  message.reset((cms::MapMessage *)consumer->receive(3000));
   EXPECT_TRUE(message != nullptr);
 
   EXPECT_FALSE(message->getBoolean("boolean"));
@@ -494,7 +494,7 @@ TEST_F(MapMessageTest, testReadOnlyBody) {
 
   producer->send(msg.get());
 
-  msg.reset((cms::MapMessage *)consumer->receive(5000));
+  msg.reset((cms::MapMessage *)consumer->receive(3000));
   EXPECT_TRUE(msg != nullptr);
 
   try {

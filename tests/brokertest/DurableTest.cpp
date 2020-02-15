@@ -34,7 +34,7 @@ TEST_F(DurableTest, testDurableConsumer) {
     // Send a text message to the consumer while its active
     std::unique_ptr<cms::TextMessage> txtMessage(session->createTextMessage("TEST MESSAGE"));
     producer->send(txtMessage.get());
-    std::unique_ptr<cms::Message> received(consumer->receive(5000));
+    std::unique_ptr<cms::Message> received(consumer->receive(3000));
 
     EXPECT_TRUE(received != nullptr);
 

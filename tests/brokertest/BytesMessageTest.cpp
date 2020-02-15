@@ -47,7 +47,7 @@ TEST_F(BytesMessageTest, testSendRecvCloneBytesMessage) {
   delete message;
 
   message = nullptr;
-  message = (cms::BytesMessage *)consumer->receive(5000);
+  message = (cms::BytesMessage *)consumer->receive(3000);
   EXPECT_TRUE(message != nullptr);
 
   unsigned char data[4];

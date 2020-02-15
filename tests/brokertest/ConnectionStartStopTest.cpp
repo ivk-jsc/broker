@@ -51,7 +51,7 @@ void ConnectionStartStopTest::testStoppedConsumerHoldsMessagesTillStarted() {
   EXPECT_TRUE(m == nullptr);
 
   stoppedConnection->start();
-  m.reset(stoppedConsumer->receive(5000));
+  m.reset(stoppedConsumer->receive(3000));
   EXPECT_TRUE(m != nullptr);
 
   startedSession->close();
