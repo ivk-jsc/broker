@@ -63,6 +63,7 @@ namespace PDSQLITE = Poco::Data::SQLite;
   }                                                                                                 \
   catch (PDSQLITE::SQLiteException & sqlex) {                                                       \
     if (sqlex.message().find("locked") == std::string::npos) {                                      \
+      __expr__;                                                                                     \
       throw EXCEPTION(std::string(__info__) + " : " + (__sql__), sqlex.message(), (__error__));     \
     }                                                                                               \
     locked = true;                                                                                  \
@@ -102,6 +103,7 @@ namespace PDSQLITE = Poco::Data::SQLite;
   }                                                                                                 \
   catch (PDSQLITE::SQLiteException & sqlex) {                                                       \
     if (sqlex.message().find("locked") == std::string::npos) {                                      \
+      __expr__;                                                                                     \
       throw EXCEPTION(std::string(__info__) + " : " + (__sql__), sqlex.message(), (__error__));     \
     }                                                                                               \
     locked = true;                                                                                  \

@@ -7,8 +7,9 @@ project(upmq
 
 option(ENABLE_TESTS "Enable tests" ON)
 option(ENABLE_EXAMPLES "Enable examples" ON)
-option(ENABLE_WEB_ADMIN "Enable web-admin gui for broker" ON)
-option(ENABLE_POSTGRESQL "Enable PostgreSQL support (usefull only for POCO-2.0)" ON)
+option(ENABLE_WEB_ADMIN "Enable web-admin gui for broker" OFF)
+option(ENABLE_POSTGRESQL "Enable PostgreSQL support (usefull only for POCO greater or equal  1.10)" OFF)
+option(ENABLE_ODBC "Enable ODBC support" OFF)
 option(ENABLE_USING_SENDFILE "Enable using SendFile for file transfering (not applyable with cygwin)" ON)
 option(MAKE_DISTR_BY_CPACK "Make distribuive with cpack" OFF)
 

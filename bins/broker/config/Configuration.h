@@ -21,7 +21,9 @@
 #include <Poco/Path.h>
 #include <Singleton.h>
 #include <string>
+#ifdef ENABLE_WEB_ADMIN
 #include <TemplateParamReplacer.h>
+#endif
 #include <memory>
 #include <unordered_map>
 
@@ -30,8 +32,10 @@ namespace broker {
 
 class Configuration {
  public:
+#ifdef ENABLE_WEB_ADMIN
   using ReplacerMapType = std::unordered_map<std::string, std::unique_ptr<TemplateParamReplacer>>;
   ReplacerMapType replacerMap;
+#endif
 
   struct Http {
     int port{9090};

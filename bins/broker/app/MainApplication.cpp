@@ -289,12 +289,8 @@ void MainApplication::loadLogConfig() {
   confLog.level = config().getInt("broker.log.level", confLog.level) % 9;
   confLog.isInteractive = config().getBool("broker.log.interactive", confLog.isInteractive);
   confLog.name = CONFIGURATION::Instance().name();
-  Poco::Path prefix;
-#ifdef _WIN32
-  prefix = expandPath(config().getString("broker.log.path[@windows]", "C:/ProgramData"));
-#else
-  prefix = expandPath(config().getString("broker.log.path[@_nix]", "/var/log"));
-#endif
+  Poco::Path prefix = expandPath(config().getString("broker.log.path[@_nix]", Poco::Path::current()));
+
   confLog.path.assign(prefix);
   confLog.path.append(expandPath(config().getString("broker.log.path", "upmq/log"))).makeDirectory();
   CONFIGURATION::Instance().setLog(confLog);

@@ -30,7 +30,9 @@
 #include "Poco/Data/SQLite/Connector.h"
 #include "Poco/Data/SQLite/SQLiteException.h"
 #include "Poco/Data/SQLite/Utility.h"
+#ifdef HAS_ODBC
 #include <Poco/Data/ODBC/Connector.h>
+#endif
 #ifdef HAS_POSTGRESQL
 #include "Poco/Data/PostgreSQL/Connector.h"
 #include "Poco/Data/PostgreSQL/PostgreSQLException.h"
@@ -80,8 +82,10 @@ DBMSConnectionPool::DBMSConnectionPool()
       _connector = "postgresql";
 #endif  // HAS_POSTGRESQL
     } else {
+#ifdef HAS_ODBC
       Poco::Data::ODBC::Connector::registerConnector();
       _connector = "ODBC";
+#endif
     }
     if (_dbmsString.find(":memory:") != std::string::npos) {
       _inMemory = IN_MEMORY::M_YES;

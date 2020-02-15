@@ -1,4 +1,4 @@
-Checks:          'clang-diagnostic-*,clang-analyzer-*,hicpp-*,-hicpp-no-malloc,-hicpp-avoid-c-arrays,-hicpp-no-array-decay,readability-identifier-naming,google-readability-*,modernize-*'
+Checks:          'clang-diagnostic-*,clang-analyzer-*,hicpp-*,-hicpp-no-malloc,-hicpp-avoid-c-arrays,-hicpp-no-array-decay,readability-identifier-naming,google-readability-*,modernize-*,-modernize-use-trailing-return-type'
 CheckOptions:
   - key:             google-readability-braces-around-statements.ShortStatementLines
     value:           '1'

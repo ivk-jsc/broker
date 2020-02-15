@@ -31,7 +31,7 @@ void QueueDestination::save(const Session &session, const MessageDataContainer &
     begin(session);
   }
   TRY_POCO_DATA_EXCEPTION { _storage.save(session, sMessage); }
-  CATCH_POCO_DATA_EXCEPTION_PURE_TROW_INVALID_SQL("can't save message", "", ERROR_ON_SAVE_MESSAGE)
+  CATCH_POCO_DATA_EXCEPTION_NO_INVALID_SQL("can't save message", "", session.currentDBSession->rollbackTX(), ERROR_ON_SAVE_MESSAGE)
 
   session.currentDBSession->commitTX();
 
