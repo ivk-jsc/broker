@@ -167,3 +167,6 @@ delete session;
 delete connection;
 delete connectionFactory;
 ```
+
+## Videos
+[Alexander Bychuk — C++ Enterprise Edition-message brokers](https://youtu.be/oZwPQte3za8) ***[RU]*
