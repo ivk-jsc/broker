@@ -30,6 +30,7 @@
 #include "Poco/Data/SQLite/Connector.h"
 #include "Poco/Data/SQLite/SQLiteException.h"
 #include "Poco/Data/SQLite/Utility.h"
+#include "sqlite3.h"
 #ifdef HAS_ODBC
 #include <Poco/Data/ODBC/Connector.h>
 #endif
@@ -178,28 +179,43 @@ void DBMSConnectionPool::beginTX(Poco::Data::Session &dbSession, const std::stri
     std::string transactionType = (mode == storage::DBMSSession::TransactionMode::WRITE) ? "immediate" : "";
 
     bool locked;
-    std::stringstream sql;
-    sql << "begin " << transactionType << " transaction \"" << txName << Poco::Thread::currentTid() << "\";";  // immediate
+    std::string sql;
+    sql.append("begin ")
+        .append(transactionType)
+        .append(" transaction \"")
+        .append(txName)
+        .append(std::to_string((size_t)Poco::Thread::currentTid()))
+        .append("\";");  // immediate
+    int result = 0;
+    sqlite3 *pSqlite3 = Poco::Data::SQLite::Utility::dbHandle(dbSession);
+    const char *cquery = sql.c_str();
     do {
-      locked = false;
-      try {
-        dbSession << sql.str(), Poco::Data::Keywords::now;
-      } catch (PDSQLITE::DBLockedException &) {
-        locked = true;
+      result = sqlite3_exec(pSqlite3, cquery, nullptr, nullptr, nullptr);
+      locked = (result == SQLITE_LOCKED || result == SQLITE_BUSY);
+      if (locked) {
         Poco::Thread::yield();
-      } catch (PDSQLITE::TableLockedException &) {
-        locked = true;
-        Poco::Thread::yield();
-      } catch (PDSQLITE::InvalidSQLStatementException &iex) {
-        UNUSED_VAR(iex);
-        locked = true;
-        Poco::Thread::yield();
-      } catch (Poco::Exception &pex) {
-        std::cerr << " ! ERROR : " << pex.message() << non_std_endl;
-      } catch (std::exception &stdex) {
-        std::cerr << " ! ERROR : " << stdex.what() << non_std_endl;
       }
     } while (locked);
+    //    do {
+    //      locked = false;
+    //      try {
+    //        dbSession << sql.str(), Poco::Data::Keywords::now;
+    //      } catch (PDSQLITE::DBLockedException &) {
+    //        locked = true;
+    //        Poco::Thread::yield();
+    //      } catch (PDSQLITE::TableLockedException &) {
+    //        locked = true;
+    //        Poco::Thread::yield();
+    //      } catch (PDSQLITE::InvalidSQLStatementException &iex) {
+    //        UNUSED_VAR(iex);
+    //        locked = true;
+    //        Poco::Thread::yield();
+    //      } catch (Poco::Exception &pex) {
+    //        std::cerr << " ! ERROR : " << pex.message() << non_std_endl;
+    //      } catch (std::exception &stdex) {
+    //        std::cerr << " ! ERROR : " << stdex.what() << non_std_endl;
+    //      }
+    //    } while (locked);
   }
 }  // namespace storage
 void DBMSConnectionPool::commitTX(Poco::Data::Session &dbSession, const std::string &txName) {
@@ -219,25 +235,35 @@ void DBMSConnectionPool::commitTX(Poco::Data::Session &dbSession, const std::str
 #endif  // HAS_POSTGRESQL
   else {
     bool locked;
-    std::stringstream sql;
-    sql << "commit transaction \"" << txName << Poco::Thread::currentTid() << "\";";
+    std::string sql;
+    sql.append("commit transaction \"").append(txName).append(std::to_string((size_t)Poco::Thread::currentTid())).append("\";");
+    int result = 0;
+    sqlite3 *pSqlite3 = Poco::Data::SQLite::Utility::dbHandle(dbSession);
+    const char *cquery = sql.c_str();
     do {
-      locked = false;
-      try {
-        dbSession << sql.str(), Poco::Data::Keywords::now;
-      } catch (PDSQLITE::DBLockedException &) {
-        locked = true;
+      result = sqlite3_exec(pSqlite3, cquery, nullptr, nullptr, nullptr);
+      locked = (result == SQLITE_LOCKED || result == SQLITE_BUSY);
+      if (locked) {
         Poco::Thread::yield();
-      } catch (PDSQLITE::TableLockedException &) {
-        locked = true;
-        Poco::Thread::yield();
-      } catch (PDSQLITE::InvalidSQLStatementException &) {
-        locked = true;
-        Poco::Thread::yield();
-      } catch (Poco::Exception &pex) {
-        std::cout << " ! ERROR : " << pex.message() << non_std_endl;
       }
     } while (locked);
+    //    do {
+    //      locked = false;
+    //      try {
+    //        dbSession << sql.str(), Poco::Data::Keywords::now;
+    //      } catch (PDSQLITE::DBLockedException &) {
+    //        locked = true;
+    //        Poco::Thread::yield();
+    //      } catch (PDSQLITE::TableLockedException &) {
+    //        locked = true;
+    //        Poco::Thread::yield();
+    //      } catch (PDSQLITE::InvalidSQLStatementException &) {
+    //        locked = true;
+    //        Poco::Thread::yield();
+    //      } catch (Poco::Exception &pex) {
+    //        std::cout << " ! ERROR : " << pex.message() << non_std_endl;
+    //      }
+    //    } while (locked);
   }
 }
 void DBMSConnectionPool::rollbackTX(Poco::Data::Session &dbSession, const std::string &txName) {
@@ -257,25 +283,35 @@ void DBMSConnectionPool::rollbackTX(Poco::Data::Session &dbSession, const std::s
 #endif  // HAS_POSTGRESQL
   else {
     bool locked;
-    std::stringstream sql;
-    sql << "rollback transaction \"" << txName << Poco::Thread::currentTid() << "\";";
+    std::string sql;
+    sql.append("rollback transaction \"").append(txName).append(std::to_string((size_t)Poco::Thread::currentTid())).append("\";");
+    int result = 0;
+    sqlite3 *pSqlite3 = Poco::Data::SQLite::Utility::dbHandle(dbSession);
+    const char *cquery = sql.c_str();
     do {
-      locked = false;
-      try {
-        dbSession << sql.str(), Poco::Data::Keywords::now;
-      } catch (PDSQLITE::DBLockedException &) {
-        locked = true;
+      result = sqlite3_exec(pSqlite3, cquery, nullptr, nullptr, nullptr);
+      locked = (result == SQLITE_LOCKED || result == SQLITE_BUSY);
+      if (locked) {
         Poco::Thread::yield();
-      } catch (PDSQLITE::TableLockedException &) {
-        locked = true;
-        Poco::Thread::yield();
-      } catch (PDSQLITE::InvalidSQLStatementException &) {
-        locked = true;
-        Poco::Thread::yield();
-      } catch (Poco::Exception &pex) {
-        std::cout << " ! ERROR : " << pex.message() << non_std_endl;
       }
     } while (locked);
+    //    do {
+    //      locked = false;
+    //      try {
+    //        dbSession << sql.str(), Poco::Data::Keywords::now;
+    //      } catch (PDSQLITE::DBLockedException &) {
+    //        locked = true;
+    //        Poco::Thread::yield();
+    //      } catch (PDSQLITE::TableLockedException &) {
+    //        locked = true;
+    //        Poco::Thread::yield();
+    //      } catch (PDSQLITE::InvalidSQLStatementException &) {
+    //        locked = true;
+    //        Poco::Thread::yield();
+    //      } catch (Poco::Exception &pex) {
+    //        std::cout << " ! ERROR : " << pex.message() << non_std_endl;
+    //      }
+    //    } while (locked);
   }
 }
 void DBMSConnectionPool::doNow(const std::string &sql, DBMSConnectionPool::TX tx) {
