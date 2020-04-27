@@ -61,6 +61,7 @@ class DECAF_API URI : public lang::Comparable<URI> {
    * @throws URISyntaxException if the URI passed is malformed.
    */
   URI(const URI &uri_);
+  URI &operator=(const URI &) = default;
 
   /**
    * Constructs a URI from the given string.
