@@ -34,8 +34,14 @@ void SelectorTest::SetUp() {
 TEST_F(SelectorTest, testBasicSelectors) {
   assertSelector("name = 'John'", false);
   assertSelector("name = 'James'", true);
+  assertSelector("rank = 123", true);
+  assertSelector("rank = 124", false);
   assertSelector("rank > 100", true);
+  assertSelector("rank < 124", true);
+  assertSelector("rank > 124", false);
+  assertSelector("rank < 123", false);
   assertSelector("rank >= 123", true);
+  assertSelector("rank <= 124", true);
   assertSelector("rank >= 124", false);
 }
 
