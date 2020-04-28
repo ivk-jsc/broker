@@ -990,7 +990,7 @@ class Parse {
 
   Expression *parseExactNumeric(const Token &token, bool isNegate) {
     int base = 0;
-    string s(0, '\0');
+    string s;
     s.reserve(token.val.size());
     std::remove_copy(token.val.begin(), token.val.end(), std::back_inserter(s), '_');
     if (s[1] == 'b' || s[1] == 'B') {
@@ -1019,6 +1019,7 @@ class Parse {
   Expression *parseApproxNumeric(const Token &token) {
     errno = 0;
     string s;
+    s.reserve(token.val.size());
     std::remove_copy(token.val.begin(), token.val.end(), std::back_inserter(s), '_');
     double value = std::strtod(s.c_str(), nullptr);
     if (!errno) {
