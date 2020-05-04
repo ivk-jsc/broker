@@ -23,7 +23,7 @@ UPMQ dependencies :
   * [google-test](https://github.com/google/googletest) 
 
 **!** Please check odbc installation on your system if you want to use UPMQ broker with database over ODBC  
-**!** Please check PostgreSQL installation on your system if you want to use UPMQ broker with POCO-2.0 library and PostgreSQL database   
+**!** Please check PostgreSQL installation on your system if you want to use UPMQ broker with POCO-1.10.0 or higher and PostgreSQL database   
 
 ## Build
 
