@@ -52,9 +52,9 @@ class MRWLock {
 
   bool tryWriteLock();
 
-  void unlockRead();
+  void unlockRead() noexcept;
 
-  void unlockWrite();
+  void unlockWrite() noexcept;
 
   bool isValid() const;
 };
@@ -74,7 +74,7 @@ class ScopedReadRWLockWithUnlock {
  public:
   explicit ScopedReadRWLockWithUnlock(MRWLock &mrwLock);
   ~ScopedReadRWLockWithUnlock() noexcept;
-  void unlock();
+  void unlock() noexcept;
 };
 
 class ScopedWriteRWLock {
@@ -92,8 +92,20 @@ class ScopedWriteRWLockWithUnlock {
  public:
   explicit ScopedWriteRWLockWithUnlock(MRWLock &mrwLock);
   ~ScopedWriteRWLockWithUnlock() noexcept;
-  void unlock();
+  void unlock() noexcept;
 };
+
+class ScopedWriteTryLocker {
+  MRWLock &_rwLock;
+  std::atomic_bool _locked{false};
+
+ public:
+  explicit ScopedWriteTryLocker(MRWLock &mrwLock, bool locked = false);
+  ~ScopedWriteTryLocker() noexcept;
+  bool tryLock();
+  void unlock() noexcept;
+};
+
 }  // namespace upmq
 
 #endif  // MOVABLE_POCO_RWLOCK_H

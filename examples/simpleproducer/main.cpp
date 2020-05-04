@@ -109,12 +109,19 @@ class SimpleProducer {
   Property<std::string> stringProperty;
   int priority = cms::Message::DEFAULT_MSG_PRIORITY;
   cms::DeliveryMode::DELIVERY_MODE deliveryMode = cms::DeliveryMode::PERSISTENT;
+  long mod = 1000;
+  bool useTransaction = false;
 
  public:
   std::chrono::steady_clock::time_point t0{perf_clock::now()};
 
-  SimpleProducer(std::string brokerURI_, long numMessages_, std::string destURI_, bool useTopic_)
-      : brokerURI(std::move(brokerURI_)), destURI(std::move(destURI_)), numMessages(numMessages_), useTopic(useTopic_) {}
+  SimpleProducer(std::string brokerURI_, long numMessages_, std::string destURI_, bool useTopic_, long logMod, bool transaction)
+      : brokerURI(std::move(brokerURI_)),
+        destURI(std::move(destURI_)),
+        numMessages(numMessages_),
+        useTopic(useTopic_),
+        mod(logMod),
+        useTransaction(transaction) {}
 
   ~SimpleProducer() {
     try {
@@ -138,7 +145,9 @@ class SimpleProducer {
     connection.reset(connectionFactory->createConnection());
     connection->start();
 
-    session.reset(connection->createSession(cms::Session::AUTO_ACKNOWLEDGE));
+    cms::Session::AcknowledgeMode mode = (useTransaction ? cms::Session::SESSION_TRANSACTED : cms::Session::AUTO_ACKNOWLEDGE);
+
+    session.reset(connection->createSession(mode));
 
     if (useTopic) {
       destination.reset(session->createTopic(destURI));
@@ -184,12 +193,18 @@ class SimpleProducer {
         producer->send(destination.get(), message.get(), deliveryMode, priority, cms::Message::DEFAULT_TIME_TO_LIVE);
 
         message->setReadable();
-        if ((ix == 1 || (ix % 1000 == 0))) {
+        if ((ix == 1 || (ix % mod == 0))) {
+          if (useTransaction) {
+            session->commit();
+          }
           std::cout << "sent => "
                     << ": " << message->getText() << " elapsed [" << floating_seconds(perf_clock::now() - t0).count() << "]" << '\n';
         }
       }
       message.reset();
+      if (useTransaction) {
+        session->commit();
+      }
     } catch (cms::CMSException &e) {
       e.printStackTrace();
     } catch (...) {
@@ -221,6 +236,8 @@ int main(int argc, char *argv[]) {
   Property<int> intProperty;
   Property<std::string> stringProperty;
   std::string text;
+  bool useTransaction = false;
+  long logMod = 1000;
 
   /* API is data structure driven */
   static const struct optparse_long opt_option[] = {
@@ -238,6 +255,8 @@ int main(int argc, char *argv[]) {
        true,
        "message string property, set with key=value pattern, for ex., --string-property=\"b=my-property\""},
       {"uri", 'u', OPTPARSE_OPTIONAL, true, "uri - broker connection string, default is tcp://localhost:12345?transport.trace=false"},
+      {"log_mod", 'l', OPTPARSE_OPTIONAL, true, "log_mod - a number of skipped messages before log, default is 1000"},
+      {"use_transaction", 'x', OPTPARSE_OPTIONAL, true, "use_transaction - [true or false], allow producer use transaction session, default false"},
       {"help", 'h', OPTPARSE_OPTIONAL, false, "show help"},
       {nullptr, 0, OPTPARSE_NONE, 0, nullptr}, /* end (a.k.a. sentinel) */
   };
@@ -280,14 +299,22 @@ int main(int argc, char *argv[]) {
       case 'b':
         processOptionResult = processOption(option, options.optarg, [&text](const char *arg) { text = std::string(arg); });
         break;
+      case 'l':
+        processOptionResult = processOption(option, options.optarg, [&logMod](const char *arg) { logMod = strtol(arg, nullptr, 10); });
+        break;
+      case 'x':
+        processOptionResult = processOption(option, options.optarg, [&useTransaction](const char *arg) {
+          useTransaction = ((std::string(arg) == "true") || (std::string(arg) == "1"));
+        });
+        break;
       case 'h':
-        usage(opt_option, 9);
+        usage(opt_option, 10);
         return 0;
       default:
         break;
     }
     if (processOptionResult != 0) {
-      usage(opt_option, 9);
+      usage(opt_option, 10);
       return -1;
     }
   }
@@ -303,7 +330,7 @@ int main(int argc, char *argv[]) {
   std::cout << "=====================================================\n";
 
   try {
-    SimpleProducer producer(brokerURI, numMessages, destURI, useTopics);
+    SimpleProducer producer(brokerURI, numMessages, destURI, useTopics, logMod, useTransaction);
     if (!intProperty.isEmpty()) {
       producer.setIntProperty(intProperty);
     }

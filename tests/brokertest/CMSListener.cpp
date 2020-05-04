@@ -46,9 +46,7 @@ void CMSListener::asyncWaitForMessages(unsigned int count) {
       if (retryNum >= count) {
         break;
       }
-      for (int i = 0; i < 500; i++) {
-        cmsSleep(10);
-      }
+      cmsSleep(3000);
       retryNum++;
     }
 

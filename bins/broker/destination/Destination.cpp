@@ -33,7 +33,7 @@ Destination::Destination(const Exchange &exchange, const std::string &uri, Type 
       _uri(uri),
       _name(Exchange::mainDestinationPath(uri)),
       _subscriptions(SUBSCRIPTIONS_CONFIG.maxCount),
-      _storage(_id),
+      _storage(_id, STORAGE_CONFIG.messages.nonPresistentSize),
       _type(type),
       _exchange(exchange),
       _subscriptionsT("\"" + _id + "_subscriptions\""),
@@ -49,11 +49,11 @@ Destination::~Destination() {
   try {
     std::stringstream sql;
     if (!isTemporary()) {
-      sql << "update " << _exchange.destinationsT() << " set subscriptions_count = 0"
-          << " where id = \'" << _id << "\'"
-          << ";";
-      TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
-      CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't update subscription count", sql.str(), ERROR_UNKNOWN)
+      //      sql << "update " << _exchange.destinationsT() << " set subscriptions_count = 0"
+      //          << " where id = \'" << _id << "\'"
+      //          << ";";
+      //      TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
+      //      CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't update subscription count", sql.str(), ERROR_UNKNOWN)
     }
     {
       _subscriptions.changeForEach([this](SubscriptionsList::ItemType::KVPair &pair) {
@@ -230,7 +230,7 @@ Subscription &Destination::subscription(const Session &session, const MessageDat
   } else if (subscription.browse()) {
     type = Subscription::Type::BROWSER;
   }
-  std::string name = subscription.subscription_name();
+  const std::string &name = subscription.subscription_name();
   if (name.empty()) {
     throw EXCEPTION("subscription name is empty", "subscription", ERROR_ON_SUBSCRIPTION);
   }
@@ -242,7 +242,9 @@ Subscription &Destination::subscription(const Session &session, const MessageDat
 
     _subscriptions.emplace(std::string(name), createSubscription(name, routingK, type));
     auto item = _subscriptions.find(name);
-    subscribeOnNotify(*item);
+    if (isTopicFamily()) {
+      subscribeOnNotify(*item);
+    }
     addSendersFromCache(session, sMessage, *item);
 
     addS2Subs(session.id(), name);
@@ -533,7 +535,7 @@ void Destination::loadDurableSubscriptions() {
       << "id, name, routing_key"
       << " from " << subscriptionsT() << " where type = " << type << ";";
   storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
-  dbSession.beginTX(_id + "ldur");
+  dbSession.beginTX(_id + "ldur", storage::DBMSSession::TransactionMode::READ);
   TRY_POCO_DATA_EXCEPTION {
     Poco::Data::Statement select(dbSession());
     select << sql.str(), Poco::Data::Keywords::into(id), Poco::Data::Keywords::into(name), Poco::Data::Keywords::into(routingKey),
@@ -565,7 +567,7 @@ bool Destination::isBindToSubscriber(const std::string &clientID) const {
   if (_predefinedSubscribers.empty()) {
     return true;
   }
-  return (_predefinedSubscribers.count(clientID) > 0);
+  return (_predefinedSubscribers.find(clientID) != _predefinedPublisher.end());
 }
 bool Destination::isSubscriberUseFileLink(const std::string &clientID) const {
   upmq::ScopedReadRWLock readRWLock(_predefSubscribersLock);

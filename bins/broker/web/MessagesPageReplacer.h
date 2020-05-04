@@ -37,6 +37,8 @@ class MessagesPageReplacer : public TemplateParamReplacer {
   std::string rowsReplacer();
 
   std::string getH1() const override;
+    
+  std::string type() const;
 };
 
 #endif  // BROKER_MESSAGESPAGEREPLACER_H

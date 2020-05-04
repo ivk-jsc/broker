@@ -7,8 +7,9 @@ project(upmq
 
 option(ENABLE_TESTS "Enable tests" ON)
 option(ENABLE_EXAMPLES "Enable examples" ON)
-option(ENABLE_WEB_ADMIN "Enable web-admin gui for broker" ON)
-option(ENABLE_POSTGRESQL "Enable PostgreSQL support (usefull only for POCO-2.0)" OFF)
+option(ENABLE_WEB_ADMIN "Enable web-admin gui for broker" OFF)
+option(ENABLE_POSTGRESQL "Enable PostgreSQL support (usefull only for POCO greater or equal  1.10)" OFF)
+option(ENABLE_ODBC "Enable ODBC support" OFF)
 option(ENABLE_USING_SENDFILE "Enable using SendFile for file transfering (not applyable with cygwin)" ON)
 option(MAKE_DISTR_BY_CPACK "Make distribuive with cpack" OFF)
 
@@ -42,6 +43,14 @@ endif ()
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_C_STANDARD 11)
+
+if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+  include(CheckIPOSupported)
+  check_ipo_supported(RESULT result)
+  if (result)
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+  endif ()
+endif ()
 
 if (WIN32)
   set(VER_SCRIPT "${CMAKE_SOURCE_DIR}/version.bat")

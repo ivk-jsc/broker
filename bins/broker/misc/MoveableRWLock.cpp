@@ -69,19 +69,25 @@ bool MRWLock::tryWriteLock() {
 #endif
 }
 
-void MRWLock::unlockRead() {
+void MRWLock::unlockRead() noexcept {
 #ifdef _WIN32
   ReleaseSRWLockShared(_rwLock.get());
 #else
-  _rwLock->unlock();
+  try {
+    _rwLock->unlock();
+  } catch (...) {
+  }
 #endif
 }
 
-void MRWLock::unlockWrite() {
+void MRWLock::unlockWrite() noexcept {
 #ifdef _WIN32
   ReleaseSRWLockExclusive(_rwLock.get());
 #else
-  _rwLock->unlock();
+  try {
+    _rwLock->unlock();
+  } catch (...) {
+  }
 #endif
 }
 
@@ -95,7 +101,7 @@ ScopedReadRWLockWithUnlock::ScopedReadRWLockWithUnlock(MRWLock& mrwLock) : _rwLo
 
 ScopedReadRWLockWithUnlock::~ScopedReadRWLockWithUnlock() noexcept { unlock(); }
 
-void ScopedReadRWLockWithUnlock::unlock() {
+void ScopedReadRWLockWithUnlock::unlock() noexcept {
   if (_locked) {
     _locked = false;
     _rwLock.unlockRead();
@@ -110,7 +116,20 @@ ScopedWriteRWLockWithUnlock::ScopedWriteRWLockWithUnlock(MRWLock& mrwLock) : _rw
 
 ScopedWriteRWLockWithUnlock::~ScopedWriteRWLockWithUnlock() noexcept { unlock(); }
 
-void ScopedWriteRWLockWithUnlock::unlock() {
+void ScopedWriteRWLockWithUnlock::unlock() noexcept {
+  if (_locked) {
+    _locked = false;
+    _rwLock.unlockWrite();
+  }
+}
+
+ScopedWriteTryLocker::ScopedWriteTryLocker(MRWLock& mrwLock, bool locked) : _rwLock(mrwLock), _locked(locked) {}
+ScopedWriteTryLocker::~ScopedWriteTryLocker() noexcept { unlock(); }
+bool ScopedWriteTryLocker::tryLock() {
+  _locked = _rwLock.tryWriteLock();
+  return _locked;
+}
+void ScopedWriteTryLocker::unlock() noexcept {
   if (_locked) {
     _locked = false;
     _rwLock.unlockWrite();

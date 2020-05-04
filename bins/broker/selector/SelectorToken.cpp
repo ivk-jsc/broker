@@ -54,7 +54,8 @@ inline bool caseless(const char *s1, const char *s2) {
     char ls2 = (char)std::tolower(*s2);
     if (ls1 < ls2) {
       return true;
-    } else if (ls1 > ls2) {
+    }
+    if (ls1 > ls2) {
       return false;
     }
   } while (*s1++ && *s2++);

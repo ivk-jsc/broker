@@ -37,7 +37,7 @@ ClientsRowPageReplacer::ClientsRowPageReplacer(
 }
 
 std::string ClientsRowPageReplacer::typeReplacer() {
-  switch (static_cast<upmq::broker::Subscription::Type>(type)) {
+  switch (static_cast<upmq::broker::Subscription::Type>(_type)) {
     case upmq::broker::Subscription::Type::SIMPLE:
       return MakeStringify(SIMPLE);
     case upmq::broker::Subscription::Type::DURABLE:

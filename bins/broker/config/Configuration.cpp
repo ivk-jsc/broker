@@ -55,7 +55,9 @@ std::string Configuration::Storage::toString() const {
       .append("\n- * \t\tdata\t=>")
       .append(data.toString())
       .append("\n- * \t\tjournal\t: ")
-      .append(_messageJournal);
+      .append(_messageJournal)
+      .append("\n- * \t\tmessages\t: ")
+      .append(messages.toString());
 }
 std::string Configuration::Storage::messageJournal(const std::string &destinationName) const {
   return std::string("\"").append(_messageJournal).append("/").append(destinationName).append("\"");
@@ -133,6 +135,7 @@ std::string Configuration::Threads::toString() const {
       .append("\n- * \t\twrite\t\t: ")
       .append(std::to_string(writers));
 }
+uint32_t Configuration::Threads::all() const { return accepters + readers + writers + subscribers; }
 std::string Configuration::Log::toString() const {
   return std::string("\n- * \t\tlevel\t\t: ")
       .append(std::to_string(level))
@@ -198,5 +201,8 @@ void Configuration::Storage::Data::set(const std::string &path) {
   }
 }
 const Poco::Path &Configuration::Storage::Data::get() const { return _path; }
+std::string Configuration::Storage::Messages::toString() const {
+  return std::string("\n- * \t\t\tnon-persistent-size\t\t: ").append(std::to_string(nonPresistentSize));
+}
 }  // namespace broker
 }  // namespace upmq

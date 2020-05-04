@@ -32,6 +32,7 @@ namespace Data = SQL;
 #include "Configuration.h"
 #include "DBMSSession.h"
 #include "Singleton.h"
+#include "FixedSizeUnorderedMap.h"
 
 namespace upmq {
 namespace broker {
@@ -47,7 +48,9 @@ class DBMSConnectionPool {
   void pushBack(std::shared_ptr<Poco::Data::Session> session);
   static void doNow(const std::string &sql, DBMSConnectionPool::TX tx = TX::USE);
 
-  void beginTX(Poco::Data::Session &dbSession, const std::string &txName);
+  void beginTX(Poco::Data::Session &dbSession,
+               const std::string &txName,
+               storage::DBMSSession::TransactionMode mode = storage::DBMSSession::TransactionMode::WRITE);
   static void commitTX(Poco::Data::Session &dbSession, const std::string &txName);
   static void rollbackTX(Poco::Data::Session &dbSession, const std::string &txName);
 
@@ -58,7 +61,9 @@ class DBMSConnectionPool {
   int _count;
   mutable SessionsQueueType _sessions;
   std::string _dbmsString;
-  std::shared_ptr<Poco::Data::Session> _memorySession;
+  DBMSType _dbmsType;
+  std::string _connector;
+  mutable FSUnorderedMap<Poco::UInt64, std::shared_ptr<Poco::Data::Session>> _memorySession;
   static void initDB(Poco::Data::Session &dbSessionstatic);
   std::shared_ptr<Poco::Data::Session> makeSession(DBMSType dbmsType, const std::string &connector) const;
   IN_MEMORY _inMemory{IN_MEMORY::M_NO};

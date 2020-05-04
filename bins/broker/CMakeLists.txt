@@ -119,16 +119,16 @@ set(SOURCE_FILES
     s2s_proto/S2SProto.h
     session/DBMSSession.cpp
     session/DBMSSession.h
-	net/SocketReactor.cpp
-	net/SocketReactor.h
-	net/ParallelSocketReactor.h
-	net/ParallelSocketAcceptor.h
-	net/SocketNotifier.cpp
-	net/SocketNotifier.h
-	net/SocketNotification.cpp
-	net/SocketNotification.h
-	net/NotificationCenter.cpp
-	net/NotificationCenter.h)
+    net/SocketReactor.cpp
+    net/SocketReactor.h
+    net/ParallelSocketReactor.h
+    net/ParallelSocketAcceptor.h
+    net/SocketNotifier.cpp
+    net/SocketNotifier.h
+    net/SocketNotification.cpp
+    net/SocketNotification.h
+    net/NotificationCenter.cpp
+    net/NotificationCenter.h)
 
 if (ENABLE_WEB_ADMIN)
   add_definitions(-DENABLE_WEB_ADMIN)
@@ -196,15 +196,29 @@ set(POCO_LIBS
     )
 
 get_target_property(Poco_VERSION_MAJOR Poco::Foundation Poco_VERSION_MAJOR)
+get_target_property(Poco_VERSION_MINOR Poco::Foundation Poco_VERSION_MINOR)
 add_definitions(-DPOCO_VERSION_MAJOR=${Poco_VERSION_MAJOR})
+add_definitions(-DPOCO_VERSION_MINOR=${Poco_VERSION_MINOR})
 if (Poco_VERSION_MAJOR GREATER 1)
-  list(APPEND POCO_LIBS Poco::SQL Poco::SQLODBC Poco::SQLSQLite)
+  list(APPEND POCO_LIBS Poco::SQL Poco::SQLSQLite)
   if (ENABLE_POSTGRESQL)
     add_definitions(-DHAS_POSTGRESQL)
     list(APPEND POCO_LIBS Poco::SQLPostgreSQL)
   endif ()
+  if (ENABLE_ODBC)
+    add_definitions(-DHAS_ODBC)
+    list(APPEND POCO_LIBS Poco::SQLODBC)
+  endif ()
 else ()
-  list(APPEND POCO_LIBS Poco::Data Poco::DataSQLite Poco::DataODBC)
+  list(APPEND POCO_LIBS Poco::Data Poco::DataSQLite)
+  if (ENABLE_POSTGRESQL)
+    add_definitions(-DHAS_POSTGRESQL)
+    list(APPEND POCO_LIBS Poco::DataPostgreSQL)
+  endif ()
+  if (ENABLE_ODBC)
+    add_definitions(-DHAS_ODBC)
+    list(APPEND POCO_LIBS Poco::DataODBC)
+  endif ()
 endif ()
 
 target_link_libraries(broker PRIVATE upmq::protocol protobuf::libprotobuf ${CMAKE_DL_LIBS} ${POCO_LIBS})

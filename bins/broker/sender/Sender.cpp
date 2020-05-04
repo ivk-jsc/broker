@@ -27,7 +27,9 @@ Sender::~Sender() = default;
 void Sender::fixMessageInGroup(const Session &session, Storage &storage, const MessageDataContainer &sMessage) const {
   auto &message = sMessage.message();
   if (message.has_group_id()) {
-    std::string groupID = message.group_id() + "+" + _groupID;
+    std::string groupID = message.group_id();
+    groupID.append("+").append(_groupID);
+
     if (!std::get<0>(_groupInfo).empty() && (std::get<0>(_groupInfo) != groupID)) {
       setToLast(session, storage);
     }

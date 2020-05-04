@@ -55,7 +55,7 @@ TEST_F(MapMessageTest, testSendRecvCloneMapMessage) {
 
   producer->send(message.get());
 
-  message.reset((cms::MapMessage *)consumer->receive(5000));
+  message.reset((cms::MapMessage *)consumer->receive(3000));
   EXPECT_TRUE(message != nullptr);
 
   EXPECT_FALSE(message->getBoolean("boolean"));
@@ -95,7 +95,7 @@ TEST_F(MapMessageTest, testEmptyMapSendReceive) {
   // Send some text messages
   producer->send(mapMessage.get());
 
-  std::unique_ptr<cms::Message> message(consumer->receive(2000));
+  std::unique_ptr<cms::Message> message(consumer->receive(3000));
   EXPECT_TRUE(message != nullptr);
 
   auto *recvMapMessage = dynamic_cast<cms::MapMessage *>(message.get());
@@ -119,7 +119,7 @@ TEST_F(MapMessageTest, testMapWithEmptyStringValue) {
   // Send some text messages
   producer->send(mapMessage.get());
 
-  std::unique_ptr<cms::Message> message(consumer->receive(2000));
+  std::unique_ptr<cms::Message> message(consumer->receive(3000));
   EXPECT_TRUE(message != nullptr);
 
   auto *recvMapMessage = dynamic_cast<MapMessage *>(message.get());
@@ -148,7 +148,7 @@ TEST_F(MapMessageTest, testMapSetEmptyBytesVector) {
   // Send some text messages
   producer->send(mapMessage.get());
 
-  std::unique_ptr<cms::Message> message(consumer->receive(2000));
+  std::unique_ptr<cms::Message> message(consumer->receive(3000));
   EXPECT_TRUE(message != nullptr);
 
   auto *recvMapMessage = dynamic_cast<MapMessage *>(message.get());
@@ -494,7 +494,7 @@ TEST_F(MapMessageTest, testReadOnlyBody) {
 
   producer->send(msg.get());
 
-  msg.reset((cms::MapMessage *)consumer->receive(5000));
+  msg.reset((cms::MapMessage *)consumer->receive(3000));
   EXPECT_TRUE(msg != nullptr);
 
   try {

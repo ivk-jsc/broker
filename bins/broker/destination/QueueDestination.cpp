@@ -31,20 +31,10 @@ void QueueDestination::save(const Session &session, const MessageDataContainer &
     begin(session);
   }
   TRY_POCO_DATA_EXCEPTION { _storage.save(session, sMessage); }
-  CATCH_POCO_DATA_EXCEPTION_PURE_TROW_INVALID_SQL("can't save message", "", ERROR_ON_SAVE_MESSAGE)
+  CATCH_POCO_DATA_EXCEPTION_NO_INVALID_SQL("can't save message", "", session.currentDBSession->rollbackTX(), ERROR_ON_SAVE_MESSAGE)
 
   session.currentDBSession->commitTX();
 
-  TRY_POCO_DATA_EXCEPTION {
-    std::string routingK = routingKey(sMessage.message().destination_uri());
-    upmq::ScopedReadRWLock readRWLock(_routingLock);
-    auto it = _routing.find(routingK);
-    if (it != _routing.end()) {
-      const MessageDataContainer *dc = &sMessage;
-      it->second->notify(&session, dc);
-    }
-  }
-  CATCH_POCO_DATA_EXCEPTION_PURE("can't save message", "", ERROR_ON_SAVE_MESSAGE)
   postNewMessageEvent();
 }
 void QueueDestination::ack(const Session &session, const MessageDataContainer &sMessage) {

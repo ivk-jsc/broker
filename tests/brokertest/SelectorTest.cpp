@@ -169,7 +169,7 @@ void SelectorTest::assertSelector(const std::string &selector, bool expected) {
   doMessage(msg.get());
   producer->send(msg.get());
 
-  const std::unique_ptr<cms::Message> msgret(consumer->receive(3000));
+  const std::unique_ptr<cms::Message> msgret(consumer->receive(1000));
 
   if (expected) {
     EXPECT_TRUE(msgret != nullptr);

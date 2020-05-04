@@ -37,7 +37,7 @@ TEST_F(TextMessageTest, testSendRecvCloneTextMessage) {
   // Send message
   producer->send(message.get());
 
-  message.reset((cms::TextMessage *)consumer->receive(5000));
+  message.reset((cms::TextMessage *)consumer->receive(3000));
   EXPECT_TRUE(message != nullptr);
   EXPECT_TRUE(message->getText() == "TEST TEXT");
   EXPECT_TRUE(message->getStringProperty("string") == "TEST PROPERTY");

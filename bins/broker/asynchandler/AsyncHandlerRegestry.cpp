@@ -112,11 +112,11 @@ int AsyncHandlerRegestry::freeNum() const {
 }
 AsyncHandlerRegestry::~AsyncHandlerRegestry() {
   try {
-    for (auto &_connection : _connections) {
-      if (_connection) {
-        _connection->setNeedErase();
-        _connection->onReadable(AutoPtr<upmq::Net::ReadableNotification>(nullptr));
-        _connection = nullptr;
+    for (auto &connection : _connections) {
+      if (connection) {
+        connection->setNeedErase();
+        connection->onReadable(AutoPtr<upmq::Net::ReadableNotification>(nullptr));
+        connection = nullptr;
       }
     }
     _connections.clear();

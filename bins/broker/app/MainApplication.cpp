@@ -189,13 +189,13 @@ int MainApplication::main(const std::vector<std::string> &args) {
   Thread thread;
   thread.start(reactor);
 
-  //            #ifdef _DEBUG
-  //                  while (true) {
-  //                    Poco::Thread::sleep(100000);
-  //                  }
-  //            #else
+#ifdef _DEBUG
+  while (true) {
+    Poco::Thread::sleep(100000);
+  }
+#else
   waitTermination();
-  //            #endif
+#endif
 
   log->critical("%s", std::string("-").append(" * ").append("wait termination"));
 
@@ -274,6 +274,7 @@ void MainApplication::loadStorageConfig() const {
   storage.data.set(prefix.append(expandPath(config().getString("broker.storage.data", "upmq/data"))).toString());
 
   storage.setMessageJournal(CONFIGURATION::Instance().name());
+  storage.messages.nonPresistentSize = config().getUInt("broker.storage.messages.non-persistent-size", 100000);
   CONFIGURATION::Instance().setStorage(storage);
 }
 void MainApplication::loadDestinationConfig() const {
@@ -288,12 +289,8 @@ void MainApplication::loadLogConfig() {
   confLog.level = config().getInt("broker.log.level", confLog.level) % 9;
   confLog.isInteractive = config().getBool("broker.log.interactive", confLog.isInteractive);
   confLog.name = CONFIGURATION::Instance().name();
-  Poco::Path prefix;
-#ifdef _WIN32
-  prefix = expandPath(config().getString("broker.log.path[@windows]", "C:/ProgramData"));
-#else
-  prefix = expandPath(config().getString("broker.log.path[@_nix]", "/var/log"));
-#endif
+  Poco::Path prefix = expandPath(config().getString("broker.log.path[@_nix]", Poco::Path::current()));
+
   confLog.path.assign(prefix);
   confLog.path.append(expandPath(config().getString("broker.log.path", "upmq/log"))).makeDirectory();
   CONFIGURATION::Instance().setLog(confLog);

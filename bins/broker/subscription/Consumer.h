@@ -28,10 +28,45 @@
 
 #include "ProtoBuf.h"
 #include "Selector.h"
+#include "MessageDataContainer.h"
 
 namespace upmq {
 namespace broker {
+namespace consumer {
+struct Msg {
+  Poco::Int64 num = 0;
+  std::string messageId;
+  int priority = 0;
+  int persistent = 0;
+  Poco::Nullable<std::string> correlationID;
+  Poco::Nullable<std::string> replyTo;
+  std::string type;
+  Poco::Int64 timestamp = 0;
+  Poco::Int64 ttl = 0;
+  Poco::Int64 expiration = 0;
+  std::string screated;
+  int bodyType = 0;
+  Poco::Nullable<std::string> groupID;
+  int groupSeq = 0;
+  int deliveryCount = 0;
 
+  void reset() {
+    num = 0;
+    messageId.clear();
+    correlationID.clear();
+    replyTo.clear();
+    type.clear();
+    timestamp = 0;
+    ttl = 0;
+    expiration = 0;
+    screated.clear();
+    bodyType = 0;
+    groupID.clear();
+    groupSeq = 0;
+    deliveryCount = 0;
+  }
+};
+}  // namespace consumer
 class Consumer {
  public:
   struct session_info {
@@ -54,41 +89,7 @@ class Consumer {
   int maxNotAckMsg;
   mutable bool abort = false;
 
-  struct Msg {
-    Poco::Int64 num = 0;
-    std::string messageId;
-    int priority = 0;
-    int persistent = 0;
-    Poco::Nullable<std::string> correlationID;
-    Poco::Nullable<std::string> replyTo;
-    std::string type;
-    Poco::Int64 timestamp = 0;
-    Poco::Int64 ttl = 0;
-    Poco::Int64 expiration = 0;
-    std::string screated;
-    int bodyType = 0;
-    Poco::Nullable<std::string> groupID;
-    int groupSeq = 0;
-    int deliveryCount = 0;
-
-    void reset() {
-      num = 0;
-      messageId.clear();
-      correlationID.clear();
-      replyTo.clear();
-      type.clear();
-      timestamp = 0;
-      ttl = 0;
-      expiration = 0;
-      screated.clear();
-      bodyType = 0;
-      groupID.clear();
-      groupSeq = 0;
-      deliveryCount = 0;
-    }
-  };
-
-  mutable std::shared_ptr<std::deque<Msg>> select;
+  mutable std::shared_ptr<std::deque<std::shared_ptr<MessageDataContainer>>> select;
 
   Consumer(int _num,
            std::string _clientID,
@@ -100,7 +101,7 @@ class Consumer {
            bool _noLocal,
            bool _browser,
            int _maxNotAxkMsg,
-           std::shared_ptr<std::deque<Consumer::Msg>> selectCache);
+           std::shared_ptr<std::deque<std::shared_ptr<MessageDataContainer>>> selectCache);
   Consumer(const Consumer &) = delete;
   Consumer(Consumer &&) = default;
   Consumer &operator=(Consumer &&) = default;

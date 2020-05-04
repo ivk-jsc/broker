@@ -51,6 +51,9 @@
                 <path windows="C:/ProgramData" _nix="../share">upmq/db</path>
             </connection>
             <data windows="C:/ProgramData" _nix="../share">upmq/data</data>
+            <messages>
+                <non-persistent-size>100000</non-persistent-size>
+            </messages>
         </storage>
     </broker>
 </config>

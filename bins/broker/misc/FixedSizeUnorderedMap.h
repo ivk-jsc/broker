@@ -119,12 +119,26 @@ class FSUnorderedNode {
 
  public:
   FSUnorderedNode() = default;
+  FSUnorderedNode(FSUnorderedNode &&) = default;
+  FSUnorderedNode &operator=(FSUnorderedNode &&) = default;
+  FSUnorderedNode(const FSUnorderedNode &o) {
+    upmq::ScopedReadRWLock oRWLock(o._rwLock);
+    upmq::ScopedWriteRWLock thisRWLock(_rwLock);
+    _items = o._items;
+  }
+  FSUnorderedNode &operator=(const FSUnorderedNode &o) {
+    if (this != &o) {
+      upmq::ScopedReadRWLock oRWLock(o._rwLock);
+      upmq::ScopedWriteRWLock thisRWLock(_rwLock);
+      _items = o._items;
+    }
+    return *this;
+  }
   FSReadLockedValue<Key, Value> find(const Key &key) const {
     _rwLock.readLock();
     auto item = std::find_if(_items.begin(), _items.end(), [&key](const KVPair &pair) { return pair.first == key; });
     if (item != _items.end()) {
-      FSReadLockedValue<Key, Value> fs(_rwLock, item->first, item->second);
-      return fs;
+      return FSReadLockedValue<Key, Value>(_rwLock, item->first, item->second);
     }
     _rwLock.unlockRead();
     return {};
@@ -134,8 +148,7 @@ class FSUnorderedNode {
     _rwLock.readLock();
     auto item = std::find_if(_items.begin(), _items.end(), f);
     if (item != _items.end()) {
-      FSReadLockedValue<Key, Value> fs(_rwLock, item->first, item->second);
-      return fs;
+      return FSReadLockedValue<Key, Value>(_rwLock, item->first, item->second);
     }
     _rwLock.unlockRead();
     return {};
@@ -236,7 +249,7 @@ class FSUnorderedMap {
   std::vector<ItemType> _items;
   using ItemsType = std::vector<ItemType>;
 
-  const size_t _size;
+  size_t _size;
   std::atomic<size_t> _realSize{0};
   mutable upmq::MRWLock _validIndexesLock;
   std::set<size_t> _validIndexes;
@@ -269,10 +282,31 @@ class FSUnorderedMap {
 
  public:
   explicit FSUnorderedMap(size_t size) : _items(size), _size(size) {}
-  FSUnorderedMap(FSUnorderedMap &&o) noexcept : _items(std::move(o._items)), _size(std::move(o._size)), _realSize(o._realSize.load()) {}
+  FSUnorderedMap(FSUnorderedMap &&o) noexcept
+      : _items(std::move(o._items)), _size(std::move(o._size)), _realSize(o._realSize.load()), _validIndexes(o._validIndexes) {}
   FSReadLockedValue<Key, Value> find(const Key &key) const {
     size_t index = Poco::hash(key) % _size;
     return _items.at(index).find(key);
+  }
+  FSUnorderedMap &operator=(FSUnorderedMap &&o) noexcept {
+    upmq::ScopedWriteRWLock thisRWLock(_validIndexesLock);
+    _items = std::move(o._items);
+    _size = std::move(o._size);
+    _realSize = o._realSize.load();
+    _validIndexes = o._validIndexes;
+    return *this;
+  }
+  FSUnorderedMap &operator=(const FSUnorderedMap &o) {
+    if (this != &o) {
+      clear();
+      upmq::ScopedReadRWLock oRWLock(o._validIndexesLock);
+      upmq::ScopedWriteRWLock thisRWLock(_validIndexesLock);
+      _items = o._items;
+      _size = o._size;
+      _realSize = o._realSize.load();
+      _validIndexes = o._validIndexes;
+    }
+    return *this;
   }
   template <typename F>
   FSReadLockedValue<Key, Value> findIf(const F &f) const {

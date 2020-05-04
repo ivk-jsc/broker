@@ -40,12 +40,13 @@ class DBMSSession {
   bool _inTransaction = false;
 
  public:
+  enum class TransactionMode { READ = 0, WRITE };
   DBMSSession(std::shared_ptr<Poco::Data::Session> &&session, DBMSConnectionPool &dbmsPool);
   DBMSSession(DBMSSession &&) = default;
   DBMSSession(const DBMSSession &) = delete;
   DBMSSession &operator=(const DBMSSession &) = delete;
   virtual ~DBMSSession();
-  void beginTX(const std::string &txName);
+  void beginTX(const std::string &txName, TransactionMode mode = TransactionMode::WRITE);
   void commitTX();
   void rollbackTX();
   template <typename T>

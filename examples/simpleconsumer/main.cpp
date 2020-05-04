@@ -64,12 +64,18 @@ class SimpleConsumer : public cms::ExceptionListener {
   std::string consMode;
   std::string selector;
   std::string outFormat{"text"};
+  long mod = 1000;
 
  public:
   std::chrono::steady_clock::time_point t0{perf_clock::now()};
 
-  SimpleConsumer(std::string brokerURI_, std::string destURI_, bool useTopic_, std::string consMode_)
-      : brokerURI(std::move(brokerURI_)), destURI(std::move(destURI_)), useTopic(useTopic_), isStoped(false), consMode(std::move(consMode_)) {}
+  SimpleConsumer(std::string brokerURI_, std::string destURI_, bool useTopic_, std::string consMode_, long logMod)
+      : brokerURI(std::move(brokerURI_)),
+        destURI(std::move(destURI_)),
+        useTopic(useTopic_),
+        isStoped(false),
+        consMode(std::move(consMode_)),
+        mod(logMod) {}
 
   ~SimpleConsumer() override {
     try {
@@ -132,7 +138,7 @@ class SimpleConsumer : public cms::ExceptionListener {
         if (message != nullptr) {
           const auto *textMessage = dynamic_cast<const cms::TextMessage *>(message.get());
           if (textMessage != nullptr) {
-            if ((i == 1 || (i % 1000 == 0)) && (outFormat.empty() || outFormat != "json")) {
+            if ((i == 1 || (i % mod == 0)) && (outFormat.empty() || outFormat != "json")) {
               std::cout << "recv (" << i << ") <= " << textMessage->getText() << " elapsed [" << floating_seconds(perf_clock::now() - t0).count()
                         << "]" << '\n';
             } else if (outFormat == "json") {
@@ -175,6 +181,7 @@ int main(int argc, char *argv[]) {
   std::string selector;
   std::string outFormat = "text";
   bool useTopics = false;
+  long logMod = 1000;
 
   /* API is data structure driven */
   static const struct optparse_long opt_option[] = {
@@ -185,6 +192,7 @@ int main(int argc, char *argv[]) {
       {"selector", 's', OPTPARSE_OPTIONAL, true, "consumer selector (sql92-where), default is empty"},
       {"out-format", 'o', OPTPARSE_OPTIONAL, true, "message out format [text or json], default is text"},
       {"uri", 'u', OPTPARSE_OPTIONAL, true, "uri - broker connection string, default is tcp://localhost:12345?transport.trace=false"},
+      {"log_mod", 'l', OPTPARSE_OPTIONAL, true, "log_mod - a number of skipped messages before log, default is 1000"},
       {"help", 'h', OPTPARSE_OPTIONAL, false, "show help"},
       {nullptr, 0, OPTPARSE_NONE, false, nullptr}, /* end (a.k.a. sentinel) */
   };
@@ -216,14 +224,17 @@ int main(int argc, char *argv[]) {
       case 's':
         processOptionResult = processOption(option, options.optarg, [&selector](const char *arg) { selector.assign(arg); });
         break;
+      case 'l':
+        processOptionResult = processOption(option, options.optarg, [&logMod](const char *arg) { logMod = strtol(arg, nullptr, 10); });
+        break;
       case 'h':
-        usage(opt_option, 7);
+        usage(opt_option, 8);
         return 0;
       default:
         break;
     }
     if (processOptionResult != 0) {
-      usage(opt_option, 9);
+      usage(opt_option, 8);
       return -1;
     }
   }
@@ -239,7 +250,7 @@ int main(int argc, char *argv[]) {
   std::cout << "=====================================================\n";
 
   try {
-    SimpleConsumer consumer(brokerURI, destURI, useTopics, consMode);
+    SimpleConsumer consumer(brokerURI, destURI, useTopics, consMode, logMod);
     if (!selector.empty()) {
       consumer.setSelector(selector);
     }

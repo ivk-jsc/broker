@@ -30,7 +30,10 @@
 #include "Poco/Data/SQLite/Connector.h"
 #include "Poco/Data/SQLite/SQLiteException.h"
 #include "Poco/Data/SQLite/Utility.h"
+#include "sqlite3.h"
+#ifdef HAS_ODBC
 #include <Poco/Data/ODBC/Connector.h>
+#endif
 #ifdef HAS_POSTGRESQL
 #include "Poco/Data/PostgreSQL/Connector.h"
 #include "Poco/Data/PostgreSQL/PostgreSQLException.h"
@@ -47,6 +50,7 @@ static constexpr char SQLITE_CONNECTOR_STR[] = "SQLite";
 #include "MiscDefines.h"
 #include "ProtoBuf.h"
 #include "AsyncLogger.h"
+#include "Poco/RWLock.h"
 
 namespace upmq {
 namespace broker {
@@ -55,11 +59,12 @@ namespace storage {
 Poco::Timestamp DBMSConnectionPool::_lastBegin;
 
 DBMSConnectionPool::DBMSConnectionPool()
-    : _count(STORAGE_CONFIG.connection.props.connectionPool), _dbmsString(STORAGE_CONFIG.connection.value.get()) {
+    : _count(STORAGE_CONFIG.connection.props.connectionPool),
+      _dbmsString(STORAGE_CONFIG.connection.value.get()),
+      _dbmsType(STORAGE_CONFIG.connection.props.dbmsType),
+      _memorySession(THREADS_CONFIG.all() + 1) {
   TRY_POCO_DATA_EXCEPTION {
-    std::string connector;
-    DBMSType dbmsType = STORAGE_CONFIG.connection.props.dbmsType;
-    if (dbmsType == storage::SQLiteNative) {
+    if (_dbmsType == storage::SQLiteNative) {
       if (STORAGE_CONFIG.connection.value.usePath && _dbmsString.find(":memory:") == std::string::npos) {
         Poco::Path dbmsFilePath = STORAGE_CONFIG.connection.path;
         Poco::File dbmsFile(dbmsFilePath);
@@ -70,25 +75,27 @@ DBMSConnectionPool::DBMSConnectionPool()
         _dbmsString = dbmsFilePath.toString();
       }
       PDSQLITE::Connector::registerConnector();
-      connector = SQLITE_CONNECTOR_STR;
+      _connector = SQLITE_CONNECTOR_STR;
       PDSQLITE::Connector::enableSharedCache();
-    } else if (dbmsType == storage::Postgresql) {
+    } else if (_dbmsType == storage::Postgresql) {
 #ifdef HAS_POSTGRESQL
       Poco::Data::PostgreSQL::Connector::registerConnector();
-      connector = "postgresql";
+      _connector = "postgresql";
 #endif  // HAS_POSTGRESQL
     } else {
+#ifdef HAS_ODBC
       Poco::Data::ODBC::Connector::registerConnector();
-      connector = "ODBC";
+      _connector = "ODBC";
+#endif
     }
-    if (_dbmsString == ":memory:") {
+    if (_dbmsString.find(":memory:") != std::string::npos) {
       _inMemory = IN_MEMORY::M_YES;
-      _count = 1;
-      _memorySession = makeSession(dbmsType, connector);
-      initDB(*_memorySession);
+      _count = 0;
+      auto tempSession = makeSession(_dbmsType, _connector);
+      initDB(*tempSession);
     } else {
       for (int i = 0; i < _count; i++) {
-        std::shared_ptr<Poco::Data::Session> session = makeSession(dbmsType, connector);
+        std::shared_ptr<Poco::Data::Session> session = makeSession(_dbmsType, _connector);
         if (i == 0) {
           initDB(*session);
         }
@@ -100,7 +107,7 @@ DBMSConnectionPool::DBMSConnectionPool()
 }
 DBMSConnectionPool::~DBMSConnectionPool() {
   if (_dbmsString == ":memory:") {
-    _memorySession.reset();
+    _memorySession.clear();
   } else {
     std::shared_ptr<Poco::Data::Session> session;
     for (int i = 0; i < _count; i++) {
@@ -112,8 +119,15 @@ DBMSConnectionPool::~DBMSConnectionPool() {
 
 std::shared_ptr<Poco::Data::Session> DBMSConnectionPool::dbmsConnection() const {
   switch (_inMemory) {
-    case IN_MEMORY::M_YES:
-      return _memorySession;
+    case IN_MEMORY::M_YES: {
+      auto tid = reinterpret_cast<Poco::UInt64>(Poco::Thread::currentTid());
+      auto sess = _memorySession.find(tid);
+      if (!sess.hasValue()) {
+        _memorySession.emplace(Poco::UInt64(tid), makeSession(_dbmsType, _connector));
+        sess = _memorySession.find(tid);
+      }
+      return *sess;
+    }
       // case IN_MEMORY::M_NO:
     default: {
       std::shared_ptr<Poco::Data::Session> session;
@@ -136,7 +150,7 @@ void DBMSConnectionPool::pushBack(std::shared_ptr<Poco::Data::Session> session) 
   }
 }
 
-void DBMSConnectionPool::beginTX(Poco::Data::Session &dbSession, const std::string &txName) {
+void DBMSConnectionPool::beginTX(Poco::Data::Session &dbSession, const std::string &txName, storage::DBMSSession::TransactionMode mode) {
   if ((STORAGE_CONFIG.connection.props.dbmsType != storage::SQLiteNative) && (STORAGE_CONFIG.connection.props.dbmsType != storage::SQLite)
 #ifdef HAS_POSTGRESQL
       && (STORAGE_CONFIG.connection.props.dbmsType != storage::Postgresql))
@@ -148,43 +162,36 @@ void DBMSConnectionPool::beginTX(Poco::Data::Session &dbSession, const std::stri
   }
 #ifdef HAS_POSTGRESQL
   else if (STORAGE_CONFIG.connection.props.dbmsType == storage::Postgresql) {
-    //    dbSession.setFeature("autoCommit", false);
-    dbSession << "BEGIN TRANSACTION;", Poco::Data::Keywords::now;
+    std::stringstream sql;
+    sql << "BEGIN TRANSACTION";
+    if (mode == storage::DBMSSession::TransactionMode::READ) {
+      sql << " READ ONLY";
+    } else {
+      sql << " READ WRITE";
+    }
+    dbSession << sql.str(), Poco::Data::Keywords::now;
   }
 #endif  // HAS_POSTGRESQL
   else {
+    while (dbSession.isTransaction()) {
+      Poco::Thread::yield();
+    }
 
-    static const std::string transactionType = (_inMemory == IN_MEMORY::M_YES ? "immediate" : "exclusive");
     bool locked;
-    std::stringstream sql;
-    sql << "begin " << transactionType << " transaction \"" << txName << Poco::Thread::currentTid() << "\";";  // immediate
+
+    const std::string sql = (mode == storage::DBMSSession::TransactionMode::WRITE) ? "begin concurrent;" : "begin transaction;";
+    int result = 0;
+    sqlite3 *pSqlite3 = Poco::Data::SQLite::Utility::dbHandle(dbSession);
+    const char *cquery = sql.c_str();
     do {
-      locked = false;
-      try {
-        if (STORAGE_CONFIG.connection.props.dbmsType == storage::SQLite) {
-          dbSession.setFeature("autoCommit", false);
-        }
-        if (STORAGE_CONFIG.connection.props.dbmsType == storage::SQLiteNative && dbSession.isTransaction()) {
-          locked = true;
-          Poco::Thread::yield();
-        }
-        dbSession << sql.str(), Poco::Data::Keywords::now;
-      } catch (PDSQLITE::DBLockedException &) {
-        locked = true;
+      result = sqlite3_exec(pSqlite3, cquery, nullptr, nullptr, nullptr);
+      locked = (result == SQLITE_LOCKED || result == SQLITE_BUSY || result == SQLITE_BUSY_SNAPSHOT);
+      if (locked) {
         Poco::Thread::yield();
-      } catch (PDSQLITE::TableLockedException &) {
-        locked = true;
-        Poco::Thread::yield();
-      } catch (PDSQLITE::InvalidSQLStatementException &iex) {
-        UNUSED_VAR(iex);
-        locked = true;
-        Poco::Thread::yield();
-      } catch (Poco::Exception &pex) {
-        std::cout << " ! ERROR : " << pex.message() << non_std_endl;
       }
     } while (locked);
   }
-}
+}  // namespace storage
 void DBMSConnectionPool::commitTX(Poco::Data::Session &dbSession, const std::string &txName) {
   if ((STORAGE_CONFIG.connection.props.dbmsType != storage::SQLiteNative) && (STORAGE_CONFIG.connection.props.dbmsType != storage::SQLite)
 #ifdef HAS_POSTGRESQL
@@ -198,31 +205,19 @@ void DBMSConnectionPool::commitTX(Poco::Data::Session &dbSession, const std::str
 #ifdef HAS_POSTGRESQL
   else if (STORAGE_CONFIG.connection.props.dbmsType == storage::Postgresql) {
     dbSession << "COMMIT;", Poco::Data::Keywords::now;
-    //    dbSession.setFeature("autoCommit", true);
   }
 #endif  // HAS_POSTGRESQL
   else {
     bool locked;
-    std::stringstream sql;
-    sql << "commit transaction \"" << txName << Poco::Thread::currentTid() << "\";";
+    const std::string sql = "commit;";
+    int result = 0;
+    sqlite3 *pSqlite3 = Poco::Data::SQLite::Utility::dbHandle(dbSession);
+    const char *cquery = sql.c_str();
     do {
-      locked = false;
-      try {
-        dbSession << sql.str(), Poco::Data::Keywords::now;
-        if (STORAGE_CONFIG.connection.props.dbmsType == storage::SQLite) {
-          dbSession.setFeature("autoCommit", true);
-        }
-      } catch (PDSQLITE::DBLockedException &) {
-        locked = true;
+      result = sqlite3_exec(pSqlite3, cquery, nullptr, nullptr, nullptr);
+      locked = (result == SQLITE_LOCKED || result == SQLITE_BUSY || result == SQLITE_BUSY_SNAPSHOT);
+      if (locked) {
         Poco::Thread::yield();
-      } catch (PDSQLITE::TableLockedException &) {
-        locked = true;
-        Poco::Thread::yield();
-      } catch (PDSQLITE::InvalidSQLStatementException &) {
-        locked = true;
-        Poco::Thread::yield();
-      } catch (Poco::Exception &pex) {
-        std::cout << " ! ERROR : " << pex.message() << non_std_endl;
       }
     } while (locked);
   }
@@ -240,31 +235,19 @@ void DBMSConnectionPool::rollbackTX(Poco::Data::Session &dbSession, const std::s
 #ifdef HAS_POSTGRESQL
   else if (STORAGE_CONFIG.connection.props.dbmsType == storage::Postgresql) {
     dbSession << "ROLLBACK;", Poco::Data::Keywords::now;
-    //    dbSession.setFeature("autoCommit", true);
   }
 #endif  // HAS_POSTGRESQL
   else {
     bool locked;
-    std::stringstream sql;
-    sql << "rollback transaction \"" << txName << Poco::Thread::currentTid() << "\";";
+    const std::string sql = "rollback;";
+    int result = 0;
+    sqlite3 *pSqlite3 = Poco::Data::SQLite::Utility::dbHandle(dbSession);
+    const char *cquery = sql.c_str();
     do {
-      locked = false;
-      try {
-        dbSession << sql.str(), Poco::Data::Keywords::now;
-        if (STORAGE_CONFIG.connection.props.dbmsType == storage::SQLite) {
-          dbSession.setFeature("autoCommit", true);
-        }
-      } catch (PDSQLITE::DBLockedException &) {
-        locked = true;
+      result = sqlite3_exec(pSqlite3, cquery, nullptr, nullptr, nullptr);
+      locked = (result == SQLITE_LOCKED || result == SQLITE_BUSY || result == SQLITE_BUSY_SNAPSHOT);
+      if (locked) {
         Poco::Thread::yield();
-      } catch (PDSQLITE::TableLockedException &) {
-        locked = true;
-        Poco::Thread::yield();
-      } catch (PDSQLITE::InvalidSQLStatementException &) {
-        locked = true;
-        Poco::Thread::yield();
-      } catch (Poco::Exception &pex) {
-        std::cout << " ! ERROR : " << pex.message() << non_std_endl;
       }
     } while (locked);
   }

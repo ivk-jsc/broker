@@ -53,7 +53,7 @@ TEST_F(MessageTest, testSendRecvCloneProperty) {
   // Send message
   producer->send(message.get());
 
-  message.reset(dynamic_cast<TextMessage *>(consumer->receive(5000)));
+  message.reset(dynamic_cast<TextMessage *>(consumer->receive(3000)));
   EXPECT_TRUE(message != nullptr);
   EXPECT_FALSE(message->getBooleanProperty("boolean"));
   EXPECT_TRUE(message->getByteProperty("byte") == 60);
