@@ -44,7 +44,7 @@ void ConnectionStartStopTest::testStoppedConsumerHoldsMessagesTillStarted() {
   producer->send(message.get());
 
   // Test the assertions.
-  std::unique_ptr<Message> m(startedConsumer->receive(2000));
+  std::unique_ptr<Message> m(startedConsumer->receive(3000));
   EXPECT_TRUE(m != nullptr);
 
   m.reset(stoppedConsumer->receive(2000));

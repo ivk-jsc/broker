@@ -47,7 +47,7 @@ TEST_F(TransactionTest, testSendReceiveTransactedBatches) {
 
     for (size_t i = 0; i < batchSize; i++) {
       std::unique_ptr<TextMessage> message;
-      EXPECT_NO_THROW(message.reset(dynamic_cast<TextMessage *>(consumer->receive(1000 * 5)))) << "Receive Shouldn't throw a Message here:";
+      EXPECT_NO_THROW(message.reset(dynamic_cast<TextMessage *>(consumer->receive(3000)))) << "Receive Shouldn't throw a Message here:";
 
       EXPECT_TRUE(message != nullptr) << "Failed to receive all messages in batch";
       EXPECT_TRUE(msg[i] == message->getText());
@@ -138,8 +138,8 @@ TEST_F(TransactionTest, testSendRollbackCommitRollback) {
 
   session->rollback();
 
-  inbound1.reset(dynamic_cast<TextMessage *>(consumer->receive(3000)));
-  inboundEmpty.reset(dynamic_cast<TextMessage *>(consumer->receive(3000)));
+  inbound1.reset(dynamic_cast<TextMessage *>(consumer->receive(5000)));
+  inboundEmpty.reset(dynamic_cast<TextMessage *>(consumer->receive(5000)));
   EXPECT_TRUE(nullptr == inboundEmpty) << "expect empty, but got =>" << inboundEmpty->getText();
   EXPECT_TRUE(inbound1 != nullptr);
   outbound2->setReadable();

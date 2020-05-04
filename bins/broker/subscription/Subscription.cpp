@@ -405,6 +405,7 @@ void Subscription::changeCurrentConsumerNumber() const {
     ++_currentConsumerNumber;
     _currentConsumerNumber %= _consumers.size();
   }
+  EXCHANGE::Instance().addNewMessageEvent(_destination.name());
 }
 const Consumer *Subscription::at(size_t index) const {
   auto consEnd = _consumers.rend();

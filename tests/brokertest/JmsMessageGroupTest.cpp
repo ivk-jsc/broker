@@ -40,7 +40,7 @@ TEST_F(JmsMessageGroupTest, testMessageSend) {
   EXPECT_NO_THROW(producer->send(txtMessage.get()));
 
   std::unique_ptr<cms::Message> message;
-  EXPECT_NO_THROW(message.reset(consumer->receive(2000)));
+  EXPECT_NO_THROW(message.reset(consumer->receive(3000)));
   EXPECT_TRUE(message != nullptr);
   EXPECT_TRUE(message->getStringProperty("JMSXGroupID") == GROUPID);
 }

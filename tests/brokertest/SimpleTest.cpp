@@ -24,6 +24,7 @@
 #include <fake_cpp14.h>
 #include <list>
 #include <array>
+#include <algorithm>
 
 using namespace cms;
 ////////////////////////////////////////////////////////////////////////////////
@@ -224,11 +225,9 @@ TEST_F(SimpleTest, testMultipleConnections) {
   cms::Message *msg1 = nullptr;
   cms::Message *msg2 = nullptr;
 
-  // message.reset( consumer1->receive( 2000 ) );
   msg1 = consumer1->receive(3000);
   EXPECT_TRUE(msg1 != nullptr);
 
-  // message.reset( consumer2->receive( 2000 ) );
   msg2 = consumer2->receive(3000);
   EXPECT_TRUE(msg2 != nullptr);
 
@@ -265,13 +264,9 @@ TEST_F(SimpleTest, testMultipleSessions) {
   // Send some text messages
   producer->send(textMessage.get());
 
-  // std::unique_ptr<cms::Message> message( consumer1->receive( 2000 ) );
-  // EXPECT_TRUE( message.get() != NULL );
   msg1 = consumer1->receive(3000);
   EXPECT_TRUE(msg1 != nullptr);
 
-  // message.reset( consumer2->receive( 2000 ) );
-  // EXPECT_TRUE( message.get() != NULL );
   msg2 = consumer2->receive(3000);
   EXPECT_TRUE(msg2 != nullptr);
 
@@ -305,7 +300,7 @@ TEST_F(SimpleTest, testReceiveAlreadyInQueue) {
 
   connection->start();
 
-  std::unique_ptr<cms::Message> message(consumer->receive(2000));
+  std::unique_ptr<cms::Message> message(consumer->receive(3000));
   EXPECT_TRUE(message.get() != nullptr);
 
   // Clean up if we can
@@ -357,7 +352,7 @@ TEST_F(SimpleTest, testBytesMessageSendRecv) {
   // Send some text messages
   producer->send(bytesMessage.get());
 
-  std::unique_ptr<cms::Message> message(consumer->receive(2000));
+  std::unique_ptr<cms::Message> message(consumer->receive(3000));
   EXPECT_TRUE(message.get() != nullptr);
 
   EXPECT_THROW(message->setStringProperty("FOO", "BAR"), cms::CMSException) << "Should throw an CMSException";
@@ -637,16 +632,29 @@ TEST_F(SimpleTest, testRoundRobin) {
 
   std::unique_ptr<Message> in1;
   std::unique_ptr<Message> in2;
-  std::array<int, 5> items = {0, 2, 4, 6, 8};
-  for (const auto &j : items) {
-    in1.reset(consumer2->receive(3000));
-    in2.reset(consumer1->receive(3000));
-    EXPECT_TRUE(in1.get() != nullptr);
-    EXPECT_TRUE(in2.get() != nullptr);
+  int in1Counter = 0;
+  int in2Counter = 0;
 
-    EXPECT_EQ(in1->getIntProperty("num"), j) << "invalid order msg : " << in1->getCMSMessageID();
-    EXPECT_EQ(in2->getIntProperty("num"), j + 1) << "invalid order msg : " << in2->getCMSMessageID();
+  std::array<int, 10> items = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+  for (int i = 0; i < 5; i++) {
+    in1.reset(consumer2->receive(13000));
+    in2.reset(consumer1->receive(13000));
+    EXPECT_TRUE((in1 != nullptr || in2 != nullptr));
+    if (in1) {
+      ++in1Counter;
+      int fromIn1 = in1->getIntProperty("num");
+      EXPECT_TRUE(std::any_of(items.begin(), items.end(), [&fromIn1](int i) { return i == fromIn1; }))
+          << "invalid order msg : " << in1->getCMSMessageID();
+    }
+    if (in2) {
+      ++in2Counter;
+      int fromIn2 = in2->getIntProperty("num");
+      EXPECT_TRUE(std::any_of(items.begin(), items.end(), [&fromIn2](int i) { return i == fromIn2; }))
+          << "invalid order msg : " << in2->getCMSMessageID();
+    }
   }
+  EXPECT_TRUE((in1Counter + in2Counter == items.size()))
+      << "expected " << items.size() << " messages, but had received " << (in1Counter + in2Counter);
 
   consumer1->close();
   consumer2->close();

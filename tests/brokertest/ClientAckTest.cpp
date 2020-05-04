@@ -268,7 +268,7 @@ TEST_F(ClientAckTest, testUnAckedMessageAreNotConsumedOnSessionCloseAsync) {
 
   // Attempt to Consume the message...
   consumer.reset(session->createConsumer(queue.get()));
-  std::unique_ptr<Message> msg(consumer->receive(2000));
+  std::unique_ptr<Message> msg(consumer->receive(3000));
   EXPECT_TRUE(msg != nullptr);
   msg->acknowledge();
 

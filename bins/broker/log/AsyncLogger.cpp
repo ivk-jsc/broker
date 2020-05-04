@@ -74,14 +74,13 @@ Logger &AsyncLogger::add(const std::string &name, const std::string &subdir) {
   try {
     Poco::ScopedLock<Poco::FastMutex> lock(logLock);
     const Poco::Logger *emptyLoggerPtr = nullptr;
-#if POCO_VERSION_MAJOR > 1
+#if POCO_VERSION_MAJOR > 1 || (POCO_VERSION_MAJOR == 1 && POCO_VERSION_MINOR > 9)
     Poco::AutoPtr<Poco::Logger>
 #else
     Poco::Logger *
 #endif
         loggetPtr = Logger::has(name);
     if (loggetPtr == emptyLoggerPtr) {
-      // if (_formattingChannel.isNull()) {
       Poco::Path dirpath;
       dirpath.parse(subdir);
       if (isInteractive || !Poco::Util::Application::instance().config().getBool("application.runAsDaemon", false)) {
@@ -93,7 +92,6 @@ Logger &AsyncLogger::add(const std::string &name, const std::string &subdir) {
         f.createDirectories();
       }
       _formattingChannel = createFormatter(dirpath.toString(), isInteractive);
-      //}
       return Logger::create(name, _formattingChannel, logPriority);
     }
     return *loggetPtr;

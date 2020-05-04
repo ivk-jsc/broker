@@ -196,7 +196,9 @@ set(POCO_LIBS
     )
 
 get_target_property(Poco_VERSION_MAJOR Poco::Foundation Poco_VERSION_MAJOR)
+get_target_property(Poco_VERSION_MINOR Poco::Foundation Poco_VERSION_MINOR)
 add_definitions(-DPOCO_VERSION_MAJOR=${Poco_VERSION_MAJOR})
+add_definitions(-DPOCO_VERSION_MINOR=${Poco_VERSION_MINOR})
 if (Poco_VERSION_MAJOR GREATER 1)
   list(APPEND POCO_LIBS Poco::SQL Poco::SQLSQLite)
   if (ENABLE_POSTGRESQL)

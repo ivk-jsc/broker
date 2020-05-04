@@ -64,7 +64,7 @@ TEST_F(DurableTest, testDurableConsumer) {
     }
 
     for (int i = 0; i < MSG_COUNT * 2; i++) {
-      received.reset(consumer->receive(1000 * 5));
+      received.reset(consumer->receive(3000));
 
       EXPECT_TRUE(received != nullptr) << "Failed to receive all messages in batch";
     }
