@@ -632,8 +632,8 @@ TEST_F(SimpleTest, testRoundRobin) {
 
   std::unique_ptr<Message> in1;
   std::unique_ptr<Message> in2;
-  int in1Counter = 0;
-  int in2Counter = 0;
+  size_t in1Counter = 0;
+  size_t in2Counter = 0;
 
   std::array<int, 10> items = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
   for (int count(0); count < 5; ++count) {
@@ -653,7 +653,7 @@ TEST_F(SimpleTest, testRoundRobin) {
           << "invalid order msg : " << in2->getCMSMessageID();
     }
   }
-  EXPECT_TRUE(((size_t)(in1Counter + in2Counter) == items.size()))
+  EXPECT_TRUE((in1Counter + in2Counter) == items.size())
       << "expected " << items.size() << " messages, but had received " << (in1Counter + in2Counter);
 
   consumer1->close();
