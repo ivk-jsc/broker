@@ -49,7 +49,7 @@ TEST_F(TransactionTest, testSendReceiveTransactedBatches) {
       std::unique_ptr<TextMessage> message;
       EXPECT_NO_THROW(message.reset(dynamic_cast<TextMessage *>(consumer->receive(3000)))) << "Receive Shouldn't throw a Message here:";
 
-      EXPECT_TRUE(message != nullptr) << "Failed to receive all messages in batch";
+      ASSERT_TRUE(message != nullptr) << "Failed to receive all messages in batch";
       EXPECT_TRUE(msg[i] == message->getText());
     }
 
@@ -95,13 +95,12 @@ TEST_F(TransactionTest, testSendRollback) {
   // validates that the rollbacked was not consumed
   EXPECT_NO_THROW(session->commit());
 
-  EXPECT_TRUE(inbound1 != nullptr);
-  EXPECT_TRUE(inbound2 != nullptr);
-
+  ASSERT_TRUE(inbound1 != nullptr);
   outbound1->setReadable();
-  outbound2->setReadable();
-
   EXPECT_EQ(outbound1->getText(), inbound1->getText());
+
+  ASSERT_TRUE(inbound2 != nullptr);
+  outbound2->setReadable();
   EXPECT_EQ(outbound2->getText(), inbound2->getText())
       << "invalid order : ou1-id[" << outbound1->getCMSMessageID() << "] : in1-id[" << inbound1->getCMSMessageID() << "]\n"
       << "invalid order : ou2-id[" << outbound2->getCMSMessageID() << "] : in2-id[" << inbound2->getCMSMessageID() << "]";
@@ -132,7 +131,7 @@ TEST_F(TransactionTest, testSendRollbackCommitRollback) {
   std::unique_ptr<TextMessage> inbound1(dynamic_cast<TextMessage *>(consumer->receive(3000)));
   std::unique_ptr<TextMessage> inboundEmpty(dynamic_cast<TextMessage *>(consumer->receive(3000)));
   EXPECT_TRUE(nullptr == inboundEmpty) << "must be empty, but : " << inboundEmpty->getText();
-  EXPECT_TRUE(inbound1 != nullptr);
+  ASSERT_TRUE(inbound1 != nullptr);
   outbound1->setReadable();
   EXPECT_EQ(outbound1->getText(), inbound1->getText());
 
@@ -141,7 +140,7 @@ TEST_F(TransactionTest, testSendRollbackCommitRollback) {
   inbound1.reset(dynamic_cast<TextMessage *>(consumer->receive(5000)));
   inboundEmpty.reset(dynamic_cast<TextMessage *>(consumer->receive(5000)));
   EXPECT_TRUE(nullptr == inboundEmpty) << "expect empty, but got =>" << inboundEmpty->getText();
-  EXPECT_TRUE(inbound1 != nullptr);
+  ASSERT_TRUE(inbound1 != nullptr);
   outbound2->setReadable();
   EXPECT_EQ(outbound1->getText(), inbound1->getText());
 
@@ -182,11 +181,12 @@ TEST_F(TransactionTest, testSendSessionClose) {
   // validates that the rolled back was not consumed
   EXPECT_NO_THROW(cmsProvider->getSession()->commit());
 
-  EXPECT_TRUE(inbound1 != nullptr);
-  EXPECT_TRUE(inbound2 != nullptr);
+  ASSERT_TRUE(inbound1 != nullptr);
   outbound1->setReadable();
-  outbound2->setReadable();
   EXPECT_TRUE(outbound1->getText() == inbound1->getText());
+
+  ASSERT_TRUE(inbound2 != nullptr);
+  outbound2->setReadable();
   EXPECT_TRUE(outbound2->getText() == inbound2->getText());
 }
 
@@ -216,7 +216,7 @@ TEST_F(TransactionTest, testWithTTLSet) {
     // receives the second message
     std::unique_ptr<TextMessage> inbound1;
     EXPECT_NO_THROW(inbound1.reset(dynamic_cast<TextMessage *>(consumer->receive(3000))));
-    EXPECT_TRUE(inbound1 != nullptr);
+    ASSERT_TRUE(inbound1 != nullptr);
     EXPECT_EQ(msg[i].first, inbound1->getCMSMessageID());
     EXPECT_EQ(msg[i].second, inbound1->getText());
   }
@@ -247,7 +247,7 @@ TEST_F(TransactionTest, testSessionCommitAfterConsumerClosed) {
   connection->start();
 
   std::unique_ptr<cms::Message> message(consumer->receive(3000));
-  EXPECT_TRUE(message.get() != nullptr);
+  ASSERT_TRUE(message.get() != nullptr);
 
   consumer->close();
   session->commit();

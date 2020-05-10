@@ -111,6 +111,7 @@ class Session {
   const Connection &_connection;
   mutable std::atomic_int _txCounter;
   mutable CircularQueue<State> _stateStack;
+  mutable std::recursive_mutex _rebegin_mutex;
   void rebegin() const;
 
  public:
