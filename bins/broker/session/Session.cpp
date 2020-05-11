@@ -135,14 +135,14 @@ void Session::rebegin() const {
   for (const auto &item : _destinations) {
     EXCHANGE::Instance().begin(*this, item);
   }
-  _rebegin_mutex.unlock();
+  _rebeginMutex.unlock();
 }
 void Session::commit() const {
   if (_stateStack.last() == State::COMMIT) {
     return;
   }
   if (isTransactAcknowledge()) {
-    _rebegin_mutex.lock();
+    _rebeginMutex.lock();
   }
   for (const auto &item : _destinations) {
     EXCHANGE::Instance().commit(*this, item);
@@ -155,7 +155,7 @@ void Session::abort(bool destruct) const {
     return;
   }
   if (isTransactAcknowledge() && !destruct) {
-    _rebegin_mutex.lock();
+    _rebeginMutex.lock();
   }
   for (const auto &item : _destinations) {
     EXCHANGE::Instance().abort(*this, item);
@@ -171,7 +171,7 @@ void Session::saveMessage(const MessageDataContainer &sMessage) {
 }
 std::string Session::txName() const {
   if (isTransactAcknowledge()) {
-    std::lock_guard<std::recursive_mutex> lock(_rebegin_mutex);
+    std::lock_guard<std::recursive_mutex> lock(_rebeginMutex);
     return _id + "_" + std::to_string(_txCounter);
   }
   return _id + "_" + std::to_string(_txCounter);
