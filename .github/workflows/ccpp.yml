@@ -1,0 +1,21 @@
+name: Build C++
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [debian, centos]
+        compiler: [clang, gcc]
+    container: ${{ format('registry.gitlab.com/s.arlyapov/broker_images/{0}:{1}', matrix.os, matrix.compiler) }}
+    steps:
+    - uses: actions/checkout@v2
+    - name: Cmake
+      run: cmake .
+    - name: Build
+      run: cmake --build .
+    - name: Start broker
+      run: ./bins/broker/broker &
+    - name: Test
+      run: ./tests/brokertest/brokertest
