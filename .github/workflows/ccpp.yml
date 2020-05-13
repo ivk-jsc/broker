@@ -15,7 +15,20 @@ jobs:
       run: cmake .
     - name: Build
       run: cmake --build .
+    - name: Add log settings
+      run: echo '<config><broker><log><level>8</level><path windows="./" _nix="./">./</path><interactive>false</interactive></log></broker></config>' > broker.xml
     - name: Start broker
       run: ./bins/broker/broker &
     - name: Test
+      id: test
       run: ./tests/brokertest/brokertest
+      continue-on-error: true
+    - name: Upload log
+      uses: actions/upload-artifact@v1
+      with:
+        name: ${{ format('{0}.{1}.log', matrix.os, matrix.compiler) }}
+        path: broker.log
+    - name: Check on failures
+      if: steps.test.outputs.status == 'failure'
+      run: exit 1
+
