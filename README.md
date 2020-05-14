@@ -2,7 +2,7 @@
 
 UPMQ - JMS-like message broker written with C++.
 
-[![Build](https://github.com/ivk-jsc/broker/workflows/Build/badge.svg)](https://github.com/ivk-jsc/broker/actions?query=workflow%3A"Build+C%2B%2B") 
+![Build C++](https://github.com/ivk-jsc/broker/workflows/Build%20C++/badge.svg)
  
 
 ## Proto
