@@ -214,7 +214,7 @@ void SelectorTest::doClean() {
   consumer->start();
   // lets consume any outstanding messages from previous test runs
   cms::Message *message;
-  while ((message = consumer->receive(3000)) != nullptr) {
+  while ((message = consumer->receive(6000)) != nullptr) {
     delete message;
   }
   consumer->stop();
