@@ -63,7 +63,7 @@ TEST_F(ClientAckTest, testAckedMessageAreConsumed) {
 
   // Consume the message...
   std::unique_ptr<MessageConsumer> consumer(session->createConsumer(queue.get()));
-  std::unique_ptr<Message> msg(consumer->receive(3000));
+  std::unique_ptr<Message> msg(consumer->receive(12000));
   ASSERT_TRUE(msg != nullptr);
   msg->acknowledge();
 
@@ -75,7 +75,7 @@ TEST_F(ClientAckTest, testAckedMessageAreConsumed) {
 
   // Attempt to Consume the message...
   consumer.reset(session->createConsumer(queue.get()));
-  msg.reset(consumer->receive(1000));
+  msg.reset(consumer->receive(6000));
   EXPECT_TRUE(msg == nullptr) << "invalid behaviour => " << dynamic_cast<cms::TextMessage *>(msg.get())->getText();
 
   session->close();
@@ -101,15 +101,15 @@ TEST_F(ClientAckTest, testLastMessageAcked) {
   std::unique_ptr<MessageConsumer> consumer;
   EXPECT_NO_THROW(consumer.reset(session->createConsumer(queue.get())));
   std::unique_ptr<Message> msg;
-  EXPECT_NO_THROW(msg.reset(consumer->receive(3000)));
+  EXPECT_NO_THROW(msg.reset(consumer->receive(6000)));
   ASSERT_TRUE(msg != nullptr);
-  EXPECT_NO_THROW(msg.reset(consumer->receive(3000)));
+  EXPECT_NO_THROW(msg.reset(consumer->receive(6000)));
   ASSERT_TRUE(msg != nullptr);
-  EXPECT_NO_THROW(msg.reset(consumer->receive(3000)));
+  EXPECT_NO_THROW(msg.reset(consumer->receive(6000)));
   ASSERT_TRUE(msg != nullptr);
   EXPECT_NO_THROW(msg->acknowledge());
 
-  cmsSleep(3000);
+  cmsSleep(6000);
 
   // Reset the session->
   EXPECT_NO_THROW(session->close());
@@ -118,7 +118,7 @@ TEST_F(ClientAckTest, testLastMessageAcked) {
   // Attempt to Consume the message...
   EXPECT_NO_THROW(consumer.reset(session->createConsumer(queue.get())));
   msg.reset(nullptr);
-  EXPECT_NO_THROW(msg.reset(consumer->receive(3000)));
+  EXPECT_NO_THROW(msg.reset(consumer->receive(6000)));
   EXPECT_TRUE(msg == nullptr) << "expect empty message, but got " << msg->getCMSMessageID() << " : "
                               << dynamic_cast<TextMessage *>(msg.get())->getText();
 
@@ -143,37 +143,37 @@ TEST_F(ClientAckTest, testFirstMessageAcked) {
 
   // Consume the message...
   std::unique_ptr<MessageConsumer> consumer(session->createConsumer(queue.get()));
-  std::unique_ptr<Message> msg(consumer->receive(5000));
+  std::unique_ptr<Message> msg(consumer->receive(12000));
   ASSERT_TRUE(msg != nullptr);
   auto *textMessage1 = dynamic_cast<TextMessage *>(msg.get());
   EXPECT_TRUE(textMessage1->getText() == "Hello1");
 
-  session->close();
+  EXPECT_NO_THROW(session->close());
 
   // Reset the session->
-  session.reset(connection->createSession(Session::CLIENT_ACKNOWLEDGE));
+  ASSERT_NO_THROW(session.reset(connection->createSession(Session::CLIENT_ACKNOWLEDGE)));
 
   // Attempt to Consume the message...
-  consumer.reset(session->createConsumer(queue.get()));
+  ASSERT_NO_THROW(consumer.reset(session->createConsumer(queue.get())));
 
-  msg.reset(consumer->receive(5000));
+  ASSERT_NO_THROW(msg.reset(consumer->receive(12000)));
   ASSERT_TRUE(msg != nullptr);
   textMessage1 = dynamic_cast<TextMessage *>(msg.get());
   EXPECT_EQ(textMessage1->getText(), "Hello1");
 
-  msg.reset(consumer->receive(5000));
+  ASSERT_NO_THROW(msg.reset(consumer->receive(12000)));
   ASSERT_TRUE(msg != nullptr);
   auto *textMessage2 = dynamic_cast<TextMessage *>(msg.get());
   EXPECT_EQ(textMessage2->getText(), "Hello2");
 
-  msg.reset(consumer->receive(5000));
+  ASSERT_NO_THROW(msg.reset(consumer->receive(12000)));
   ASSERT_TRUE(msg != nullptr);
   auto *textMessage3 = dynamic_cast<TextMessage *>(msg.get());
   EXPECT_EQ(textMessage3->getText(), "Hello3");
 
-  textMessage3->acknowledge();
+  EXPECT_NO_THROW(textMessage3->acknowledge());
 
-  session->close();
+  EXPECT_NO_THROW(session->close());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -190,7 +190,7 @@ TEST_F(ClientAckTest, testUnAckedMessageAreNotConsumedOnSessionClose) {
 
   // Consume the message...
   std::unique_ptr<MessageConsumer> consumer(session->createConsumer(queue.get()));
-  std::unique_ptr<Message> msg(consumer->receive(3000));
+  std::unique_ptr<Message> msg(consumer->receive(6000));
   ASSERT_TRUE(msg != nullptr);
   // Don't ack the message.
 
@@ -200,7 +200,7 @@ TEST_F(ClientAckTest, testUnAckedMessageAreNotConsumedOnSessionClose) {
 
   // Attempt to Consume the message...
   consumer.reset(session->createConsumer(queue.get()));
-  msg.reset(consumer->receive(3000));
+  msg.reset(consumer->receive(6000));
   ASSERT_TRUE(msg != nullptr);
   msg->acknowledge();
 
@@ -225,7 +225,7 @@ TEST_F(ClientAckTest, testAckedMessageAreConsumedAsync) {
   std::unique_ptr<MessageConsumer> consumer(session->createConsumer(queue.get()));
   consumer->setMessageListener(&listener);
 
-  cmsSleep(3000);
+  cmsSleep(6000);
 
   // Reset the session->
   session->close();
@@ -234,7 +234,7 @@ TEST_F(ClientAckTest, testAckedMessageAreConsumedAsync) {
 
   // Attempt to Consume the message...
   consumer.reset(session->createConsumer(queue.get()));
-  std::unique_ptr<Message> msg(consumer->receive(3000));
+  std::unique_ptr<Message> msg(consumer->receive(6000));
   EXPECT_TRUE(msg == nullptr);
 
   session->close();
@@ -268,7 +268,7 @@ TEST_F(ClientAckTest, testUnAckedMessageAreNotConsumedOnSessionCloseAsync) {
 
   // Attempt to Consume the message...
   consumer.reset(session->createConsumer(queue.get()));
-  std::unique_ptr<Message> msg(consumer->receive(3000));
+  std::unique_ptr<Message> msg(consumer->receive(6000));
   ASSERT_TRUE(msg != nullptr);
   msg->acknowledge();
 
