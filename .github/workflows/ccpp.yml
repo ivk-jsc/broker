@@ -6,7 +6,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [debian, centos]
+        os: [debian, centos, ubuntu18]
         compiler: [clang, gcc]
     container: ${{ format('registry.gitlab.com/s.arlyapov/broker_images/{0}:{1}', matrix.os, matrix.compiler) }}
     steps:
@@ -21,7 +21,7 @@ jobs:
       run: ./bins/broker/broker &
     - name: Test
       id: test
-      run: ./tests/brokertest/brokertest
+      run: ./tests/brokertest/brokertest && echo ::set-output name=status::success
       continue-on-error: true
     - name: Upload log
       uses: actions/upload-artifact@v1
@@ -29,6 +29,6 @@ jobs:
         name: ${{ format('{0}.{1}.log', matrix.os, matrix.compiler) }}
         path: broker.log
     - name: Check on failures
-      if: steps.test.outputs.status == 'failure'
+      if: steps.test.outputs.status != 'success'
       run: exit 1
 
