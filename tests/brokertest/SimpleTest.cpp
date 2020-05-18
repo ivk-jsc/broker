@@ -653,7 +653,7 @@ TEST_F(SimpleTest, testRoundRobin) {
           << "invalid order msg : " << in2->getCMSMessageID();
     }
   }
-  EXPECT_TRUE((in1Counter + in2Counter) == items.size())
+  EXPECT_EQ((in1Counter + in2Counter), items.size())
       << "expected " << items.size() << " messages, but had received " << (in1Counter + in2Counter);
 
   consumer1->close();

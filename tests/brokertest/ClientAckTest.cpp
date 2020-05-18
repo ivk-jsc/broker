@@ -148,32 +148,32 @@ TEST_F(ClientAckTest, testFirstMessageAcked) {
   auto *textMessage1 = dynamic_cast<TextMessage *>(msg.get());
   EXPECT_TRUE(textMessage1->getText() == "Hello1");
 
-  session->close();
+  EXPECT_NO_THROW(session->close());
 
   // Reset the session->
-  session.reset(connection->createSession(Session::CLIENT_ACKNOWLEDGE));
+  ASSERT_NO_THROW(session.reset(connection->createSession(Session::CLIENT_ACKNOWLEDGE)));
 
   // Attempt to Consume the message...
-  consumer.reset(session->createConsumer(queue.get()));
+  ASSERT_NO_THROW(consumer.reset(session->createConsumer(queue.get())));
 
-  msg.reset(consumer->receive(5000));
+  ASSERT_NO_THROW(msg.reset(consumer->receive(5000)));
   ASSERT_TRUE(msg != nullptr);
   textMessage1 = dynamic_cast<TextMessage *>(msg.get());
   EXPECT_EQ(textMessage1->getText(), "Hello1");
 
-  msg.reset(consumer->receive(5000));
+  ASSERT_NO_THROW(msg.reset(consumer->receive(5000)));
   ASSERT_TRUE(msg != nullptr);
   auto *textMessage2 = dynamic_cast<TextMessage *>(msg.get());
   EXPECT_EQ(textMessage2->getText(), "Hello2");
 
-  msg.reset(consumer->receive(5000));
+  ASSERT_NO_THROW(msg.reset(consumer->receive(5000)));
   ASSERT_TRUE(msg != nullptr);
   auto *textMessage3 = dynamic_cast<TextMessage *>(msg.get());
   EXPECT_EQ(textMessage3->getText(), "Hello3");
 
-  textMessage3->acknowledge();
+  EXPECT_NO_THROW(textMessage3->acknowledge());
 
-  session->close();
+  EXPECT_NO_THROW(session->close());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
