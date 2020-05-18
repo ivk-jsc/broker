@@ -63,7 +63,7 @@ TEST_F(ClientAckTest, testAckedMessageAreConsumed) {
 
   // Consume the message...
   std::unique_ptr<MessageConsumer> consumer(session->createConsumer(queue.get()));
-  std::unique_ptr<Message> msg(consumer->receive(6000));
+  std::unique_ptr<Message> msg(consumer->receive(12000));
   ASSERT_TRUE(msg != nullptr);
   msg->acknowledge();
 
@@ -75,7 +75,7 @@ TEST_F(ClientAckTest, testAckedMessageAreConsumed) {
 
   // Attempt to Consume the message...
   consumer.reset(session->createConsumer(queue.get()));
-  msg.reset(consumer->receive(1000));
+  msg.reset(consumer->receive(6000));
   EXPECT_TRUE(msg == nullptr) << "invalid behaviour => " << dynamic_cast<cms::TextMessage *>(msg.get())->getText();
 
   session->close();
@@ -143,7 +143,7 @@ TEST_F(ClientAckTest, testFirstMessageAcked) {
 
   // Consume the message...
   std::unique_ptr<MessageConsumer> consumer(session->createConsumer(queue.get()));
-  std::unique_ptr<Message> msg(consumer->receive(5000));
+  std::unique_ptr<Message> msg(consumer->receive(12000));
   ASSERT_TRUE(msg != nullptr);
   auto *textMessage1 = dynamic_cast<TextMessage *>(msg.get());
   EXPECT_TRUE(textMessage1->getText() == "Hello1");
@@ -156,17 +156,17 @@ TEST_F(ClientAckTest, testFirstMessageAcked) {
   // Attempt to Consume the message...
   ASSERT_NO_THROW(consumer.reset(session->createConsumer(queue.get())));
 
-  ASSERT_NO_THROW(msg.reset(consumer->receive(5000)));
+  ASSERT_NO_THROW(msg.reset(consumer->receive(12000)));
   ASSERT_TRUE(msg != nullptr);
   textMessage1 = dynamic_cast<TextMessage *>(msg.get());
   EXPECT_EQ(textMessage1->getText(), "Hello1");
 
-  ASSERT_NO_THROW(msg.reset(consumer->receive(5000)));
+  ASSERT_NO_THROW(msg.reset(consumer->receive(12000)));
   ASSERT_TRUE(msg != nullptr);
   auto *textMessage2 = dynamic_cast<TextMessage *>(msg.get());
   EXPECT_EQ(textMessage2->getText(), "Hello2");
 
-  ASSERT_NO_THROW(msg.reset(consumer->receive(5000)));
+  ASSERT_NO_THROW(msg.reset(consumer->receive(12000)));
   ASSERT_TRUE(msg != nullptr);
   auto *textMessage3 = dynamic_cast<TextMessage *>(msg.get());
   EXPECT_EQ(textMessage3->getText(), "Hello3");

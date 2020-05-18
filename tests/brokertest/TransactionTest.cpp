@@ -246,7 +246,7 @@ TEST_F(TransactionTest, testSessionCommitAfterConsumerClosed) {
 
   connection->start();
 
-  std::unique_ptr<cms::Message> message(consumer->receive(6000));
+  std::unique_ptr<cms::Message> message(consumer->receive(12000));
   ASSERT_TRUE(message.get() != nullptr);
 
   consumer->close();
