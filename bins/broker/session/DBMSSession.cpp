@@ -41,7 +41,7 @@ void upmq::broker::storage::DBMSSession::commitTX() {
     throw EXCEPTION("dbms session was closed", _lastTXName, ERROR_WORKER);
   }
   if (_inTransaction) {
-    DBMSConnectionPool::commitTX(*_session, _lastTXName);
+    dbms::Instance().commitTX(*_session, _lastTXName);
   }
   _inTransaction = false;
 }
@@ -50,14 +50,14 @@ void upmq::broker::storage::DBMSSession::rollbackTX() {
     throw EXCEPTION("dbms session was closed", _lastTXName, ERROR_WORKER);
   }
   if (_inTransaction) {
-    DBMSConnectionPool::rollbackTX(*_session, _lastTXName);
+    dbms::Instance().rollbackTX(*_session, _lastTXName);
   }
   _inTransaction = false;
 }
 void upmq::broker::storage::DBMSSession::close() {
   if (_session) {
     if (_inTransaction) {
-      DBMSConnectionPool::rollbackTX(*_session, _lastTXName);
+      dbms::Instance().rollbackTX(*_session, _lastTXName);
     }
     _dbmsPool.pushBack(_session);
   }

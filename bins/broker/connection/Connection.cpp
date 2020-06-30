@@ -69,16 +69,16 @@ Connection::~Connection() {
   try {
     std::stringstream sql;
     sql << "delete from \"" << BROKER::Instance().id() << "\" where client_id = \'" << _clientID << "\';";
-    TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
+    TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
     CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't delete client_id", sql.str(), ERROR_CONNECTION)
 
     sql.str("");
     sql << "drop table if exists " << _sessionsT << ";";
-    TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
+    TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
     CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't drop sessions", sql.str(), ERROR_CONNECTION)
     sql.str("");
     sql << "drop table if exists " << _tcpT << ";";
-    TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
+    TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
     CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't drop tcp connections", sql.str(), ERROR_CONNECTION)
   } catch (...) {
   }
@@ -114,7 +114,7 @@ void Connection::addTcpConnection(size_t tcpConnectionNum) {
         << " \'" << _clientID << "\'"
         << "," << tcpConnectionNum << ")"
         << ";";
-    TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
+    TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
     CATCH_POCO_DATA_EXCEPTION_PURE("can't add tcp connection", sql.str(), ERROR_CLIENT_ID_EXISTS);
     return;
   }
@@ -128,7 +128,7 @@ void Connection::removeTcpConnection(size_t tcpConnectionNum) {
     writeRWLock.unlock();
     std::stringstream sql;
     sql << "delete from " << _tcpT << " where tcp_id = " << tcpConnectionNum << ";";
-    TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
+    TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
     CATCH_POCO_DATA_EXCEPTION_PURE_NO_INVALIDEXCEPT_NO_EXCEPT("can't remove tcp connection", sql.str(), ERROR_CONNECTION)
   }
 }

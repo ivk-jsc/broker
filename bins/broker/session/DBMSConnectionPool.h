@@ -16,23 +16,9 @@
 
 #ifndef BROKER_DBMSCONNECTIONPOOL_H
 #define BROKER_DBMSCONNECTIONPOOL_H
-#if POCO_VERSION_MAJOR > 1
-#include <Poco/SQL/AbstractBinder.h>
-#include <Poco/SQL/Session.h>
-namespace Poco {
-namespace Data = SQL;
-}
-#else
-#include <Poco/Data/AbstractBinder.h>
-#include <Poco/Data/Session.h>
-#endif
-#include <memory>
-#include <mutex>
-#include "ConcurrentQueueHeader.h"
-#include "Configuration.h"
-#include "DBMSSession.h"
+
 #include "Singleton.h"
-#include "FixedSizeUnorderedMap.h"
+#include "IConnectionPool.h"
 
 namespace upmq {
 namespace broker {
@@ -40,40 +26,33 @@ namespace storage {
 class DBMSConnectionPool {
  public:
   enum class TX : int { NOT_USE = 0, USE };
-  enum class IN_MEMORY : int { M_YES, M_NO };
-  typedef moodycamel::ConcurrentQueue<std::shared_ptr<Poco::Data::Session>> SessionsQueueType;
   DBMSConnectionPool();
+  DBMSConnectionPool(const DBMSConnectionPool &) = delete;
+  DBMSConnectionPool(DBMSConnectionPool &&) = delete;
   virtual ~DBMSConnectionPool();
+
   std::shared_ptr<Poco::Data::Session> dbmsConnection() const;
+
   void pushBack(std::shared_ptr<Poco::Data::Session> session);
-  static void doNow(const std::string &sql, DBMSConnectionPool::TX tx = TX::USE);
+  void doNow(const std::string &sql, DBMSConnectionPool::TX tx = TX::USE);
 
   void beginTX(Poco::Data::Session &dbSession,
                const std::string &txName,
                storage::DBMSSession::TransactionMode mode = storage::DBMSSession::TransactionMode::WRITE);
-  static void commitTX(Poco::Data::Session &dbSession, const std::string &txName);
-  static void rollbackTX(Poco::Data::Session &dbSession, const std::string &txName);
+  void commitTX(Poco::Data::Session &dbSession, const std::string &txName);
+  void rollbackTX(Poco::Data::Session &dbSession, const std::string &txName);
 
   DBMSSession dbmsSession() const;
   std::unique_ptr<DBMSSession> dbmsSessionPtr() const;
 
  private:
-  int _count;
-  mutable SessionsQueueType _sessions;
-  std::string _dbmsString;
-  DBMSType _dbmsType;
-  std::string _connector;
-  mutable FSUnorderedMap<Poco::UInt64, std::shared_ptr<Poco::Data::Session>> _memorySession;
-  static void initDB(Poco::Data::Session &dbSessionstatic);
-  std::shared_ptr<Poco::Data::Session> makeSession(DBMSType dbmsType, const std::string &connector) const;
-  IN_MEMORY _inMemory{IN_MEMORY::M_NO};
-  static Poco::Timestamp _lastBegin;
+  std::unique_ptr<IConnectionPool> _impl;
 };
 }  // namespace storage
 }  // namespace broker
 }  // namespace upmq
 
-typedef Singleton<upmq::broker::storage::DBMSConnectionPool> dbms;
-typedef std::shared_ptr<Poco::Data::Session> DBMSConnection;
+using dbms = Singleton<upmq::broker::storage::DBMSConnectionPool>;
+using DBMSConnection = std::shared_ptr<Poco::Data::Session>;
 
 #endif  // BROKER_DBMSCONNECTIONPOOL_H

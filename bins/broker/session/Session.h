@@ -25,6 +25,7 @@
 #include "DBMSConnectionPool.h"
 #include "MessageDataContainer.h"
 #include "ProtoBuf.h"
+#include "Configuration.h"
 
 namespace upmq {
 namespace broker {

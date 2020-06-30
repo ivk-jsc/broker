@@ -14,17 +14,22 @@
  * limitations under the License.
  */
 
-#ifndef UPMQ_BINS_BROKER_SESSION_POSTGRESQL_CONNECTIONPOOL_H_
-#define UPMQ_BINS_BROKER_SESSION_POSTGRESQL_CONNECTIONPOOL_H_
+#ifndef UPMQ_BINS_BROKER_SESSION_SQLITE_CONNECTIONPOOL_H_
+#define UPMQ_BINS_BROKER_SESSION_SQLITE_CONNECTIONPOOL_H_
 
 #include "IConnectionPool.h"
+#include "FixedSizeUnorderedMap.h"
 
 namespace upmq {
 namespace broker {
 namespace storage {
-namespace postgresql {
-
+namespace sqlite {
 class ConnectionPool : public IConnectionPool {
+  bool _inMemory = false;
+  static Poco::Timestamp _lastBegin;
+  mutable FSUnorderedMap<Poco::UInt64, std::shared_ptr<Poco::Data::Session>> _memorySession;
+
+  static void initDB(Poco::Data::Session &dbSessionstatic);
   std::shared_ptr<Poco::Data::Session> makeSession() const;
 
  public:
@@ -42,9 +47,8 @@ class ConnectionPool : public IConnectionPool {
   void commitTX(Poco::Data::Session &dbSession, const std::string &txName) override;
   void rollbackTX(Poco::Data::Session &dbSession, const std::string &txName) override;
 };
-}  // namespace postgresql
+}  // namespace sqlite
 }  // namespace storage
 }  // namespace broker
 }  // namespace upmq
-
-#endif  // UPMQ_BINS_BROKER_SESSION_POSTGRESQL_CONNECTIONPOOL_H_
+#endif  // UPMQ_BINS_BROKER_SESSION_SQLITE_CONNECTIONPOOL_H_

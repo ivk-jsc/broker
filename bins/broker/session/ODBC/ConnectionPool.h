@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-#ifndef UPMQ_BINS_BROKER_SESSION_POSTGRESQL_CONNECTIONPOOL_H_
-#define UPMQ_BINS_BROKER_SESSION_POSTGRESQL_CONNECTIONPOOL_H_
+#ifndef UPMQ_BINS_BROKER_SESSION_ODBC_CONNECTIONPOOL_H_
+#define UPMQ_BINS_BROKER_SESSION_ODBC_CONNECTIONPOOL_H_
 
 #include "IConnectionPool.h"
 
 namespace upmq {
 namespace broker {
 namespace storage {
-namespace postgresql {
-
+namespace odbc {
 class ConnectionPool : public IConnectionPool {
   std::shared_ptr<Poco::Data::Session> makeSession() const;
 
@@ -42,9 +41,8 @@ class ConnectionPool : public IConnectionPool {
   void commitTX(Poco::Data::Session &dbSession, const std::string &txName) override;
   void rollbackTX(Poco::Data::Session &dbSession, const std::string &txName) override;
 };
-}  // namespace postgresql
+}  // namespace odbc
 }  // namespace storage
 }  // namespace broker
 }  // namespace upmq
-
-#endif  // UPMQ_BINS_BROKER_SESSION_POSTGRESQL_CONNECTIONPOOL_H_
+#endif  // UPMQ_BINS_BROKER_SESSION_ODBC_CONNECTIONPOOL_H_
