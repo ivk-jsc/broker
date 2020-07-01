@@ -21,6 +21,7 @@
 #include "Poco/RWLock.h"
 #include "ProtoBuf.h"
 #include "MiscDefines.h"
+#include "fake_cpp14.h"
 
 #include "SQlite/ConnectionPool.h"
 
