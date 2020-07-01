@@ -21,7 +21,7 @@ class IConnectionPool {
   std::string dbmsString;
 
  public:
-  IConnectionPool(int count, std::string dbmsString) : count(count), dbmsString(std::move(dbmsString)) {}
+  IConnectionPool(int cnt, std::string connectionString) : count(cnt), dbmsString(std::move(connectionString)) {}
   IConnectionPool(const IConnectionPool &) = delete;
   IConnectionPool(IConnectionPool &&) = delete;
   IConnectionPool &operator=(const IConnectionPool &) = delete;
