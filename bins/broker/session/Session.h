@@ -20,6 +20,7 @@
 #include <MoveableRWLock.h>
 #include <atomic>
 #include <string>
+#include <mutex>
 #include <unordered_set>
 #include "CircularQueue.h"
 #include "DBMSConnectionPool.h"
