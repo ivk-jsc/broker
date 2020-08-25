@@ -81,8 +81,7 @@ class MessageInfo {
   MsgTuple tuple;
 
   MessageInfo() = default;
-  explicit MessageInfo(const MsgTuple &tuple);
-  explicit MessageInfo(MsgTuple &&tuple);
+  explicit MessageInfo(MsgTuple tuple);
   explicit MessageInfo(const std::string &messageID);
   explicit MessageInfo(Poco::Int64 num,
                        const std::string &messageID,

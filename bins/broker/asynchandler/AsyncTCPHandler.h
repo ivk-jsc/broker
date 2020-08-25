@@ -165,6 +165,7 @@ class AsyncTCPHandler {
   AsyncTCPHandler::DataStatus fillBody(MessageDataContainer &sMessage);
   AsyncTCPHandler::DataStatus tryMoveBodyByLink(MessageDataContainer &sMessage);
   void setReadComplete(bool readComplete);
+  bool readComplete() const;
 };
 }  // namespace broker
 }  // namespace upmq

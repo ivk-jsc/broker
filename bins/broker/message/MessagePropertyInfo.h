@@ -79,8 +79,7 @@ class MessagePropertyInfo {
   MsgTuple tuple{};
 
   explicit MessagePropertyInfo();
-  explicit MessagePropertyInfo(const MsgTuple &tuple_);
-  explicit MessagePropertyInfo(MsgTuple &&tuple_);
+  explicit MessagePropertyInfo(MsgTuple tuple_);
   explicit MessagePropertyInfo(const std::string &messageID);
   MessagePropertyInfo(const std::string &messageID,
                       const std::string &propertyName,
