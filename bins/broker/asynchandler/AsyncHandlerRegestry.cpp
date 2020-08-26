@@ -60,13 +60,16 @@ void AsyncHandlerRegestry::run() {
   _isRunning = true;
   int num;
   while (_isRunning) {
-    if (_needToErase.wait_dequeue_timed(num, 2000000)) {
+    if (_needToErase.wait_dequeue_timed(num, 1000000)) {
       auto &connection = _connections[static_cast<size_t>(num)];
       if (connection && connection->needErase()) {
         if (connection->readComplete()) {
           connection = nullptr;
         } else {
           connection->onReadable(nullptr);
+          if (connection->readComplete()) {
+            connection = nullptr;
+          }
         }
       }
     }
@@ -88,6 +91,11 @@ void AsyncHandlerRegestry::run() {
         }
       } else {
         connection->setNeedErase();
+        connection->onReadable(nullptr);
+        if (connection->readComplete()) {
+          connection = nullptr;
+          ++cnt;
+        }
       }
     }
   }
