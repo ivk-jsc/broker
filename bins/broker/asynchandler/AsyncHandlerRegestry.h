@@ -41,7 +41,6 @@ class AsyncHandlerRegestry : public Poco::Runnable {
 
   void start();
   void stop();
-  void notify();
   size_t size() const;
 
   void needToErase(size_t num);

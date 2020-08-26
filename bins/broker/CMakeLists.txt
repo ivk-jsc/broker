@@ -94,6 +94,9 @@ set(SOURCE_FILES
     session/Session.h
     session/DBMSConnectionPool.cpp
     session/DBMSConnectionPool.h
+    session/SQlite/ConnectionPool.cpp
+    session/SQlite/ConnectionPool.h
+    session/IConnectionPool.h
     server/Broker.cpp
     server/Broker.h
     config/Configuration.cpp
@@ -170,6 +173,20 @@ if (ENABLE_USING_SENDFILE)
       asynchandler/sendfile/fileno_stream.h
       )
 endif (ENABLE_USING_SENDFILE)
+
+if (ENABLE_POSTGRESQL)
+  set(SOURCE_FILES ${SOURCE_FILES}
+      session/PostgreSQL/ConnectionPool.cpp
+      session/PostgreSQL/ConnectionPool.h
+      )
+endif ()
+
+if (ENABLE_ODBC)
+  set(SOURCE_FILES ${SOURCE_FILES}
+      session/ODBC/ConnectionPool.cpp
+      session/ODBC/ConnectionPool.h
+      )
+endif ()
 
 foreach (SOURCE IN ITEMS ${SOURCE_FILES})
   set(SOURCE_FILES_NEW ${SOURCE_FILES_NEW} "${SOURCE}")

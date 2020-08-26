@@ -60,19 +60,56 @@ void AsyncHandlerRegestry::run() {
   _isRunning = true;
   int num;
   while (_isRunning) {
-    if (_needToErase.wait_dequeue_timed(num, 2000000)) {
+    if (_needToErase.wait_dequeue_timed(num, 1000000)) {
       auto &connection = _connections[static_cast<size_t>(num)];
       if (connection && connection->needErase()) {
-        connection = nullptr;
+        if (connection->readComplete()) {
+          connection = nullptr;
+        } else {
+          connection->onReadable(nullptr);
+          if (connection->readComplete()) {
+            connection = nullptr;
+          }
+        }
       }
     }
+  }
+
+  size_t cnt = 0;
+  while (cnt != _connections.size()) {
+    cnt = 0;
+    for (auto &connection : _connections) {
+      if (!connection) {
+        ++cnt;
+        continue;
+      }
+      if (connection->needErase()) {
+        if (connection->readComplete()) {
+          connection = nullptr;
+        } else {
+          connection->onReadable(nullptr);
+        }
+      } else {
+        connection->setNeedErase();
+        connection->onReadable(nullptr);
+        if (connection->readComplete()) {
+          connection = nullptr;
+          ++cnt;
+        }
+      }
+    }
+  }
+
+  try {
+    _connections.clear();
+  } catch (...) {
   }
 }
 int AsyncHandlerRegestry::erasedConnections() {
   int erased = 0;
-  for (auto &_connection : _connections) {
-    if (_connection && _connection->needErase()) {
-      _connection = nullptr;
+  for (auto &connection : _connections) {
+    if (connection && connection->needErase()) {
+      connection = nullptr;
       ++erased;
     }
   }
@@ -92,14 +129,8 @@ void AsyncHandlerRegestry::start() {
 void AsyncHandlerRegestry::stop() {
   if (_isRunning) {
     _isRunning = false;
-    notify();
     _thread.join();
   }
-}
-
-void AsyncHandlerRegestry::notify() {
-  Poco::ScopedLock<Poco::FastMutex> lock(_mutex);
-  _condition.signal();
 }
 
 size_t AsyncHandlerRegestry::size() const { return _current_size; }
@@ -110,19 +141,7 @@ int AsyncHandlerRegestry::freeNum() const {
   }
   return num;
 }
-AsyncHandlerRegestry::~AsyncHandlerRegestry() {
-  try {
-    for (auto &connection : _connections) {
-      if (connection) {
-        connection->setNeedErase();
-        connection->onReadable(AutoPtr<upmq::Net::ReadableNotification>(nullptr));
-        connection = nullptr;
-      }
-    }
-    _connections.clear();
-  } catch (...) {
-  }
-}
+AsyncHandlerRegestry::~AsyncHandlerRegestry() = default;
 void AsyncHandlerRegestry::needToErase(size_t num) { _needToErase.enqueue(static_cast<int>(num)); }
 }  // namespace broker
 }  // namespace upmq

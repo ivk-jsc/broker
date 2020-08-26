@@ -52,7 +52,7 @@ Destination::~Destination() {
       //      sql << "update " << _exchange.destinationsT() << " set subscriptions_count = 0"
       //          << " where id = \'" << _id << "\'"
       //          << ";";
-      //      TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
+      //      TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
       //      CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't update subscription count", sql.str(), ERROR_UNKNOWN)
     }
     {
@@ -63,12 +63,12 @@ Destination::~Destination() {
     }
     if (isTemporary()) {
       sql << "drop table if exists " << _subscriptionsT << ";" << non_std_endl;
-      TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
+      TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
       CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't update subscription count", sql.str(), ERROR_UNKNOWN)
       sql.str("");
       sql << "delete from " << _exchange.destinationsT() << " where id = \'" << _id << "\'"
           << ";";
-      TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
+      TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
       CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't update subscription count", sql.str(), ERROR_UNKNOWN)
       _storage.dropTables();
     }

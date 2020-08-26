@@ -20,11 +20,13 @@
 #include <MoveableRWLock.h>
 #include <atomic>
 #include <string>
+#include <mutex>
 #include <unordered_set>
 #include "CircularQueue.h"
 #include "DBMSConnectionPool.h"
 #include "MessageDataContainer.h"
 #include "ProtoBuf.h"
+#include "Configuration.h"
 
 namespace upmq {
 namespace broker {

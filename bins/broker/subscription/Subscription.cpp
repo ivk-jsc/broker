@@ -53,7 +53,7 @@ Subscription::Subscription(const Destination &destination, const std::string &id
 
   std::stringstream sql;
   sql << "drop table if exists " << _consumersT << ";" << non_std_endl;
-  TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
+  TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
   CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't init consumers table for subscription", sql.str(), ERROR_UNKNOWN)
   sql.str("");
   sql << "create table if not exists " << _consumersT << "("
@@ -67,7 +67,7 @@ Subscription::Subscription(const Destination &destination, const std::string &id
       << ",constraint \"" << _id << "_tcp_index\" unique (client_id, tcp_id, session, selector)"
       << ")"
       << ";";
-  TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
+  TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
   CATCH_POCO_DATA_EXCEPTION_PURE("can't init destination", sql.str(), ERROR_DESTINATION)
   sql.str("");
   std::string ignorsert = "insert or ignore";
@@ -444,7 +444,7 @@ const Consumer &Subscription::byClientAndHandlerAndSessionIDs(const std::string 
 Subscription::ConsumersListType::iterator Subscription::eraseConsumer(ConsumersListType::iterator it) {
   std::stringstream sql;
   sql << "delete from " << _consumersT << " where object_id = \'" << it->second.objectID << "\';";
-  TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
+  TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
   CATCH_POCO_DATA_EXCEPTION_PURE_NO_INVALIDEXCEPT_NO_EXCEPT("can't remove consumer", sql.str(), ERROR_ON_UNSUBSCRIPTION)
   _destination.remFromNotAck(it->second.objectID);
   return _consumers.erase(it);

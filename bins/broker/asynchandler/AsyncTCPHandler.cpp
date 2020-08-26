@@ -29,6 +29,8 @@
 
 #ifdef ENABLE_USING_SENDFILE
 #include "sendfile/SendFile.h"
+#include "AsyncTCPHandler.h"
+
 #endif
 
 #ifdef _WIN32
@@ -205,7 +207,7 @@ AsyncTCPHandler::DataStatus AsyncTCPHandler::sendHeaderAndData(MessageDataContai
     if (!sendfile()) {
       return DataStatus::AS_ERROR;
     }
-#else   // !ENABLE_USING_SENDFILE
+#else  // !ENABLE_USING_SENDFILE
     sent = 0;
     do {
       int tmpDataSize = ((dataSize - sent) < BUFFER_SIZE) ? static_cast<int>(dataSize - sent) : BUFFER_SIZE;
@@ -248,7 +250,6 @@ void AsyncTCPHandler::emitCloseEvent(bool withError) {
         setNeedErase();
         _wasError = withError;
         _closeEventLock.unlock();
-        AHRegestry::Instance().notify();
         return;
       }
     } catch (...) {  // -V565
@@ -433,5 +434,6 @@ void AsyncTCPHandler::allowPutReadEvent() { _allowPutEvent = true; }
 size_t AsyncTCPHandler::queueReadNum() const { return _queueReadNum; }
 size_t AsyncTCPHandler::queueWriteNum() const { return _queueWriteNum; }
 void AsyncTCPHandler::setReadComplete(bool readComplete) { _readComplete = readComplete; }
+bool AsyncTCPHandler::readComplete() const { return _readComplete; }
 }  // namespace broker
 }  // namespace upmq

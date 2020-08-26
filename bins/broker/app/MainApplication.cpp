@@ -182,20 +182,21 @@ int MainApplication::main(const std::vector<std::string> &args) {
   svs.setReuseAddress(false);
 
   upmq::Net::SocketReactor reactor(CONFIGURATION::Instance().net().maxConnections);
-  // upmq::Net::ParallelSocketAcceptor<AsyncTCPHandler, upmq::Net::SocketReactor> acceptor(svs, reactor,
-  // CONFIGURATION::Instance().threads().accepters);
   auto acceptor = std::make_unique<upmq::Net::ParallelSocketAcceptor<AsyncTCPHandler, upmq::Net::SocketReactor>>(
       svs, reactor, CONFIGURATION::Instance().threads().accepters);
   Thread thread;
   thread.start(reactor);
 
-#ifdef _DEBUG
-  while (true) {
-    Poco::Thread::sleep(100000);
-  }
-#else
+  // NOTE: uncomment "#ifdef _DEBUG" section if you want to debug broker and set breakpoints "on fly",
+  // otherwise remember that poco handle SIGINT into waitTermination method
+
+  //#ifdef _DEBUG
+  //  while (true) {
+  //    Poco::Thread::sleep(100000);
+  //  }
+  //#else
   waitTermination();
-#endif
+  //#endif
 
   log->critical("%s", std::string("-").append(" * ").append("wait termination"));
 
@@ -206,7 +207,7 @@ int MainApplication::main(const std::vector<std::string> &args) {
   reactor.stop();
   reactor.wakeUp();
   thread.join();
-  acceptor.reset(nullptr);
+  acceptor->unregisterAcceptor();
 
   BROKER::Instance().stop();
   EXCHANGE::Instance().stop();
@@ -215,6 +216,8 @@ int MainApplication::main(const std::vector<std::string> &args) {
   AHRegestry::destroyInstance();
   BROKER::destroyInstance();
   EXCHANGE::destroyInstance();
+
+  acceptor.reset(nullptr);
 
   log->critical("%s", std::string("-").append(" * ").append(">>========= stop =========<<"));
   ASYNCLOGGER::Instance().destroy(CONFIGURATION::Instance().log().name);

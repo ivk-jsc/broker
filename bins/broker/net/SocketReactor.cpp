@@ -135,9 +135,9 @@ void SocketReactor::addEventHandler(const Poco::Net::Socket& socket, const Poco:
   if (!it.hasValue()) {
     pNotifier = new upmq::Net::SocketNotifier(socket);
     _handlers.insert(std::make_pair(socket, pNotifier));
-  } else
+  } else {
     pNotifier = *it;
-
+  }
   if (!pNotifier->hasObserver(observer)) {
     pNotifier->addObserver(this, observer);
   }

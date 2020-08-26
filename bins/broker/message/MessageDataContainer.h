@@ -145,11 +145,11 @@ class MessageDataContainer {
   bool toDisconnect = false;
 
  private:
-  std::string _path = "";
-  mutable std::unique_ptr<ProtoMessage> _headerMessage = nullptr;
-  mutable std::unique_ptr<Body> _dataMessage = nullptr;
+  std::string _path;
+  mutable std::unique_ptr<ProtoMessage> _headerMessage;
+  mutable std::unique_ptr<Body> _dataMessage;
   bool _withFile = false;
-  std::unique_ptr<std::fstream> _dataFileStream = nullptr;
+  std::unique_ptr<std::fstream> _dataFileStream;
   void initHeader() const;
   void newMessage(const std::string &objectID);
   void initDataFileStream();

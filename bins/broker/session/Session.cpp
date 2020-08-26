@@ -38,7 +38,7 @@ Session::Session(const Connection &connection, std::string id, Proto::Acknowledg
       << "\'" << _id << "\'"
       << "," << _acknowledgeType << ")"
       << ";";
-  TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
+  TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
   CATCH_POCO_DATA_EXCEPTION_PURE("can't create session", sql.str(), ERROR_ON_SESSION);
 }
 Session::~Session() {
@@ -75,7 +75,7 @@ void Session::dropTemporaryDestination() const {
 void Session::deleteFromConnectionTable() const {
   std::stringstream sql;
   sql << "delete from " << _connection.sessionsT() << " where id = \'" << _id << "\';";
-  TRY_POCO_DATA_EXCEPTION { storage::DBMSConnectionPool::doNow(sql.str()); }
+  TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
   CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't delete from session table", sql.str(), ERROR_ON_UNSESSION)
 }
 std::string Session::acknowlegeName(Proto::Acknowledge acknowledgeType) {
