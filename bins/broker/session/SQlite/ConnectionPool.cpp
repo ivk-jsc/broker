@@ -25,7 +25,7 @@
 #include "Poco/Data/SQLite/Connector.h"
 #include "Poco/Data/SQLite/SQLiteException.h"
 #include "Poco/Data/SQLite/Utility.h"
-#include "sqlite3.h"
+#include "fake_sqlite.h"
 #endif
 #include "MiscDefines.h"
 #include <Poco/Path.h>
