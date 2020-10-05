@@ -169,7 +169,7 @@ TEST_F(SimpleTest, testSyncReceive) {
   // Send some text messages
   producer->send(txtMessage.get());
 
-  std::unique_ptr<cms::Message> message(consumer->receive(3000));
+  std::unique_ptr<cms::Message> message(consumer->receive(cmsProvider->minTimeout));
   EXPECT_TRUE(message != nullptr);
 }
 
@@ -189,7 +189,7 @@ TEST_F(SimpleTest, testSyncReceiveClientAck) {
   // Send some text messages
   producer->send(txtMessage.get());
 
-  std::unique_ptr<cms::Message> message(consumer->receive(3000));
+  std::unique_ptr<cms::Message> message(consumer->receive(cmsProvider->minTimeout));
   message->acknowledge();
   EXPECT_TRUE(message.get() != nullptr);
 }
@@ -225,10 +225,10 @@ TEST_F(SimpleTest, testMultipleConnections) {
   cms::Message *msg1 = nullptr;
   cms::Message *msg2 = nullptr;
 
-  msg1 = consumer1->receive(3000);
+  msg1 = consumer1->receive(cmsProvider->minTimeout);
   EXPECT_TRUE(msg1 != nullptr);
 
-  msg2 = consumer2->receive(3000);
+  msg2 = consumer2->receive(cmsProvider->minTimeout);
   EXPECT_TRUE(msg2 != nullptr);
 
   delete msg1;
@@ -264,10 +264,10 @@ TEST_F(SimpleTest, testMultipleSessions) {
   // Send some text messages
   producer->send(textMessage.get());
 
-  msg1 = consumer1->receive(3000);
+  msg1 = consumer1->receive(cmsProvider->minTimeout);
   EXPECT_TRUE(msg1 != nullptr);
 
-  msg2 = consumer2->receive(3000);
+  msg2 = consumer2->receive(cmsProvider->minTimeout);
   EXPECT_TRUE(msg2 != nullptr);
 
   delete msg1;
@@ -300,7 +300,7 @@ TEST_F(SimpleTest, testReceiveAlreadyInQueue) {
 
   connection->start();
 
-  std::unique_ptr<cms::Message> message(consumer->receive(3000));
+  std::unique_ptr<cms::Message> message(consumer->receive(cmsProvider->minTimeout));
   EXPECT_TRUE(message.get() != nullptr);
 
   // Clean up if we can
@@ -352,7 +352,7 @@ TEST_F(SimpleTest, testBytesMessageSendRecv) {
   // Send some text messages
   producer->send(bytesMessage.get());
 
-  std::unique_ptr<cms::Message> message(consumer->receive(3000));
+  std::unique_ptr<cms::Message> message(consumer->receive(cmsProvider->minTimeout));
   EXPECT_TRUE(message.get() != nullptr);
 
   EXPECT_THROW(message->setStringProperty("FOO", "BAR"), cms::CMSException) << "Should throw an CMSException";
@@ -582,7 +582,7 @@ TEST_F(SimpleTest, testServerTimeToLive) {
 
   cmsSleep(static_cast<unsigned int>(timeToLive * 2));
 
-  message.reset(consumer->receive(3000));
+  message.reset(consumer->receive(cmsProvider->minTimeout));
   EXPECT_TRUE(message.get() == nullptr);
 
   consumer->close();
@@ -603,7 +603,7 @@ TEST_F(SimpleTest, testPriority) {
   std::unique_ptr<MessageConsumer> consumer(cmsProvider->getSession()->createConsumer(queue.get()));
 
   for (int j = 9; j >= 0; j--) {
-    message.reset(consumer->receive(3000));
+    message.reset(consumer->receive(cmsProvider->minTimeout));
     EXPECT_TRUE(message.get() != nullptr);
     EXPECT_EQ(message->getCMSPriority(), j) << "invalid order msg : " << message->getCMSMessageID();
   }
@@ -637,8 +637,8 @@ TEST_F(SimpleTest, testRoundRobin) {
 
   std::array<int, 10> items = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
   for (int count(0); count < 5; ++count) {
-    in1.reset(consumer2->receive(13000));
-    in2.reset(consumer1->receive(13000));
+    in1.reset(consumer2->receive(cmsProvider->maxTimeout));
+    in2.reset(consumer1->receive(cmsProvider->maxTimeout));
     EXPECT_TRUE((in1 != nullptr || in2 != nullptr));
     if (in1) {
       ++in1Counter;
@@ -653,8 +653,7 @@ TEST_F(SimpleTest, testRoundRobin) {
           << "invalid order msg : " << in2->getCMSMessageID();
     }
   }
-  EXPECT_EQ((in1Counter + in2Counter), items.size())
-      << "expected " << items.size() << " messages, but had received " << (in1Counter + in2Counter);
+  EXPECT_EQ((in1Counter + in2Counter), items.size()) << "expected " << items.size() << " messages, but had received " << (in1Counter + in2Counter);
 
   consumer1->close();
   consumer2->close();
