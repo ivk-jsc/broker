@@ -57,8 +57,8 @@ class CMSProvider {
   std::unique_ptr<cms::Destination> tempDestination;
 
  public:
-  const int minTimeout = 5000;
-  const int maxTimeout = 15000;
+  const int minTimeout = 10000;
+  const int maxTimeout = 3 * minTimeout;
 
   CMSProvider(std::string brokerURL_, cms::Session::AcknowledgeMode ackMode_ = cms::Session::AUTO_ACKNOWLEDGE);
 
