@@ -614,15 +614,16 @@ TEST_F(SimpleTest, testPriority) {
   cmsProvider->getSession()->close();
 }
 TEST_F(SimpleTest, testRoundRobin) {
-  std::unique_ptr<TemporaryQueue> queue(cmsProvider->getSession()->createTemporaryQueue());
-  std::unique_ptr<MessageProducer> producer(cmsProvider->getSession()->createProducer(queue.get()));
-  std::unique_ptr<MessageConsumer> consumer1(cmsProvider->getSession()->createConsumer(queue.get()));
+  std::unique_ptr<cms::Session> session1(cmsProvider->getConnection()->createSession(cms::Session::CLIENT_ACKNOWLEDGE));
+  std::unique_ptr<TemporaryQueue> queue(session1->createTemporaryQueue());
+  std::unique_ptr<MessageProducer> producer(session1->createProducer(queue.get()));
+  std::unique_ptr<MessageConsumer> consumer1(session1->createConsumer(queue.get()));
 
   std::unique_ptr<cms::ConnectionFactory> connFactory(cmsProvider->getConnectionFactory()->createCMSConnectionFactory(cmsProvider->getBrokerURL()));
   std::unique_ptr<cms::Connection> connection(connFactory->createConnection());
   connection->start();
-  std::unique_ptr<cms::Session> session(connection->createSession(cms::Session::AUTO_ACKNOWLEDGE));
-  std::unique_ptr<MessageConsumer> consumer2(session->createConsumer(queue.get()));
+  std::unique_ptr<cms::Session> session2(connection->createSession(cms::Session::CLIENT_ACKNOWLEDGE));
+  std::unique_ptr<MessageConsumer> consumer2(session2->createConsumer(queue.get()));
 
   for (int i = 0; i < 10; i++) {
     std::unique_ptr<Message> message(cmsProvider->getSession()->createMessage());
@@ -641,16 +642,18 @@ TEST_F(SimpleTest, testRoundRobin) {
     in2.reset(consumer1->receive(cmsProvider->maxTimeout));
     EXPECT_TRUE((in1 != nullptr || in2 != nullptr));
     if (in1) {
-      ++in1Counter;
       int fromIn1 = in1->getIntProperty("num");
       EXPECT_TRUE(std::any_of(items.begin(), items.end(), [&fromIn1](int i) { return i == fromIn1; }))
           << "invalid order msg : " << in1->getCMSMessageID();
+      EXPECT_NO_THROW(in1->acknowledge());
+      ++in1Counter;
     }
     if (in2) {
-      ++in2Counter;
       int fromIn2 = in2->getIntProperty("num");
       EXPECT_TRUE(std::any_of(items.begin(), items.end(), [&fromIn2](int i) { return i == fromIn2; }))
           << "invalid order msg : " << in2->getCMSMessageID();
+      EXPECT_NO_THROW(in2->acknowledge());
+      ++in2Counter;
     }
   }
   EXPECT_EQ((in1Counter + in2Counter), items.size()) << "expected " << items.size() << " messages, but had received " << (in1Counter + in2Counter);
@@ -659,8 +662,8 @@ TEST_F(SimpleTest, testRoundRobin) {
   consumer2->close();
   producer->close();
   queue->destroy();
-  cmsProvider->getSession()->close();
-  session.reset();
+  session1.reset();
+  session2.reset();
   connection.reset();
   connFactory.reset();
 }
