@@ -27,7 +27,6 @@
 #include "Poco/Data/SQLite/Utility.h"
 #include "fake_sqlite.h"
 #endif
-#include "MiscDefines.h"
 #include <Poco/Path.h>
 #include <Poco/File.h>
 #include <Poco/RWLock.h>
@@ -55,7 +54,7 @@ ConnectionPool::ConnectionPool()
     dbmsString = dbmsFilePath.toString();
   }
   PDSQLITE::Connector::registerConnector();
-  PDSQLITE::Connector::enableSharedCache();
+  //  PDSQLITE::Connector::enableSharedCache();
 
   if (dbmsString.find(":memory:") != std::string::npos) {
     _inMemory = true;
@@ -129,24 +128,16 @@ std::shared_ptr<Poco::Data::Session> ConnectionPool::makeSession() const {
   return session;
 }
 std::shared_ptr<Poco::Data::Session> ConnectionPool::dbmsConnection() const {
-  switch (static_cast<int>(_inMemory)) {
-    case 1: {
-      auto tid = reinterpret_cast<Poco::UInt64>(Poco::Thread::currentTid());
-      auto sess = _memorySession.find(tid);
-      if (!sess.hasValue()) {
-        _memorySession.emplace(Poco::UInt64(tid), makeSession());
-        sess = _memorySession.find(tid);
-      }
-      return *sess;
-    }
-    default: {
-      std::shared_ptr<Poco::Data::Session> session;
-      do {
-        sessions.try_dequeue(session);
-      } while (session == nullptr);
-      return session;
-    }
+  auto tid = Poco::UInt64(1);
+  if (!_inMemory) {
+    tid = reinterpret_cast<Poco::UInt64>(Poco::Thread::currentTid());
   }
+  auto sess = _memorySession.find(tid);
+  if (!sess.hasValue()) {
+    _memorySession.emplace(Poco::UInt64(tid), makeSession());
+    sess = _memorySession.find(tid);
+  }
+  return *sess;
 }
 void ConnectionPool::pushBack(std::shared_ptr<Poco::Data::Session> session) {
   if (!_inMemory) {

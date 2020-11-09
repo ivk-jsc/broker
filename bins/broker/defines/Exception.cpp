@@ -15,6 +15,9 @@
  */
 
 #include "Exception.h"
+#include <Poco/Thread.h>
+#include "AsyncLogger.h"
+#include "Configuration.h"
 
 namespace upmq {
 namespace broker {
@@ -48,5 +51,78 @@ std::string Exception::message() const { return _message; }
 int Exception::error() const { return _error; }
 
 Exception::~Exception() noexcept = default;
+// ----------------------------------------
+OnError& OnError::setInfo(std::string info) {
+  _info = std::move(info);
+  return *this;
+}
+OnError& OnError::setError(int error) {
+  _error = error;
+  return *this;
+}
+OnError& OnError::setSql(std::string sql) {
+  _sql = std::move(sql);
+  return *this;
+}
+OnError& OnError::setErrorDescription(std::string description) {
+  _errorDescription = std::move(description);
+  return *this;
+}
+OnError& OnError::setExpression(const std::function<void()>& expression) {
+  _expression.assign(expression);
+  return *this;
+}
+OnError& OnError::setLine(int line) {
+  _line = line;
+  return *this;
+}
+OnError& OnError::setFile(std::string file) {
+  _file = std::move(file);
+  return *this;
+}
+void OnError::make(OnError::Mode mode) const {
+  if (!_expression.isNull()) {
+    (_expression.value())();
+  }
+  switch (mode) {
+    case WITH_THROW:
+      throw upmq::broker::Exception(_info + " : " + _sql,
+                                    std::string(_errorDescription).append(" native(").append(std::to_string(Poco::Error::last())).append(")"),
+                                    _error,
+                                    _file,
+                                    _line);
+      break;
+    case NO_THROW:
+      ASYNCLOGGER::Instance().get(LOG_CONFIG.name).error("- ! => %s : %s : %s : %d", _info, _sql, _errorDescription, _error);
+      break;
+  }
+}
+void tryExecute(const std::function<void()>& call, OnError& onError, std::string file, int line, OnError::Mode mode) {
+  bool locked;
+  do {
+    locked = false;
+    try {
+      call();
+    } catch (PDSQLITE::DBLockedException& dblex) {
+      UNUSED_VAR(dblex);
+      locked = true;
+      Poco::Thread::yield();
+    } catch (PDSQLITE::TableLockedException& tblex) {
+      UNUSED_VAR(tblex);
+      locked = true;
+      Poco::Thread::yield();
+    } catch (Poco::InvalidAccessException& invaccex) {
+      UNUSED_VAR(invaccex);
+      locked = true;
+      Poco::Thread::yield();
+    } catch (Poco::Exception& pex) {
+      onError.setErrorDescription(pex.message()).setFile(std::move(file)).setLine(line);
+      onError.make(mode);
+    } catch (const std::exception& e) {
+      onError.setErrorDescription(e.what()).setFile(std::move(file)).setLine(line);
+      onError.make(mode);
+    }
+  } while (locked);
+}
 }  // namespace broker
 }  // namespace upmq

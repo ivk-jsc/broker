@@ -22,12 +22,11 @@
 #include <Poco/Timezone.h>
 #include <limits>
 #include <sstream>
-#include <fake_cpp14.h>
 #include <NextBindParam.h>
 #include "Broker.h"
 #include "Connection.h"
 #include "MappedDBMessage.h"
-#include "MiscDefines.h"
+#include "Exception.h"
 #include "S2SProto.h"
 #include "Defines.h"
 #include "MessageStorage.h"
@@ -44,16 +43,21 @@ Storage::Storage(const std::string &messageTableID, size_t nonPersistentSize)
       _nonPersistent(nonPersistentSize) {
   std::string mainTsql = generateSQLMainTable(messageTableID);
   auto mainTXsqlIndexes = generateSQLMainTableIndexes(messageTableID);
-  TRY_POCO_DATA_EXCEPTION {
-    dbms::Instance().doNow(mainTsql);
-    for (const auto &index : mainTXsqlIndexes) {
-      dbms::Instance().doNow(index);
-    }
-  }
-  CATCH_POCO_DATA_EXCEPTION_PURE("can't init storage", mainTsql, ERROR_STORAGE)
+
+  OnError onError;
+  onError.setError(ERROR_STORAGE).setSql(mainTsql).setInfo("can't init storage");
+
+  TRY_EXECUTE(([&mainTsql, &mainTXsqlIndexes]() {
+                dbms::Instance().doNow(mainTsql);
+                for (const auto &index : mainTXsqlIndexes) {
+                  dbms::Instance().doNow(index);
+                }
+              }),
+              onError);
+
   std::string propTsql = generateSQLProperties();
-  TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(propTsql); }
-  CATCH_POCO_DATA_EXCEPTION_PURE("can't init storage", mainTsql, ERROR_STORAGE)
+  onError.setSql(propTsql);
+  TRY_EXECUTE(([&propTsql]() { dbms::Instance().doNow(propTsql); }), onError);
 }
 Storage::~Storage() = default;
 std::string Storage::generateSQLMainTable(const std::string &tableName) const {
@@ -155,26 +159,30 @@ void Storage::removeMessagesBySession(const upmq::broker::Session &session) {
   sql << ";" << non_std_endl;
 
   MessageInfo messageInfo;
-  TRY_POCO_DATA_EXCEPTION {
-    Poco::Data::Statement select((*session.currentDBSession)());
-    select << sql.str(), Poco::Data::Keywords::into(messageInfo.tuple), Poco::Data::Keywords::range(0, 1);
-    while (!select.done()) {
-      select.execute();
 
-      auto &fieldMessageId = messageInfo.tuple.get<message::field_message_id.position>();
-      if (!fieldMessageId.empty()) {
-        auto &fieldGroupId = messageInfo.tuple.get<message::field_group_id.position>();
-        if (!fieldGroupId.isNull() && !fieldGroupId.value().empty()) {
-          if (messageInfo.tuple.get<message::field_last_in_group.position>()) {
-            removeGroupMessage(fieldGroupId.value(), session);
-          }
-        } else {
-          removeMessage(fieldMessageId, *session.currentDBSession);
-        }
-      }
-    }
-  }
-  CATCH_POCO_DATA_EXCEPTION_PURE("can't remove all messages in session", sql.str(), ERROR_ON_SAVE_MESSAGE)
+  OnError onError;
+  onError.setError(ERROR_ON_SAVE_MESSAGE).setSql(sql.str()).setInfo("can't remove all messages in session");
+
+  TRY_EXECUTE(([&session, &sql, &messageInfo, this]() {
+                Poco::Data::Statement select((*session.currentDBSession)());
+                select << sql.str(), Poco::Data::Keywords::into(messageInfo.tuple), Poco::Data::Keywords::range(0, 1);
+                while (!select.done()) {
+                  select.execute();
+
+                  auto &fieldMessageId = messageInfo.tuple.get<message::field_message_id.position>();
+                  if (!fieldMessageId.empty()) {
+                    auto &fieldGroupId = messageInfo.tuple.get<message::field_group_id.position>();
+                    if (!fieldGroupId.isNull() && !fieldGroupId.value().empty()) {
+                      if (messageInfo.tuple.get<message::field_last_in_group.position>()) {
+                        removeGroupMessage(fieldGroupId.value(), session);
+                      }
+                    } else {
+                      removeMessage(fieldMessageId, *session.currentDBSession);
+                    }
+                  }
+                }
+              }),
+              onError);
 }
 void Storage::resetMessagesBySession(const upmq::broker::Session &session) {
   std::stringstream sql;
@@ -203,8 +211,11 @@ void Storage::removeGroupMessage(const std::string &groupID, const upmq::broker:
     tempDBMSSession->beginTX(groupID);
   }
   storage::DBMSSession &dbSession = externConnection ? *session.currentDBSession : *tempDBMSSession;
-  TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::into(result), Poco::Data::Keywords::now; }
-  CATCH_POCO_DATA_EXCEPTION_PURE("can't get message group for ack", sql.str(), ERROR_ON_ACK_MESSAGE)
+
+  OnError onError;
+  onError.setError(ERROR_ON_ACK_MESSAGE).setSql(sql.str()).setInfo("can't get message group for ack");
+
+  TRY_EXECUTE(([&dbSession, &sql, &result]() { dbSession << sql.str(), Poco::Data::Keywords::into(result), Poco::Data::Keywords::now; }), onError);
 
   for (const auto &msgID : result) {
     removeMessage(msgID, dbSession);
@@ -226,8 +237,11 @@ message::GroupStatus Storage::checkIsGroupClosed(const MessageDataContainer &sMe
     tempDBMSSession = std::make_unique<storage::DBMSSession>(dbms::Instance().dbmsSession());
   }
   storage::DBMSSession &dbSession = externConnection ? *session.currentDBSession : *tempDBMSSession;
-  TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::into(result), Poco::Data::Keywords::now; }
-  CATCH_POCO_DATA_EXCEPTION_PURE("can't check last in group for ack", sql.str(), ERROR_ON_ACK_MESSAGE)
+
+  OnError onError;
+  onError.setError(ERROR_ON_ACK_MESSAGE).setInfo("can't check last in group for ack").setSql(sql.str());
+
+  TRY_EXECUTE(([&dbSession, &sql, &result]() { dbSession << sql.str(), Poco::Data::Keywords::into(result), Poco::Data::Keywords::now; }), onError);
 
   switch (result) {
     case 0:
@@ -243,37 +257,52 @@ int Storage::deleteMessageHeader(storage::DBMSSession &dbSession, const std::str
   int persistent = static_cast<int>(!_nonPersistent.contains(messageID));
   sql << "delete from " << _messageTableID << " where message_id = \'" << messageID << "\'"
       << ";" << non_std_endl;
-  TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::now; }
-  CATCH_POCO_DATA_EXCEPTION_PURE("can't erase message", sql.str(), ERROR_UNKNOWN)
+  OnError onError;
+  onError.setError(ERROR_UNKNOWN).setInfo("can't erase message").setSql(sql.str());
+
+  TRY_EXECUTE(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
+
   return persistent;
 }
 void Storage::deleteMessageProperties(storage::DBMSSession &dbSession, const std::string &messageID) {
   std::stringstream sql;
   sql << "delete from " << _propertyTableID << " where message_id = \'" << messageID << "\'"
       << ";" << non_std_endl;
-  TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::now; }
-  CATCH_POCO_DATA_EXCEPTION_PURE_TROW_INVALID_SQL("can't erase message", sql.str(), ERROR_UNKNOWN)
+  OnError onError;
+  onError.setError(ERROR_UNKNOWN).setInfo("can't erase message properties").setSql(sql.str());
+
+  TRY_EXECUTE(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
 }
 int Storage::getSubscribersCount(storage::DBMSSession &dbSession, const std::string &messageID) {
   int subscribersCount = 1;
   std::stringstream sql;
   sql << "select subscribers_count from " << STORAGE_CONFIG.messageJournal(_parent->name()) << " where message_id = \'" << messageID << "\';";
-  TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::into(subscribersCount), Poco::Data::Keywords::now; }
-  CATCH_POCO_DATA_EXCEPTION_PURE("can't get subscribers count", sql.str(), ERROR_UNKNOWN)
+  OnError onError;
+  onError.setError(ERROR_UNKNOWN).setInfo("can't get subscribers count").setSql(sql.str());
+
+  TRY_EXECUTE(
+      ([&dbSession, &sql, &subscribersCount]() { dbSession << sql.str(), Poco::Data::Keywords::into(subscribersCount), Poco::Data::Keywords::now; }),
+      onError);
+
   return (--subscribersCount);
 }
 void Storage::updateSubscribersCount(storage::DBMSSession &dbSession, const std::string &messageID) {
   std::stringstream sql;
   sql << "update " << STORAGE_CONFIG.messageJournal(_parent->name()) << " set subscribers_count = subscribers_count - 1 where message_id =\'"
       << messageID << "\';" << non_std_endl;
-  TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::now; }
-  CATCH_POCO_DATA_EXCEPTION_PURE("can't erase message", sql.str(), ERROR_UNKNOWN)
+
+  OnError onError;
+  onError.setError(ERROR_UNKNOWN).setInfo("can't update subscribers count").setSql(sql.str());
+
+  TRY_EXECUTE(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
 }
 void Storage::deleteMessageInfoFromJournal(storage::DBMSSession &dbSession, const std::string &messageID) {
   std::stringstream sql;
   sql << "delete from " << STORAGE_CONFIG.messageJournal(_parent->name()) << " where message_id = \'" << messageID << "\';";
-  TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::now; }
-  CATCH_POCO_DATA_EXCEPTION_PURE("can't erase message", sql.str(), ERROR_UNKNOWN)
+  OnError onError;
+  onError.setError(ERROR_UNKNOWN).setInfo("can't delete message from journal").setSql(sql.str());
+
+  TRY_EXECUTE(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
 }
 void Storage::deleteMessageDataIfExists(const std::string &messageID, int persistent) {
   if (persistent == 1) {
@@ -447,40 +476,45 @@ std::shared_ptr<MessageDataContainer> Storage::get(const Consumer &consumer, boo
     }
 
     consumer::Msg tempMsg;
+
+    OnError onError;
+    onError.setError(ERROR_ON_GET_MESSAGE).setInfo("can't get message").setSql(sql.str());
+
     dbSession.beginTX(_extParentID);
-    TRY_POCO_DATA_EXCEPTION {
-      Poco::Data::Statement select(dbSession());
+    TRY_EXECUTE(([&dbSession, &sql, &tempMsg, &consumer, &needFiltered, &useFileLink, this]() {
+                  Poco::Data::Statement select(dbSession());
 
-      select << sql.str(), Poco::Data::Keywords::into(tempMsg.num), Poco::Data::Keywords::into(tempMsg.messageId),
-          Poco::Data::Keywords::into(tempMsg.priority), Poco::Data::Keywords::into(tempMsg.persistent),
-          Poco::Data::Keywords::into(tempMsg.correlationID), Poco::Data::Keywords::into(tempMsg.replyTo), Poco::Data::Keywords::into(tempMsg.type),
-          Poco::Data::Keywords::into(tempMsg.timestamp), Poco::Data::Keywords::into(tempMsg.ttl), Poco::Data::Keywords::into(tempMsg.expiration),
-          Poco::Data::Keywords::into(tempMsg.screated), Poco::Data::Keywords::into(tempMsg.bodyType),
-          Poco::Data::Keywords::into(tempMsg.deliveryCount), Poco::Data::Keywords::into(tempMsg.groupID),
-          Poco::Data::Keywords::into(tempMsg.groupSeq), Poco::Data::Keywords::range(0, 1);
+                  select << sql.str(), Poco::Data::Keywords::into(tempMsg.num), Poco::Data::Keywords::into(tempMsg.messageId),
+                      Poco::Data::Keywords::into(tempMsg.priority), Poco::Data::Keywords::into(tempMsg.persistent),
+                      Poco::Data::Keywords::into(tempMsg.correlationID), Poco::Data::Keywords::into(tempMsg.replyTo),
+                      Poco::Data::Keywords::into(tempMsg.type), Poco::Data::Keywords::into(tempMsg.timestamp),
+                      Poco::Data::Keywords::into(tempMsg.ttl), Poco::Data::Keywords::into(tempMsg.expiration),
+                      Poco::Data::Keywords::into(tempMsg.screated), Poco::Data::Keywords::into(tempMsg.bodyType),
+                      Poco::Data::Keywords::into(tempMsg.deliveryCount), Poco::Data::Keywords::into(tempMsg.groupID),
+                      Poco::Data::Keywords::into(tempMsg.groupSeq), Poco::Data::Keywords::range(0, 1);
 
-      while (!select.done()) {
-        tempMsg.reset();
-        select.execute();
-        if (!tempMsg.messageId.empty() && needFiltered) {
-          storage::MappedDBMessage mappedDBMessage(tempMsg.messageId, *this);
-          mappedDBMessage.dbmsConnection = dbSession.dbmsConnnectionRef();
-          if (consumer.selector->filter(mappedDBMessage)) {
-            auto sMessage = makeMessage(dbSession, tempMsg, consumer, useFileLink);
-            if (sMessage) {
-              consumer.select->push_back(std::move(sMessage));
-            }
-          }
-        } else if (!tempMsg.messageId.empty() && !needFiltered) {
-          auto sMessage = makeMessage(dbSession, tempMsg, consumer, useFileLink);
-          if (sMessage) {
-            consumer.select->push_back(std::move(sMessage));
-          }
-        }
-      }
-      setMessagesToWasSent(dbSession, consumer);
-    }
-    CATCH_POCO_DATA_EXCEPTION_PURE("get message", sql.str(), ERROR_ON_GET_MESSAGE)
+                  while (!select.done()) {
+                    tempMsg.reset();
+                    select.execute();
+                    if (!tempMsg.messageId.empty() && needFiltered) {
+                      storage::MappedDBMessage mappedDBMessage(tempMsg.messageId, *this);
+                      mappedDBMessage.dbmsConnection = dbSession.dbmsConnnectionRef();
+                      if (consumer.selector->filter(mappedDBMessage)) {
+                        auto sMessage = makeMessage(dbSession, tempMsg, consumer, useFileLink);
+                        if (sMessage) {
+                          consumer.select->push_back(std::move(sMessage));
+                        }
+                      }
+                    } else if (!tempMsg.messageId.empty() && !needFiltered) {
+                      auto sMessage = makeMessage(dbSession, tempMsg, consumer, useFileLink);
+                      if (sMessage) {
+                        consumer.select->push_back(std::move(sMessage));
+                      }
+                    }
+                  }
+                  setMessagesToWasSent(dbSession, consumer);
+                }),
+                onError);
     dbSession.commitTX();
   }
 
@@ -624,13 +658,16 @@ void Storage::begin(const Session &session, const std::string &extParentId) {
   std::string mainTXTable = std::to_string(Poco::hash(_extParentID + "_" + session.txName()));
   std::string mainTXsql = generateSQLMainTable(mainTXTable);
   auto mainTXsqlIndexes = generateSQLMainTableIndexes(mainTXTable);
-  TRY_POCO_DATA_EXCEPTION {
-    dbms::Instance().doNow(mainTXsql);
-    for (const auto &index : mainTXsqlIndexes) {
-      dbms::Instance().doNow(index);
-    }
-  }
-  CATCH_POCO_DATA_EXCEPTION_PURE("can't create tx_table", mainTXsql, ERROR_ON_BEGIN)
+  OnError onError;
+  onError.setError(ERROR_ON_BEGIN).setInfo("can't create tx_table");
+
+  TRY_EXECUTE(([&mainTXsql, &mainTXsqlIndexes]() {
+                dbms::Instance().doNow(mainTXsql);
+                for (const auto &index : mainTXsqlIndexes) {
+                  dbms::Instance().doNow(index);
+                }
+              }),
+              onError);
 }
 void Storage::commit(const Session &session) {
   std::string mainTXTable = "\"" + std::to_string(Poco::hash(_extParentID + "_" + session.txName())) + "\"";
@@ -644,17 +681,25 @@ void Storage::commit(const Session &session) {
          "expiration, body_type, client_id, consumer_id, group_id, group_seq from "
       << mainTXTable << " order by num asc;";
   std::unique_ptr<storage::DBMSSession> dbSession = dbms::Instance().dbmsSessionPtr();
+  OnError onError;
+  onError.setError(ERROR_ON_COMMIT).setInfo("can't commit");
+
   dbSession->beginTX(session.id());
 
-  TRY_POCO_DATA_EXCEPTION { *dbSession << sql.str(), Poco::Data::Keywords::now; }
-  CATCH_POCO_DATA_EXCEPTION_PURE("can't commit", sql.str(), ERROR_ON_COMMIT)
-  TRY_POCO_DATA_EXCEPTION { dropTXTable(*dbSession, mainTXTable); }
-  CATCH_POCO_DATA_EXCEPTION_PURE("can't commit", mainTXTable, ERROR_ON_COMMIT)
-  TRY_POCO_DATA_EXCEPTION {
-    session.currentDBSession = std::move(dbSession);
-    removeMessagesBySession(session);
-  }
-  CATCH_POCO_DATA_EXCEPTION("can't commit (removeMessagesBySession)", session.id(), session.currentDBSession.reset(nullptr), ERROR_ON_COMMIT)
+  onError.setSql(sql.str());
+  TRY_EXECUTE(([&dbSession, &sql]() { *dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
+
+  TRY_EXECUTE(([&dbSession, &mainTXTable, this]() { dropTXTable(*dbSession, mainTXTable); }), onError);
+
+  onError.setInfo("can't commit (removeMessagesBySession) for session : " + session.id()).setExpression([&session]() {
+    session.currentDBSession.reset(nullptr);
+  });
+
+  TRY_EXECUTE(([&session, &dbSession, this]() {
+                session.currentDBSession = std::move(dbSession);
+                removeMessagesBySession(session);
+              }),
+              onError);
 
   session.currentDBSession->commitTX();
   session.currentDBSession.reset(nullptr);
@@ -668,36 +713,46 @@ void Storage::abort(const Session &session) {
   sql << "select 1 from " << mainTXTable << ";";
   std::unique_ptr<storage::DBMSSession> dbSession = dbms::Instance().dbmsSessionPtr();
   dbSession->beginTX(session.id());
-  TRY_POCO_DATA_EXCEPTION {
-    *dbSession << sql.str(), Poco::Data::Keywords::now;
-    tbExist = true;
-  }
-  catch (PDSQLITE::InvalidSQLStatementException &issex) {
-    UNUSED_VAR(issex);
-    tbExist = false;
-  }
-  CATCH_POCO_DATA_EXCEPTION_NO_INVALID_SQL("can't check table on existence", sql.str(), , ERROR_ON_ABORT)
+
+  OnError onError;
+  onError.setError(ERROR_ON_ABORT).setSql(sql.str()).setInfo("can't check table on existence");
+
+  TRY_EXECUTE(([&dbSession, &sql, &tbExist]() {
+                try {
+                  *dbSession << sql.str(), Poco::Data::Keywords::now;
+                  tbExist = true;
+                } catch (PDSQLITE::InvalidSQLStatementException &issex) {
+                  UNUSED_VAR(issex);
+                  tbExist = false;
+                }
+              }),
+              onError);
 
   if (tbExist) {
     sql.str("");
     sql << "delete from " << STORAGE_CONFIG.messageJournal(_parent->name()) << " where message_id in ("
         << " select message_id from " << mainTXTable << ");";
 
-    TRY_POCO_DATA_EXCEPTION { *dbSession << sql.str(), Poco::Data::Keywords::now; }
-    CATCH_POCO_DATA_EXCEPTION_PURE("can't abort", sql.str(), ERROR_ON_ABORT)
+    onError.setSql(sql.str()).setInfo("can't abort");
+    TRY_EXECUTE(([&dbSession, &sql]() { *dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
+
     sql.str("");
     sql << "delete from " << _propertyTableID << " where message_id in ("
         << " select message_id from " << mainTXTable << ");";
-    TRY_POCO_DATA_EXCEPTION { *dbSession << sql.str(), Poco::Data::Keywords::now; }
-    CATCH_POCO_DATA_EXCEPTION_PURE("can't abort", sql.str(), ERROR_ON_ABORT)
-    TRY_POCO_DATA_EXCEPTION { dropTXTable(*dbSession, mainTXTable); }
-    CATCH_POCO_DATA_EXCEPTION_PURE("can't abort", sql.str(), ERROR_ON_ABORT)
+
+    onError.setSql(sql.str());
+    TRY_EXECUTE(([&dbSession, &sql]() { *dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
+
+    onError.setSql("");
+    TRY_EXECUTE(([&dbSession, &mainTXTable, this]() { dropTXTable(*dbSession, mainTXTable); }), onError);
   }
-  TRY_POCO_DATA_EXCEPTION {
-    session.currentDBSession = std::move(dbSession);
-    resetMessagesBySession(session);
-  }
-  CATCH_POCO_DATA_EXCEPTION("can't abort", sql.str(), session.currentDBSession.reset(nullptr), ERROR_ON_ABORT)
+
+  onError.setSql("").setInfo("can't abort").setExpression([&session]() { session.currentDBSession.reset(nullptr); });
+  TRY_EXECUTE(([&dbSession, &session, this]() {
+                session.currentDBSession = std::move(dbSession);
+                resetMessagesBySession(session);
+              }),
+              onError);
 
   session.currentDBSession->commitTX();
   session.currentDBSession.reset(nullptr);
@@ -717,22 +772,27 @@ std::vector<MessageInfo> Storage::getMessagesBelow(const Session &session, const
   sql << "select * from " << _messageTableID << " where delivery_count > 0 "
       << " and consumer_id like \'%" << session.id() << "%'"
       << ";" << non_std_endl;
+
+  OnError onError;
+  onError.setError(ERROR_ON_ACK_MESSAGE).setSql(sql.str()).setInfo("can't get all messages below id");
+
   storage::DBMSSession &dbSession = session.currentDBSession.get();
-  TRY_POCO_DATA_EXCEPTION {
-    Poco::Data::Statement select(dbSession());
-    MessageInfo messageInfo;
-    select << sql.str(), Poco::Data::Keywords::into(messageInfo.tuple), Poco::Data::Keywords::range(0, 1);
-    while (!select.done()) {
-      select.execute();
-      if (!(messageInfo.tuple.get<message::field_message_id.position>()).empty()) {
-        result.push_back(messageInfo);
-      }
-    }
-  }
-  CATCH_POCO_DATA_EXCEPTION_PURE("can't get all messages below id", sql.str(), ERROR_ON_ACK_MESSAGE)
+  TRY_EXECUTE(([&dbSession, &sql, &result]() {
+                Poco::Data::Statement select(dbSession());
+                MessageInfo messageInfo;
+                select << sql.str(), Poco::Data::Keywords::into(messageInfo.tuple), Poco::Data::Keywords::range(0, 1);
+                while (!select.done()) {
+                  select.execute();
+                  if (!(messageInfo.tuple.get<message::field_message_id.position>()).empty()) {
+                    result.push_back(messageInfo);
+                  }
+                }
+              }),
+              onError);
+
   return result;
 }
-void Storage::setMessageToWasSent(const std::string &messageID, const Consumer &consumer) {
+void Storage::setMessageToWasSent(const std::string &messageID, storage::DBMSSession &dbSession, const Consumer &consumer) {
   std::stringstream sql;
   sql << "update " << _messageTableID << " set delivery_status = " << message::WAS_SENT << ",    consumer_id = \'" << consumer.id << "\'"
       << ",    delivery_count  = delivery_count + 1";
@@ -742,8 +802,11 @@ void Storage::setMessageToWasSent(const std::string &messageID, const Consumer &
   }
   sql << " where message_id = \'" << messageID << "\'"
       << ";";
-  TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
-  CATCH_POCO_DATA_EXCEPTION_PURE("can't set message to was_sent ", sql.str(), ERROR_STORAGE)
+
+  OnError onError;
+  onError.setError(ERROR_STORAGE).setSql(sql.str()).setInfo("can't set message to was_sent");
+
+  TRY_EXECUTE(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
 }
 void Storage::setMessagesToWasSent(storage::DBMSSession &dbSession, const Consumer &consumer) {
   if (!consumer.select->empty()) {
@@ -763,8 +826,11 @@ void Storage::setMessagesToWasSent(storage::DBMSSession &dbSession, const Consum
       sql << "message_id = \'" << messages[i]->message().message_id() << "\'";
     }
     sql << ";";
-    TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::now; }
-    CATCH_POCO_DATA_EXCEPTION_PURE("can't set message to was_sent ", sql.str(), ERROR_STORAGE)
+
+    OnError onError;
+    onError.setError(ERROR_STORAGE).setSql(sql.str()).setInfo("can't set message to was_sent");
+
+    TRY_EXECUTE(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
   }
 }
 void Storage::setMessageToDelivered(const upmq::broker::Session &session, const std::string &messageID) {
@@ -772,8 +838,10 @@ void Storage::setMessageToDelivered(const upmq::broker::Session &session, const 
   sql << "update " << _messageTableID << " set delivery_status = " << message::DELIVERED << " where message_id = \'" << messageID << "\'"
       << ";";
   storage::DBMSSession &dbSession = session.currentDBSession.get();
-  TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::now; }
-  CATCH_POCO_DATA_EXCEPTION_PURE("can't set message to delivered", sql.str(), ERROR_STORAGE)
+  OnError onError;
+  onError.setError(ERROR_STORAGE).setSql(sql.str()).setInfo("can't set message to delivered");
+
+  TRY_EXECUTE(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
 }
 void Storage::setMessageToLastInGroup(const Session &session, const std::string &messageID) {
   std::stringstream sql;
@@ -789,8 +857,12 @@ void Storage::setMessageToLastInGroup(const Session &session, const std::string 
   if (!externConnection) {
     dbSession.beginTX(messageID);
   }
-  TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::now; }
-  CATCH_POCO_DATA_EXCEPTION_PURE("can't set message to last_in_group", sql.str(), ERROR_ON_SAVE_MESSAGE)
+
+  OnError onError;
+  onError.setError(ERROR_ON_SAVE_MESSAGE).setSql(sql.str()).setInfo("can't set message to last_in_group");
+
+  TRY_EXECUTE(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
+
   if (!externConnection) {
     dbSession.commitTX();
   }
@@ -803,14 +875,15 @@ std::string Storage::saveTableName(const Session &session) const {
   return messageTable;
 }
 void Storage::setMessagesToNotSent(const Consumer &consumer) {
+  OnError onError;
+  onError.setError(ERROR_STORAGE).setInfo("can't set messages to not-sent");
   std::stringstream sql;
   sql << "update " << _messageTableID << " set delivery_status = " << message::NOT_SENT << " where consumer_id like \'%" << consumer.id << "%\'";
   if (consumer.session.type == SESSION_TRANSACTED) {
     sql << " and transaction_id = \'" << consumer.session.txName << "\'";
   }
   sql << ";";
-  TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
-  CATCH_POCO_DATA_EXCEPTION_PURE_NO_INVALIDEXCEPT_NO_EXCEPT("can't set messages to not-sent", sql.str(), ERROR_STORAGE)
+  TRY_EXECUTE_NOEXCEPT([&sql]() { dbms::Instance().doNow(sql.str()); }, onError);
 }
 void Storage::copyTo(Storage &storage, const Consumer &consumer) {
   storage.resetNonPersistent(_nonPersistent);
@@ -837,83 +910,91 @@ void Storage::copyTo(Storage &storage, const Consumer &consumer) {
         << _messageTableID << " where delivery_status <> " << message::DELIVERED << " order by num asc;";
   }
 
+  OnError onError;
+  onError.setError(ERROR_ON_BROWSER).setInfo("can't copy messages to the browser").setSql(sql.str());
+
   dbSession.beginTX(consumer.objectID);
 
-  TRY_POCO_DATA_EXCEPTION {
-    if (withSelector) {
-      std::string messageID;
-      int priority;
-      int persistent;
-      Poco::Nullable<std::string> correlationID;
-      Poco::Nullable<std::string> replyTo;
-      std::string type;
-      std::string clientTimestamp;
-      Poco::Int64 ttl;
-      Poco::Int64 expiration;
-      int bodyType;
-      std::string clientID;
-      Poco::Nullable<std::string> groupID;
-      int groupSeq;
+  TRY_EXECUTE(([&withSelector, &dbSession, &sql, &consumer, &storage, this]() {
+                if (withSelector) {
+                  std::string messageID;
+                  int priority;
+                  int persistent;
+                  Poco::Nullable<std::string> correlationID;
+                  Poco::Nullable<std::string> replyTo;
+                  std::string type;
+                  std::string clientTimestamp;
+                  Poco::Int64 ttl;
+                  Poco::Int64 expiration;
+                  int bodyType;
+                  std::string clientID;
+                  Poco::Nullable<std::string> groupID;
+                  int groupSeq;
 
-      auto &session = dbSession();
-      Poco::Data::Statement select(session);
-      Poco::Data::Statement insert(session);
-      select << sql.str(), Poco::Data::Keywords::into(messageID), Poco::Data::Keywords::into(priority), Poco::Data::Keywords::into(persistent),
-          Poco::Data::Keywords::into(correlationID), Poco::Data::Keywords::into(replyTo), Poco::Data::Keywords::into(type),
-          Poco::Data::Keywords::into(clientTimestamp), Poco::Data::Keywords::into(ttl), Poco::Data::Keywords::into(expiration),
-          Poco::Data::Keywords::into(bodyType), Poco::Data::Keywords::into(clientID), Poco::Data::Keywords::into(groupID),
-          Poco::Data::Keywords::into(groupSeq), Poco::Data::Keywords::range(0, 1);
-      NextBindParam nextParam;
-      while (!select.done()) {
-        nextParam.reset();
-        select.execute();
-        if (!messageID.empty()) {
-          storage::MappedDBMessage mappedDBMessage(messageID, *this);
-          mappedDBMessage.dbmsConnection = dbSession.dbmsConnnectionRef();
-          if (consumer.selector->filter(mappedDBMessage)) {
-            sql.str("");
-            sql << " insert into " << storage.messageTableID() << " (message_id, priority, persistent, correlation_id, "
-                << " reply_to, type, client_timestamp, "
-                << " ttl, expiration, body_type, client_id, group_id, group_seq)"
-                << " values "
-                << " (" << nextParam();
-            sql << "," << nextParam();
-            sql << "," << nextParam();
-            sql << "," << nextParam();
-            sql << "," << nextParam();
-            sql << "," << nextParam();
-            sql << "," << nextParam();
-            sql << "," << nextParam();
-            sql << "," << nextParam();
-            sql << "," << nextParam();
-            sql << "," << nextParam();
-            sql << "," << nextParam();
-            sql << "," << nextParam() << ");";
-            insert << sql.str(), Poco::Data::Keywords::use(messageID), Poco::Data::Keywords::use(priority), Poco::Data::Keywords::use(persistent),
-                Poco::Data::Keywords::use(correlationID), Poco::Data::Keywords::use(replyTo), Poco::Data::Keywords::use(type),
-                Poco::Data::Keywords::use(clientTimestamp), Poco::Data::Keywords::use(ttl), Poco::Data::Keywords::use(expiration),
-                Poco::Data::Keywords::use(bodyType), Poco::Data::Keywords::use(clientID), Poco::Data::Keywords::use(groupID),
-                Poco::Data::Keywords::use(groupSeq), Poco::Data::Keywords::now;
-          }
-        }
-      }
-    } else {
-      dbSession << sql.str(), Poco::Data::Keywords::now;
-    }
-  }
-  CATCH_POCO_DATA_EXCEPTION_PURE("can't copy messages to the browser", sql.str(), ERROR_ON_BROWSER)
+                  auto &session = dbSession();
+                  Poco::Data::Statement select(session);
+                  Poco::Data::Statement insert(session);
+                  select << sql.str(), Poco::Data::Keywords::into(messageID), Poco::Data::Keywords::into(priority),
+                      Poco::Data::Keywords::into(persistent), Poco::Data::Keywords::into(correlationID), Poco::Data::Keywords::into(replyTo),
+                      Poco::Data::Keywords::into(type), Poco::Data::Keywords::into(clientTimestamp), Poco::Data::Keywords::into(ttl),
+                      Poco::Data::Keywords::into(expiration), Poco::Data::Keywords::into(bodyType), Poco::Data::Keywords::into(clientID),
+                      Poco::Data::Keywords::into(groupID), Poco::Data::Keywords::into(groupSeq), Poco::Data::Keywords::range(0, 1);
+                  NextBindParam nextParam;
+                  while (!select.done()) {
+                    nextParam.reset();
+                    select.execute();
+                    if (!messageID.empty()) {
+                      storage::MappedDBMessage mappedDBMessage(messageID, *this);
+                      mappedDBMessage.dbmsConnection = dbSession.dbmsConnnectionRef();
+                      if (consumer.selector->filter(mappedDBMessage)) {
+                        sql.str("");
+                        sql << " insert into " << storage.messageTableID() << " (message_id, priority, persistent, correlation_id, "
+                            << " reply_to, type, client_timestamp, "
+                            << " ttl, expiration, body_type, client_id, group_id, group_seq)"
+                            << " values "
+                            << " (" << nextParam();
+                        sql << "," << nextParam();
+                        sql << "," << nextParam();
+                        sql << "," << nextParam();
+                        sql << "," << nextParam();
+                        sql << "," << nextParam();
+                        sql << "," << nextParam();
+                        sql << "," << nextParam();
+                        sql << "," << nextParam();
+                        sql << "," << nextParam();
+                        sql << "," << nextParam();
+                        sql << "," << nextParam();
+                        sql << "," << nextParam() << ");";
+                        insert << sql.str(), Poco::Data::Keywords::use(messageID), Poco::Data::Keywords::use(priority),
+                            Poco::Data::Keywords::use(persistent), Poco::Data::Keywords::use(correlationID), Poco::Data::Keywords::use(replyTo),
+                            Poco::Data::Keywords::use(type), Poco::Data::Keywords::use(clientTimestamp), Poco::Data::Keywords::use(ttl),
+                            Poco::Data::Keywords::use(expiration), Poco::Data::Keywords::use(bodyType), Poco::Data::Keywords::use(clientID),
+                            Poco::Data::Keywords::use(groupID), Poco::Data::Keywords::use(groupSeq), Poco::Data::Keywords::now;
+                      }
+                    }
+                  }
+                } else {
+                  dbSession << sql.str(), Poco::Data::Keywords::now;
+                }
+              }),
+              onError);
+
   sql.str("");
   sql << "update " << STORAGE_CONFIG.messageJournal(_parent->name()) << " set subscribers_count = subscribers_count + 1 where message_id in ("
       << "select message_id from " << storage.messageTableID() << ");";
-  TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::now; }
-  CATCH_POCO_DATA_EXCEPTION_PURE("can't copy messages to the browser", sql.str(), ERROR_ON_BROWSER)
+
+  onError.setSql(sql.str());
+  TRY_EXECUTE(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
+
   sql.str("");
   sql << "insert into " << storage.propertyTableID() << " select * from " << _propertyTableID << " where message_id in "
       << "("
       << " select message_id from " << storage.messageTableID() << ")"
       << ";";
-  TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::now; }
-  CATCH_POCO_DATA_EXCEPTION_PURE("can't copy messages to the browser", sql.str(), ERROR_ON_BROWSER)
+
+  onError.setSql(sql.str());
+  TRY_EXECUTE(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
+
   dbSession.commitTX();
 }
 void Storage::resetNonPersistent(const Storage::NonPersistentMessagesListType &nonPersistentMessagesList) {
@@ -923,14 +1004,17 @@ void Storage::resetNonPersistent(const Storage::NonPersistentMessagesListType &n
 int64_t Storage::size() {
   std::stringstream sql;
   Poco::Int64 result = 0;
+  OnError onError;
+  onError.setError(ERROR_STORAGE).setInfo("can't get queue size");
+
   sql << "select count(*) from " << _messageTableID << " as msgs"
       << " where delivery_status <> " << message::DELIVERED;
   sql << ";";
 
   storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
   dbSession.beginTX(_messageTableID, storage::DBMSSession::TransactionMode::READ);
-  TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::into(result), Poco::Data::Keywords::now; }
-  CATCH_POCO_DATA_EXCEPTION_PURE_NO_INVALIDEXCEPT_NO_EXCEPT("can't get queue size", sql.str(), ERROR_STORAGE)
+  TRY_EXECUTE_NOEXCEPT(([&dbSession, &sql, &result]() { dbSession << sql.str(), Poco::Data::Keywords::into(result), Poco::Data::Keywords::now; }),
+                       onError);
   dbSession.commitTX();
   return result;
 }
@@ -1055,83 +1139,86 @@ void Storage::fillProperties(storage::DBMSSession &dbSession, Proto::Message &me
          " from "
       << _propertyTableID << " where message_id = \'" << message.message_id() << "\';";
   MessagePropertyInfo messagePropertyInfo;
-  TRY_POCO_DATA_EXCEPTION {
-    Poco::Data::Statement select(dbSession());
-    select << sql.str(), Poco::Data::Keywords::into(messagePropertyInfo.tuple), Poco::Data::Keywords::range(0, 1);
-    while (!select.done()) {
-      select.execute();
-      if (!messagePropertyInfo.messageID().empty()) {
-        auto &pmap = *message.mutable_property();
-        const std::string &name = messagePropertyInfo.propertyName();
-        bool isNull = messagePropertyInfo.valueNull();
-        bool isNan = false;
-        if (messagePropertyInfo.isNull() && !isNull) {
-          isNan = true;
-        }
+  OnError onError;
+  onError.setError(ERROR_ON_GET_MESSAGE).setInfo("can't fill properties").setSql(sql.str());
 
-        switch (static_cast<MessagePropertyInfo::Field>(messagePropertyInfo.propertyType())) {
-          case MessagePropertyInfo::Field::value_string:
-            pmap[name].set_value_string(messagePropertyInfo.valueString());
-            break;
-          case MessagePropertyInfo::Field::value_char:
-            pmap[name].set_value_char(messagePropertyInfo.valueChar());
-            break;
-          case MessagePropertyInfo::Field::value_bool:
-            pmap[name].set_value_bool(messagePropertyInfo.valueBool());
-            break;
-          case MessagePropertyInfo::Field::value_byte:
-            pmap[name].set_value_byte(messagePropertyInfo.valueByte());
-            break;
-          case MessagePropertyInfo::Field::value_short:
-            pmap[name].set_value_short(messagePropertyInfo.valueShort());
-            break;
-          case MessagePropertyInfo::Field::value_int:
-            pmap[name].set_value_int(messagePropertyInfo.valueInt());
-            break;
-          case MessagePropertyInfo::Field::value_long:
-            pmap[name].set_value_long(messagePropertyInfo.valueLong());
-            break;
-          case MessagePropertyInfo::Field::value_float:
-            if (isNan) {
-              pmap[name].set_value_float(std::numeric_limits<float>::quiet_NaN());
-            } else {
-              pmap[name].set_value_float(messagePropertyInfo.valueFloat());
-            }
-            break;
-          case MessagePropertyInfo::Field::value_double:
-            if (isNan) {
-              pmap[name].set_value_double(std::numeric_limits<double>::quiet_NaN());
-            } else {
-              pmap[name].set_value_double(messagePropertyInfo.valueDouble());
-            }
-            break;
-          case MessagePropertyInfo::Field::value_bytes:
-            pmap[name].set_value_bytes(messagePropertyInfo.valueBytes().rawContent(), messagePropertyInfo.valueBytes().size());
-            break;
-          case MessagePropertyInfo::Field::value_object:
-            pmap[name].set_value_object(reinterpret_cast<const char *>(messagePropertyInfo.valueObject().rawContent()),
-                                        messagePropertyInfo.valueObject().size());
-            break;
-          default:
-            pmap[name].set_is_null(true);
-        }
+  TRY_EXECUTE(([&dbSession, &messagePropertyInfo, &message, &sql]() {
+                Poco::Data::Statement select(dbSession());
+                select << sql.str(), Poco::Data::Keywords::into(messagePropertyInfo.tuple), Poco::Data::Keywords::range(0, 1);
+                while (!select.done()) {
+                  select.execute();
+                  if (!messagePropertyInfo.messageID().empty()) {
+                    auto &pmap = *message.mutable_property();
+                    const std::string &name = messagePropertyInfo.propertyName();
+                    bool isNull = messagePropertyInfo.valueNull();
+                    bool isNan = false;
+                    if (messagePropertyInfo.isNull() && !isNull) {
+                      isNan = true;
+                    }
 
-        pmap[name].set_is_null(isNull);
-      }
-    }
-  }
-  CATCH_POCO_DATA_EXCEPTION_PURE_TROW_INVALID_SQL("can't fill properties", sql.str(), ERROR_ON_GET_MESSAGE)
+                    switch (static_cast<MessagePropertyInfo::Field>(messagePropertyInfo.propertyType())) {
+                      case MessagePropertyInfo::Field::value_string:
+                        pmap[name].set_value_string(messagePropertyInfo.valueString());
+                        break;
+                      case MessagePropertyInfo::Field::value_char:
+                        pmap[name].set_value_char(messagePropertyInfo.valueChar());
+                        break;
+                      case MessagePropertyInfo::Field::value_bool:
+                        pmap[name].set_value_bool(messagePropertyInfo.valueBool());
+                        break;
+                      case MessagePropertyInfo::Field::value_byte:
+                        pmap[name].set_value_byte(messagePropertyInfo.valueByte());
+                        break;
+                      case MessagePropertyInfo::Field::value_short:
+                        pmap[name].set_value_short(messagePropertyInfo.valueShort());
+                        break;
+                      case MessagePropertyInfo::Field::value_int:
+                        pmap[name].set_value_int(messagePropertyInfo.valueInt());
+                        break;
+                      case MessagePropertyInfo::Field::value_long:
+                        pmap[name].set_value_long(messagePropertyInfo.valueLong());
+                        break;
+                      case MessagePropertyInfo::Field::value_float:
+                        if (isNan) {
+                          pmap[name].set_value_float(std::numeric_limits<float>::quiet_NaN());
+                        } else {
+                          pmap[name].set_value_float(messagePropertyInfo.valueFloat());
+                        }
+                        break;
+                      case MessagePropertyInfo::Field::value_double:
+                        if (isNan) {
+                          pmap[name].set_value_double(std::numeric_limits<double>::quiet_NaN());
+                        } else {
+                          pmap[name].set_value_double(messagePropertyInfo.valueDouble());
+                        }
+                        break;
+                      case MessagePropertyInfo::Field::value_bytes:
+                        pmap[name].set_value_bytes(messagePropertyInfo.valueBytes().rawContent(), messagePropertyInfo.valueBytes().size());
+                        break;
+                      case MessagePropertyInfo::Field::value_object:
+                        pmap[name].set_value_object(reinterpret_cast<const char *>(messagePropertyInfo.valueObject().rawContent()),
+                                                    messagePropertyInfo.valueObject().size());
+                        break;
+                      default:
+                        pmap[name].set_is_null(true);
+                    }
+
+                    pmap[name].set_is_null(isNull);
+                  }
+                }
+              }),
+              onError);
 }
 void Storage::dropTables() {
+  OnError onError;
+  onError.setError(ERROR_ON_UNSUBSCRIPTION).setInfo("can't drop table");
   std::stringstream sql;
   sql << "drop table if exists " << _messageTableID << ";" << non_std_endl;
-  TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
-  CATCH_POCO_DATA_EXCEPTION_PURE_NO_INVALIDEXCEPT_NO_EXCEPT("can't drop table", sql.str(), ERROR_ON_UNSUBSCRIPTION)
+  TRY_EXECUTE_NOEXCEPT([&sql]() { dbms::Instance().doNow(sql.str()); }, onError);
 
   sql.str("");
   sql << "drop table if exists " << _propertyTableID << ";";
-  TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
-  CATCH_POCO_DATA_EXCEPTION_PURE_NO_INVALIDEXCEPT_NO_EXCEPT("can't drop table", sql.str(), ERROR_ON_UNSUBSCRIPTION)
+  TRY_EXECUTE_NOEXCEPT([&sql]() { dbms::Instance().doNow(sql.str()); }, onError);
 }
 bool Storage::hasTransaction(const Session &session) const {
   upmq::ScopedReadRWLock readRWLock(_txSessionsLock);

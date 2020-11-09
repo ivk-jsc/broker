@@ -20,8 +20,6 @@
 #include "AsyncLogger.h"
 #include "Poco/RWLock.h"
 #include "ProtoBuf.h"
-#include "MiscDefines.h"
-#include "fake_cpp14.h"
 
 #include "SQlite/ConnectionPool.h"
 
@@ -38,20 +36,20 @@ namespace broker {
 namespace storage {
 
 DBMSConnectionPool::DBMSConnectionPool() {
+  OnError onError;
+  onError.setError(Proto::ERROR_STORAGE).setInfo("can't create dbms connect");
   switch (STORAGE_CONFIG.connection.props.dbmsType) {
     case NO_TYPE:
       throw EXCEPTION("invalid DBMS", Configuration::Storage::typeName(STORAGE_CONFIG.connection.props.dbmsType), Proto::ERROR_STORAGE);
     case Postgresql:
 #ifdef HAS_POSTGRESQL
-      TRY_POCO_DATA_EXCEPTION { _impl.reset(new postgresql::ConnectionPool()); }
-      CATCH_POCO_DATA_EXCEPTION_PURE("create dbms connect", "", Proto::ERROR_STORAGE)
+      TRY_EXECUTE(([this]() { _impl.reset(new postgresql::ConnectionPool()); }), onError);
 #endif
       break;
     case SQLite:
       break;
     case SQLiteNative:
-      TRY_POCO_DATA_EXCEPTION { _impl.reset(new sqlite::ConnectionPool()); }
-      CATCH_POCO_DATA_EXCEPTION_PURE("create dbms connect", "", Proto::ERROR_STORAGE)
+      TRY_EXECUTE(([this]() { _impl.reset(new sqlite::ConnectionPool()); }), onError);
       break;
   }
   if (_impl == nullptr) {

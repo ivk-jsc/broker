@@ -16,7 +16,7 @@
 
 #include "QueueDestination.h"
 #include "Exchange.h"
-#include "MiscDefines.h"
+#include "Exception.h"
 #include "QueueSender.h"
 #include "Session.h"
 
@@ -30,8 +30,9 @@ void QueueDestination::save(const Session &session, const MessageDataContainer &
   if (session.isTransactAcknowledge() && !_storage.hasTransaction(session)) {
     begin(session);
   }
-  TRY_POCO_DATA_EXCEPTION { _storage.save(session, sMessage); }
-  CATCH_POCO_DATA_EXCEPTION_NO_INVALID_SQL("can't save message", "", session.currentDBSession->rollbackTX(), ERROR_ON_SAVE_MESSAGE)
+  OnError onError;
+  onError.setError(ERROR_ON_SAVE_MESSAGE).setInfo("can't save message").setExpression([&session]() { session.currentDBSession->rollbackTX(); });
+  TRY_EXECUTE(([this, &session, &sMessage]() { _storage.save(session, sMessage); }), onError);
 
   session.currentDBSession->commitTX();
 

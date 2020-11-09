@@ -15,7 +15,7 @@
  */
 
 #include "TopicDestination.h"
-#include "MiscDefines.h"
+#include "Exception.h"
 #include "TopicSender.h"
 #include <Poco/StringTokenizer.h>
 #include <Poco/Hash.h>
@@ -29,20 +29,22 @@ TopicDestination::TopicDestination(const Exchange &exchange, const std::string &
 void TopicDestination::save(const Session &session, const MessageDataContainer &sMessage) {
   session.currentDBSession->commitTX();
 
-  TRY_POCO_DATA_EXCEPTION {
-    std::string routingK = routingKey(sMessage.message().destination_uri());
-    ParentTopics parentTopics = generateParentTopics(routingK);
-    bool needRemoveBody = true;
-    for (const auto &topic : parentTopics) {
-      if (notifySubscription(topic, session, sMessage)) {
-        needRemoveBody = false;
-      }
-    }
-    if (needRemoveBody) {
-      const_cast<MessageDataContainer &>(sMessage).removeLinkedFile();
-    }
-  }
-  CATCH_POCO_DATA_EXCEPTION_PURE("can't save message", "", ERROR_ON_SAVE_MESSAGE)
+  OnError onError;
+  onError.setError(ERROR_ON_SAVE_MESSAGE).setInfo("can't save message");
+  TRY_EXECUTE(([&sMessage, &session, this]() {
+                std::string routingK = routingKey(sMessage.message().destination_uri());
+                ParentTopics parentTopics = generateParentTopics(routingK);
+                bool needRemoveBody = true;
+                for (const auto &topic : parentTopics) {
+                  if (notifySubscription(topic, session, sMessage)) {
+                    needRemoveBody = false;
+                  }
+                }
+                if (needRemoveBody) {
+                  const_cast<MessageDataContainer &>(sMessage).removeLinkedFile();
+                }
+              }),
+              onError);
 }
 void TopicDestination::ack(const Session &session, const MessageDataContainer &sMessage) {
   const Proto::Ack &ack = sMessage.ack();

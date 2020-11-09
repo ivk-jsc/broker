@@ -34,7 +34,6 @@ include_directories(net)
 set(SOURCE_FILES
     version/About.cpp
     version/About.h
-    defines/MiscDefines.h
     defines/Defines.h
     defines/Exception.h
     defines/Exception.cpp

@@ -373,7 +373,8 @@ class FSUnorderedMap {
     }
   }
   size_t size() const { return _realSize; }
-  size_t capacity() const { return _size; };
+  size_t capacity() const { return _size; }
+  bool empty() const { return _size == 0; }
   const ItemType &at(size_t index) { return _items.at(index); }
   template <typename F>
   void applyForEach(const F &f) const {

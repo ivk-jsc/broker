@@ -21,8 +21,7 @@
 #include <Poco/URI.h>
 #include "Connection.h"
 #include "Exchange.h"
-#include "MiscDefines.h"
-#include "fake_cpp14.h"
+#include "Exception.h"
 #include "NextBindParam.h"
 
 namespace upmq {
@@ -46,14 +45,16 @@ Destination::Destination(const Exchange &exchange, const std::string &uri, Type 
   dbSession.commitTX();
 }
 Destination::~Destination() {
+  OnError onError;
+  onError.setError(ERROR_DESTINATION).setInfo("can't update subscription count");
   try {
     std::stringstream sql;
     if (!isTemporary()) {
-      //      sql << "update " << _exchange.destinationsT() << " set subscriptions_count = 0"
-      //          << " where id = \'" << _id << "\'"
-      //          << ";";
-      //      TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
-      //      CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't update subscription count", sql.str(), ERROR_UNKNOWN)
+      sql << "update " << _exchange.destinationsT() << " set subscriptions_count = 0"
+          << " where id = \'" << _id << "\'"
+          << ";";
+      onError.setSql(sql.str());
+      TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
     }
     {
       _subscriptions.changeForEach([this](SubscriptionsList::ItemType::KVPair &pair) {
@@ -63,13 +64,15 @@ Destination::~Destination() {
     }
     if (isTemporary()) {
       sql << "drop table if exists " << _subscriptionsT << ";" << non_std_endl;
-      TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
-      CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't update subscription count", sql.str(), ERROR_UNKNOWN)
+      onError.setInfo("can't drop temporary destination table for subscriptions").setSql(sql.str());
+      TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
+
       sql.str("");
       sql << "delete from " << _exchange.destinationsT() << " where id = \'" << _id << "\'"
           << ";";
-      TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
-      CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't update subscription count", sql.str(), ERROR_UNKNOWN)
+      onError.setInfo("can't delete record with temporary destination table").setSql(sql.str());
+      TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
+
       _storage.dropTables();
     }
   } catch (...) {
@@ -86,11 +89,13 @@ void Destination::createSubscriptionsTable(storage::DBMSSession &dbSession) {
       << ",create_time timestamp not null default current_timestamp"
       << ")"
       << ";";
+  OnError onError;
+  onError.setError(ERROR_DESTINATION).setInfo("can't init destination").setSql(sql.str()).setExpression([&dbSession]() { dbSession.close(); });
 
-  TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::now; }
-  CATCH_POCO_DATA_EXCEPTION("can't init destination", sql.str(), dbSession.close();, ERROR_DESTINATION)
+  TRY_EXECUTE_NOEXCEPT(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
 }
 void Destination::createJournalTable(storage::DBMSSession &dbSession) {
+  OnError onError;
   std::stringstream sql;
   sql << " create table if not exists " << STORAGE_CONFIG.messageJournal(_name) << "("
       << "    message_id text not null primary key"
@@ -98,8 +103,8 @@ void Destination::createJournalTable(storage::DBMSSession &dbSession) {
       << "   ,body_type int"
       << "   ,subscribers_count int not null default 0"
       << ");";
-  TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::now; }
-  CATCH_POCO_DATA_EXCEPTION_PURE("can't init destination", sql.str(), ERROR_DESTINATION);
+  onError.setError(ERROR_DESTINATION).setInfo("can't init destination").setSql(sql.str());
+  TRY_EXECUTE(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
 }
 std::string Destination::getStoredDestinationID(const Exchange &exchange, const std::string &name, Destination::Type type) {
   std::string id = Poco::UUIDGenerator::defaultGenerator().createRandom().toString();
@@ -112,10 +117,12 @@ std::string Destination::getStoredDestinationID(const Exchange &exchange, const 
   sql << "select id from " << exchange.destinationsT() << " where name = " << nextParam() << " and type = " << static_cast<int>(type) << ";";
 
   std::string tempId;
-  TRY_POCO_DATA_EXCEPTION {
-    dbSession << sql.str(), Poco::Data::Keywords::useRef(name), Poco::Data::Keywords::into(tempId), Poco::Data::Keywords::now;
-  }
-  CATCH_POCO_DATA_EXCEPTION_NO_INVALID_SQL("can't init destination", sql.str(), ;, ERROR_DESTINATION)
+  OnError onError;
+  onError.setError(ERROR_DESTINATION).setSql(sql.str()).setInfo("can't init destination");
+  TRY_EXECUTE(([&dbSession, &sql, &name, &tempId]() {
+                dbSession << sql.str(), Poco::Data::Keywords::useRef(name), Poco::Data::Keywords::into(tempId), Poco::Data::Keywords::now;
+              }),
+              onError);
 
   if (tempId.empty()) {
     saveDestinationId(id, dbSession, exchange, name, type);
@@ -139,8 +146,9 @@ void Destination::saveDestinationId(
       << "\'" << id << "\'"
       << "," << nextParam() << "," << static_cast<int>(type) << ")"
       << ";";
-  TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::useRef(name), Poco::Data::Keywords::now; }
-  CATCH_POCO_DATA_EXCEPTION_PURE("can't init destination", sql.str(), ERROR_DESTINATION)
+  OnError onError;
+  onError.setError(ERROR_DESTINATION).setInfo("can't init destination").setSql(sql.str());
+  TRY_EXECUTE(([&dbSession, &sql, &name]() { dbSession << sql.str(), Poco::Data::Keywords::useRef(name), Poco::Data::Keywords::now; }), onError);
 }
 void Destination::subscribe(const MessageDataContainer &sMessage) {
   const Proto::Subscribe &subscribe = sMessage.subscribe();
@@ -534,24 +542,27 @@ void Destination::loadDurableSubscriptions() {
   sql << "select "
       << "id, name, routing_key"
       << " from " << subscriptionsT() << " where type = " << type << ";";
+  OnError onError;
+  onError.setError(ERROR_ON_SUBSCRIPTION).setInfo("can't create subscription").setSql(sql.str());
+
   storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
   dbSession.beginTX(_id + "ldur", storage::DBMSSession::TransactionMode::READ);
-  TRY_POCO_DATA_EXCEPTION {
-    Poco::Data::Statement select(dbSession());
-    select << sql.str(), Poco::Data::Keywords::into(id), Poco::Data::Keywords::into(name), Poco::Data::Keywords::into(routingKey),
-        Poco::Data::Keywords::range(0, 1);
-    while (!select.done()) {
-      select.execute();
-      if (!id.empty() && !name.empty()) {
-        const std::string &rKey = (routingKey.isNull() ? emptyString : routingKey.value());
-        _subscriptions.emplace(std::string(name), createSubscription(name, rKey, static_cast<Subscription::Type>(type)));
-        auto item = _subscriptions.find(name);
-        subscribeOnNotify(*item);
-        item->setInited(false);
-      }
-    }
-  }
-  CATCH_POCO_DATA_EXCEPTION_PURE("can't create subscription", sql.str(), ERROR_ON_SUBSCRIPTION)
+  TRY_EXECUTE(([&dbSession, &sql, &id, &name, &routingKey, &type, this]() {
+                Poco::Data::Statement select(dbSession());
+                select << sql.str(), Poco::Data::Keywords::into(id), Poco::Data::Keywords::into(name), Poco::Data::Keywords::into(routingKey),
+                    Poco::Data::Keywords::range(0, 1);
+                while (!select.done()) {
+                  select.execute();
+                  if (!id.empty() && !name.empty()) {
+                    const std::string &rKey = (routingKey.isNull() ? emptyString : routingKey.value());
+                    _subscriptions.emplace(std::string(name), createSubscription(name, rKey, static_cast<Subscription::Type>(type)));
+                    auto item = _subscriptions.find(name);
+                    subscribeOnNotify(*item);
+                    item->setInited(false);
+                  }
+                }
+              }),
+              onError);
   dbSession.commitTX();
 }
 void Destination::bindWithSubscriber(const std::string &clientID, bool useFileLink) {

@@ -20,7 +20,6 @@
 #include "Consumer.h"
 #include "Exception.h"
 #include "Exchange.h"
-#include "MiscDefines.h"
 #include "Poco/Error.h"
 #include "Poco/File.h"
 #include "S2SProto.h"
@@ -44,16 +43,20 @@ Broker::Broker(std::string id)
       _writableIndexes(THREADS_CONFIG.writers) {
   std::stringstream sql;
   sql << "drop table if exists \"" << _id << "\";";
-  TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
-  CATCH_POCO_DATA_EXCEPTION_PURE("broker initialization error", sql.str(), ERROR_STORAGE);
+  OnError onError;
+  onError.setError(ERROR_STORAGE).setInfo("broker initialization error").setSql(sql.str());
+
+  TRY_EXECUTE(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
+
   sql.str("");
   sql << "create table if not exists \"" << _id << "\" ("
       << " client_id text not null unique"
       << ",create_time timestamp not null default current_timestamp"
       << ")"
       << ";";
-  TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
-  CATCH_POCO_DATA_EXCEPTION_PURE("broker initialization error", sql.str(), ERROR_STORAGE);
+  onError.setSql(sql.str());
+
+  TRY_EXECUTE(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
 }
 Broker::~Broker() {
   try {

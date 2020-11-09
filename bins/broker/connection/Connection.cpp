@@ -20,7 +20,6 @@
 #include "Broker.h"
 #include "DBMSSession.h"
 #include "Exception.h"
-#include "MiscDefines.h"
 #include "Exchange.h"
 
 namespace upmq {
@@ -35,14 +34,19 @@ Connection::Connection(const std::string &clientID)
   std::stringstream sql;
   storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
 
+  auto onErrExpr = [&dbSession]() { dbSession.rollbackTX(); };
+  OnError onError;
+  onError.setExpression(onErrExpr).setInfo("can't create connection").setSql(sql.str()).setError(ERROR_CONNECTION);
+
   sql << "create table if not exists " << _sessionsT << " ("
       << " id text not null primary key"
       << ",ack_type int not null"
       << ",create_time timestamp not null default current_timestamp"
       << ")"
       << ";";
-  TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::now; }
-  CATCH_POCO_DATA_EXCEPTION("can't create connection", sql.str(), dbSession.rollbackTX(), ERROR_CONNECTION);
+
+  TRY_EXECUTE(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
+
   sql.str("");
   sql << "create table if not exists " << _tcpT << " ("
       << " client_id text not null primary key"
@@ -50,16 +54,14 @@ Connection::Connection(const std::string &clientID)
       << ",create_time timestamp not null default current_timestamp"
       << ")"
       << ";";
-  TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::now; }
-  CATCH_POCO_DATA_EXCEPTION("can't create connection", sql.str(), dbSession.rollbackTX(), ERROR_CONNECTION);
+  TRY_EXECUTE(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
 
   sql.str("");
   sql << "insert into \"" << BROKER::Instance().id() << "\" (client_id) values "
       << "("
       << "\'" << _clientID << "\'"
       << ");";
-  TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::now; }
-  CATCH_POCO_DATA_EXCEPTION("can't create connection", sql.str(), dbSession.rollbackTX(), ERROR_CONNECTION);
+  TRY_EXECUTE(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
 }
 Connection::~Connection() {
   try {
@@ -67,19 +69,20 @@ Connection::~Connection() {
   } catch (...) {
   }
   try {
+    OnError onError;
+    onError.setError(ERROR_CONNECTION);
     std::stringstream sql;
     sql << "delete from \"" << BROKER::Instance().id() << "\" where client_id = \'" << _clientID << "\';";
-    TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
-    CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't delete client_id", sql.str(), ERROR_CONNECTION)
-
+    onError.setSql(sql.str()).setInfo("can't delete client_id");
+    TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
     sql.str("");
     sql << "drop table if exists " << _sessionsT << ";";
-    TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
-    CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't drop sessions", sql.str(), ERROR_CONNECTION)
+    onError.setSql(sql.str()).setInfo("can't drop sessions");
+    TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
     sql.str("");
     sql << "drop table if exists " << _tcpT << ";";
-    TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
-    CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't drop tcp connections", sql.str(), ERROR_CONNECTION)
+    onError.setSql(sql.str()).setInfo("can't drop tcp connections");
+    TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
   } catch (...) {
   }
 }
@@ -104,6 +107,9 @@ void Connection::addTcpConnection(size_t tcpConnectionNum) {
   if (it == _tcpConnections.end()) {
     _tcpConnections.insert(tcpConnectionNum);
     writeRWLock.unlock();
+    OnError onError;
+    onError.setError(ERROR_CLIENT_ID_EXISTS);
+
     std::stringstream sql;
     sql << "insert into " << _tcpT << "("
         << "client_id"
@@ -114,8 +120,8 @@ void Connection::addTcpConnection(size_t tcpConnectionNum) {
         << " \'" << _clientID << "\'"
         << "," << tcpConnectionNum << ")"
         << ";";
-    TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
-    CATCH_POCO_DATA_EXCEPTION_PURE("can't add tcp connection", sql.str(), ERROR_CLIENT_ID_EXISTS);
+    onError.setSql(sql.str()).setInfo("can't add tcp connection");
+    TRY_EXECUTE(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
     return;
   }
   throw EXCEPTION("connection already exists", _clientID + " : " + std::to_string(tcpConnectionNum), ERROR_CLIENT_ID_EXISTS);
@@ -126,10 +132,12 @@ void Connection::removeTcpConnection(size_t tcpConnectionNum) {
   if (it != _tcpConnections.end()) {
     _tcpConnections.erase(it);
     writeRWLock.unlock();
+    OnError onError;
+    onError.setError(ERROR_CONNECTION);
     std::stringstream sql;
     sql << "delete from " << _tcpT << " where tcp_id = " << tcpConnectionNum << ";";
-    TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
-    CATCH_POCO_DATA_EXCEPTION_PURE_NO_INVALIDEXCEPT_NO_EXCEPT("can't remove tcp connection", sql.str(), ERROR_CONNECTION)
+    onError.setSql(sql.str()).setInfo("can't remove tcp connection");
+    TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
   }
 }
 bool Connection::isTcpConnectionExists(size_t tcpConnectionNum) const {

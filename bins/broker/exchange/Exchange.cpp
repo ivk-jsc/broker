@@ -18,9 +18,8 @@
 #include <Poco/String.h>
 #include <Poco/StringTokenizer.h>
 #include <sstream>
-#include <fake_cpp14.h>
 #include "Broker.h"
-#include "MiscDefines.h"
+#include "Exception.h"
 
 namespace upmq {
 namespace broker {
@@ -41,8 +40,10 @@ Exchange::Exchange()
       << ",constraint \"" << BROKER::Instance().id() << "_destinations_index\" unique (name, type)"
       << ")"
       << ";";
-  TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
-  CATCH_POCO_DATA_EXCEPTION_PURE("can't init exchange", sql.str(), ERROR_STORAGE);
+  OnError onError;
+  onError.setError(ERROR_STORAGE).setInfo("can't init exchange").setSql(sql.str());
+
+  TRY_EXECUTE(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
 }
 Exchange::~Exchange() {
   try {
@@ -112,8 +113,14 @@ void Exchange::saveMessage(const Session &session, const MessageDataContainer &s
       << ";";
   session.currentDBSession = dbms::Instance().dbmsSessionPtr();
   session.currentDBSession->beginTX(message.message_id());
-  TRY_POCO_DATA_EXCEPTION { (*session.currentDBSession) << sql.str(), Poco::Data::Keywords::now; }
-  CATCH_POCO_DATA_EXCEPTION("can't save message", sql.str(), session.currentDBSession.reset(nullptr), ERROR_ON_SAVE_MESSAGE)
+
+  OnError onError;
+  onError.setError(ERROR_ON_SAVE_MESSAGE).setInfo("can't save message").setSql(sql.str()).setExpression([&session]() {
+    session.currentDBSession.reset(nullptr);
+  });
+
+  TRY_EXECUTE_NOEXCEPT(([&session, &sql]() { (*session.currentDBSession) << sql.str(), Poco::Data::Keywords::now; }), onError);
+
   dest.save(session, sMessage);
 }
 const std::string &Exchange::destinationsT() const { return _destinationsT; }
@@ -182,11 +189,13 @@ void Exchange::dropOwnedDestination(const std::string &clientId) {
 void Exchange::addSubscription(const upmq::broker::Session &session, const MessageDataContainer &sMessage) {
   Destination &dest = destination(sMessage.subscription().destination_uri(), DestinationCreationMode::NO_CREATE);
   if (dest.isBindToSubscriber(sMessage.clientID)) {
+    OnError onError;
+    onError.setError(ERROR_ON_SUBSCRIPTION).setInfo("can't update subscriptions count");
     dest.subscription(session, sMessage);
-    //    std::stringstream sql;
-    //    sql << "update " << _destinationsT << " set subscriptions_count = " << dest.subscriptionsTrueCount() << ";";
-    //    TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
-    //    CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't update subscriptions count", sql.str(), ERROR_ON_SUBSCRIPTION)
+    std::stringstream sql;
+    sql << "update " << _destinationsT << " set subscriptions_count = " << dest.subscriptionsTrueCount() << ";";
+    onError.setSql(sql.str());
+    TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
   } else {
     throw EXCEPTION("this destination was bound to another subscriber", dest.name() + " : " + sMessage.clientID, ERROR_ON_SUBSCRIPTION);
   }
@@ -284,7 +293,9 @@ std::vector<Destination::Info> Exchange::info() const {
   auto containDigit = [](const std::string &s) {
     bool has = false;
     std::for_each(s.begin(), s.end(), [&](const char &c) {
-      if (std::isdigit(c)) has = true;
+      if (std::isdigit(c)) {
+        has = true;
+      }
     });
     return has;
   };
@@ -302,37 +313,42 @@ std::vector<Destination::Info> Exchange::info() const {
   storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
   Poco::Data::Statement select(dbSession());
   Destination::Info destInfo;
-  TRY_POCO_DATA_EXCEPTION {
-    select << sql.str(), Poco::Data::Keywords::into(destInfo.id), Poco::Data::Keywords::into(destInfo.name),
-        Poco::Data::Keywords::into(*((int *)&destInfo.type)), Poco::Data::Keywords::into(destInfo.created), Poco::Data::Keywords::range(0, 1);
-    while (!select.done()) {
-      select.execute();
-      if (!destInfo.name.empty() && !destInfo.id.empty()) {
-        if (destInfo.name.find(TEMP_QUEUE_PREFIX "/") != std::string::npos) {
-          Poco::replaceInPlace(destInfo.name, TEMP_QUEUE_PREFIX "/", "");
-        } else if (destInfo.name.find(TEMP_TOPIC_PREFIX "/") != std::string::npos) {
-          Poco::replaceInPlace(destInfo.name, TEMP_TOPIC_PREFIX "/", "");
-        } else if (destInfo.name.find(QUEUE_PREFIX "/") != std::string::npos) {
-          Poco::replaceInPlace(destInfo.name, QUEUE_PREFIX "/", "");
-        } else if (destInfo.name.find(TOPIC_PREFIX "/") != std::string::npos) {
-          Poco::replaceInPlace(destInfo.name, TOPIC_PREFIX "/", "");
-        }
+  OnError onError;
+  onError.setError(ERROR_STORAGE).setInfo("can't get destinations info").setSql(sql.str());
 
-        destInfo.uri = Poco::toLower(Destination::typeName(destInfo.type)) + "://" + destInfo.name;
-        destInfo.dataPath = Exchange::mainDestinationPath(destInfo.uri);
-        size_t sz = 0;
-        if (containDigit(destInfo.name)) {
-          sz = destInfo.name.size();
-        }
-        auto resultInfo = std::find_if(
-            infosGroup[sz].begin(), infosGroup[sz].end(), [&destInfo](const Destination::Info &info) { return info.name == destInfo.name; });
-        if (resultInfo == infosGroup[sz].end()) {
-          infosGroup[sz].emplace_back(destInfo);
-        }
-      }
-    }
-  }
-  CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't get destinations info", sql.str(), ERROR_STORAGE)
+  TRY_EXECUTE_NOEXCEPT(([&select, &sql, &destInfo, &containDigit, &infosGroup]() {
+                         select << sql.str(), Poco::Data::Keywords::into(destInfo.id), Poco::Data::Keywords::into(destInfo.name),
+                             Poco::Data::Keywords::into(*((int *)&destInfo.type)), Poco::Data::Keywords::into(destInfo.created),
+                             Poco::Data::Keywords::range(0, 1);
+                         while (!select.done()) {
+                           select.execute();
+                           if (!destInfo.name.empty() && !destInfo.id.empty()) {
+                             if (destInfo.name.find(TEMP_QUEUE_PREFIX "/") != std::string::npos) {
+                               Poco::replaceInPlace(destInfo.name, TEMP_QUEUE_PREFIX "/", "");
+                             } else if (destInfo.name.find(TEMP_TOPIC_PREFIX "/") != std::string::npos) {
+                               Poco::replaceInPlace(destInfo.name, TEMP_TOPIC_PREFIX "/", "");
+                             } else if (destInfo.name.find(QUEUE_PREFIX "/") != std::string::npos) {
+                               Poco::replaceInPlace(destInfo.name, QUEUE_PREFIX "/", "");
+                             } else if (destInfo.name.find(TOPIC_PREFIX "/") != std::string::npos) {
+                               Poco::replaceInPlace(destInfo.name, TOPIC_PREFIX "/", "");
+                             }
+
+                             destInfo.uri = Poco::toLower(Destination::typeName(destInfo.type)) + "://" + destInfo.name;
+                             destInfo.dataPath = Exchange::mainDestinationPath(destInfo.uri);
+                             size_t sz = 0;
+                             if (containDigit(destInfo.name)) {
+                               sz = destInfo.name.size();
+                             }
+                             auto resultInfo = std::find_if(infosGroup[sz].begin(), infosGroup[sz].end(), [&destInfo](const Destination::Info &info) {
+                               return info.name == destInfo.name;
+                             });
+                             if (resultInfo == infosGroup[sz].end()) {
+                               infosGroup[sz].emplace_back(destInfo);
+                             }
+                           }
+                         }
+                       }),
+                       onError);
 
   for (auto &item : infosGroup) {
     std::sort(item.second.begin(), item.second.end(), [](const Destination::Info &l, const Destination::Info &r) { return (l.name < r.name); });

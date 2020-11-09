@@ -90,7 +90,7 @@ class Storage {
   std::vector<std::string> generateSQLMainTableIndexes(const std::string &tableName) const;
   std::string generateSQLProperties() const;
   std::vector<MessageInfo> getMessagesBelow(const upmq::broker::Session &session, const std::string &messageID) const;
-  void setMessageToWasSent(const std::string &messageID, const Consumer &consumer);
+  void setMessageToWasSent(const std::string &messageID, storage::DBMSSession &dbSession, const Consumer &consumer);
   void setMessagesToWasSent(storage::DBMSSession &dbSession, const Consumer &consumer);
   void setMessageToDelivered(const upmq::broker::Session &session, const std::string &messageID);
   void setMessagesToNotSent(const Consumer &consumer);

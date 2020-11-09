@@ -15,8 +15,8 @@
  */
 
 #include "MappedDBMessage.h"
-#include <Session.h>
-#include "MiscDefines.h"
+#include "Session.h"
+#include "Exception.h"
 
 namespace upmq {
 namespace broker {
@@ -30,8 +30,11 @@ T getPropertyValue(const std::string &propName, const std::string &messageID, co
   sql << "select " << propName << " from " << storage.messageTableID() << " where message_id = \'" << messageID << "\'";
   // not necessary to begin transaction, because this function always using in transaction
   storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
-  TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::into(result), Poco::Data::Keywords::now; }
-  CATCH_POCO_DATA_EXCEPTION_PURE("can't get message property : " + propName, sql.str(), ERROR_ON_GET_MESSAGE)
+  OnError onError;
+  onError.setError(ERROR_ON_GET_MESSAGE).setInfo("can't get message property : " + propName).setSql(sql.str());
+
+  TRY_EXECUTE(([&dbSession, &sql, &result]() { dbSession << sql.str(), Poco::Data::Keywords::into(result), Poco::Data::Keywords::now; }), onError);
+
   return result;
 }
 
@@ -77,53 +80,56 @@ void MappedDBMessage::processProperties(PropertyHandler &handler, const std::str
       << " and property_name = \'" << identifier << "\'"
       << ";";
 
-  TRY_POCO_DATA_EXCEPTION {
-    *dbmsConnection << sql.str(), Poco::Data::Keywords::into(properties), Poco::Data::Keywords::now;
+  OnError onError;
+  onError.setError(ERROR_ON_GET_MESSAGE).setInfo("can't get message properties").setSql(sql.str());
 
-    for (const auto &property : properties) {
-      switch (property.get<PropVals::prop_type>()) {
-        case Property::kValueString: {
-          handler.handleString(property.get<PropVals::prop_name>(), property.get<PropVals::string_val>().value());
-        } break;
+  TRY_EXECUTE(([this, &sql, &properties, &handler]() {
+                *dbmsConnection << sql.str(), Poco::Data::Keywords::into(properties), Poco::Data::Keywords::now;
 
-        case Property::kValueChar: {
-          handler.handleInt8(property.get<PropVals::prop_name>(), static_cast<int8_t>(property.get<PropVals::char_val>().value()));
-        } break;
+                for (const auto &property : properties) {
+                  switch (property.get<PropVals::prop_type>()) {
+                    case Property::kValueString: {
+                      handler.handleString(property.get<PropVals::prop_name>(), property.get<PropVals::string_val>().value());
+                    } break;
 
-        case Property::kValueBool: {
-          handler.handleBool(property.get<PropVals::prop_name>(), property.get<PropVals::bool_val>().value());
-        } break;
+                    case Property::kValueChar: {
+                      handler.handleInt8(property.get<PropVals::prop_name>(), static_cast<int8_t>(property.get<PropVals::char_val>().value()));
+                    } break;
 
-        case Property::kValueByte: {
-          handler.handleUint8(property.get<PropVals::prop_name>(), static_cast<uint8_t>(property.get<PropVals::byte_val>().value()));
-        } break;
+                    case Property::kValueBool: {
+                      handler.handleBool(property.get<PropVals::prop_name>(), property.get<PropVals::bool_val>().value());
+                    } break;
 
-        case Property::kValueShort: {
-          handler.handleInt16(property.get<PropVals::prop_name>(), static_cast<int16_t>(property.get<PropVals::short_val>().value()));
-        } break;
+                    case Property::kValueByte: {
+                      handler.handleUint8(property.get<PropVals::prop_name>(), static_cast<uint8_t>(property.get<PropVals::byte_val>().value()));
+                    } break;
 
-        case Property::kValueInt: {
-          handler.handleInt32(property.get<PropVals::prop_name>(), property.get<PropVals::int_val>().value());
-        } break;
+                    case Property::kValueShort: {
+                      handler.handleInt16(property.get<PropVals::prop_name>(), static_cast<int16_t>(property.get<PropVals::short_val>().value()));
+                    } break;
 
-        case Property::kValueLong: {
-          handler.handleInt64(property.get<PropVals::prop_name>(), property.get<PropVals::long_val>().value());
-        } break;
+                    case Property::kValueInt: {
+                      handler.handleInt32(property.get<PropVals::prop_name>(), property.get<PropVals::int_val>().value());
+                    } break;
 
-        case Property::kValueFloat: {
-          handler.handleFloat(property.get<PropVals::prop_name>(), property.get<PropVals::float_val>().value());
-        } break;
+                    case Property::kValueLong: {
+                      handler.handleInt64(property.get<PropVals::prop_name>(), property.get<PropVals::long_val>().value());
+                    } break;
 
-        case Property::kValueDouble: {
-          handler.handleDouble(property.get<PropVals::prop_name>(), property.get<PropVals::double_val>().value());
-        } break;
+                    case Property::kValueFloat: {
+                      handler.handleFloat(property.get<PropVals::prop_name>(), property.get<PropVals::float_val>().value());
+                    } break;
 
-        default:
-          break;
-      }
-    }
-  }
-  CATCH_POCO_DATA_EXCEPTION_PURE("can't get message properties", sql.str(), ERROR_ON_GET_MESSAGE)
+                    case Property::kValueDouble: {
+                      handler.handleDouble(property.get<PropVals::prop_name>(), property.get<PropVals::double_val>().value());
+                    } break;
+
+                    default:
+                      break;
+                  }
+                }
+              }),
+              onError);
 }
 }  // namespace storage
 }  // namespace broker

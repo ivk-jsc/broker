@@ -122,9 +122,9 @@ class MessageDataContainer {
   void setDeliveryCount(int count);
   void debugPrintHeader() const;
   std::string typeName() const;
-  std::string header = "";
-  mutable std::string data = "";
-  std::string clientID = "";
+  std::string header;
+  mutable std::string data;
+  std::string clientID;
   size_t handlerNum = 0;
   void reparseHeader();
   void resetSessionId(const std::string &sessionID);

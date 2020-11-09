@@ -25,9 +25,8 @@
 #include "Exception.h"
 #include "Exchange.h"
 #include "MessageStorage.h"
-#include "MiscDefines.h"
+#include "Exception.h"
 #include "TopicSender.h"
-#include <fake_cpp14.h>
 
 namespace upmq {
 namespace broker {
@@ -51,10 +50,13 @@ Subscription::Subscription(const Destination &destination, const std::string &id
       _roundRobinCache(new std::deque<std::shared_ptr<MessageDataContainer>>) {
   _storage.setParent(&destination);
 
+  OnError onError;
+
   std::stringstream sql;
   sql << "drop table if exists " << _consumersT << ";" << non_std_endl;
-  TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
-  CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't init consumers table for subscription", sql.str(), ERROR_UNKNOWN)
+  onError.setError(ERROR_UNKNOWN).setInfo("can't init consumers table for subscription").setSql(sql.str());
+  TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
+
   sql.str("");
   sql << "create table if not exists " << _consumersT << "("
       << " client_id text not null"
@@ -67,8 +69,9 @@ Subscription::Subscription(const Destination &destination, const std::string &id
       << ",constraint \"" << _id << "_tcp_index\" unique (client_id, tcp_id, session, selector)"
       << ")"
       << ";";
-  TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
-  CATCH_POCO_DATA_EXCEPTION_PURE("can't init destination", sql.str(), ERROR_DESTINATION)
+  onError.setError(ERROR_DESTINATION).setInfo("can't init destination").setSql(sql.str());
+  TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
+
   sql.str("");
   std::string ignorsert = "insert or ignore";
   std::string postfix;
@@ -90,10 +93,12 @@ Subscription::Subscription(const Destination &destination, const std::string &id
 
   storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
   dbSession.beginTX(_id);
-  TRY_POCO_DATA_EXCEPTION {
-    dbSession << sql.str(), Poco::Data::Keywords::useRef(_name), Poco::Data::Keywords::useRef(_routingKey), Poco::Data::Keywords::now;
-  }
-  CATCH_POCO_DATA_EXCEPTION_NO_INVALID_SQL("can't create subscription", sql.str(), ;, ERROR_ON_SUBSCRIPTION)
+
+  onError.setError(ERROR_ON_SUBSCRIPTION).setSql(sql.str()).setInfo("can't create subscription");
+  TRY_EXECUTE(([&dbSession, &sql, this]() {
+                dbSession << sql.str(), Poco::Data::Keywords::useRef(_name), Poco::Data::Keywords::useRef(_routingKey), Poco::Data::Keywords::now;
+              }),
+              onError);
   dbSession.commitTX();
 }
 Subscription::~Subscription() noexcept {
@@ -127,8 +132,12 @@ void Subscription::save(const Session &session, const MessageDataContainer &sMes
     session.currentDBSession->commitTX();
 
     session.currentDBSession->beginTX(_id + message.message_id());
-    TRY_POCO_DATA_EXCEPTION { _storage.save(session, sMessage); }
-    CATCH_POCO_DATA_EXCEPTION_PURE("can't save message", "", ERROR_ON_SAVE_MESSAGE)
+
+    OnError onError;
+    onError.setError(ERROR_ON_SAVE_MESSAGE).setInfo("can't save message");
+
+    TRY_EXECUTE(([this, &session, &sMessage]() { _storage.save(session, sMessage); }), onError);
+
     session.currentDBSession->commitTX();
     _destination.postNewMessageEvent();
   }
@@ -153,6 +162,10 @@ void Subscription::addClient(
     clientID.append("-browser");
   }
   storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
+
+  OnError onError;
+  onError.setError(ERROR_ON_SUBSCRIPTION).setInfo("can't add consumer");
+
   if (!selector.empty()) {
     sql << "select count(*) from " << _consumersT << " where "
         << " client_id = \'" << clientID << "\'"
@@ -166,8 +179,10 @@ void Subscription::addClient(
 
     size_t count = 0;
     dbSession.beginTX(objectID);
-    TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::into(count), Poco::Data::Keywords::now; }
-    CATCH_POCO_DATA_EXCEPTION_PURE("can't add consumer", sql.str(), ERROR_ON_SUBSCRIPTION)
+
+    onError.setSql(sql.str());
+
+    TRY_EXECUTE(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
 
     if (count > 0) {
       throw EXCEPTION("client already exists", sql.str(), ERROR_ON_SUBSCRIPTION);
@@ -187,12 +202,15 @@ void Subscription::addClient(
   sql << "," << nextParam();
   sql << "," << nextParam() << ");";
 
-  TRY_POCO_DATA_EXCEPTION {
-    dbSession << sql.str(), Poco::Data::Keywords::use(clientID), Poco::Data::Keywords::use(tcpConnectionNum), Poco::Data::Keywords::useRef(selector),
-        Poco::Data::Keywords::useRef(objectID), Poco::Data::Keywords::useRef(session.id()), Poco::Data::Keywords::use(nolocal),
-        Poco::Data::Keywords::now;
-  }
-  CATCH_POCO_DATA_EXCEPTION_PURE("can't add consumer", sql.str(), ERROR_ON_SUBSCRIPTION)
+  onError.setSql(sql.str());
+
+  TRY_EXECUTE(([&dbSession, &sql, &clientID, &tcpConnectionNum, &objectID, &session, &nolocal, &selector]() {
+                dbSession << sql.str(), Poco::Data::Keywords::use(clientID), Poco::Data::Keywords::use(tcpConnectionNum),
+                    Poco::Data::Keywords::useRef(selector), Poco::Data::Keywords::useRef(objectID), Poco::Data::Keywords::useRef(session.id()),
+                    Poco::Data::Keywords::useRef(nolocal), Poco::Data::Keywords::now;
+              }),
+              onError);
+
   dbSession.commitTX();
 
   std::shared_ptr<std::deque<std::shared_ptr<MessageDataContainer>>> selectCache;
@@ -442,10 +460,11 @@ const Consumer &Subscription::byClientAndHandlerAndSessionIDs(const std::string 
   throw EXCEPTION("consumer not found", clientID + " : " + std::to_string(handlerNum), ERROR_UNKNOWN);
 }
 Subscription::ConsumersListType::iterator Subscription::eraseConsumer(ConsumersListType::iterator it) {
+  OnError onError;
+  onError.setError(ERROR_ON_UNSUBSCRIPTION).setInfo("can't remove consumer");
   std::stringstream sql;
   sql << "delete from " << _consumersT << " where object_id = \'" << it->second.objectID << "\';";
-  TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
-  CATCH_POCO_DATA_EXCEPTION_PURE_NO_INVALIDEXCEPT_NO_EXCEPT("can't remove consumer", sql.str(), ERROR_ON_UNSUBSCRIPTION)
+  TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
   _destination.remFromNotAck(it->second.objectID);
   return _consumers.erase(it);
 }
@@ -507,22 +526,26 @@ void Subscription::destroy() {
     _storage.dropTables();
   }
 
+  OnError onError;
+  onError.setError(ERROR_ON_UNSUBSCRIPTION).setInfo("can't erase subscription");
   std::stringstream sql;
   sql << "drop table if exists " << _consumersT << ";" << non_std_endl;
   storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
   dbSession.beginTX(_id);
-  TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::now; }
-  CATCH_POCO_DATA_EXCEPTION_PURE_NO_INVALIDEXCEPT_NO_EXCEPT("can't erase subscription", sql.str(), ERROR_ON_UNSUBSCRIPTION)
+
+  onError.setSql(sql.str());
+  TRY_EXECUTE_NOEXCEPT(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
+
   if (!isDurable()) {
     sql.str("");
     sql << "delete from " << _destination.subscriptionsT() << " where id = \'" << _id << "\';";
-    TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::now; }
-    CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't erase subscription", sql.str(), ERROR_ON_UNSUBSCRIPTION)
+    onError.setSql(sql.str());
+    TRY_EXECUTE_NOEXCEPT(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
 
-    //    sql.str("");
-    //    sql << "update " << EXCHANGE::Instance().destinationsT() << " set subscriptions_count = " << _destination.subscriptionsTrueCount();
-    //    TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::now; }
-    //    CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't update subscriptions count", sql.str(), ERROR_ON_UNSUBSCRIPTION)
+    sql.str("");
+    sql << "update " << EXCHANGE::Instance().destinationsT() << " set subscriptions_count = " << _destination.subscriptionsTrueCount();
+    onError.setInfo("can't update subscriptions count").setSql(sql.str());
+    TRY_EXECUTE_NOEXCEPT(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
   }
   dbSession.commitTX();
   _isDestroyed = true;

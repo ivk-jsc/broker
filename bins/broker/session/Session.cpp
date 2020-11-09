@@ -16,9 +16,8 @@
 
 #include <utility>
 #include "Connection.h"
-#include "Defines.h"
 #include "Exchange.h"
-#include "MiscDefines.h"
+#include "Exception.h"
 
 namespace upmq {
 namespace broker {
@@ -38,8 +37,10 @@ Session::Session(const Connection &connection, std::string id, Proto::Acknowledg
       << "\'" << _id << "\'"
       << "," << _acknowledgeType << ")"
       << ";";
-  TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
-  CATCH_POCO_DATA_EXCEPTION_PURE("can't create session", sql.str(), ERROR_ON_SESSION);
+  OnError onError;
+  onError.setError(ERROR_ON_SESSION).setInfo("can't create session").setSql(sql.str());
+
+  TRY_EXECUTE(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
 }
 Session::~Session() {
   if (isTransactAcknowledge()) {
@@ -73,10 +74,11 @@ void Session::dropTemporaryDestination() const {
   }
 }
 void Session::deleteFromConnectionTable() const {
+  OnError onError;
   std::stringstream sql;
   sql << "delete from " << _connection.sessionsT() << " where id = \'" << _id << "\';";
-  TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
-  CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't delete from session table", sql.str(), ERROR_ON_UNSESSION)
+  onError.setError(ERROR_ON_UNSESSION).setInfo("can't delete from session table").setSql(sql.str());
+  TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
 }
 std::string Session::acknowlegeName(Proto::Acknowledge acknowledgeType) {
   switch (acknowledgeType) {
