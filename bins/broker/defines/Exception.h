@@ -21,6 +21,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <functional>
 #include <Poco/Error.h>
 #include <Poco/Nullable.h>
 #include <fake_cpp14.h>
