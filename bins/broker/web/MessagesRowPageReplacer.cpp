@@ -99,7 +99,7 @@ std::string MessagesRowPageReplacer::numReplacer() { return std::to_string((long
 std::string MessagesRowPageReplacer::deliveredReplacer() { return _delivered; }
 
 std::string MessagesRowPageReplacer::processModeReplacer() {
-  switch (static_cast<message::DeliveryStatus>(_processMode)) {
+  switch (static_cast<message::_DeliveryStatus>(_processMode)) {
     case message::NOT_SENT:
       return MakeStringify(NOT_SENT);
     case message::WAS_SENT:

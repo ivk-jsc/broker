@@ -21,7 +21,6 @@
 #include "Exception.h"
 #include "Exchange.h"
 #include "Poco/Error.h"
-#include "Poco/File.h"
 #include "S2SProto.h"
 #include "Session.h"
 #include "Version.hpp"
@@ -44,7 +43,7 @@ Broker::Broker(std::string id)
   std::stringstream sql;
   sql << "drop table if exists \"" << _id << "\";";
   OnError onError;
-  onError.setError(ERROR_STORAGE).setInfo("broker initialization error").setSql(sql.str());
+  onError.setError(Proto::ERROR_STORAGE).setInfo("broker initialization error").setSql(sql.str());
 
   TRY_EXECUTE(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
 
@@ -70,68 +69,68 @@ void Broker::onEvent(const AsyncTCPHandler &ahandler, MessageDataContainer &sMes
   std::shared_ptr<MessageDataContainer> outMessage = std::make_shared<MessageDataContainer>(new Proto::ProtoMessage());
   try {
     switch (static_cast<int>(sMessage.type())) {
-      case ProtoMessage::kConnect: {
+      case Proto::ProtoMessage::kConnect: {
         onConnect(ahandler, sMessage, *outMessage);
       } break;
-      case ProtoMessage::kClientInfo: {
+      case Proto::ProtoMessage::kClientInfo: {
         onSetClientId(ahandler, sMessage, *outMessage);
       } break;
-      case ProtoMessage::kDisconnect: {
+      case Proto::ProtoMessage::kDisconnect: {
         onDisconnect(ahandler, sMessage, *outMessage);
       } break;
-      case ProtoMessage::kSession: {
+      case Proto::ProtoMessage::kSession: {
         onCreateSession(ahandler, sMessage, *outMessage);
       } break;
-      case ProtoMessage::kUnsession: {
+      case Proto::ProtoMessage::kUnsession: {
         onCloseSession(ahandler, sMessage, *outMessage);
       } break;
-      case ProtoMessage::kDestination: {
+      case Proto::ProtoMessage::kDestination: {
         onDestination(ahandler, sMessage, *outMessage);
       } break;
-      case ProtoMessage::kUndestination: {
+      case Proto::ProtoMessage::kUndestination: {
         onUndestination(ahandler, sMessage, *outMessage);
       } break;
-      case ProtoMessage::kBegin: {
+      case Proto::ProtoMessage::kBegin: {
         onBegin(ahandler, sMessage, *outMessage);
       } break;
-      case ProtoMessage::kCommit: {
+      case Proto::ProtoMessage::kCommit: {
         onCommit(ahandler, sMessage, *outMessage);
       } break;
-      case ProtoMessage::kAbort: {
+      case Proto::ProtoMessage::kAbort: {
         onAbort(ahandler, sMessage, *outMessage);
       } break;
-      case ProtoMessage::kMessage: {
+      case Proto::ProtoMessage::kMessage: {
         onMessage(ahandler, sMessage, *outMessage);
       } break;
-      case ProtoMessage::kAck: {
+      case Proto::ProtoMessage::kAck: {
         onAcknowledge(ahandler, sMessage, *outMessage);
       } break;
-      case ProtoMessage::kSender: {
+      case Proto::ProtoMessage::kSender: {
         onSender(ahandler, sMessage, *outMessage);
       } break;
-      case ProtoMessage::kUnsender: {
+      case Proto::ProtoMessage::kUnsender: {
         onUnsender(ahandler, sMessage, *outMessage);
       } break;
-      case ProtoMessage::kSubscription: {
+      case Proto::ProtoMessage::kSubscription: {
         onSubscription(ahandler, sMessage, *outMessage);
       } break;
-      case ProtoMessage::kSubscribe: {
+      case Proto::ProtoMessage::kSubscribe: {
         onSubscribe(ahandler, sMessage, *outMessage);
       } break;
-      case ProtoMessage::kUnsubscribe: {
+      case Proto::ProtoMessage::kUnsubscribe: {
         onUnsubscribe(ahandler, sMessage, *outMessage);
       } break;
-      case ProtoMessage::kUnsubscription: {
+      case Proto::ProtoMessage::kUnsubscription: {
         onUnsubscription(ahandler, sMessage, *outMessage);
       } break;
-      case ProtoMessage::kBrowser: {
+      case Proto::ProtoMessage::kBrowser: {
         onBrowser(ahandler, sMessage, *outMessage);
       } break;
-      case ProtoMessage::kPing: {
+      case Proto::ProtoMessage::kPing: {
         outMessage->protoMessage().mutable_pong();
       } break;
       default:
-        throw EXCEPTION("unknown message type", std::to_string(static_cast<int>(sMessage.type())), ERROR_UNKNOWN);
+        throw EXCEPTION("unknown message type", std::to_string(static_cast<int>(sMessage.type())), Proto::ERROR_UNKNOWN);
     }
   } catch (Exception &ex) {
     auto &protoMessage = outMessage->protoMessage();
@@ -168,7 +167,7 @@ void Broker::onConnect(const AsyncTCPHandler &tcpHandler, const MessageDataConta
     it = _connections.find(connect.client_id());
   } else {
     if ((*it)->isTcpConnectionExists(sMessage.handlerNum)) {
-      throw EXCEPTION("connection already exists", connect.client_id() + " : " + std::to_string(sMessage.handlerNum), ERROR_CLIENT_ID_EXISTS);
+      throw EXCEPTION("connection already exists", connect.client_id() + " : " + std::to_string(sMessage.handlerNum), Proto::ERROR_CLIENT_ID_EXISTS);
     }
   }
   (*it)->addTcpConnection(sMessage.handlerNum);
@@ -223,10 +222,10 @@ void Broker::onSetClientId(const AsyncTCPHandler &tcpHandler, const MessageDataC
                                   .append(clientInfo.new_client_id()));
 
   if (isConnectionExists(clientInfo.new_client_id())) {
-    throw EXCEPTION("connection already exists", clientInfo.new_client_id(), ERROR_CLIENT_ID_EXISTS);
+    throw EXCEPTION("connection already exists", clientInfo.new_client_id(), Proto::ERROR_CLIENT_ID_EXISTS);
   }
   if (!isConnectionExists(clientInfo.old_client_id())) {
-    throw EXCEPTION("connection not found", clientInfo.old_client_id(), ERROR_CONNECTION);
+    throw EXCEPTION("connection not found", clientInfo.old_client_id(), Proto::ERROR_CONNECTION);
   }
   std::unique_ptr<Connection> connection;
   {
@@ -259,7 +258,7 @@ void Broker::onCreateSession(const AsyncTCPHandler &tcpHandler, const MessageDat
                                   .append(" ack : ")
                                   .append(Session::acknowlegeName(session.acknowledge_type())));
   if (tcpHandler.connection() == nullptr) {
-    throw EXCEPTION("connection not found", sMessage.clientID, ERROR_ON_SESSION);
+    throw EXCEPTION("connection not found", sMessage.clientID, Proto::ERROR_ON_SESSION);
   }
   tcpHandler.connection()->addSession(session.session_id(), session.acknowledge_type());
 }
@@ -268,7 +267,7 @@ void Broker::onCloseSession(const AsyncTCPHandler &tcpHandler, const MessageData
   const Proto::Unsession &unsession = sMessage.unsession();
   tcpHandler.log->information("%s", std::to_string(sMessage.handlerNum).append(" # => ").append(" id : ").append(unsession.session_id()));
   if (tcpHandler.connection() == nullptr) {
-    throw EXCEPTION("connection not found", sMessage.clientID, ERROR_ON_UNSESSION);
+    throw EXCEPTION("connection not found", sMessage.clientID, Proto::ERROR_ON_UNSESSION);
   }
   tcpHandler.connection()->removeSession(unsession.session_id(), tcpHandler.num);
 }
@@ -277,7 +276,7 @@ void Broker::onBegin(const AsyncTCPHandler &tcpHandler, const MessageDataContain
   const Proto::Begin &begin = sMessage.begin();
   tcpHandler.log->information("%s", std::to_string(sMessage.handlerNum).append(" # => ").append(" : on session : ").append(begin.session_id()));
   if (tcpHandler.connection() == nullptr) {
-    throw EXCEPTION("connection not found", sMessage.clientID, ERROR_ON_BEGIN);
+    throw EXCEPTION("connection not found", sMessage.clientID, Proto::ERROR_ON_BEGIN);
   }
   tcpHandler.connection()->beginTX(begin.session_id());
 }
@@ -287,7 +286,7 @@ void Broker::onCommit(const AsyncTCPHandler &tcpHandler, const MessageDataContai
   tcpHandler.log->information("%s", std::to_string(sMessage.handlerNum).append(" # => ").append(" : on session : ").append(commit.session_id()));
 
   if (tcpHandler.connection() == nullptr) {
-    throw EXCEPTION("connection not found", sMessage.clientID, ERROR_ON_COMMIT);
+    throw EXCEPTION("connection not found", sMessage.clientID, Proto::ERROR_ON_COMMIT);
   }
   tcpHandler.connection()->commitTX(commit.session_id());
 }
@@ -296,7 +295,7 @@ void Broker::onAbort(const AsyncTCPHandler &tcpHandler, const MessageDataContain
   const Proto::Abort &abort = sMessage.abort();
   tcpHandler.log->information("%s", std::to_string(sMessage.handlerNum).append(" # => ").append(" : on session : ").append(abort.session_id()));
   if (tcpHandler.connection() == nullptr) {
-    throw EXCEPTION("connection not found", sMessage.clientID, ERROR_ON_COMMIT);
+    throw EXCEPTION("connection not found", sMessage.clientID, Proto::ERROR_ON_COMMIT);
   }
   tcpHandler.connection()->abortTX(abort.session_id());
 }
@@ -304,10 +303,10 @@ void Broker::onMessage(const AsyncTCPHandler &tcpHandler, const MessageDataConta
   UNUSED_VAR(outMessage);
 
   if (tcpHandler.connection() == nullptr) {
-    throw EXCEPTION("connection not found", sMessage.clientID, ERROR_ON_SAVE_MESSAGE);
+    throw EXCEPTION("connection not found", sMessage.clientID, Proto::ERROR_ON_SAVE_MESSAGE);
   }
 
-  const Message &constMessage = sMessage.message();
+  const Proto::Message &constMessage = sMessage.message();
   Destination &dest = EXCHANGE::Instance().destination(constMessage.destination_uri());
 
   if (DESTINATION_CONFIG.forwardByProperty && (constMessage.property_size() > 0)) {
@@ -349,7 +348,7 @@ void Broker::onSender(const AsyncTCPHandler &tcpHandler, const MessageDataContai
   UNUSED_VAR(outMessage);
 
   if (tcpHandler.connection() == nullptr) {
-    throw EXCEPTION("connection not found", sMessage.clientID, ERROR_ON_SENDER);
+    throw EXCEPTION("connection not found", sMessage.clientID, Proto::ERROR_ON_SENDER);
   }
   Destination &dest =
       EXCHANGE::Instance().destination(sMessage.sender().destination_uri());  // NOTE: !NEED for pre-creation of destination, try to mitigate deadlock
@@ -360,14 +359,14 @@ void Broker::onUnsender(const AsyncTCPHandler &tcpHandler, const MessageDataCont
   UNUSED_VAR(outMessage);
 
   if (tcpHandler.connection() == nullptr) {
-    throw EXCEPTION("connection not found", sMessage.clientID, ERROR_ON_UNSENDER);
+    throw EXCEPTION("connection not found", sMessage.clientID, Proto::ERROR_ON_UNSENDER);
   }
   tcpHandler.connection()->removeSender(sMessage);
 }
 void Broker::onSubscription(const AsyncTCPHandler &tcpHandler, const MessageDataContainer &sMessage, MessageDataContainer &outMessage) {
   UNUSED_VAR(outMessage);
   if (tcpHandler.connection() == nullptr) {
-    throw EXCEPTION("connection not found", sMessage.clientID, ERROR_ON_SUBSCRIPTION);
+    throw EXCEPTION("connection not found", sMessage.clientID, Proto::ERROR_ON_SUBSCRIPTION);
   }
   tcpHandler.log->information("%s",
                               std::to_string(sMessage.handlerNum)
@@ -383,10 +382,10 @@ void Broker::onSubscription(const AsyncTCPHandler &tcpHandler, const MessageData
 void Broker::onSubscribe(const AsyncTCPHandler &tcpHandler, const MessageDataContainer &sMessage, MessageDataContainer &outMessage) {
   UNUSED_VAR(outMessage);
   UNUSED_VAR(tcpHandler);
-  const Subscribe &subscribe = sMessage.subscribe();
+  const Proto::Subscribe &subscribe = sMessage.subscribe();
   const std::string &name = subscribe.subscription_name();
   if (name.empty()) {
-    throw EXCEPTION("subscription name is empty", "subscribe", ERROR_ON_SUBSCRIBE);
+    throw EXCEPTION("subscription name is empty", "subscribe", Proto::ERROR_ON_SUBSCRIBE);
   }
   EXCHANGE::Instance().destination(subscribe.destination_uri(), Exchange::DestinationCreationMode::NO_CREATE).subscribe(sMessage);
 }
@@ -396,7 +395,7 @@ void Broker::onUnsubscribe(const AsyncTCPHandler &tcpHandler, const MessageDataC
   try {
     EXCHANGE::Instance().destination(sMessage.unsubscribe().destination_uri(), Exchange::DestinationCreationMode::NO_CREATE).unsubscribe(sMessage);
   } catch (Exception &ex) {
-    if (ex.error() != ERROR_UNKNOWN) {
+    if (ex.error() != Proto::ERROR_UNKNOWN) {
       throw Exception(ex);
     }
   }
@@ -404,12 +403,12 @@ void Broker::onUnsubscribe(const AsyncTCPHandler &tcpHandler, const MessageDataC
 void Broker::onUnsubscription(const AsyncTCPHandler &tcpHandler, const MessageDataContainer &sMessage, MessageDataContainer &outMessage) {
   UNUSED_VAR(outMessage);
   if (tcpHandler.connection() == nullptr) {
-    throw EXCEPTION("connection not found", sMessage.clientID, ERROR_ON_UNSUBSCRIPTION);
+    throw EXCEPTION("connection not found", sMessage.clientID, Proto::ERROR_ON_UNSUBSCRIPTION);
   }
   try {
     tcpHandler.connection()->removeConsumer(sMessage, tcpHandler.num);
   } catch (Exception &ex) {
-    if (ex.error() != ERROR_UNKNOWN) {
+    if (ex.error() != Proto::ERROR_UNKNOWN) {
       throw Exception(ex);
     }
   }
@@ -424,7 +423,7 @@ void Broker::onUnsubscription(const AsyncTCPHandler &tcpHandler, const MessageDa
 void Broker::onAcknowledge(const AsyncTCPHandler &tcpHandler, const MessageDataContainer &sMessage, MessageDataContainer &outMessage) {
   UNUSED_VAR(outMessage);
   if (tcpHandler.connection() == nullptr) {
-    throw EXCEPTION("connection not found", sMessage.clientID, ERROR_ON_ACK_MESSAGE);
+    throw EXCEPTION("connection not found", sMessage.clientID, Proto::ERROR_ON_ACK_MESSAGE);
   }
   tcpHandler.log->information(
       "%s", std::to_string(sMessage.handlerNum).append(" # => ").append(" on message id [").append(sMessage.ack().message_id()).append("]"));
@@ -484,7 +483,7 @@ bool Broker::isConnectionExists(const std::string &clientID) { return _connectio
 std::string Broker::currentTransaction(const std::string &clientID, const std::string &sessionID) const {
   auto it = _connections.find(clientID);
   if (!it.hasValue()) {
-    throw EXCEPTION("connection not found", clientID, ERROR_CONNECTION);
+    throw EXCEPTION("connection not found", clientID, Proto::ERROR_CONNECTION);
   }
   return (*it)->transactionID(sessionID);
 }
@@ -725,12 +724,12 @@ bool Broker::read(size_t num) {
         sMessage.clientID = ((ahandler->connection() != nullptr) ? ahandler->connection()->clientID() : emptyString);
 
         switch (static_cast<int>(sMessage.type())) {
-          case ProtoMessage::kConnect: {
+          case Proto::ProtoMessage::kConnect: {
             ahandler->log->information("%s", std::to_string(num).append(" * ").append("=> get connect frame"));
             ahandler->storeClientInfo(sMessage);
             ahandler->log->information("%s", std::to_string(num).append(" # => ").append(ahandler->toString()));
           } break;
-          case ProtoMessage::kSubscription: {
+          case Proto::ProtoMessage::kSubscription: {
             ahandler->log->information("%s", std::to_string(num).append(" * ").append("=> get subscription frame"));
             ahandler->initSubscription(sMessage);
           } break;

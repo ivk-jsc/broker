@@ -42,7 +42,9 @@
 #include "ConcurrentQueueHeader.h"
 #include <Poco/Logger.h>
 #ifdef __APPLE__
+#ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0
+#endif
 #endif
 
 #ifdef _WIN32

@@ -53,7 +53,7 @@ class Storage {
  private:
   std::string saveTableName(const upmq::broker::Session &session) const;
   std::shared_ptr<MessageDataContainer> makeMessage(storage::DBMSSession &dbSession,
-                                                    const consumer::Msg &msgInfo,
+                                                    const MessageInfo &msgInfo,
                                                     const Consumer &consumer,
                                                     bool useFileLink);
   void fillProperties(storage::DBMSSession &dbSession, Proto::Message &message);
@@ -64,8 +64,8 @@ class Storage {
   void deleteMessageInfoFromJournal(storage::DBMSSession &dbSession, const std::string &messageID);
   void deleteMessageDataIfExists(const std::string &messageID, int persistent);
   void saveMessageHeader(const upmq::broker::Session &session, const MessageDataContainer &sMessage);
-  void saveMessageProperties(const upmq::broker::Session &session, const Message &message);
-  bool checkTTLIsOut(const std::string &stringMessageTime, Poco::Int64 ttl);
+  void saveMessageProperties(const upmq::broker::Session &session, const Proto::Message &message);
+  bool checkTTLIsOut(const Poco::DateTime &messageTime, Poco::Int64 ttl);
 
  public:
   explicit Storage(const std::string &messageTableID, size_t nonPersistentSize);

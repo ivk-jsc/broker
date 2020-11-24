@@ -31,7 +31,9 @@ void QueueDestination::save(const Session &session, const MessageDataContainer &
     begin(session);
   }
   OnError onError;
-  onError.setError(ERROR_ON_SAVE_MESSAGE).setInfo("can't save message").setExpression([&session]() { session.currentDBSession->rollbackTX(); });
+  onError.setError(Proto::ERROR_ON_SAVE_MESSAGE).setInfo("can't save message").setExpression([&session]() {
+    session.currentDBSession->rollbackTX();
+  });
   TRY_EXECUTE(([this, &session, &sMessage]() { _storage.save(session, sMessage); }), onError);
 
   session.currentDBSession->commitTX();
@@ -51,7 +53,7 @@ void QueueDestination::ack(const Session &session, const MessageDataContainer &s
     if (it.hasValue()) {
       storage = &(it->storage());
     } else {
-      throw EXCEPTION("can't find browser subscription", subscriptionName, ERROR_ON_ACK_MESSAGE);
+      throw EXCEPTION("can't find browser subscription", subscriptionName, Proto::ERROR_ON_ACK_MESSAGE);
     }
   }
 

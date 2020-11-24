@@ -30,7 +30,7 @@ void TopicDestination::save(const Session &session, const MessageDataContainer &
   session.currentDBSession->commitTX();
 
   OnError onError;
-  onError.setError(ERROR_ON_SAVE_MESSAGE).setInfo("can't save message");
+  onError.setError(Proto::ERROR_ON_SAVE_MESSAGE).setInfo("can't save message");
   TRY_EXECUTE(([&sMessage, &session, this]() {
                 std::string routingK = routingKey(sMessage.message().destination_uri());
                 ParentTopics parentTopics = generateParentTopics(routingK);

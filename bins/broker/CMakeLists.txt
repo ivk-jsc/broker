@@ -45,8 +45,6 @@ set(SOURCE_FILES
     log/AsyncLogger.cpp
     message/MessageDataContainer.h
     message/MessageDataContainer.cpp
-    message/MappedDBMessage.cpp
-    message/MappedDBMessage.h
     selector/Selector.cpp
     selector/Selector.h
     selector/SelectorExpression.cpp

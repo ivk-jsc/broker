@@ -23,9 +23,11 @@
 
 namespace upmq {
 namespace broker {
+
+class MessageDataContainer;
+
 namespace storage {
 
-class MappedDBMessage;
 class Value;
 class TopExpression;
 
@@ -59,7 +61,7 @@ class Selector {
    * @param msg message to filter against selector
    * @return true if msg meets the selector specification
    */
-  bool filter(const MappedDBMessage &msg);
+  bool filter(const upmq::broker::MessageDataContainer &msg);
 };
 
 /**

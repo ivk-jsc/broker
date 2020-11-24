@@ -19,10 +19,10 @@
 
 namespace message {
 
-typedef enum _DeliveryStatus { NOT_SENT = 0, WAS_SENT = 1, DELIVERED = 2 } DeliveryStatus;
+enum _DeliveryStatus { NOT_SENT = 0, WAS_SENT = 1, DELIVERED = 2 };
 
 static const int MAX_COUNT_PRIORITY = 10;
 
-typedef enum _GroupStatus { NOT_IN_GROUP = 0, ONE_OF_GROUP = 1, LAST_IN_GROUP = 2 } GroupStatus;
+enum GroupStatus { NOT_IN_GROUP = 0, ONE_OF_GROUP = 1, LAST_IN_GROUP = 2 };
 }  // namespace message
 #endif  // BROKER_MESSAGEDEFINES_H

@@ -41,7 +41,7 @@ Exchange::Exchange()
       << ")"
       << ";";
   OnError onError;
-  onError.setError(ERROR_STORAGE).setInfo("can't init exchange").setSql(sql.str());
+  onError.setError(Proto::ERROR_STORAGE).setInfo("can't init exchange").setSql(sql.str());
 
   TRY_EXECUTE(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
 }
@@ -69,7 +69,7 @@ Destination &Exchange::destination(const std::string &uri, Exchange::Destination
         if (dest->consumerMode() != Destination::makeConsumerMode(uri)) {
           std::string err = "current consumer mode is ";
           err.append(Destination::consumerModeName(dest->consumerMode()));
-          throw EXCEPTION("destination was initiated with another consumer mode", err, ERROR_DESTINATION);
+          throw EXCEPTION("destination was initiated with another consumer mode", err, Proto::ERROR_DESTINATION);
         }
         return *dest;
       }
@@ -81,12 +81,12 @@ Destination &Exchange::destination(const std::string &uri, Exchange::Destination
       return *(*it);
     }
   }
-  throw EXCEPTION("invalid creation mode", std::to_string(static_cast<int>(creationMode)), ERROR_UNKNOWN);
+  throw EXCEPTION("invalid creation mode", std::to_string(static_cast<int>(creationMode)), Proto::ERROR_UNKNOWN);
 }  // namespace broker
 Destination &Exchange::getDestination(const std::string &id) const {
   auto it = _destinations.find(id);
   if (!it.hasValue()) {
-    throw EXCEPTION("destination not found", id, ERROR_UNKNOWN);
+    throw EXCEPTION("destination not found", id, Proto::ERROR_UNKNOWN);
   }
   return *(*it);
 }
@@ -115,7 +115,7 @@ void Exchange::saveMessage(const Session &session, const MessageDataContainer &s
   session.currentDBSession->beginTX(message.message_id());
 
   OnError onError;
-  onError.setError(ERROR_ON_SAVE_MESSAGE).setInfo("can't save message").setSql(sql.str()).setExpression([&session]() {
+  onError.setError(Proto::ERROR_ON_SAVE_MESSAGE).setInfo("can't save message").setSql(sql.str()).setExpression([&session]() {
     session.currentDBSession.reset(nullptr);
   });
 
@@ -129,7 +129,7 @@ void Exchange::removeConsumer(const std::string &sessionID, const std::string &d
   destination.removeConsumer(sessionID, subscriptionID, tcpNum);
 }
 void Exchange::removeConsumer(const MessageDataContainer &sMessage, size_t tcpNum) {
-  const Unsubscription &unsubscription = sMessage.unsubscription();
+  const Proto::Unsubscription &unsubscription = sMessage.unsubscription();
   const std::string destinationID = Exchange::mainDestinationPath(unsubscription.destination_uri());
   removeConsumer(unsubscription.session_id(), destinationID, unsubscription.subscription_name(), tcpNum);
 }
@@ -190,14 +190,14 @@ void Exchange::addSubscription(const upmq::broker::Session &session, const Messa
   Destination &dest = destination(sMessage.subscription().destination_uri(), DestinationCreationMode::NO_CREATE);
   if (dest.isBindToSubscriber(sMessage.clientID)) {
     OnError onError;
-    onError.setError(ERROR_ON_SUBSCRIPTION).setInfo("can't update subscriptions count");
+    onError.setError(Proto::ERROR_ON_SUBSCRIPTION).setInfo("can't update subscriptions count");
     dest.subscription(session, sMessage);
     std::stringstream sql;
     sql << "update " << _destinationsT << " set subscriptions_count = " << dest.subscriptionsTrueCount() << ";";
     onError.setSql(sql.str());
     TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
   } else {
-    throw EXCEPTION("this destination was bound to another subscriber", dest.name() + " : " + sMessage.clientID, ERROR_ON_SUBSCRIPTION);
+    throw EXCEPTION("this destination was bound to another subscriber", dest.name() + " : " + sMessage.clientID, Proto::ERROR_ON_SUBSCRIPTION);
   }
 }
 void Exchange::addSender(const upmq::broker::Session &session, const MessageDataContainer &sMessage) {
@@ -205,11 +205,11 @@ void Exchange::addSender(const upmq::broker::Session &session, const MessageData
   if (dest.isBindToPublisher(sMessage.clientID)) {
     dest.addSender(session, sMessage);
   } else {
-    throw EXCEPTION("this destination was bound to another publisher", dest.name() + " : " + sMessage.clientID, ERROR_ON_SUBSCRIPTION);
+    throw EXCEPTION("this destination was bound to another publisher", dest.name() + " : " + sMessage.clientID, Proto::ERROR_ON_SUBSCRIPTION);
   }
 }
 void Exchange::removeSender(const upmq::broker::Session &session, const MessageDataContainer &sMessage) {
-  const Unsender &unsender = sMessage.unsender();
+  const Proto::Unsender &unsender = sMessage.unsender();
   if (unsender.destination_uri().empty()) {
     removeSenderFromAnyDest(session, unsender.sender_id());
   } else {
@@ -314,7 +314,7 @@ std::vector<Destination::Info> Exchange::info() const {
   Poco::Data::Statement select(dbSession());
   Destination::Info destInfo;
   OnError onError;
-  onError.setError(ERROR_STORAGE).setInfo("can't get destinations info").setSql(sql.str());
+  onError.setError(Proto::ERROR_STORAGE).setInfo("can't get destinations info").setSql(sql.str());
 
   TRY_EXECUTE_NOEXCEPT(([&select, &sql, &destInfo, &containDigit, &infosGroup]() {
                          select << sql.str(), Poco::Data::Keywords::into(destInfo.id), Poco::Data::Keywords::into(destInfo.name),

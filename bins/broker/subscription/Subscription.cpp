@@ -54,7 +54,7 @@ Subscription::Subscription(const Destination &destination, const std::string &id
 
   std::stringstream sql;
   sql << "drop table if exists " << _consumersT << ";" << non_std_endl;
-  onError.setError(ERROR_UNKNOWN).setInfo("can't init consumers table for subscription").setSql(sql.str());
+  onError.setError(Proto::ERROR_UNKNOWN).setInfo("can't init consumers table for subscription").setSql(sql.str());
   TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
 
   sql.str("");
@@ -69,7 +69,7 @@ Subscription::Subscription(const Destination &destination, const std::string &id
       << ",constraint \"" << _id << "_tcp_index\" unique (client_id, tcp_id, session, selector)"
       << ")"
       << ";";
-  onError.setError(ERROR_DESTINATION).setInfo("can't init destination").setSql(sql.str());
+  onError.setError(Proto::ERROR_DESTINATION).setInfo("can't init destination").setSql(sql.str());
   TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
 
   sql.str("");
@@ -94,7 +94,7 @@ Subscription::Subscription(const Destination &destination, const std::string &id
   storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
   dbSession.beginTX(_id);
 
-  onError.setError(ERROR_ON_SUBSCRIPTION).setSql(sql.str()).setInfo("can't create subscription");
+  onError.setError(Proto::ERROR_ON_SUBSCRIPTION).setSql(sql.str()).setInfo("can't create subscription");
   TRY_EXECUTE(([&dbSession, &sql, this]() {
                 dbSession << sql.str(), Poco::Data::Keywords::useRef(_name), Poco::Data::Keywords::useRef(_routingKey), Poco::Data::Keywords::now;
               }),
@@ -120,7 +120,7 @@ void Subscription::save(const Session &session, const MessageDataContainer &sMes
     return;
   }
   if (!_destination.isQueueFamily()) {
-    const Message &message = sMessage.message();
+    const Proto::Message &message = sMessage.message();
     if (session.isTransactAcknowledge() && !_storage.hasTransaction(session)) {
       _storage.begin(session);
     }
@@ -134,7 +134,7 @@ void Subscription::save(const Session &session, const MessageDataContainer &sMes
     session.currentDBSession->beginTX(_id + message.message_id());
 
     OnError onError;
-    onError.setError(ERROR_ON_SAVE_MESSAGE).setInfo("can't save message");
+    onError.setError(Proto::ERROR_ON_SAVE_MESSAGE).setInfo("can't save message");
 
     TRY_EXECUTE(([this, &session, &sMessage]() { _storage.save(session, sMessage); }), onError);
 
@@ -164,7 +164,7 @@ void Subscription::addClient(
   storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
 
   OnError onError;
-  onError.setError(ERROR_ON_SUBSCRIPTION).setInfo("can't add consumer");
+  onError.setError(Proto::ERROR_ON_SUBSCRIPTION).setInfo("can't add consumer");
 
   if (!selector.empty()) {
     sql << "select count(*) from " << _consumersT << " where "
@@ -185,7 +185,7 @@ void Subscription::addClient(
     TRY_EXECUTE(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
 
     if (count > 0) {
-      throw EXCEPTION("client already exists", sql.str(), ERROR_ON_SUBSCRIPTION);
+      throw EXCEPTION("client already exists", sql.str(), Proto::ERROR_ON_SUBSCRIPTION);
     }
   }
 
@@ -392,7 +392,7 @@ Subscription::ProcessMessageResult Subscription::getNextMessage() {
 
         } catch (Exception &ex) {
           log->error("%s", std::to_string(consumer->tcpNum).append(" ! <= [").append(__FUNCTION__).append("] ").append(ex.message()));
-          if (ex.error() == ERROR_CONNECTION) {
+          if (ex.error() == Proto::ERROR_CONNECTION) {
             messageID.clear();
             removeConsumers(consumer->tcpNum);
             if (_consumers.empty()) {
@@ -447,7 +447,7 @@ const Consumer &Subscription::byObjectID(const std::string &objectID) {
       return it->second;
     }
   }
-  throw EXCEPTION("consumer not found", objectID, ERROR_UNKNOWN);
+  throw EXCEPTION("consumer not found", objectID, Proto::ERROR_UNKNOWN);
 }
 const Consumer &Subscription::byClientAndHandlerAndSessionIDs(const std::string &clientID, size_t handlerNum, const std::string &sessionID) {
   std::string tmpClientID = (isBrowser() ? clientID + "-browser" : clientID);
@@ -457,11 +457,11 @@ const Consumer &Subscription::byClientAndHandlerAndSessionIDs(const std::string 
       return it->second;
     }
   }
-  throw EXCEPTION("consumer not found", clientID + " : " + std::to_string(handlerNum), ERROR_UNKNOWN);
+  throw EXCEPTION("consumer not found", clientID + " : " + std::to_string(handlerNum), Proto::ERROR_UNKNOWN);
 }
 Subscription::ConsumersListType::iterator Subscription::eraseConsumer(ConsumersListType::iterator it) {
   OnError onError;
-  onError.setError(ERROR_ON_UNSUBSCRIPTION).setInfo("can't remove consumer");
+  onError.setError(Proto::ERROR_ON_UNSUBSCRIPTION).setInfo("can't remove consumer");
   std::stringstream sql;
   sql << "delete from " << _consumersT << " where object_id = \'" << it->second.objectID << "\';";
   TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
@@ -527,7 +527,7 @@ void Subscription::destroy() {
   }
 
   OnError onError;
-  onError.setError(ERROR_ON_UNSUBSCRIPTION).setInfo("can't erase subscription");
+  onError.setError(Proto::ERROR_ON_UNSUBSCRIPTION).setInfo("can't erase subscription");
   std::stringstream sql;
   sql << "drop table if exists " << _consumersT << ";" << non_std_endl;
   storage::DBMSSession dbSession = dbms::Instance().dbmsSession();

@@ -46,7 +46,7 @@ Destination::Destination(const Exchange &exchange, const std::string &uri, Type 
 }
 Destination::~Destination() {
   OnError onError;
-  onError.setError(ERROR_DESTINATION).setInfo("can't update subscription count");
+  onError.setError(Proto::ERROR_DESTINATION).setInfo("can't update subscription count");
   try {
     std::stringstream sql;
     if (!isTemporary()) {
@@ -90,7 +90,7 @@ void Destination::createSubscriptionsTable(storage::DBMSSession &dbSession) {
       << ")"
       << ";";
   OnError onError;
-  onError.setError(ERROR_DESTINATION).setInfo("can't init destination").setSql(sql.str()).setExpression([&dbSession]() { dbSession.close(); });
+  onError.setError(Proto::ERROR_DESTINATION).setInfo("can't init destination").setSql(sql.str()).setExpression([&dbSession]() { dbSession.close(); });
 
   TRY_EXECUTE_NOEXCEPT(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
 }
@@ -103,7 +103,7 @@ void Destination::createJournalTable(storage::DBMSSession &dbSession) {
       << "   ,body_type int"
       << "   ,subscribers_count int not null default 0"
       << ");";
-  onError.setError(ERROR_DESTINATION).setInfo("can't init destination").setSql(sql.str());
+  onError.setError(Proto::ERROR_DESTINATION).setInfo("can't init destination").setSql(sql.str());
   TRY_EXECUTE(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
 }
 std::string Destination::getStoredDestinationID(const Exchange &exchange, const std::string &name, Destination::Type type) {
@@ -118,7 +118,7 @@ std::string Destination::getStoredDestinationID(const Exchange &exchange, const 
 
   std::string tempId;
   OnError onError;
-  onError.setError(ERROR_DESTINATION).setSql(sql.str()).setInfo("can't init destination");
+  onError.setError(Proto::ERROR_DESTINATION).setSql(sql.str()).setInfo("can't init destination");
   TRY_EXECUTE(([&dbSession, &sql, &name, &tempId]() {
                 dbSession << sql.str(), Poco::Data::Keywords::useRef(name), Poco::Data::Keywords::into(tempId), Poco::Data::Keywords::now;
               }),
@@ -147,7 +147,7 @@ void Destination::saveDestinationId(
       << "," << nextParam() << "," << static_cast<int>(type) << ")"
       << ";";
   OnError onError;
-  onError.setError(ERROR_DESTINATION).setInfo("can't init destination").setSql(sql.str());
+  onError.setError(Proto::ERROR_DESTINATION).setInfo("can't init destination").setSql(sql.str());
   TRY_EXECUTE(([&dbSession, &sql, &name]() { dbSession << sql.str(), Poco::Data::Keywords::useRef(name), Poco::Data::Keywords::now; }), onError);
 }
 void Destination::subscribe(const MessageDataContainer &sMessage) {
@@ -163,7 +163,7 @@ void Destination::subscribe(const MessageDataContainer &sMessage) {
     consumer.id = Consumer::genConsumerID(consumer.clientID, std::to_string(consumer.tcpNum), consumer.session.id, "");
     it->start(consumer);
   } else {
-    throw EXCEPTION("subscription not found", name, ERROR_ON_SUBSCRIBE);
+    throw EXCEPTION("subscription not found", name, Proto::ERROR_ON_SUBSCRIBE);
   }
 }
 void Destination::unsubscribe(const MessageDataContainer &sMessage) {
@@ -240,7 +240,7 @@ Subscription &Destination::subscription(const Session &session, const MessageDat
   }
   const std::string &name = subscription.subscription_name();
   if (name.empty()) {
-    throw EXCEPTION("subscription name is empty", "subscription", ERROR_ON_SUBSCRIPTION);
+    throw EXCEPTION("subscription name is empty", "subscription", Proto::ERROR_ON_SUBSCRIPTION);
   }
   const std::string &uri = subscription.destination_uri();
 
@@ -357,10 +357,10 @@ size_t Destination::subscriptionsTrueCount() const { return _subscriptions.size(
 const std::string &Destination::name() const { return _name; }
 void Destination::removeMessageOrGroup(const Session &session, Storage &storage, const MessageInfo &msg, message::GroupStatus groupStatus) {
   if (groupStatus == message::LAST_IN_GROUP) {
-    storage.removeGroupMessage(msg.tuple.get<message::field_group_id.position>().value(), session);
+    storage.removeGroupMessage(msg.tuple.get<message::field::GroupId::POSITION>().value(), session);
   }
 
-  auto &txName = msg.tuple.get<message::field_message_id.position>();
+  auto &txName = msg.tuple.get<message::field::MessageId::POSITION>();
   if (session.currentDBSession == nullptr) {
     storage::DBMSSession dbmsSession = dbms::Instance().dbmsSession();
     dbmsSession.beginTX(txName);
@@ -378,10 +378,10 @@ void Destination::doAck(
     if (session.isClientAcknowledge()) {
       removeMessageOrGroup(session, storage, msg, groupStatus);
     } else if (session.isTransactAcknowledge() || browser) {
-      storage.setMessageToDelivered(session, msg.tuple.get<message::field_message_id.position>());
+      storage.setMessageToDelivered(session, msg.tuple.get<message::field::MessageId::POSITION>());
     } else {
       if (groupStatus == message::ONE_OF_GROUP) {
-        storage.setMessageToDelivered(session, msg.tuple.get<message::field_message_id.position>());
+        storage.setMessageToDelivered(session, msg.tuple.get<message::field::MessageId::POSITION>());
       } else {
         removeMessageOrGroup(session, storage, msg, groupStatus);
       }
@@ -397,8 +397,8 @@ void Destination::doAck(
 }
 message::GroupStatus Destination::getMsgGroupStatus(const MessageInfo &msg) const {
   message::GroupStatus groupStatus = message::NOT_IN_GROUP;
-  if (!msg.tuple.get<message::field_group_id.position>().isNull() && !msg.tuple.get<message::field_group_id.position>().value().empty()) {
-    if (msg.tuple.get<message::field_last_in_group.position>()) {
+  if (!msg.tuple.get<message::field::GroupId::POSITION>().isNull() && !msg.tuple.get<message::field::GroupId::POSITION>().value().empty()) {
+    if (msg.tuple.get<message::field::LastInGroup::POSITION>()) {
       groupStatus = message::LAST_IN_GROUP;
     } else {
       groupStatus = message::ONE_OF_GROUP;
@@ -473,7 +473,7 @@ Storage &Destination::storage() const { return _storage; }
 int64_t Destination::initBrowser(const std::string &subscriptionName) {
   auto it = _subscriptions.find(subscriptionName);
   if (!it.hasValue()) {
-    throw EXCEPTION("subscription not found", subscriptionName, ERROR_ON_BROWSER);
+    throw EXCEPTION("subscription not found", subscriptionName, Proto::ERROR_ON_BROWSER);
   }
   auto &subs = *it;
   if (!subs.hasSnapshot()) {
@@ -543,7 +543,7 @@ void Destination::loadDurableSubscriptions() {
       << "id, name, routing_key"
       << " from " << subscriptionsT() << " where type = " << type << ";";
   OnError onError;
-  onError.setError(ERROR_ON_SUBSCRIPTION).setInfo("can't create subscription").setSql(sql.str());
+  onError.setError(Proto::ERROR_ON_SUBSCRIPTION).setInfo("can't create subscription").setSql(sql.str());
 
   storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
   dbSession.beginTX(_id + "ldur", storage::DBMSSession::TransactionMode::READ);

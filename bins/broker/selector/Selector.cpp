@@ -27,8 +27,9 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <Poco/DateTime.h>
 #include "Exception.h"
-#include "MappedDBMessage.h"
+#include "MessageDataContainer.h"
 #include "ProtoBuf.h"
 
 namespace upmq {
@@ -60,7 +61,7 @@ const Aliases aliases = define_aliases();
 }  // namespace
 
 class MessageSelectorEnv : public SelectorEnv {
-  const MappedDBMessage &msg;
+  const upmq::broker::MessageDataContainer &msg;
   mutable std::vector<std::shared_ptr<std::string>> returnedStrings;
   mutable std::unordered_map<std::string, Value> returnedValues;
 
@@ -68,18 +69,19 @@ class MessageSelectorEnv : public SelectorEnv {
   Value specialValue(const std::string &id) const;
 
  public:
-  explicit MessageSelectorEnv(const MappedDBMessage &m);
+  explicit MessageSelectorEnv(const upmq::broker::MessageDataContainer &m);
 };
 
-MessageSelectorEnv::MessageSelectorEnv(const MappedDBMessage &m) : msg(m) {}
+MessageSelectorEnv::MessageSelectorEnv(const upmq::broker::MessageDataContainer &m) : msg(m) {}
 
 Value MessageSelectorEnv::specialValue(const std::string &id) const {
   Value v;
+  const Proto::Message &protoMessage = msg.message();
   // TODO(bas): Just use a simple if chain for now - improve this later
   if (id == "delivery_mode") {
-    v = msg.persistent() ? std::string(PERSISTENT) : std::string(NON_PERSISTENT);
+    v = protoMessage.persistent() ? std::string(PERSISTENT) : std::string(NON_PERSISTENT);
   } else if (id == "subject") {
-    std::string s = msg.type();
+    std::string s = protoMessage.type();
     if (!s.empty()) {
       returnedStrings.push_back(std::make_shared<std::string>(s));
       v = *returnedStrings[returnedStrings.size() - 1];
@@ -88,35 +90,35 @@ Value MessageSelectorEnv::specialValue(const std::string &id) const {
     // Although redelivered is defined to be true delivery-count>0 if it is 0
     // now
     // it will be 1 by the time the message is delivered
-    v = msg.redelivered();
+    v = protoMessage.redelivered();
   } else if (id == "priority") {
-    v = int64_t(msg.priority());
+    v = int64_t(protoMessage.priority());
   } else if (id == "correlation_id") {
-    std::string cId = msg.correlationID();
+    std::string cId = protoMessage.correlation_id();
     if (!cId.empty()) {
       returnedStrings.push_back(std::make_shared<std::string>(cId));
       v = *returnedStrings[returnedStrings.size() - 1];
     }
   } else if (id == "message_id") {
-    std::string mId = msg.messageID();
+    std::string mId = protoMessage.message_id();
     if (!mId.empty()) {
       returnedStrings.push_back(std::make_shared<std::string>(mId));
       v = *returnedStrings[returnedStrings.size() - 1];
     }
   } else if (id == "to") {
-    std::string s = msg.destinationURI();
+    std::string s = protoMessage.destination_uri();
     if (!s.empty()) {
       returnedStrings.push_back(std::make_shared<std::string>(s));
       v = *returnedStrings[returnedStrings.size() - 1];
     }
   } else if (id == "reply_to") {
-    std::string s = msg.replyTo();
+    std::string s = protoMessage.reply_to();
     if (!s.empty()) {
       returnedStrings.push_back(std::make_shared<std::string>(s));
       v = *returnedStrings[returnedStrings.size() - 1];
     }
   } else if (id == "absolute_expiry_time") {
-    int64_t expiry = msg.expiration();
+    int64_t expiry = protoMessage.expiration();
     Poco::DateTime currentDateTime;
 
     // Java property has value of 0 for no expiry
@@ -126,12 +128,12 @@ Value MessageSelectorEnv::specialValue(const std::string &id) const {
     // to get message
     // creation time and we're not paying attention to the 1.0 creation time
     // yet.
-    v = int64_t(msg.creationTime() * 1000);  // getTimestamp() returns time in seconds we need milliseconds
+    v = int64_t(msg.created() / 1000);
   } else if (id == "jms_type") {
     // Currently we can't distinguish between an empty JMSType and no JMSType
     // We'll assume for now that setting an empty JMSType doesn't make a lot of
     // sense
-    const string jmsType = msg.type();
+    const string jmsType = protoMessage.type();
     if (!jmsType.empty()) {
       returnedStrings.push_back(std::make_shared<std::string>(jmsType));
       v = *returnedStrings[returnedStrings.size() - 1];
@@ -203,7 +205,7 @@ Selector::~Selector(){};
 
 bool Selector::eval(const SelectorEnv &env) { return _parse->eval(env); }
 
-bool Selector::filter(const MappedDBMessage &msg) {
+bool Selector::filter(const upmq::broker::MessageDataContainer &msg) {
   const MessageSelectorEnv env(msg);
   return eval(env);
 }

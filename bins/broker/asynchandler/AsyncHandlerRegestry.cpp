@@ -52,7 +52,7 @@ void AsyncHandlerRegestry::deleteAHandler(size_t num) {
 }
 void AsyncHandlerRegestry::put(size_t num, std::shared_ptr<MessageDataContainer> sMessage) {
   if (_connections[num] == nullptr) {
-    throw EXCEPTION("tcp connection not found", std::to_string(num), ERROR_CONNECTION);
+    throw EXCEPTION("tcp connection not found", std::to_string(num), Proto::ERROR_CONNECTION);
   }
   _connections[num]->put(std::move(sMessage));
 }

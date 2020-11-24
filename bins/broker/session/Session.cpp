@@ -38,7 +38,7 @@ Session::Session(const Connection &connection, std::string id, Proto::Acknowledg
       << "," << _acknowledgeType << ")"
       << ";";
   OnError onError;
-  onError.setError(ERROR_ON_SESSION).setInfo("can't create session").setSql(sql.str());
+  onError.setError(Proto::ERROR_ON_SESSION).setInfo("can't create session").setSql(sql.str());
 
   TRY_EXECUTE(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
 }
@@ -77,26 +77,26 @@ void Session::deleteFromConnectionTable() const {
   OnError onError;
   std::stringstream sql;
   sql << "delete from " << _connection.sessionsT() << " where id = \'" << _id << "\';";
-  onError.setError(ERROR_ON_UNSESSION).setInfo("can't delete from session table").setSql(sql.str());
+  onError.setError(Proto::ERROR_ON_UNSESSION).setInfo("can't delete from session table").setSql(sql.str());
   TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
 }
 std::string Session::acknowlegeName(Proto::Acknowledge acknowledgeType) {
   switch (acknowledgeType) {
-    case SESSION_TRANSACTED:
+    case Proto::SESSION_TRANSACTED:
       return MakeStringify(SESSION_TRANSACTED);
-    case AUTO_ACKNOWLEDGE:
+    case Proto::AUTO_ACKNOWLEDGE:
       return MakeStringify(AUTO_ACKNOWLEDGE);
-    case CLIENT_ACKNOWLEDGE:
+    case Proto::CLIENT_ACKNOWLEDGE:
       return MakeStringify(CLIENT_ACKNOWLEDGE);
-    case DUPS_OK_ACKNOWLEDGE:
+    case Proto::DUPS_OK_ACKNOWLEDGE:
       return MakeStringify(DUPS_OK_ACKNOWLEDGE);
   }
   return emptyString;
 }
-bool Session::isAutoAcknowledge() const { return _acknowledgeType == AUTO_ACKNOWLEDGE; }
-bool Session::isDupsOkAcknowledge() const { return _acknowledgeType == DUPS_OK_ACKNOWLEDGE; }
-bool Session::isClientAcknowledge() const { return _acknowledgeType == CLIENT_ACKNOWLEDGE; }
-bool Session::isTransactAcknowledge() const { return _acknowledgeType == SESSION_TRANSACTED; }
+bool Session::isAutoAcknowledge() const { return _acknowledgeType == Proto::AUTO_ACKNOWLEDGE; }
+bool Session::isDupsOkAcknowledge() const { return _acknowledgeType == Proto::DUPS_OK_ACKNOWLEDGE; }
+bool Session::isClientAcknowledge() const { return _acknowledgeType == Proto::CLIENT_ACKNOWLEDGE; }
+bool Session::isTransactAcknowledge() const { return _acknowledgeType == Proto::SESSION_TRANSACTED; }
 void Session::addToUsed(const std::string &uri) {
   DestinationsList::iterator it;
   const std::string destName = Exchange::mainDestinationPath(uri);
@@ -208,7 +208,7 @@ void Session::processAcknowledge(const MessageDataContainer &sMessage) {
         try {
           EXCHANGE::Instance().destination(destination, Exchange::DestinationCreationMode::NO_CREATE).ack(*this, sMessage);
         } catch (Exception &ex) {
-          if (ex.error() == ERROR_UNKNOWN) {
+          if (ex.error() == Proto::ERROR_UNKNOWN) {
             toerase.emplace_back(destination);
           } else {
             throw Exception(ex);
@@ -231,7 +231,7 @@ void Session::closeSubscriptions(size_t tcpNum) {
     try {
       EXCHANGE::Instance().destination(destination, Exchange::DestinationCreationMode::NO_CREATE).closeAllSubscriptions(*this, tcpNum);
     } catch (Exception &ex) {
-      if ((ex.error() != ERROR_UNKNOWN) || (ex.message().find("destination not found") == std::string::npos)) {
+      if ((ex.error() != Proto::ERROR_UNKNOWN) || (ex.message().find("destination not found") == std::string::npos)) {
         throw Exception(ex);
       }
     }
