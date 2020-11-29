@@ -229,51 +229,40 @@ class DECAF_API Exception : public Throwable {  //-V690
 }  // namespace lang
 }  // namespace decaf
 
-#define DECAF_DECLARE_EXCEPTION(API, CLS, BASE)                                               \
-  class API CLS : public BASE {                                                               \
-   public:                                                                                    \
-    CLS();                                                                                    \
-    CLS(const BASE &exc) noexcept;                                                            \
-    CLS(const CLS &exc) noexcept;                                                             \
-    CLS(CLS &&exc) noexcept;                                                                  \
-    CLS(const std::exception *cause);                                                         \
-    CLS(const char *file, int lineNumber, const char *msg, ...);                              \
-    CLS(const char *file, int lineNumber, const std::exception *cause, const char *msg, ...); \
-    ~CLS() noexcept override;                                                                 \
-    CLS &operator=(const CLS &exc);                                                           \
-    CLS &operator=(CLS &&exc) noexcept;                                                       \
-    CLS *clone() const override;                                                              \
+#define DECAF_DECLARE_EXCEPTION(API, CLS, BASE)                                                                                          \
+  class API CLS : public BASE {                                                                                                          \
+   public:                                                                                                                               \
+    CLS();                                                                                                                               \
+    CLS(const BASE &exc) noexcept;                                                                                                       \
+    CLS(const CLS &exc) noexcept;                                                                                                        \
+    CLS(CLS &&exc) noexcept;                                                                                                             \
+    CLS(const std::exception *cause);                                                                                                    \
+    template <typename... Args>                                                                                                          \
+    CLS(const char *file, int lineNumber, const char *msg, Args &&...args) : BASE(file, lineNumber, msg, std::forward<Args>(args)...) {} \
+    template <typename... Args>                                                                                                          \
+    CLS(const char *file, int lineNumber, const std::exception *cause, const char *msg, Args &&...args)                                  \
+        : BASE(file, lineNumber, cause, msg, std::forward<Args>(args)...) {}                                                             \
+    ~CLS() noexcept override;                                                                                                            \
+    CLS &operator=(const CLS &exc);                                                                                                      \
+    CLS &operator=(CLS &&exc) noexcept;                                                                                                  \
+    CLS *clone() const override;                                                                                                         \
   };
 
-#define DECAF_IMPLEMENT_EXCEPTION(CLS, BASE)                                                                    \
-  CLS::CLS() = default;                                                                                         \
-  CLS::CLS(const BASE &exc) noexcept : BASE(exc) {}                                                             \
-  CLS::CLS(const CLS &exc) noexcept = default;                                                                  \
-  CLS::CLS(CLS &&exc) noexcept = default;                                                                       \
-  CLS::CLS(const std::exception *cause) : BASE(cause) {}                                                        \
-  CLS::CLS(const char *file, int lineNumber, const char *msg, ...) {                                            \
-    va_list vargs;                                                                                              \
-    va_start(vargs, msg);                                                                                       \
-    decaf::lang::Exception::buildMessage(msg, vargs);                                                           \
-    va_end(vargs);                                                                                              \
-    decaf::lang::Exception::setMark(file, lineNumber);                                                          \
-  }                                                                                                             \
-  CLS::CLS(const char *file, int lineNumber, const std::exception *cause, const char *msg, ...) : BASE(cause) { \
-    va_list vargs;                                                                                              \
-    va_start(vargs, msg);                                                                                       \
-    decaf::lang::Exception::buildMessage(msg, vargs);                                                           \
-    va_end(vargs);                                                                                              \
-    decaf::lang::Exception::setMark(file, lineNumber);                                                          \
-  }                                                                                                             \
-  CLS::~CLS() noexcept = default;                                                                               \
-  CLS &CLS::operator=(const CLS &exc) {                                                                         \
-    BASE::operator=(exc);                                                                                       \
-    return *this;                                                                                               \
-  }                                                                                                             \
-  CLS &CLS::operator=(CLS &&exc) noexcept {                                                                     \
-    BASE::operator=(std::forward<BASE>(exc));                                                                   \
-    return *this;                                                                                               \
-  }                                                                                                             \
+#define DECAF_IMPLEMENT_EXCEPTION(CLS, BASE)             \
+  CLS::CLS() = default;                                  \
+  CLS::CLS(const BASE &exc) noexcept : BASE(exc) {}      \
+  CLS::CLS(const CLS &exc) noexcept = default;           \
+  CLS::CLS(CLS &&exc) noexcept = default;                \
+  CLS::CLS(const std::exception *cause) : BASE(cause) {} \
+  CLS::~CLS() noexcept = default;                        \
+  CLS &CLS::operator=(const CLS &exc) {                  \
+    BASE::operator=(exc);                                \
+    return *this;                                        \
+  }                                                      \
+  CLS &CLS::operator=(CLS &&exc) noexcept {              \
+    BASE::operator=(std::forward<BASE>(exc));            \
+    return *this;                                        \
+  }                                                      \
   CLS *CLS::clone() const { return new CLS(*this); }
 
 #endif /*_DECAF_LANG_EXCEPTION_EXCEPTION_H_*/

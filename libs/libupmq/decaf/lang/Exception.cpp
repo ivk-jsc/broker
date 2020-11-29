@@ -109,9 +109,14 @@ void Exception::setMessage(const char *msg, ...) {
 
 ////////////////////////////////////////////////////////////////////////////////
 void Exception::buildMessage(const char *format, va_list &vargs) {
+  va_list vaCopy;
+  va_copy(vaCopy, vargs);
+  const int len = std::vsnprintf(nullptr, 0, format, vaCopy);
+  va_end(vaCopy);
+
   // Allocate a buffer of the specified size.
-  std::vector<char> buffer(vsnprintf(nullptr, 0, format, vargs) + 1);
-  vsnprintf(&buffer[0], buffer.size() - 1, format, vargs);
+  std::vector<char> buffer(len + 1);
+  vsnprintf(&buffer[0], buffer.size(), format, vargs);
   // Guessed size was enough. Assign the string.
   this->data->message.assign(&buffer[0], buffer.size());
 }
