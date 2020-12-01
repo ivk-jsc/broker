@@ -137,5 +137,20 @@ MessagePropertyInfo::Field MessagePropertyInfo::getNotNullValInfo() const {
   }
   return message::property::MessageId::TYPE;
 }
+void MessagePropertyInfo::setMessageID(const std::string &value) { tuple.set<message::property::MessageId::POSITION>(value); }
+void MessagePropertyInfo::setPropertyName(const std::string &value) { tuple.set<message::property::Name::POSITION>(value); }
+void MessagePropertyInfo::setPropertyType(int value) { tuple.set<message::property::Type::POSITION>(value); }
+void MessagePropertyInfo::setValueString(const std::string &value) { tuple.set<message::property::value::String::POSITION>(value); }
+void MessagePropertyInfo::setValueChar(int value) { tuple.set<message::property::value::Char::POSITION>(value); }
+void MessagePropertyInfo::setValueBool(bool value) { tuple.set<message::property::value::Bool::POSITION>(value); }
+void MessagePropertyInfo::setValueByte(int value) { tuple.set<message::property::value::Byte::POSITION>(value); }
+void MessagePropertyInfo::setValueShort(int value) { tuple.set<message::property::value::Short::POSITION>(value); }
+void MessagePropertyInfo::setValueInt(int value) { tuple.set<message::property::value::Int::POSITION>(value); }
+void MessagePropertyInfo::setValueLong(int64_t value) { tuple.set<message::property::value::Long::POSITION>(value); }
+void MessagePropertyInfo::setValueFloat(float value) { tuple.set<message::property::value::Float::POSITION>(value); }
+void MessagePropertyInfo::setValueDouble(double value) { tuple.set<message::property::value::Double::POSITION>(value); }
+void MessagePropertyInfo::setValueNull(bool value) { tuple.set<message::property::value::IsNull::POSITION>(value); }
+void MessagePropertyInfo::setValueBytes(const Poco::Data::BLOB &value) { tuple.set<message::property::value::Bytes::POSITION>(value); }
+void MessagePropertyInfo::setValueObject(const Poco::Data::BLOB &value) { tuple.set<message::property::value::Object::POSITION>(value); }
 }  // namespace broker
 }  // namespace upmq

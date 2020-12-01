@@ -92,7 +92,6 @@ std::shared_ptr<Poco::Data::Session> ConnectionPool::makeSession() const {
 
   *session << "PRAGMA journal_mode = " << STORAGE_CONFIG.connection.props.journalMode << " ;", Poco::Data::Keywords::now;
 
-  *session << "PRAGMA locking_mode = EXCLUSIVE;", Poco::Data::Keywords::now;
   *session << "PRAGMA secure_delete = FALSE;", Poco::Data::Keywords::now;
 
 #ifdef SQLITE_TRACE

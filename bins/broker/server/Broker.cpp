@@ -342,6 +342,14 @@ void Broker::onMessage(const AsyncTCPHandler &tcpHandler, const MessageDataConta
                                   .append("] : into destination : ")
                                   .append(constMessage.destination_uri()));
   tcpHandler.connection()->saveMessage(sMessage);
+  tcpHandler.log->information("%s",
+                              std::to_string(sMessage.handlerNum)
+                                  .append(" # => ")
+                                  .append("id [")
+                                  .append(constMessage.message_id())
+                                  .append("] : into destination : ")
+                                  .append(constMessage.destination_uri())
+                                  .append(" saved"));
   EXCHANGE::Instance().postNewMessageEvent(dest.name());
 }
 void Broker::onSender(const AsyncTCPHandler &tcpHandler, const MessageDataContainer &sMessage, MessageDataContainer &outMessage) {
@@ -492,12 +500,15 @@ void Broker::onWritable() {
   _isWritable = true;
   size_t num = 0;
   auto &blockingConcurrentQueue = _writableIndexes[indexNum];
+  bool ok = true;
   do {
     try {
       num = 0;
       while (blockingConcurrentQueue.wait_dequeue_timed(num, 1000000)) {
-        if (!write(num)) {
-          blockingConcurrentQueue.enqueue(num);
+        ok = write(num);
+        while (!ok) {
+          //          blockingConcurrentQueue.enqueue(num);
+          ok = write(num);
         }
       }
     } catch (std::exception &ex) {
@@ -549,6 +560,7 @@ bool Broker::write(size_t num) {
                   ahandler->onWritableLock.unlock();
                   return true;
                 }
+                ahandler->log->warning("%s", (std::to_string(num).append(" ! <= AsyncTCPHandler::sendHeaderAndData : try again")));
                 Poco::Thread::yield();
               }
             } while (status == AsyncTCPHandler::DataStatus::TRYAGAIN && _isWritable);
@@ -570,6 +582,7 @@ bool Broker::write(size_t num) {
       } while (sMessage != nullptr && !ahandler->needErase());
       ahandler->onWritableLock.unlock();
     } else {
+      ahandler->log->warning("%s", (std::to_string(num).append(" ! <= AsyncTCPHandler::write::tryLock : false")));
       return false;
     }
   }

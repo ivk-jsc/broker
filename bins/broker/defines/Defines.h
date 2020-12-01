@@ -49,4 +49,10 @@ static const std::string emptyString;
 
 #define non_std_endl '\n'
 
+#ifdef _DEBUG
+#define DEFAULT_LOG_LEVEL 8
+#else
+#define DEFAULT_LOG_LEVEL 4
+#endif
+
 #endif  // __BROKER_DEFINES_H__

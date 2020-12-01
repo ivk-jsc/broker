@@ -378,24 +378,28 @@ void Storage::saveMessageHeader(const upmq::broker::Session &session, const Mess
 
   // Save header
 
-  Poco::Data::Statement insert(dbs());
-  insert.addBind(Poco::Data::Keywords::useRef(message.message_id()))
-      .addBind(Poco::Data::Keywords::use(priority))
-      .addBind(Poco::Data::Keywords::use(persistent))
-      .addBind(Poco::Data::Keywords::useRef(message.correlation_id()))
-      .addBind(Poco::Data::Keywords::useRef(message.reply_to()))
-      .addBind(Poco::Data::Keywords::useRef(message.type()))
-      .addBind(Poco::Data::Keywords::use(timestamp))
-      .addBind(Poco::Data::Keywords::use(ttl))
-      .addBind(Poco::Data::Keywords::use(expiration))
-      .addBind(Poco::Data::Keywords::use(bodyType))
-      .addBind(Poco::Data::Keywords::useRef(sMessage.clientID))
-      .addBind(Poco::Data::Keywords::useRef(message.group_id()))
-      .addBind(Poco::Data::Keywords::use(groupSeq));
+  OnError onError;
+  onError.setError(Proto::ERROR_ON_SAVE_MESSAGE).setSql(sql.str()).setInfo("failed to save message header id : " + message.message_id());
+  TRY_EXECUTE(([&dbs, &message, &priority, &persistent, &timestamp, &ttl, &expiration, &bodyType, &sMessage, &groupSeq, &sql]() {
+                Poco::Data::Statement insert(dbs());
+                insert.addBind(Poco::Data::Keywords::useRef(message.message_id()))
+                    .addBind(Poco::Data::Keywords::use(priority))
+                    .addBind(Poco::Data::Keywords::use(persistent))
+                    .addBind(Poco::Data::Keywords::useRef(message.correlation_id()))
+                    .addBind(Poco::Data::Keywords::useRef(message.reply_to()))
+                    .addBind(Poco::Data::Keywords::useRef(message.type()))
+                    .addBind(Poco::Data::Keywords::use(timestamp))
+                    .addBind(Poco::Data::Keywords::use(ttl))
+                    .addBind(Poco::Data::Keywords::use(expiration))
+                    .addBind(Poco::Data::Keywords::use(bodyType))
+                    .addBind(Poco::Data::Keywords::useRef(sMessage.clientID))
+                    .addBind(Poco::Data::Keywords::useRef(message.group_id()))
+                    .addBind(Poco::Data::Keywords::use(groupSeq));
 
-  insert << sql.str();
-
-  insert.execute();
+                insert << sql.str();
+                insert.execute();
+              }),
+              onError);
 }
 void Storage::save(const upmq::broker::Session &session, const MessageDataContainer &sMessage) {
   const Proto::Message &message = sMessage.message();
@@ -501,19 +505,74 @@ std::shared_ptr<MessageDataContainer> Storage::get(const Consumer &consumer, boo
 void Storage::setParent(const broker::Destination *parent) { _parent = parent; }
 const std::string &Storage::uri() const { return _parent ? _parent->uri() : emptyString; }
 void Storage::saveMessageProperties(const upmq::broker::Session &session, const Proto::Message &message) {
-  storage::DBMSSession &dbSession = *session.currentDBSession;
-  std::stringstream sql;
-  std::string upsert = "insert or replace";
-  std::string postfix;
-  if (STORAGE_CONFIG.connection.props.dbmsType == storage::Postgresql) {
-    upsert = "insert";
+  std::vector<MessagePropertyInfo::MsgTuple> messageProperties(message.property_size());
+  size_t i = 0;
+  for (auto it = message.property().begin(); it != message.property().end(); ++it) {
+    MessagePropertyInfo messagePropertyInfo;
+    messagePropertyInfo.setValueNull(it->second.is_null());
+    messagePropertyInfo.setMessageID(message.message_id());
+    messagePropertyInfo.setPropertyName(it->first);
+    messagePropertyInfo.setPropertyType(it->second.PropertyValue_case());
+    switch (it->second.PropertyValue_case()) {
+      case Proto::Property::kValueString: {
+        messagePropertyInfo.setValueString(it->second.value_string());
+      } break;
+
+      case Proto::Property::kValueChar: {
+        messagePropertyInfo.setValueChar(it->second.value_char());
+      } break;
+
+      case Proto::Property::kValueBool: {
+        messagePropertyInfo.setValueBool(it->second.value_bool());
+      } break;
+
+      case Proto::Property::kValueByte: {
+        messagePropertyInfo.setValueByte(it->second.value_byte());
+      } break;
+
+      case Proto::Property::kValueShort: {
+        messagePropertyInfo.setValueShort(it->second.value_short());
+      } break;
+
+      case Proto::Property::kValueInt: {
+        messagePropertyInfo.setValueInt(it->second.value_int());
+      } break;
+
+      case Proto::Property::kValueLong: {
+        messagePropertyInfo.setValueLong(it->second.value_long());
+      } break;
+
+      case Proto::Property::kValueFloat: {
+        messagePropertyInfo.setValueFloat(it->second.value_float());
+      } break;
+
+      case Proto::Property::kValueDouble: {
+        messagePropertyInfo.setValueDouble(it->second.value_double());
+      } break;
+
+      case Proto::Property::kValueBytes: {
+        messagePropertyInfo.setValueBytes(Poco::Data::BLOB((const unsigned char *)it->second.value_bytes().c_str(), it->second.value_bytes().size()));
+      } break;
+
+      case Proto::Property::kValueObject: {
+        messagePropertyInfo.setValueObject(
+            Poco::Data::BLOB((const unsigned char *)it->second.value_object().c_str(), it->second.value_object().size()));
+      } break;
+
+      default:
+        break;
+    }
+    messageProperties.push_back(messagePropertyInfo.tuple);
   }
-
-  NextBindParam nextParam;
-
-  for (google::protobuf::Map<std::string, Proto::Property>::const_iterator it = message.property().begin(); it != message.property().end(); ++it) {
-    nextParam.reset();
-    sql.str("");
+  if (!messageProperties.empty()) {
+    storage::DBMSSession &dbSession = *session.currentDBSession;
+    std::stringstream sql;
+    std::string upsert = "insert or replace";
+    std::string postfix;
+    if (STORAGE_CONFIG.connection.props.dbmsType == storage::Postgresql) {
+      upsert = "insert";
+    }
+    NextBindParam nextParam;
     sql << upsert << " into " << _propertyTableID
         << " (message_id,"
            "  property_name,"
@@ -529,94 +588,32 @@ void Storage::saveMessageProperties(const upmq::broker::Session &session, const 
            "  value_double,"
            "  value_bytes,"
            "  value_object,"
-           "  is_null) values ("
-        << "\'" << message.message_id() << "\'"
-        << ","
-        << "\'" << it->first << "\'"
-        << "," << it->second.PropertyValue_case() << ",";
-    bool isNull = it->second.is_null();
-    switch (it->second.PropertyValue_case()) {
-      case Proto::Property::kValueString: {
-        sql << nextParam();
-        sql << ", NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, " << nextParam();
-        sql << ")" << postfix << ";" << non_std_endl;
-        dbSession << sql.str(), Poco::Data::Keywords::useRef(it->second.value_string()), Poco::Data::Keywords::use(isNull), Poco::Data::Keywords::now;
-      } break;
+           "  is_null) values (";
+    sql << " " << nextParam();  // 1
+    sql << "," << nextParam();  // 2
+    sql << "," << nextParam();  // 3
+    sql << "," << nextParam();  // 4
+    sql << "," << nextParam();  // 5
+    sql << "," << nextParam();  // 6
+    sql << "," << nextParam();  // 7
+    sql << "," << nextParam();  // 8
+    sql << "," << nextParam();  // 9
+    sql << "," << nextParam();  // 10
+    sql << "," << nextParam();  // 11
+    sql << "," << nextParam();  // 12
+    sql << "," << nextParam();  // 13
+    sql << "," << nextParam();  // 14
+    sql << "," << nextParam();  // 15
+    sql << ");";
 
-      case Proto::Property::kValueChar: {
-        sql << "NULL, " << it->second.value_char() << " , NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, " << nextParam();
-        sql << ")" << postfix << ";" << non_std_endl;
-        dbSession << sql.str(), Poco::Data::Keywords::use(isNull), Poco::Data::Keywords::now;
-      } break;
-
-      case Proto::Property::kValueBool: {
-        bool boolValue = it->second.value_bool();
-        sql << "NULL, NULL, " << nextParam();
-        sql << ", NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, " << nextParam();
-        sql << ")" << postfix << ";" << non_std_endl;
-        dbSession << sql.str(), Poco::Data::Keywords::use(boolValue), Poco::Data::Keywords::use(isNull), Poco::Data::Keywords::now;
-      } break;
-
-      case Proto::Property::kValueByte: {
-        sql << "NULL, NULL, NULL, " << it->second.value_byte() << ", NULL, NULL, NULL, NULL, NULL, NULL, NULL, " << nextParam();
-        sql << ")" << postfix << ";" << non_std_endl;
-        dbSession << sql.str(), Poco::Data::Keywords::use(isNull), Poco::Data::Keywords::now;
-      } break;
-
-      case Proto::Property::kValueShort: {
-        sql << "NULL, NULL, NULL, NULL, " << it->second.value_short() << ", NULL, NULL, NULL, NULL, NULL, NULL, " << nextParam();
-        sql << ")" << postfix << ";" << non_std_endl;
-        dbSession << sql.str(), Poco::Data::Keywords::use(isNull), Poco::Data::Keywords::now;
-      } break;
-
-      case Proto::Property::kValueInt: {
-        sql << "NULL, NULL, NULL, NULL, NULL, " << it->second.value_int() << ", NULL, NULL, NULL, NULL, NULL, " << nextParam();
-        sql << ")" << postfix << ";" << non_std_endl;
-        dbSession << sql.str(), Poco::Data::Keywords::use(isNull), Poco::Data::Keywords::now;
-      } break;
-
-      case Proto::Property::kValueLong: {
-        sql << "NULL, NULL, NULL, NULL, NULL, NULL, " << it->second.value_long() << ", NULL, NULL, NULL, NULL, " << nextParam();
-        sql << ")" << postfix << ";" << non_std_endl;
-        dbSession << sql.str(), Poco::Data::Keywords::use(isNull), Poco::Data::Keywords::now;
-      } break;
-
-      case Proto::Property::kValueFloat: {
-        float fval = it->second.value_float();
-        sql << "NULL, NULL, NULL, NULL, NULL, NULL, NULL, " << nextParam();
-        sql << ", NULL, NULL, NULL, " << nextParam();
-        sql << ")" << postfix << ";" << non_std_endl;
-        dbSession << sql.str(), Poco::Data::Keywords::use(fval), Poco::Data::Keywords::use(isNull), Poco::Data::Keywords::now;
-      } break;
-
-      case Proto::Property::kValueDouble: {
-        double dval = it->second.value_double();
-        sql << "NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, " << nextParam();
-        sql << ", NULL, NULL, " << nextParam();
-        sql << ")" << postfix << ";" << non_std_endl;
-        dbSession << sql.str(), Poco::Data::Keywords::use(dval), Poco::Data::Keywords::use(isNull), Poco::Data::Keywords::now;
-      } break;
-
-      case Proto::Property::kValueBytes: {
-        sql << "NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, " << nextParam();
-        sql << ", NULL, " << nextParam();
-        sql << ")" << postfix << ";" << non_std_endl;
-        Poco::Data::BLOB blob((const unsigned char *)it->second.value_bytes().c_str(), it->second.value_bytes().size());
-        dbSession << sql.str(), Poco::Data::Keywords::use(blob), Poco::Data::Keywords::use(isNull), Poco::Data::Keywords::now;
-      } break;
-
-      case Proto::Property::kValueObject: {
-        sql << "NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, " << nextParam();
-        sql << ", " << nextParam();
-        sql << ")" << postfix << ";" << non_std_endl;
-        Poco::Data::BLOB blob((const unsigned char *)it->second.value_object().c_str(), it->second.value_object().size());
-        dbSession << sql.str(), Poco::Data::Keywords::use(blob), Poco::Data::Keywords::use(isNull), Poco::Data::Keywords::now;
-      } break;
-
-      default:
-        sql.str("");
-        break;
-    }
+    OnError onError;
+    onError.setError(Proto::ERROR_ON_SAVE_MESSAGE)
+        .setSql(sql.str())
+        .setInfo("failed to save message properties for msg id : " + message.message_id());
+    TRY_EXECUTE(([&dbSession, &messageProperties, &sql]() {
+                  dbSession << sql.str(), Poco::Data::Keywords::use(messageProperties), Poco::Data::Keywords::now;
+                }),
+                onError);
   }
 }
 void Storage::begin(const Session &session, const std::string &extParentId) {

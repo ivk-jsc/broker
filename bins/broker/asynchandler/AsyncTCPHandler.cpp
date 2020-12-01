@@ -147,7 +147,7 @@ void AsyncTCPHandler::put(std::shared_ptr<MessageDataContainer> sMessage) {
     if (_needErase) {
       return;
     }
-  } while (!outputQueue.enqueue(std::move(sMessage)));
+  } while (!outputQueue.enqueue(sMessage));
   BROKER::Instance().putWritable(_queueWriteNum, num);
 }
 

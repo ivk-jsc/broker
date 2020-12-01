@@ -309,7 +309,7 @@ void ConnectionImpl::removeDispatcher(ConsumerImpl *consumerImpl) {
   CATCH_ALL_THROW_CMSEXCEPTION
 }
 
-ConsumerImpl *ConnectionImpl::getDispatcher(const string& objectId) {
+ConsumerImpl *ConnectionImpl::getDispatcher(const string &objectId) {
   ConsumerImpl *consumer = nullptr;
   try {
     synchronized(&_lockCommand) { consumer = _dispatchersMap.at(objectId); }

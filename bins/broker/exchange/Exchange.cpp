@@ -140,12 +140,10 @@ void Exchange::begin(const upmq::broker::Session &session, const std::string &de
 void Exchange::commit(const upmq::broker::Session &session, const std::string &destinationID) {
   Destination &destination = getDestination(destinationID);
   destination.commit(session);
-  destination.postNewMessageEvent();
 }
 void Exchange::abort(const upmq::broker::Session &session, const std::string &destinationID) {
   Destination &destination = getDestination(destinationID);
   destination.abort(session);
-  destination.postNewMessageEvent();
 }
 bool Exchange::isDestinationTemporary(const std::string &id) {
   Destination &destination = getDestination(id);

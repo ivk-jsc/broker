@@ -32,7 +32,7 @@ storage::DBMSType Configuration::Storage::type(const std::string &dbms) {
     regestryDBMSType = storage::Postgresql;
   } else if (localDBMS == "sqlite") {
     regestryDBMSType = storage::SQLite;
-  } else if ((localDBMS == "sqlite-native") || (localDBMS == ":memory:")) {
+  } else if ((localDBMS == "sqlite-native") || (localDBMS.find(":memory:") != std::string::npos)) {
     regestryDBMSType = storage::SQLiteNative;
   }
   return regestryDBMSType;

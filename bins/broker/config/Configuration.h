@@ -64,7 +64,7 @@ class Configuration {
   };
 
   struct Log {
-    int level{4};
+    int level{DEFAULT_LOG_LEVEL};
     std::string name{"broker"};
     Poco::Path path;
     bool isInteractive{true};

@@ -59,7 +59,7 @@ class Connection;
 class AsyncTCPHandler {
  public:
   // SubscriptionsList - set<destination_id, set<subscription_id> >
-  using SubscriptionsList = std::unordered_map<std::string, std::unordered_set<std::string> >;
+  using SubscriptionsList = std::unordered_map<std::string, std::unordered_set<std::string>>;
   struct HeartBeat {
     int sendTimeout;
     int recvTimeout;
@@ -127,7 +127,7 @@ class AsyncTCPHandler {
   void allowPutReadEvent();
 
  public:
-  moodycamel::ConcurrentQueue<std::shared_ptr<MessageDataContainer> > outputQueue;
+  moodycamel::ConcurrentQueue<std::shared_ptr<MessageDataContainer>> outputQueue;
   Poco::FastMutex onWritableLock;
   Poco::FastMutex onReadableLock;
   char pBuffer[BUFFER_SIZE]{};
