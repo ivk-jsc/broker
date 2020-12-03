@@ -57,12 +57,12 @@ class Storage {
                                                     const Consumer &consumer,
                                                     bool useFileLink);
   void fillProperties(storage::DBMSSession &dbSession, Proto::Message &message);
-  int deleteMessageHeader(storage::DBMSSession &dbSession, const std::string &messageID);
+  bool deleteMessageHeader(storage::DBMSSession &dbSession, const std::string &messageID);
   void deleteMessageProperties(storage::DBMSSession &dbSession, const std::string &messageID);
   int getSubscribersCount(storage::DBMSSession &dbSession, const std::string &messageID);
   void updateSubscribersCount(storage::DBMSSession &dbSession, const std::string &messageID);
   void deleteMessageInfoFromJournal(storage::DBMSSession &dbSession, const std::string &messageID);
-  void deleteMessageDataIfExists(const std::string &messageID, int persistent);
+  void deleteMessageDataIfExists(const std::string &messageID, bool persistent);
   void saveMessageHeader(const upmq::broker::Session &session, const MessageDataContainer &sMessage);
   void saveMessageProperties(const upmq::broker::Session &session, const Proto::Message &message);
   bool checkTTLIsOut(const Poco::DateTime &messageTime, Poco::Int64 ttl);

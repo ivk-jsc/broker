@@ -125,6 +125,7 @@ class MessageInfo {
   bool lastInGroup() const;
   const Poco::Nullable<std::string> &transactionID() const;
   void clear();
+  std::string dump() const;
 };
 
 }  // namespace broker

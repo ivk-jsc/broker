@@ -143,6 +143,9 @@ void tryExecute(const std::function<void()>& call, OnError& onError, std::string
     } catch (const std::exception& e) {
       onError.setErrorDescription(e.what()).setFile(std::move(file)).setLine(line);
       onError.make(mode);
+    } catch (...) {
+      onError.setErrorDescription("unknown exception").setFile(std::move(file)).setLine(line);
+      onError.make(mode);
     }
   } while (locked);
 }

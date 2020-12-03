@@ -83,7 +83,7 @@ std::string Storage::generateSQLMainTable(const std::string &tableName) const {
       << "   ,type text not null"
       << "   ,body_type int not null default 0"
       << "   ,priority int not null"
-      << "   ,persistent int not null"
+      << "   ,persistent boolean not null"
       << "   ,correlation_id text"
       << "   ,reply_to text"
       << "   ,client_timestamp bigint not null"
@@ -258,9 +258,9 @@ message::GroupStatus Storage::checkIsGroupClosed(const MessageDataContainer &sMe
       return message::GroupStatus::NOT_IN_GROUP;
   }
 }
-int Storage::deleteMessageHeader(storage::DBMSSession &dbSession, const std::string &messageID) {
+bool Storage::deleteMessageHeader(storage::DBMSSession &dbSession, const std::string &messageID) {
   std::stringstream sql;
-  int persistent = static_cast<int>(!_nonPersistent.contains(messageID));
+  bool persistent = !_nonPersistent.contains(messageID);
   sql << "delete from " << _messageTableID << " where message_id = \'" << messageID << "\'"
       << ";" << non_std_endl;
   OnError onError;
@@ -310,8 +310,8 @@ void Storage::deleteMessageInfoFromJournal(storage::DBMSSession &dbSession, cons
 
   TRY_EXECUTE(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
 }
-void Storage::deleteMessageDataIfExists(const std::string &messageID, int persistent) {
-  if (persistent == 1) {
+void Storage::deleteMessageDataIfExists(const std::string &messageID, bool persistent) {
+  if (persistent) {
     std::string mID = Poco::replace(messageID, ":", "_");
     Poco::Path msgFile = STORAGE_CONFIG.data.get();
     msgFile.append(_parent->name());
@@ -332,7 +332,7 @@ void Storage::removeMessage(const std::string &messageID, storage::DBMSSession &
     dbSession.beginTX(messageID);
   }
 
-  const int wasPersistent = deleteMessageHeader(dbSession, messageID);
+  const bool wasPersistent = deleteMessageHeader(dbSession, messageID);
   deleteMessageProperties(dbSession, messageID);
   const int subscribersCount = getSubscribersCount(dbSession, messageID);
   if (subscribersCount <= 0) {
@@ -351,7 +351,7 @@ const std::string &Storage::propertyTableID() const { return _propertyTableID; }
 void Storage::saveMessageHeader(const upmq::broker::Session &session, const MessageDataContainer &sMessage) {
   storage::DBMSSession &dbs = *session.currentDBSession;
   const Proto::Message &message = sMessage.message();
-  int persistent = message.persistent() ? 1 : 0;
+  bool persistent = message.persistent();
   int bodyType = message.body_type();
   int priority = message.priority();
   Poco::Int64 timestamp = message.timestamp();
@@ -567,7 +567,8 @@ void Storage::saveMessageProperties(const upmq::broker::Session &session, const 
       default:
         break;
     }
-    messageProperties.push_back(messagePropertyInfo.tuple);
+    messageProperties[i] = std::move(messagePropertyInfo.tuple);
+    i++;
   }
   if (!messageProperties.empty()) {
     storage::DBMSSession &dbSession = *session.currentDBSession;
@@ -611,10 +612,19 @@ void Storage::saveMessageProperties(const upmq::broker::Session &session, const 
     sql << "," << nextParam();  // 15
     sql << ");";
 
+    auto dumpInfo = [&messageProperties]() -> std::string {
+      std::string result;
+      result += non_std_endl;
+      for (const auto &item : messageProperties) {
+        result.append(MessagePropertyInfo::dump(item));
+        result += non_std_endl;
+      }
+      return result;
+    };
     OnError onError;
     onError.setError(Proto::ERROR_ON_SAVE_MESSAGE)
         .setSql(sql.str())
-        .setInfo("failed to save message properties for msg id : " + message.message_id());
+        .setInfo("failed to save message properties for msg id : " + message.message_id() + " " + dumpInfo());
     TRY_EXECUTE(([&dbSession, &messageProperties, &sql]() {
                   dbSession << sql.str(), Poco::Data::Keywords::use(messageProperties), Poco::Data::Keywords::now;
                 }),
@@ -1017,6 +1027,8 @@ std::shared_ptr<MessageDataContainer> Storage::makeMessage(storage::DBMSSession 
       if (item.hasValue()) {
         sMessage = (*item);
       } else {
+        auto *log = &Poco::Logger::get(CONFIGURATION::Instance().log().name);
+        log->warning("- ! message : %s was not found in non-persistent storage dump : %s", msgInfo.messageId(), msgInfo.dump());
         removeMessage(msgInfo.messageId(), dbSession);
         return {};
       }

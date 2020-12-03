@@ -15,6 +15,7 @@
  */
 
 #include "MessagePropertyInfo.h"
+#include <sstream>
 
 namespace upmq {
 namespace broker {
@@ -152,5 +153,67 @@ void MessagePropertyInfo::setValueDouble(double value) { tuple.set<message::prop
 void MessagePropertyInfo::setValueNull(bool value) { tuple.set<message::property::value::IsNull::POSITION>(value); }
 void MessagePropertyInfo::setValueBytes(const Poco::Data::BLOB &value) { tuple.set<message::property::value::Bytes::POSITION>(value); }
 void MessagePropertyInfo::setValueObject(const Poco::Data::BLOB &value) { tuple.set<message::property::value::Object::POSITION>(value); }
+std::string MessagePropertyInfo::dump() const {
+  std::stringstream ss;
+  ss << "<" << messageID() << "|" << propertyName() << "|" << propertyType() << "|";
+  switch (static_cast<MessagePropertyInfo::Field>(propertyType())) {
+    case Field::message_id:
+    case Field::property_name:
+    case Field::property_type:
+      ss << "";
+    case Field::value_string:
+      if (!tuple.get<message::property::value::String::POSITION>().isNull()) {
+        ss << tuple.get<message::property::value::String::POSITION>().value();
+      }
+    case Field::value_char:
+      if (!tuple.get<message::property::value::Char::POSITION>().isNull()) {
+        ss << tuple.get<message::property::value::Char::POSITION>().value();
+      }
+    case Field::value_bool:
+      if (!tuple.get<message::property::value::Bool::POSITION>().isNull()) {
+        ss << tuple.get<message::property::value::Bool::POSITION>().value();
+      }
+    case Field::value_byte:
+      if (!tuple.get<message::property::value::Byte::POSITION>().isNull()) {
+        ss << tuple.get<message::property::value::Byte::POSITION>().value();
+      }
+    case Field::value_short:
+      if (!tuple.get<message::property::value::Short::POSITION>().isNull()) {
+        ss << tuple.get<message::property::value::Short::POSITION>().value();
+      }
+    case Field::value_int:
+      if (!tuple.get<message::property::value::Int::POSITION>().isNull()) {
+        ss << tuple.get<message::property::value::Int::POSITION>().value();
+      }
+    case Field::value_long:
+      if (!tuple.get<message::property::value::Long::POSITION>().isNull()) {
+        ss << tuple.get<message::property::value::Long::POSITION>().value();
+      }
+    case Field::value_float:
+      if (!tuple.get<message::property::value::Float::POSITION>().isNull()) {
+        ss << tuple.get<message::property::value::Float::POSITION>().value();
+      }
+    case Field::value_double:
+      if (!tuple.get<message::property::value::Double::POSITION>().isNull()) {
+        ss << tuple.get<message::property::value::Double::POSITION>().value();
+      }
+    case Field::value_bytes:
+      if (!tuple.get<message::property::value::Bytes::POSITION>().isNull()) {
+        ss << "xxxx:blob";
+      }
+    case Field::value_object:
+      if (!tuple.get<message::property::value::Object::POSITION>().isNull()) {
+        ss << "xxxx:blob";
+      }
+    case Field::is_null:
+      ss << "is_null";
+  }
+  ss << ">";
+  return ss.str();
+}
+std::string MessagePropertyInfo::dump(const MsgTuple &tuple) {
+  MessagePropertyInfo messagePropertyInfo(tuple);
+  return messagePropertyInfo.dump();
+}
 }  // namespace broker
 }  // namespace upmq

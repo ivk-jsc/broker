@@ -129,6 +129,8 @@ class MessagePropertyInfo {
   void setValueObject(const Poco::Data::BLOB &value);
   bool isNull() const;
   Field getNotNullValInfo() const;
+  std::string dump() const;
+  static std::string dump(const MsgTuple &tuple);
 };
 }  // namespace broker
 }  // namespace upmq

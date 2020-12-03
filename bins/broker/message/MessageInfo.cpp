@@ -15,7 +15,9 @@
  */
 
 #include "MessageInfo.h"
-
+#include <sstream>
+#include <Poco/DateTimeFormatter.h>
+#include <Poco/DateTimeFormat.h>
 namespace upmq {
 namespace broker {
 
@@ -86,5 +88,30 @@ int MessageInfo::groupSeq() const { return tuple.get<message::field::GroupSeq::P
 bool MessageInfo::lastInGroup() const { return tuple.get<message::field::LastInGroup::POSITION>(); }
 const Poco::Nullable<std::string> &MessageInfo::transactionID() const { return tuple.get<message::field::TransactionId::POSITION>(); }
 void MessageInfo::clear() { tuple = MessageInfo::MsgTuple{}; }
+std::string MessageInfo::dump() const {
+  std::stringstream ss;
+  ss << "<"
+     << "id:" << messageId() << "|"
+     << "num:" << num() << "|"
+     << "type:" << type() << "|"
+     << "bodyType:" << bodyType() << "|"
+     << "priority:" << priority() << "|"
+     << "persistent:" << persistent() << "|"
+     << "correlationID:" << correlationID().value("empty") << "|"
+     << "replyTo:" << replyTo().value("empty") << "|"
+     << "timestamp:" << timestamp() << "|"
+     << "expiration:" << expiration() << "|"
+     << "timetolive:" << timetolive() << "|"
+     << "createdTime:" << Poco::DateTimeFormatter::format(createdTime(), Poco::DateTimeFormat::ISO8601_FRAC_FORMAT) << "|"
+     << "deliveryCount:" << deliveryCount() << "|"
+     << "deliveryStatus:" << deliveryStatus() << "|"
+     << "clientID:" << clientID().value("empty") << "|"
+     << "consumerID:" << consumerID().value("empty") << "|"
+     << "groupID:" << groupID().value("empty") << "|"
+     << "groupSeq:" << groupSeq() << "|"
+     << "lastInGroup:" << lastInGroup() << "|"
+     << "transactionID:" << transactionID().value("empty") << ">";
+  return ss.str();
+}
 }  // namespace broker
 }  // namespace upmq
