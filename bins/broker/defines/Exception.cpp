@@ -23,6 +23,8 @@
 #define LOG_LOCKS(x)                                                    \
   auto* log = &Poco::Logger::get(CONFIGURATION::Instance().log().name); \
   log->warning("tid : %s ! " #x " : %s, line : %d, sql : %s ", tid, file, line, onError.sql())
+#else
+#define LOG_LOCKS(x)
 #endif
 
 namespace upmq {
