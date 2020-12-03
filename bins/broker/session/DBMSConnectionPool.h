@@ -29,6 +29,8 @@ class DBMSConnectionPool {
   DBMSConnectionPool();
   DBMSConnectionPool(const DBMSConnectionPool &) = delete;
   DBMSConnectionPool(DBMSConnectionPool &&) = delete;
+  DBMSConnectionPool &operator=(const DBMSConnectionPool &) = delete;
+  DBMSConnectionPool &operator=(DBMSConnectionPool &&) = delete;
   virtual ~DBMSConnectionPool();
 
   std::shared_ptr<Poco::Data::Session> dbmsConnection() const;

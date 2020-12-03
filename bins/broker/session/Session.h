@@ -79,6 +79,9 @@ class Session {
       upmq::ScopedReadRWLock readRWLock(_rwLock);
       auto it = _currentSessions.find(Poco::Thread::currentTid());
       if (it == _currentSessions.end()) {
+        if (rhs == nullptr) {
+          return true;
+        }
         return false;
       }
       if (rhs == nullptr) {

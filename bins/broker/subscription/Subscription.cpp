@@ -51,8 +51,10 @@ Subscription::Subscription(const Destination &destination, const std::string &id
   _storage.setParent(&destination);
 
   OnError onError;
-
+  storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
   std::stringstream sql;
+
+  dbSession.beginTX(_id);
   sql << "drop table if exists " << _consumersT << ";" << non_std_endl;
   onError.setError(Proto::ERROR_UNKNOWN).setInfo("can't init consumers table for subscription").setSql(sql.str());
   TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
@@ -90,9 +92,6 @@ Subscription::Subscription(const Destination &destination, const std::string &id
       << " \'" << _id << "\'"
       << "," << nextParam();
   sql << "," << static_cast<int>(_type) << "," << nextParam() << ")" << postfix << ";";
-
-  storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
-  dbSession.beginTX(_id);
 
   onError.setError(Proto::ERROR_ON_SUBSCRIPTION).setSql(sql.str()).setInfo("can't create subscription");
   TRY_EXECUTE(([&dbSession, &sql, this]() {

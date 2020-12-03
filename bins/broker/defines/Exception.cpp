@@ -19,6 +19,12 @@
 #include "AsyncLogger.h"
 #include "Configuration.h"
 
+#ifdef _DEBUG
+#define LOG_LOCKS(x)                                                    \
+  auto* log = &Poco::Logger::get(CONFIGURATION::Instance().log().name); \
+  log->warning("tid : %s ! " #x " : %s, line : %d, sql : %s ", tid, file, line, onError.sql());
+#endif
+
 namespace upmq {
 namespace broker {
 
@@ -97,8 +103,17 @@ void OnError::make(OnError::Mode mode) const {
       break;
   }
 }
+const std::string& OnError::info() const { return _info; }
+const std::string& OnError::sql() const { return _sql; }
+const std::string& OnError::errorDescription() const { return _errorDescription; }
+int OnError::error() const { return _error; }
+const Poco::Nullable<std::function<void()>>& OnError::expression() const { return _expression; }
+const std::string& OnError::file() const { return _file; }
+int OnError::line() const { return _line; }
+
 void tryExecute(const std::function<void()>& call, OnError& onError, std::string file, int line, OnError::Mode mode) {
   bool locked;
+  std::string tid = std::to_string((size_t)Poco::Thread::currentTid());
   do {
     locked = false;
     try {
@@ -106,14 +121,17 @@ void tryExecute(const std::function<void()>& call, OnError& onError, std::string
     } catch (PDSQLITE::DBLockedException& dblex) {
       UNUSED_VAR(dblex);
       locked = true;
+      LOG_LOCKS(db - locked)
       Poco::Thread::yield();
     } catch (PDSQLITE::TableLockedException& tblex) {
       UNUSED_VAR(tblex);
       locked = true;
+      LOG_LOCKS(table - locked)
       Poco::Thread::yield();
     } catch (Poco::InvalidAccessException& invaccex) {
       UNUSED_VAR(invaccex);
       locked = true;
+      LOG_LOCKS(invalid - access - locked)
       Poco::Thread::yield();
     } catch (Poco::Exception& pex) {
       onError.setErrorDescription(pex.message()).setFile(std::move(file)).setLine(line);

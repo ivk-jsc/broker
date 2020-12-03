@@ -85,6 +85,13 @@ class OnError {
   OnError &setExpression(const std::function<void()> &expression);
   OnError &setLine(int line);
   OnError &setFile(std::string file);
+  const std::string &info() const;
+  const std::string &sql() const;
+  const std::string &errorDescription() const;
+  int error() const;
+  const Poco::Nullable<std::function<void()>> &expression() const;
+  const std::string &file() const;
+  int line() const;
 
   void make(OnError::Mode mode) const;
 };

@@ -41,20 +41,25 @@ Storage::Storage(const std::string &messageTableID, size_t nonPersistentSize)
   std::string mainTsql = generateSQLMainTable(messageTableID);
   auto mainTXsqlIndexes = generateSQLMainTableIndexes(messageTableID);
 
-  OnError onError;
-  onError.setError(Proto::ERROR_STORAGE).setSql(mainTsql).setInfo("can't init storage");
+  storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
+  dbSession.beginTX(messageTableID);
 
-  TRY_EXECUTE(([&mainTsql, &mainTXsqlIndexes]() {
-                dbms::Instance().doNow(mainTsql);
+  OnError onError;
+  onError.setError(Proto::ERROR_STORAGE).setSql(mainTsql).setInfo("can't init storage").setExpression([&dbSession]() { dbSession.rollbackTX(); });
+
+  TRY_EXECUTE(([&mainTsql, &mainTXsqlIndexes, &dbSession]() {
+                dbSession << mainTsql, Poco::Data::Keywords::now;
                 for (const auto &index : mainTXsqlIndexes) {
-                  dbms::Instance().doNow(index);
+                  dbSession << index, Poco::Data::Keywords::now;
                 }
               }),
               onError);
 
   std::string propTsql = generateSQLProperties();
   onError.setSql(propTsql);
-  TRY_EXECUTE(([&propTsql]() { dbms::Instance().doNow(propTsql); }), onError);
+  TRY_EXECUTE(([&propTsql, &dbSession]() { dbSession << propTsql, Poco::Data::Keywords::now; }), onError);
+
+  dbSession.commitTX();
 }
 Storage::~Storage() = default;
 std::string Storage::generateSQLMainTable(const std::string &tableName) const {
@@ -629,14 +634,31 @@ void Storage::begin(const Session &session, const std::string &extParentId) {
   auto mainTXsqlIndexes = generateSQLMainTableIndexes(mainTXTable);
   OnError onError;
   onError.setError(Proto::ERROR_ON_BEGIN).setInfo("can't create tx_table");
+  std::unique_ptr<storage::DBMSSession> dbSessionPtr;
 
-  TRY_EXECUTE(([&mainTXsql, &mainTXsqlIndexes]() {
-                dbms::Instance().doNow(mainTXsql);
+  auto getRef = [&session, &dbSessionPtr, &mainTXTable]() -> storage::DBMSSession & {
+    if (session.currentDBSession == nullptr) {
+      dbSessionPtr = dbms::Instance().dbmsSessionPtr();
+      dbSessionPtr->beginTX(mainTXTable);
+      return *dbSessionPtr;
+    }
+    return *session.currentDBSession;
+  };
+
+  storage::DBMSSession &dbSession = getRef();
+
+  TRY_EXECUTE(([&mainTXsql, &mainTXsqlIndexes, &dbSession, &onError]() {
+                onError.setSql(mainTXsql);
+                dbSession << mainTXsql, Poco::Data::Keywords::now;
                 for (const auto &index : mainTXsqlIndexes) {
-                  dbms::Instance().doNow(index);
+                  onError.setSql(mainTXsql);
+                  dbSession << index, Poco::Data::Keywords::now;
                 }
               }),
               onError);
+  if (dbSessionPtr != nullptr) {
+    dbSessionPtr->commitTX();
+  }
 }
 void Storage::commit(const Session &session) {
   std::string mainTXTable = "\"" + std::to_string(Poco::hash(_extParentID + "_" + session.txName())) + "\"";
@@ -712,11 +734,11 @@ void Storage::abort(const Session &session) {
     onError.setSql(sql.str());
     TRY_EXECUTE(([&dbSession, &sql]() { *dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
 
-    onError.setSql("");
+    onError.setSql("drop table if exists " + mainTXTable);
     TRY_EXECUTE(([&dbSession, &mainTXTable, this]() { dropTXTable(*dbSession, mainTXTable); }), onError);
   }
 
-  onError.setSql("").setInfo("can't abort").setExpression([&session]() { session.currentDBSession.reset(nullptr); });
+  onError.setSql("func:resetMessagesBySession").setInfo("can't abort").setExpression([&session]() { session.currentDBSession.reset(nullptr); });
   TRY_EXECUTE(([&dbSession, &session, this]() {
                 session.currentDBSession = std::move(dbSession);
                 resetMessagesBySession(session);
@@ -1172,10 +1194,12 @@ void Storage::dropTables() {
   onError.setError(Proto::ERROR_ON_UNSUBSCRIPTION).setInfo("can't drop table");
   std::stringstream sql;
   sql << "drop table if exists " << _messageTableID << ";" << non_std_endl;
+  onError.setSql(sql.str());
   TRY_EXECUTE_NOEXCEPT([&sql]() { dbms::Instance().doNow(sql.str()); }, onError);
 
   sql.str("");
   sql << "drop table if exists " << _propertyTableID << ";";
+  onError.setSql(sql.str());
   TRY_EXECUTE_NOEXCEPT([&sql]() { dbms::Instance().doNow(sql.str()); }, onError);
 }
 bool Storage::hasTransaction(const Session &session) const {

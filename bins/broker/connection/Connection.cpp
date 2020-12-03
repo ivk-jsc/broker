@@ -33,10 +33,10 @@ Connection::Connection(const std::string &clientID)
       _tcpT("\"" + clientID + "_tcp_connections\"") {
   std::stringstream sql;
   storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
-
+  dbSession.beginTX(_clientID);
   auto onErrExpr = [&dbSession]() { dbSession.rollbackTX(); };
   OnError onError;
-  onError.setExpression(onErrExpr).setInfo("can't create connection").setSql(sql.str()).setError(Proto::ERROR_CONNECTION);
+  onError.setExpression(onErrExpr).setInfo("can't create connection").setError(Proto::ERROR_CONNECTION);
 
   sql << "create table if not exists " << _sessionsT << " ("
       << " id text not null primary key"
@@ -44,7 +44,7 @@ Connection::Connection(const std::string &clientID)
       << ",create_time timestamp not null default current_timestamp"
       << ")"
       << ";";
-
+  onError.setSql(sql.str());
   TRY_EXECUTE(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
 
   sql.str("");
@@ -54,6 +54,7 @@ Connection::Connection(const std::string &clientID)
       << ",create_time timestamp not null default current_timestamp"
       << ")"
       << ";";
+  onError.setSql(sql.str());
   TRY_EXECUTE(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
 
   sql.str("");
@@ -61,7 +62,9 @@ Connection::Connection(const std::string &clientID)
       << "("
       << "\'" << _clientID << "\'"
       << ");";
+  onError.setSql(sql.str());
   TRY_EXECUTE(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
+  dbSession.commitTX();
 }
 Connection::~Connection() {
   try {
@@ -72,17 +75,20 @@ Connection::~Connection() {
     OnError onError;
     onError.setError(Proto::ERROR_CONNECTION);
     std::stringstream sql;
+    storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
+    dbSession.beginTX(_clientID);
     sql << "delete from \"" << BROKER::Instance().id() << "\" where client_id = \'" << _clientID << "\';";
     onError.setSql(sql.str()).setInfo("can't delete client_id");
-    TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
+    TRY_EXECUTE_NOEXCEPT(([&sql, &dbSession]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
     sql.str("");
     sql << "drop table if exists " << _sessionsT << ";";
     onError.setSql(sql.str()).setInfo("can't drop sessions");
-    TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
+    TRY_EXECUTE_NOEXCEPT(([&sql, &dbSession]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
     sql.str("");
     sql << "drop table if exists " << _tcpT << ";";
     onError.setSql(sql.str()).setInfo("can't drop tcp connections");
-    TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
+    TRY_EXECUTE_NOEXCEPT(([&sql, &dbSession]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
+    dbSession.commitTX();
   } catch (...) {
   }
 }
