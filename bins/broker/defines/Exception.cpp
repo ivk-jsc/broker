@@ -121,17 +121,17 @@ void tryExecute(const std::function<void()>& call, OnError& onError, std::string
     } catch (PDSQLITE::DBLockedException& dblex) {
       UNUSED_VAR(dblex);
       locked = true;
-      LOG_LOCKS(db - locked)
+      LOG_LOCKS(dbLocked)
       Poco::Thread::yield();
     } catch (PDSQLITE::TableLockedException& tblex) {
       UNUSED_VAR(tblex);
       locked = true;
-      LOG_LOCKS(table - locked)
+      LOG_LOCKS(tableLocked)
       Poco::Thread::yield();
     } catch (Poco::InvalidAccessException& invaccex) {
       UNUSED_VAR(invaccex);
       locked = true;
-      LOG_LOCKS(invalid - access - locked)
+      LOG_LOCKS(invalidAccessLocked)
       Poco::Thread::yield();
     } catch (Poco::Exception& pex) {
       onError.setErrorDescription(pex.message()).setFile(std::move(file)).setLine(line);
