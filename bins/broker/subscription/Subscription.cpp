@@ -57,7 +57,7 @@ Subscription::Subscription(const Destination &destination, const std::string &id
   dbSession.beginTX(_id);
   sql << "drop table if exists " << _consumersT << ";" << non_std_endl;
   onError.setError(Proto::ERROR_UNKNOWN).setInfo("can't init consumers table for subscription").setSql(sql.str());
-  TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
+  TRY_EXECUTE_NOEXCEPT(([&sql, &dbSession]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
 
   sql.str("");
   sql << "create table if not exists " << _consumersT << "("
@@ -72,7 +72,7 @@ Subscription::Subscription(const Destination &destination, const std::string &id
       << ")"
       << ";";
   onError.setError(Proto::ERROR_DESTINATION).setInfo("can't init destination").setSql(sql.str());
-  TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
+  TRY_EXECUTE_NOEXCEPT(([&sql, &dbSession]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
 
   sql.str("");
   std::string ignorsert = "insert or ignore";
