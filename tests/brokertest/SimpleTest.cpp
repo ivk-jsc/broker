@@ -614,7 +614,7 @@ TEST_F(SimpleTest, testPriority) {
   cmsProvider->getSession()->close();
 }
 TEST_F(SimpleTest, testRoundRobin) {
-  std::unique_ptr<cms::Session> session1(cmsProvider->getConnection()->createSession(cms::Session::CLIENT_ACKNOWLEDGE));
+  std::unique_ptr<cms::Session> session1(cmsProvider->getConnection()->createSession(cms::Session::AUTO_ACKNOWLEDGE));
   std::unique_ptr<TemporaryQueue> queue(session1->createTemporaryQueue());
   std::unique_ptr<MessageProducer> producer(session1->createProducer(queue.get()));
   std::unique_ptr<MessageConsumer> consumer1(session1->createConsumer(queue.get()));
@@ -622,7 +622,7 @@ TEST_F(SimpleTest, testRoundRobin) {
   std::unique_ptr<cms::ConnectionFactory> connFactory(cmsProvider->getConnectionFactory()->createCMSConnectionFactory(cmsProvider->getBrokerURL()));
   std::unique_ptr<cms::Connection> connection(connFactory->createConnection());
   connection->start();
-  std::unique_ptr<cms::Session> session2(connection->createSession(cms::Session::CLIENT_ACKNOWLEDGE));
+  std::unique_ptr<cms::Session> session2(connection->createSession(cms::Session::AUTO_ACKNOWLEDGE));
   std::unique_ptr<MessageConsumer> consumer2(session2->createConsumer(queue.get()));
 
   for (int i = 0; i < 10; i++) {
@@ -639,20 +639,21 @@ TEST_F(SimpleTest, testRoundRobin) {
   std::array<int, 10> items = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
   for (int count(0); count < 5; ++count) {
     in1.reset(consumer2->receive(cmsProvider->maxTimeout));
-    in2.reset(consumer1->receive(cmsProvider->maxTimeout));
-    EXPECT_TRUE((in1 != nullptr || in2 != nullptr));
+    EXPECT_TRUE((in1 != nullptr));
     if (in1) {
       int fromIn1 = in1->getIntProperty("num");
       EXPECT_TRUE(std::any_of(items.begin(), items.end(), [&fromIn1](int i) { return i == fromIn1; }))
           << "invalid order msg : " << in1->getCMSMessageID();
-      EXPECT_NO_THROW(in1->acknowledge());
       ++in1Counter;
     }
+  }
+  for (int count(0); count < 5; ++count) {
+    in2.reset(consumer1->receive(cmsProvider->maxTimeout));
+    EXPECT_TRUE((in2 != nullptr));
     if (in2) {
       int fromIn2 = in2->getIntProperty("num");
       EXPECT_TRUE(std::any_of(items.begin(), items.end(), [&fromIn2](int i) { return i == fromIn2; }))
           << "invalid order msg : " << in2->getCMSMessageID();
-      EXPECT_NO_THROW(in2->acknowledge());
       ++in2Counter;
     }
   }

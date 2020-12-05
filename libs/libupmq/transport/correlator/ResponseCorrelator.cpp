@@ -292,7 +292,7 @@ void ResponseCorrelator::onCommand(Pointer<Command> command) {
     }
 
     // Set the response property in the future response.
-    futureResponse->setResponse(std::move(response));
+    futureResponse->setResponse(response);
   }
 }
 
