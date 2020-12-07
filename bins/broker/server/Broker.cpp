@@ -506,9 +506,8 @@ void Broker::onWritable() {
       num = 0;
       while (blockingConcurrentQueue.wait_dequeue_timed(num, 1000000)) {
         ok = write(num);
-        while (!ok) {
-          //          blockingConcurrentQueue.enqueue(num);
-          ok = write(num);
+        if (!ok) {
+          blockingConcurrentQueue.enqueue(num);
         }
       }
     } catch (std::exception &ex) {
