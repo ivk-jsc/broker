@@ -23,7 +23,7 @@
 namespace upmq {
 namespace broker {
 
-constexpr char DEFAULT_PATTERN[] = "%Y-%m-%d %H:%M:%S:%i %t";
+constexpr char DEFAULT_PATTERN[] = "%Y-%m-%d %H:%M:%S:%i #%q [%I %T] - %t";
 
 AutoPtr<FormattingChannel> AsyncLogger::createFormatter(const std::string &name, bool interactive) {
 #if !defined(WIN32) && !defined(WIN32)

@@ -22,7 +22,7 @@
 #ifdef _DEBUG
 #define LOG_LOCKS(x)                                                    \
   auto* log = &Poco::Logger::get(CONFIGURATION::Instance().log().name); \
-  log->warning("tid : %s ! " #x " : %s, line : %d, sql : %s ", tid, file, line, onError.sql())
+  log->warning(#x " file : %s, line : %d, sql : %s ", file, line, onError.sql())
 #else
 #define LOG_LOCKS(x)
 #endif
@@ -115,9 +115,6 @@ int OnError::line() const { return _line; }
 
 void tryExecute(const std::function<void()>& call, OnError& onError, std::string file, int line, OnError::Mode mode) {
   bool locked;
-#ifdef _DEBUG
-  std::string tid = std::to_string((size_t)Poco::Thread::currentTid());
-#endif
   do {
     locked = false;
     try {

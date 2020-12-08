@@ -66,9 +66,8 @@ AsyncTCPHandler::AsyncTCPHandler(Poco::Net::StreamSocket &socket, upmq::Net::Soc
   _socket.setNoDelay(true);
   _socket.setBlocking(false);
 
-  log->information("%s",
-                   std::to_string(num)
-                       .append(" * => new asynchandler from ")
+  log->information(std::to_string(num)
+                       .append(" => new asynchandler from ")
                        .append(_peerAddress)
                        .append(" q-num : ")
                        .append(std::to_string(queueNum))
@@ -118,10 +117,10 @@ AsyncTCPHandler::~AsyncTCPHandler() {
     EXCHANGE::Instance().dropOwnedDestination(_clientID);
 
   } catch (std::exception &ex) {
-    log->critical("%s", std::to_string(num).append(" ! => ").append(std::string(ex.what())));
+    log->critical(std::to_string(num).append(" => ").append(std::string(ex.what())));
   }
 
-  log->information("%s", std::to_string(num).append(" * => destruct asynchandler from ").append(_peerAddress));
+  log->information(std::to_string(num).append(" => destruct asynchandler from ").append(_peerAddress));
 }
 
 void AsyncTCPHandler::onReadable(const AutoPtr<upmq::Net::ReadableNotification> &pNf) {
@@ -153,13 +152,13 @@ void AsyncTCPHandler::put(std::shared_ptr<MessageDataContainer> sMessage) {
 
 void AsyncTCPHandler::onShutdown(const AutoPtr<upmq::Net::ShutdownNotification> &pNf) {
   UNUSED_VAR(pNf);
-  log->notice("%s", std::to_string(num).append(" ! => shutdown : ").append(_peerAddress));
+  log->warning(std::to_string(num).append(" => shutdown : ").append(_peerAddress));
   emitCloseEvent();
 }
 
 void AsyncTCPHandler::onError(const AutoPtr<upmq::Net::ErrorNotification> &pNf) {
   UNUSED_VAR(pNf);
-  log->error("%s", std::to_string(num).append(" ! => network error : ").append(_peerAddress));
+  log->error(std::to_string(num).append(" => network error : ").append(_peerAddress));
   emitCloseEvent(true);
 }
 

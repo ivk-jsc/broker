@@ -331,12 +331,12 @@ Subscription::ProcessMessageResult Subscription::getNextMessage() {
         sMessage = storage.get(*consumer, useFileLink);
       } catch (Exception &ex) {
         consumer->select->clear();
-        log->error("%s", std::string(consumer->clientID).append(" ! <= [").append(std::string(__FUNCTION__)).append("] ").append(ex.message()));
+        log->error(std::string(consumer->clientID).append(" <= [").append(std::string(__FUNCTION__)).append("] ").append(ex.message()));
         swTryLocker.unlock();
         return ProcessMessageResult::SOME_ERROR;
       } catch (std::exception &stdex) {
         consumer->select->clear();
-        log->error("%s", std::string(consumer->clientID).append(" ! <= [").append(std::string(__FUNCTION__)).append("] ").append(stdex.what()));
+        log->error(std::string(consumer->clientID).append(" <= [").append(std::string(__FUNCTION__)).append("] ").append(stdex.what()));
         swTryLocker.unlock();
         return ProcessMessageResult::SOME_ERROR;
       }
@@ -355,14 +355,10 @@ Subscription::ProcessMessageResult Subscription::getNextMessage() {
           sMessage->serialize();
           AHRegestry::Instance().put(consumer->tcpNum, std::move(sMessage));
           ++_messageCounter;
-          const size_t tid = (size_t)(Poco::Thread::currentTid());
-          log->information("%s",
-                           std::to_string(consumer->tcpNum)
-                               .append(" * <= from subs => ")
+          log->information(std::to_string(consumer->tcpNum)
+                               .append(" <= from subs => ")
                                .append(_name)
-                               .append(" : consumer [ tid(")
-                               .append(std::to_string(tid))
-                               .append(") ")
+                               .append(" : consumer [")
                                .append(std::to_string(consumer->num))
                                .append(":")
                                .append(consumer->clientID)
@@ -390,7 +386,7 @@ Subscription::ProcessMessageResult Subscription::getNextMessage() {
           }
 
         } catch (Exception &ex) {
-          log->error("%s", std::to_string(consumer->tcpNum).append(" ! <= [").append(__FUNCTION__).append("] ").append(ex.message()));
+          log->error(std::to_string(consumer->tcpNum).append(" <= [").append(__FUNCTION__).append("] ").append(ex.message()));
           if (ex.error() == Proto::ERROR_CONNECTION) {
             messageID.clear();
             removeConsumers(consumer->tcpNum);

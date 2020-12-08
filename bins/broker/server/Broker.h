@@ -97,7 +97,7 @@ class Broker {
   bool isConnectionExists(const std::string &clientID);
   std::string currentTransaction(const std::string &clientID, const std::string &sessionID) const;
 
-  void eraseConnection(const std::string &connectionID);
+  void eraseConnection(const std::string &connectionID, size_t num);
 
   void start();
   void stop();

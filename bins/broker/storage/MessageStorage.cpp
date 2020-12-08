@@ -1028,7 +1028,7 @@ std::shared_ptr<MessageDataContainer> Storage::makeMessage(storage::DBMSSession 
         sMessage = (*item);
       } else {
         auto *log = &Poco::Logger::get(CONFIGURATION::Instance().log().name);
-        log->warning("- ! message : %s was not found in non-persistent storage dump : %s", msgInfo.messageId(), msgInfo.dump());
+        log->warning("message : %s was not found in non-persistent storage dump : %s", msgInfo.messageId(), msgInfo.dump());
         removeMessage(msgInfo.messageId(), dbSession);
         return {};
       }

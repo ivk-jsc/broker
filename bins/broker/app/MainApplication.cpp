@@ -128,12 +128,13 @@ int MainApplication::main(const std::vector<std::string> &args) {
   }
 
 #endif
-
-  log->critical("%s", std::string("-").append(" * ").append("<<========= start =========>>"));
-  log->critical("%s", std::string("-").append(" * ").append("version\t\t\t: ").append(About::version()));
-  log->critical("%s", std::string("-").append(" * ").append("configuration\t\t=> "));
+  const int lvl = log->getLevel();
+  log->setLevel(Poco::Message::PRIO_INFORMATION);
+  log->information("<<========= start =========>>");
+  log->information(std::string("version\t\t\t: ").append(About::version()));
+  log->information("configuration\t\t=> ");
   auto configStrings = CONFIGURATION::Instance().toStringLines();
-  std::for_each(configStrings.begin(), configStrings.end(), [this](const std::string &line) { log->critical("%s", line); });
+  std::for_each(configStrings.begin(), configStrings.end(), [this](const std::string &line) { log->information("%s", line); });
 
   std::string webuiStatus = "disabled";
 #ifdef ENABLE_WEB_ADMIN
@@ -141,7 +142,9 @@ int MainApplication::main(const std::vector<std::string> &args) {
     webuiStatus = "enabled";
   }
 #endif
-  log->critical("%s", std::string("-").append(" * ").append("webui\t\t: ").append(webuiStatus));
+  log->information(std::string("webui\t\t: ").append(webuiStatus));
+  log->setLevel(lvl);
+
   // TODO(bas) : refactor this
   Poco::Util::AbstractConfiguration::Keys destinationsKeys;
   std::string destinationsSection = "broker.destinations";
@@ -197,9 +200,7 @@ int MainApplication::main(const std::vector<std::string> &args) {
   //#else
   waitTermination();
   //#endif
-
-  log->critical("%s", std::string("-").append(" * ").append("wait termination"));
-
+  log->critical("wait termination");
 #ifdef ENABLE_WEB_ADMIN
   s.stop();
 #endif
@@ -218,8 +219,9 @@ int MainApplication::main(const std::vector<std::string> &args) {
   EXCHANGE::destroyInstance();
 
   acceptor.reset(nullptr);
-
-  log->critical("%s", std::string("-").append(" * ").append(">>========= stop =========<<"));
+  log->setLevel(Poco::Message::PRIO_INFORMATION);
+  log->information(">>========= stop =========<<");
+  log->setLevel(lvl);
   ASYNCLOGGER::Instance().destroy(CONFIGURATION::Instance().log().name);
   return Application::EXIT_OK;
 }

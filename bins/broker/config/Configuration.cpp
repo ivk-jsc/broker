@@ -50,13 +50,13 @@ std::string Configuration::Storage::typeName(storage::DBMSType dbmsType) {
   }
 }
 std::string Configuration::Storage::toString() const {
-  return std::string("\n- * \t\tconnection\t=> ")
+  return std::string("\n\t\tconnection\t=> ")
       .append(connection.toString())
-      .append("\n- * \t\tdata\t=>")
+      .append("\n\t\tdata\t=>")
       .append(data.toString())
-      .append("\n- * \t\tjournal\t: ")
+      .append("\n\t\tjournal\t: ")
       .append(_messageJournal)
-      .append("\n- * \t\tmessages\t: ")
+      .append("\n\t\tmessages\t: ")
       .append(messages.toString());
 }
 std::string Configuration::Storage::messageJournal(const std::string &destinationName) const {
@@ -90,27 +90,27 @@ void Configuration::setDestinations(const Configuration::Destinations &destinati
 const Configuration::Storage &Configuration::storage() const { return _storage; }
 void Configuration::setStorage(const Configuration::Storage &storage) { _storage = storage; }
 std::string Configuration::toString() const {
-  return std::string("\n- * \tport\t\t\t: ")
+  return std::string("\n\tport\t\t\t: ")
       .append(std::to_string(_port))
-      .append("\n- * \tname\t\t\t: ")
+      .append("\n\tname\t\t\t: ")
       .append(_name)
-      .append("\n- * \thttp\t\t\t=> ")
+      .append("\n\thttp\t\t\t=> ")
       .append(_http.toString())
-      .append("\n- * \theartbeat\t\t: ")
+      .append("\n\theartbeat\t\t: ")
       .append(_heartbeat.toString())
-      .append("\n- * \tnet\t\t\t=> ")
+      .append("\n\tnet\t\t\t=> ")
       .append(_net.toString())
-      .append("\n- * \tthreads\t\t\t=> ")
+      .append("\n\tthreads\t\t\t=> ")
       .append(_threads.toString())
-      .append("\n- * \tlog\t\t\t=> ")
+      .append("\n\tlog\t\t\t=> ")
       .append(_log.toString())
-      .append("\n- * \tsessions\t\t=> ")
+      .append("\n\tsessions\t\t=> ")
       .append(_sessions.toString())
-      .append("\n- * \tsubscriptions\t\t=> ")
+      .append("\n\tsubscriptions\t\t=> ")
       .append(_subscriptions.toString())
-      .append("\n- * \tdestination\t\t=> ")
+      .append("\n\tdestination\t\t=> ")
       .append(_destinations.toString())
-      .append("\n- * \tstorage\t\t\t=> ")
+      .append("\n\tstorage\t\t\t=> ")
       .append(_storage.toString());
 }
 std::vector<std::string> Configuration::toStringLines() const {
@@ -121,52 +121,52 @@ std::vector<std::string> Configuration::toStringLines() const {
   return result;
 }
 std::string Configuration::Http::toString() const {
-  return std::string("\n- * \t\tport\t\t: ").append(std::to_string(port)).append("\n- * \t\tsite\t\t: [").append(site.toString()).append("]");
+  return std::string("\n\t\tport\t\t: ").append(std::to_string(port)).append("\n\t\tsite\t\t: [").append(site.toString()).append("]");
 }
 std::string Configuration::HeartBeat::toString() const { return std::to_string(sendTimeout).append(".").append(std::to_string(recvTimeout)); }
-std::string Configuration::Net::toString() const { return std::string("\n- * \t\tmax-connections\t: ").append(std::to_string(maxConnections)); }
+std::string Configuration::Net::toString() const { return std::string("\n\t\tmax-connections\t: ").append(std::to_string(maxConnections)); }
 std::string Configuration::Threads::toString() const {
-  return std::string("\n- * \t\taccept\t\t: ")
+  return std::string("\n\t\taccept\t\t: ")
       .append(std::to_string(accepters))
-      .append("\n- * \t\tread\t\t: ")
+      .append("\n\t\tread\t\t: ")
       .append(std::to_string(readers))
-      .append("\n- * \t\tsubscribe\t: ")
+      .append("\n\t\tsubscribe\t: ")
       .append(std::to_string(subscribers))
-      .append("\n- * \t\twrite\t\t: ")
+      .append("\n\t\twrite\t\t: ")
       .append(std::to_string(writers));
 }
 uint32_t Configuration::Threads::all() const { return accepters + readers + writers + subscribers; }
 std::string Configuration::Log::toString() const {
-  return std::string("\n- * \t\tlevel\t\t: ")
+  return std::string("\n\t\tlevel\t\t: ")
       .append(std::to_string(level))
-      .append("\n- * \t\tinteracive\t: ")
+      .append("\n\t\tinteracive\t: ")
       .append(isInteractive ? "true" : "false")
-      .append("\n- * \t\tpath\t\t: [")
+      .append("\n\t\tpath\t\t: [")
       .append(path.toString())
       .append("]");
 }
-std::string Configuration::Sessions::toString() const { return std::string("\n- * \t\tmax-count\t: ").append(std::to_string(maxCount)); }
-std::string Configuration::Subscriptions::toString() const { return std::string("\n- * \t\tmax-count\t: ").append(std::to_string(maxCount)); }
+std::string Configuration::Sessions::toString() const { return std::string("\n\t\tmax-count\t: ").append(std::to_string(maxCount)); }
+std::string Configuration::Subscriptions::toString() const { return std::string("\n\t\tmax-count\t: ").append(std::to_string(maxCount)); }
 std::string Configuration::Destinations::toString() const {
-  return std::string("\n- * \t\tautocreate\t: ")
+  return std::string("\n\t\tautocreate\t: ")
       .append(autocreate ? "true" : "false")
-      .append("\n- * \t\tforward-by-property\t: ")
+      .append("\n\t\tforward-by-property\t: ")
       .append(forwardByProperty ? "true" : "false")
-      .append("\n- * \t\tmax-count\t: ")
+      .append("\n\t\tmax-count\t: ")
       .append(std::to_string(maxCount));
 }
 std::string Configuration::Storage::Connection::Props::toString() const {
-  return std::string("\n- * \t\t\ttype\t: ")
+  return std::string("\n\t\t\ttype\t: ")
       .append(typeName(dbmsType))
-      .append("\n- * \t\t\tpool\t: ")
+      .append("\n\t\t\tpool\t: ")
       .append(std::to_string(connectionPool))
-      .append("\n- * \t\t\tsync\t: ")
+      .append("\n\t\t\tsync\t: ")
       .append(useSync ? "true" : "false")
-      .append("\n- * \t\t\tjournal-mode\t: ")
+      .append("\n\t\t\tjournal-mode\t: ")
       .append(journalMode);
 }
 std::string Configuration::Storage::Connection::Value::toString() const {
-  return std::string("\n- * \t\t\tuse-path\t: ").append(usePath ? "true" : "false").append("\n- * \t\t\tvalue\t: ").append(_v);
+  return std::string("\n\t\t\tuse-path\t: ").append(usePath ? "true" : "false").append("\n\t\t\tvalue\t: ").append(_v);
 }
 const std::string &Configuration::Storage::Connection::Value::get() const { return _v; }
 void Configuration::Storage::Connection::Value::set(const std::string &connectionString) {
@@ -178,15 +178,15 @@ void Configuration::Storage::Connection::Value::set(const std::string &connectio
   std::for_each(options.begin(), options.end(), [this, &sep](const std::string &item) { _v.append(Poco::trim(item) + sep); });
 }
 std::string Configuration::Storage::Connection::toString() const {
-  return std::string("\n- * \t\tproperties\t=>")
+  return std::string("\n\t\tproperties\t=>")
       .append(props.toString())
-      .append("\n- * \t\t\tvalue\t=>")
+      .append("\n\t\t\tvalue\t=>")
       .append(value.toString())
-      .append("\n- * \t\t\tpath\t: [")
+      .append("\n\t\t\tpath\t: [")
       .append(path.toString())
       .append("]");
 }
-std::string Configuration::Storage::Data::toString() const { return std::string("\n- * \t\t\tpath\t\t: [").append(_path.toString()).append("]"); }
+std::string Configuration::Storage::Data::toString() const { return std::string("\n\t\t\tpath\t\t: [").append(_path.toString()).append("]"); }
 void Configuration::Storage::Data::set(const std::string &path) {
   Poco::Path storageDataPath(path);
   if (storageDataPath.isRelative()) {
@@ -202,7 +202,7 @@ void Configuration::Storage::Data::set(const std::string &path) {
 }
 const Poco::Path &Configuration::Storage::Data::get() const { return _path; }
 std::string Configuration::Storage::Messages::toString() const {
-  return std::string("\n- * \t\t\tnon-persistent-size\t\t: ").append(std::to_string(nonPresistentSize));
+  return std::string("\n\t\t\tnon-persistent-size\t\t: ").append(std::to_string(nonPresistentSize));
 }
 }  // namespace broker
 }  // namespace upmq
