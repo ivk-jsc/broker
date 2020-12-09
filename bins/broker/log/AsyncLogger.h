@@ -88,8 +88,22 @@ class AsyncLogger {
   static AutoPtr<FormattingChannel> createFormatter(const std::string &name, bool interactive);
 };
 
+class Trace {
+  Poco::Logger *_log{nullptr};
+  std::string _func;
+
+ public:
+  explicit Trace(Poco::Logger *l, std::string func);
+  ~Trace() noexcept;
+};
+
 }  // namespace broker
 }  // namespace upmq
 using ASYNCLOGGER = Singleton<upmq::broker::AsyncLogger>;
 
+#ifdef _MSC_VER
+#define __PRETTY_FUNCTION__ __FUNCTION__
+#endif
+
+#define TRACE(log) upmq::broker::Trace trace(log, __PRETTY_FUNCTION__)
 #endif  // BROKERSTORAGELOGGER_H

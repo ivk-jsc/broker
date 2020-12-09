@@ -48,6 +48,7 @@ Subscription::Subscription(const Destination &destination, const std::string &id
       _isInited(true),
       _hasSnapshot(false),
       _roundRobinCache(new std::deque<std::shared_ptr<MessageDataContainer>>) {
+  TRACE(log);
   _storage.setParent(&destination);
 
   OnError onError;
@@ -101,6 +102,7 @@ Subscription::Subscription(const Destination &destination, const std::string &id
   dbSession.commitTX();
 }
 Subscription::~Subscription() noexcept {
+  TRACE(log);
   try {
     if (_isSubsNotify) {
       _destination.unsubscribeFromNotify(*this);
@@ -115,6 +117,7 @@ Subscription::~Subscription() noexcept {
   }
 }
 void Subscription::save(const Session &session, const MessageDataContainer &sMessage) {
+  TRACE(log);
   if (isBrowser()) {
     return;
   }
@@ -142,16 +145,19 @@ void Subscription::save(const Session &session, const MessageDataContainer &sMes
   }
 }
 void Subscription::commit(const Session &session) {
+  TRACE(log);
   _storage.commit(session);
   _destination.postNewMessageEvent();
 }
 void Subscription::abort(const Session &session) {
+  TRACE(log);
   _storage.abort(session);
   _destination.postNewMessageEvent();
 }
 
 void Subscription::addClient(
     const Session &session, size_t tcpConnectionNum, const std::string &objectID, const std::string &selector, Subscription::LocalMode localMode) {
+  TRACE(log);
   std::stringstream sql;
   // NOTE: if subscription is browser then make client_id more unique
   std::string clientID = session.connection().clientID();
@@ -237,6 +243,7 @@ void Subscription::addClient(
 }
 const std::string &Subscription::routingKey() const { return _routingKey; }
 void Subscription::onEvent(const void *pSender, const MessageDataContainer *&sMessage) {
+  TRACE(log);
   if (sMessage == nullptr) {
     removeSenders(*((const Session *)pSender));
   } else {
@@ -253,6 +260,7 @@ void Subscription::onEvent(const void *pSender, const MessageDataContainer *&sMe
 bool Subscription::isDurable() const { return _type == Type::DURABLE; }
 bool Subscription::isBrowser() const { return _type == Type::BROWSER; }
 void Subscription::start() {
+  TRACE(log);
   _destination.postNewMessageEvent();
   if (*_isRunning) {
     return;
@@ -260,11 +268,13 @@ void Subscription::start() {
   *_isRunning = true;
 }
 void Subscription::stop() {
+  TRACE(log);
   if (*_isRunning) {
     *_isRunning = false;
   }
 }
 void Subscription::stop(const Consumer &consumer) {
+  TRACE(log);
   try {
     {
       upmq::ScopedReadRWLock readRWLock(_consumersLock);
@@ -279,6 +289,7 @@ void Subscription::stop(const Consumer &consumer) {
   }
 }
 void Subscription::start(const Consumer &consumer) {
+  TRACE(log);
   try {
     upmq::ScopedReadRWLock readRWLock(_consumersLock);
     const Consumer &cons = byClientAndHandlerAndSessionIDs(consumer.clientID, consumer.tcpNum, consumer.session.id);
@@ -290,6 +301,7 @@ void Subscription::start(const Consumer &consumer) {
   start();
 }
 void Subscription::recover() {
+  TRACE(log);
   upmq::ScopedReadRWLock readRWLock(_consumersLock);
   for (const auto &consumer : _consumers) {
     _storage.setMessagesToNotSent(consumer.second);
@@ -297,6 +309,7 @@ void Subscription::recover() {
   }
 }
 void Subscription::recover(const Consumer &consumer) {
+  TRACE(log);
   try {
     upmq::ScopedReadRWLock readRWLock(_consumersLock);
     const Consumer &cons = byClientAndHandlerAndSessionIDs(consumer.clientID, consumer.tcpNum, consumer.session.id);
@@ -307,6 +320,7 @@ void Subscription::recover(const Consumer &consumer) {
   }
 }
 Subscription::ProcessMessageResult Subscription::getNextMessage() {
+  TRACE(log);
   std::string groupID;
   std::string messageID;
   ScopedWriteTryLocker swTryLocker(_consumersLock, false);
@@ -412,6 +426,7 @@ Subscription::ProcessMessageResult Subscription::getNextMessage() {
   return ProcessMessageResult::CONSUMER_LOCKED;
 }
 void Subscription::changeCurrentConsumerNumber() const {
+  TRACE(log);
   if (_consumers.empty()) {
     _currentConsumerNumber = 0;
   } else {
@@ -421,6 +436,7 @@ void Subscription::changeCurrentConsumerNumber() const {
   EXCHANGE::Instance().addNewMessageEvent(_destination.name());
 }
 const Consumer *Subscription::at(size_t index) const {
+  TRACE(log);
   auto consEnd = _consumers.rend();
   size_t counter = 0;
   const size_t curSize = (_consumers.empty()) ? 0 : (_consumers.size() - 1);
@@ -436,6 +452,7 @@ const Consumer *Subscription::at(size_t index) const {
 }
 Storage &Subscription::storage() const { return _storage; }
 const Consumer &Subscription::byObjectID(const std::string &objectID) {
+  TRACE(log);
   auto consEnd = _consumers.rend();
   for (auto it = _consumers.rbegin(); it != consEnd; ++it) {
     if (it->second.objectID == objectID) {
@@ -445,6 +462,7 @@ const Consumer &Subscription::byObjectID(const std::string &objectID) {
   throw EXCEPTION("consumer not found", objectID, Proto::ERROR_UNKNOWN);
 }
 const Consumer &Subscription::byClientAndHandlerAndSessionIDs(const std::string &clientID, size_t handlerNum, const std::string &sessionID) {
+  TRACE(log);
   std::string tmpClientID = (isBrowser() ? clientID + "-browser" : clientID);
   auto consEnd = _consumers.rend();
   for (auto it = _consumers.rbegin(); it != consEnd; ++it) {
@@ -455,6 +473,7 @@ const Consumer &Subscription::byClientAndHandlerAndSessionIDs(const std::string 
   throw EXCEPTION("consumer not found", clientID + " : " + std::to_string(handlerNum), Proto::ERROR_UNKNOWN);
 }
 Subscription::ConsumersListType::iterator Subscription::eraseConsumer(ConsumersListType::iterator it) {
+  TRACE(log);
   OnError onError;
   onError.setError(Proto::ERROR_ON_UNSUBSCRIPTION).setInfo("can't remove consumer");
   std::stringstream sql;
@@ -464,6 +483,7 @@ Subscription::ConsumersListType::iterator Subscription::eraseConsumer(ConsumersL
   return _consumers.erase(it);
 }
 bool Subscription::removeClient(size_t tcpConnectionNum, const std::string &sessionID) {
+  TRACE(log);
   bool result = false;
   bool doStop = false;
   {
@@ -482,6 +502,7 @@ bool Subscription::removeClient(size_t tcpConnectionNum, const std::string &sess
   return result;
 }
 bool Subscription::removeConsumer(size_t tcpConnectionNum, const std::string &sessionID) {
+  TRACE(log);
   bool result = false;
   for (auto it = _consumers.begin(); it != _consumers.end();) {
     if ((it->second.tcpNum == tcpConnectionNum) && (it->second.session.id == sessionID)) {
@@ -496,6 +517,7 @@ bool Subscription::removeConsumer(size_t tcpConnectionNum, const std::string &se
 }
 
 void Subscription::removeConsumers(size_t tcpConnectionNum) {
+  TRACE(log);
   for (auto it = _consumers.begin(); it != _consumers.end();) {
     if (it->second.tcpNum == tcpConnectionNum) {
       _storage.setMessagesToNotSent(it->second);
@@ -506,6 +528,7 @@ void Subscription::removeConsumers(size_t tcpConnectionNum) {
   }
 }
 void Subscription::removeClients() {
+  TRACE(log);
   upmq::ScopedWriteRWLock writeRWLock(_consumersLock);
   for (auto it = _consumers.begin(); it != _consumers.end();) {
     _storage.setMessagesToNotSent(it->second);
@@ -516,6 +539,7 @@ void Subscription::removeClients() {
 bool Subscription::isRunning() const { return *_isRunning; }
 void Subscription::setHasNotify(bool hasNotify) { _isSubsNotify = hasNotify; }
 void Subscription::destroy() {
+  TRACE(log);
   removeClients();
   if (isBrowser() /*|| _destination.isTemporary()*/) {
     _storage.dropTables();
@@ -549,20 +573,24 @@ const std::string &Subscription::id() const { return _id; }
 void Subscription::setInited(bool inited) { _isInited = inited; }
 bool Subscription::isInited() const { return _isInited; }
 void Subscription::addSender(const Session &session, const MessageDataContainer &sMessage) {
+  TRACE(log);
   const Proto::Sender &sender = sMessage.sender();
   std::unique_ptr<Sender> pSender = std::make_unique<TopicSender>(sender.sender_id(), session, *this);
   _senders.addSender(std::move(pSender));
 }
 void Subscription::removeSender(const Session &session, const MessageDataContainer &sMessage) {
+  TRACE(log);
   const std::string &senderID = sMessage.unsender().sender_id();
   _senders.closeGroup(senderID, session);
   _senders.removeSender(senderID);
 }
 void Subscription::removeSenders(const Session &session) {
+  TRACE(log);
   _senders.closeGroups(session);
   _senders.removeSenders(session);
 }
 bool Subscription::allConsumersStopped() {
+  TRACE(log);
   size_t stoppedCount = 0;
   for (const auto &item : _consumers) {
     if (!item.second.isRunning) {
@@ -572,6 +600,7 @@ bool Subscription::allConsumersStopped() {
   return (stoppedCount == _consumers.size());
 }
 bool Subscription::consumersWithSelectorsOnly() const {
+  TRACE(log);
   for (const auto &consumer : _consumers) {
     if (consumer.second.selector != nullptr) {
       return !consumer.second.selector->expression().empty();
@@ -582,11 +611,13 @@ bool Subscription::consumersWithSelectorsOnly() const {
 bool Subscription::hasSnapshot() const { return _hasSnapshot; }
 void Subscription::setHasSnapshot(bool hasSnapshot) { _hasSnapshot = hasSnapshot; }
 Subscription::Info Subscription::info() const {
+  TRACE(log);
   upmq::ScopedReadRWLock readRWLock(_consumersLock);
   return Subscription::Info(_id, _name, _type, static_cast<int>(_consumers.size()), _messageCounter, *_isRunning);
 }
 
 void Subscription::resetConsumersCache() {
+  TRACE(log);
   upmq::ScopedReadRWLock readRWLock(_consumersLock);
   for (auto &consumer : _consumers) {
     consumer.second.abort = true;

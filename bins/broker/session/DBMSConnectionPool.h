@@ -19,11 +19,15 @@
 
 #include "Singleton.h"
 #include "IConnectionPool.h"
+#include <Poco/Logger.h>
 
 namespace upmq {
 namespace broker {
 namespace storage {
 class DBMSConnectionPool {
+  std::unique_ptr<IConnectionPool> _impl;
+  mutable Poco::Logger *log;
+
  public:
   enum class TX : int { NOT_USE = 0, USE };
   DBMSConnectionPool();
@@ -46,9 +50,6 @@ class DBMSConnectionPool {
 
   DBMSSession dbmsSession() const;
   std::unique_ptr<DBMSSession> dbmsSessionPtr() const;
-
- private:
-  std::unique_ptr<IConnectionPool> _impl;
 };
 }  // namespace storage
 }  // namespace broker

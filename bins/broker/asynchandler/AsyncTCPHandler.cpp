@@ -62,7 +62,7 @@ AsyncTCPHandler::AsyncTCPHandler(Poco::Net::StreamSocket &socket, upmq::Net::Soc
   _queueWriteNum = queueNum % THREADS_CONFIG.writers;
 
   log = &Poco::Logger::get(CONFIGURATION::Instance().log().name);
-
+  TRACE(log);
   _socket.setNoDelay(true);
   _socket.setBlocking(false);
 
@@ -81,6 +81,7 @@ AsyncTCPHandler::AsyncTCPHandler(Poco::Net::StreamSocket &socket, upmq::Net::Soc
 }
 
 void AsyncTCPHandler::removeErrorShutdownHandler() {
+  TRACE(log);
   if (_closeEventLock.tryLock(2000)) {
     _reactor.removeEventHandler(_socket, _shutdownCallBack);
     _reactor.removeEventHandler(_socket, _errorCallBack);
@@ -89,6 +90,7 @@ void AsyncTCPHandler::removeErrorShutdownHandler() {
 }
 
 void AsyncTCPHandler::removeConsumers() {
+  TRACE(log);
   for (const auto &dest : _subscriptions) {
     for (const auto &subs : dest.second) {
       try {
@@ -100,6 +102,7 @@ void AsyncTCPHandler::removeConsumers() {
 }
 
 AsyncTCPHandler::~AsyncTCPHandler() {
+  TRACE(log);
   try {
     while (!_readComplete) {
       Poco::Thread::sleep(100);
@@ -151,18 +154,21 @@ void AsyncTCPHandler::put(std::shared_ptr<MessageDataContainer> sMessage) {
 }
 
 void AsyncTCPHandler::onShutdown(const AutoPtr<upmq::Net::ShutdownNotification> &pNf) {
+  TRACE(log);
   UNUSED_VAR(pNf);
   log->warning(std::to_string(num).append(" => shutdown : ").append(_peerAddress));
   emitCloseEvent();
 }
 
 void AsyncTCPHandler::onError(const AutoPtr<upmq::Net::ErrorNotification> &pNf) {
+  TRACE(log);
   UNUSED_VAR(pNf);
   log->error(std::to_string(num).append(" => network error : ").append(_peerAddress));
   emitCloseEvent(true);
 }
 
 AsyncTCPHandler::DataStatus AsyncTCPHandler::sendHeaderAndData(MessageDataContainer &sMessage) {
+  TRACE(log);
   uint32_t headerSize = static_cast<uint32_t>(sMessage.header.size());
   uint64_t dataSize = sMessage.dataSize();
 
@@ -239,6 +245,7 @@ void AsyncTCPHandler::emitCloseEvent(bool withError) {
   if (_needErase) {
     return;
   }
+  TRACE(log);
   if (_closeEventLock.tryLock()) {
     try {
       if (_needErase) {
@@ -270,6 +277,7 @@ void AsyncTCPHandler::setConnection(Connection *connection) const { _connection 
 Connection *AsyncTCPHandler::connection() const { return _connection; }
 int AsyncTCPHandler::maxNotAcknowledgedMessages() const { return _maxNotAcknowledgedMessages; }
 void AsyncTCPHandler::storeClientInfo(const MessageDataContainer &sMessage) {
+  TRACE(log);
   const Proto::Connect &connect = sMessage.connect();
   const Proto::ClientVersion &version = connect.client_version();
   clientVersion.vendorId = version.vendor_id();
@@ -290,6 +298,7 @@ void AsyncTCPHandler::storeClientInfo(const MessageDataContainer &sMessage) {
   setClientID(connect.client_id());
 }
 void AsyncTCPHandler::initSubscription(const MessageDataContainer &sMessage) const {
+  TRACE(log);
   const Proto::Subscription &subscription = sMessage.subscription();
   std::string destinationID = upmq::broker::Exchange::mainDestinationPath(subscription.destination_uri());
   auto subs = _subscriptions.find(destinationID);
@@ -300,6 +309,7 @@ void AsyncTCPHandler::initSubscription(const MessageDataContainer &sMessage) con
   subs->second.insert(subscription.subscription_name());
 }
 void AsyncTCPHandler::eraseSubscription(const MessageDataContainer &sMessage) const {
+  TRACE(log);
   const Proto::Unsubscription &unsubscription = sMessage.unsubscription();
   std::string destinationID = upmq::broker::Exchange::mainDestinationPath(unsubscription.destination_uri());
   auto subs = _subscriptions.find(destinationID);
@@ -309,10 +319,12 @@ void AsyncTCPHandler::eraseSubscription(const MessageDataContainer &sMessage) co
 }
 bool AsyncTCPHandler::needErase() const { return _needErase; }
 void AsyncTCPHandler::setNeedErase() {
+  TRACE(log);
   _needErase = true;
   AHRegestry::Instance().needToErase(num);
 }
 AsyncTCPHandler::DataStatus AsyncTCPHandler::fillHeaderBodyLens() {
+  TRACE(log);
   headerBodyLens.headerLen = 0;
   headerBodyLens.bodyLen = 0;
 
@@ -335,9 +347,6 @@ AsyncTCPHandler::DataStatus AsyncTCPHandler::fillHeaderBodyLens() {
       }
       return DataStatus::AS_ERROR;
     }
-    if (n == 0) {
-      break;
-    }
     tmpDtSize += static_cast<send_size_t>(n);
   } while (tmpDtSize != sizeof(hbLens));
 
@@ -355,6 +364,7 @@ AsyncTCPHandler::DataStatus AsyncTCPHandler::fillHeaderBodyLens() {
   return DataStatus::OK;
 }
 AsyncTCPHandler::DataStatus AsyncTCPHandler::fillHeader(MessageDataContainer &sMessage) {
+  TRACE(log);
   ptrdiff_t n = 0;
   do {
     send_size_t tmpHeaderSize =
@@ -380,6 +390,7 @@ AsyncTCPHandler::DataStatus AsyncTCPHandler::fillHeader(MessageDataContainer &sM
   return DataStatus::OK;
 }
 AsyncTCPHandler::DataStatus AsyncTCPHandler::fillBody(MessageDataContainer &sMessage) {
+  TRACE(log);
   ptrdiff_t n = 0;
   sMessage.initPersistentDataFileLink();
   do {
@@ -407,6 +418,7 @@ AsyncTCPHandler::DataStatus AsyncTCPHandler::fillBody(MessageDataContainer &sMes
   return DataStatus::OK;
 }
 AsyncTCPHandler::DataStatus AsyncTCPHandler::tryMoveBodyByLink(MessageDataContainer &sMessage) {
+  TRACE(log);
   auto &message = sMessage.message();
   auto &property = message.property();
   auto it = property.find(s2s::proto::upmq_data_link);

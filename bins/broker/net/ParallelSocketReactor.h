@@ -42,7 +42,7 @@ class ParallelSocketReactor : public SR {
  public:
   typedef Poco::SharedPtr<ParallelSocketReactor> Ptr;
 
-  explicit ParallelSocketReactor(Args... args) : SR(args...) { _thread.start(*this); }
+  explicit ParallelSocketReactor(Args... args) : SR(args...), _thread("\t\tsocket-reactor\t\t") { _thread.start(*this); }
   ~ParallelSocketReactor() override;
 
  protected:

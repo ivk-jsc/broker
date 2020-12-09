@@ -17,15 +17,23 @@
 #include "DBMSSession.h"
 #include <Exception.h>
 #include "DBMSConnectionPool.h"
+#include "AsyncLogger.h"
+#include "Configuration.h"
+
 upmq::broker::storage::DBMSSession::DBMSSession(std::shared_ptr<Poco::Data::Session> &&session, upmq::broker::storage::DBMSConnectionPool &dbmsPool)
-    : _session(std::move(session)), _dbmsPool(dbmsPool) {}
+    : _session(std::move(session)), _dbmsPool(dbmsPool) {
+  log = &Poco::Logger::get(CONFIGURATION::Instance().log().name);
+  TRACE(log);
+}
 upmq::broker::storage::DBMSSession::~DBMSSession() {
+  TRACE(log);
   try {
     close();
   } catch (...) {
   }
 }
 void upmq::broker::storage::DBMSSession::beginTX(const std::string &txName, TransactionMode mode) {
+  TRACE(log);
   if (!_session) {
     throw EXCEPTION("dbms session was closed", txName, ERROR_WORKER);
   }
@@ -37,6 +45,7 @@ void upmq::broker::storage::DBMSSession::beginTX(const std::string &txName, Tran
   _inTransaction = true;
 }
 void upmq::broker::storage::DBMSSession::commitTX() {
+  TRACE(log);
   if (!_session) {
     throw EXCEPTION("dbms session was closed", _lastTXName, ERROR_WORKER);
   }
@@ -46,6 +55,7 @@ void upmq::broker::storage::DBMSSession::commitTX() {
   _inTransaction = false;
 }
 void upmq::broker::storage::DBMSSession::rollbackTX() {
+  TRACE(log);
   if (!_session) {
     throw EXCEPTION("dbms session was closed", _lastTXName, ERROR_WORKER);
   }
@@ -55,6 +65,7 @@ void upmq::broker::storage::DBMSSession::rollbackTX() {
   _inTransaction = false;
 }
 void upmq::broker::storage::DBMSSession::close() {
+  TRACE(log);
   if (_session) {
     if (_inTransaction) {
       dbms::Instance().rollbackTX(*_session, _lastTXName);
@@ -70,6 +81,7 @@ Poco::Data::Session &upmq::broker::storage::DBMSSession::operator()() const {
 }
 bool upmq::broker::storage::DBMSSession::isValid() const { return _session != nullptr; }
 const std::shared_ptr<Poco::Data::Session> &upmq::broker::storage::DBMSSession::dbmsConnnectionRef() const {
+  TRACE(log);
   if (!_session) {
     throw EXCEPTION("dbms session was closed", _lastTXName, ERROR_WORKER);
   }

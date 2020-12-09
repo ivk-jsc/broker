@@ -38,6 +38,8 @@ Storage::Storage(const std::string &messageTableID, size_t nonPersistentSize)
       _propertyTableID("\"" + messageTableID + "_property" + "\""),
       _parent(nullptr),
       _nonPersistent(nonPersistentSize) {
+  log = &Poco::Logger::get(CONFIGURATION::Instance().log().name);
+  TRACE(log);
   std::string mainTsql = generateSQLMainTable(messageTableID);
   auto mainTXsqlIndexes = generateSQLMainTableIndexes(messageTableID);
 
@@ -61,8 +63,9 @@ Storage::Storage(const std::string &messageTableID, size_t nonPersistentSize)
 
   dbSession.commitTX();
 }
-Storage::~Storage() = default;
+Storage::~Storage() { TRACE(log); };
 std::string Storage::generateSQLMainTable(const std::string &tableName) const {
+  TRACE(log);
   std::stringstream sql;
   std::string autoinc = "integer primary key autoincrement not null";
   std::string currTimeType = "bigint";
@@ -103,6 +106,7 @@ std::string Storage::generateSQLMainTable(const std::string &tableName) const {
   return sql.str();
 }
 std::vector<std::string> Storage::generateSQLMainTableIndexes(const std::string &tableName) const {
+  TRACE(log);
   std::stringstream sql;
   std::vector<std::string> indexes;
   sql << "create index if not exists \"" << tableName << "_msgs_delivery_status\" on "  // if not exists
@@ -124,6 +128,7 @@ std::vector<std::string> Storage::generateSQLMainTableIndexes(const std::string 
   return indexes;
 }
 std::string Storage::generateSQLProperties() const {
+  TRACE(log);
   std::stringstream sql;
   std::string idx = _propertyTableID;
   idx.replace(_propertyTableID.find_last_of('\"'), 1, "_");
@@ -157,6 +162,7 @@ std::string Storage::generateSQLProperties() const {
   return sql.str();
 }
 void Storage::removeMessagesBySession(const upmq::broker::Session &session) {
+  TRACE(log);
   std::stringstream sql;
   sql << "select * from " << _messageTableID << " where consumer_id like \'%" << session.id() << "%\'";
   if (session.isTransactAcknowledge()) {
@@ -191,6 +197,7 @@ void Storage::removeMessagesBySession(const upmq::broker::Session &session) {
               onError);
 }
 void Storage::resetMessagesBySession(const upmq::broker::Session &session) {
+  TRACE(log);
   std::stringstream sql;
 
   std::string transactionExclusion = std::string(" or  delivery_status = ").append(std::to_string(message::WAS_SENT));
@@ -206,6 +213,7 @@ void Storage::resetMessagesBySession(const upmq::broker::Session &session) {
   *session.currentDBSession << sql.str(), Poco::Data::Keywords::now;
 }
 void Storage::removeGroupMessage(const std::string &groupID, const upmq::broker::Session &session) {
+  TRACE(log);
   std::vector<std::string> result;
   std::stringstream sql;
   sql << "select message_id from " << _messageTableID << " where group_id = \'" << groupID << "\'"
@@ -231,6 +239,7 @@ void Storage::removeGroupMessage(const std::string &groupID, const upmq::broker:
   }
 }
 message::GroupStatus Storage::checkIsGroupClosed(const MessageDataContainer &sMessage, const Session &session) const {
+  TRACE(log);
   int result = -1;
   std::stringstream sql;
   sql << "select count(last_in_group) from " << _messageTableID << " where last_in_group = \'TRUE\' and group_id in "
@@ -259,6 +268,7 @@ message::GroupStatus Storage::checkIsGroupClosed(const MessageDataContainer &sMe
   }
 }
 bool Storage::deleteMessageHeader(storage::DBMSSession &dbSession, const std::string &messageID) {
+  TRACE(log);
   std::stringstream sql;
   bool persistent = !_nonPersistent.contains(messageID);
   sql << "delete from " << _messageTableID << " where message_id = \'" << messageID << "\'"
@@ -271,6 +281,7 @@ bool Storage::deleteMessageHeader(storage::DBMSSession &dbSession, const std::st
   return persistent;
 }
 void Storage::deleteMessageProperties(storage::DBMSSession &dbSession, const std::string &messageID) {
+  TRACE(log);
   std::stringstream sql;
   sql << "delete from " << _propertyTableID << " where message_id = \'" << messageID << "\'"
       << ";" << non_std_endl;
@@ -280,6 +291,7 @@ void Storage::deleteMessageProperties(storage::DBMSSession &dbSession, const std
   TRY_EXECUTE(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
 }
 int Storage::getSubscribersCount(storage::DBMSSession &dbSession, const std::string &messageID) {
+  TRACE(log);
   int subscribersCount = 1;
   std::stringstream sql;
   sql << "select subscribers_count from " << STORAGE_CONFIG.messageJournal(_parent->name()) << " where message_id = \'" << messageID << "\';";
@@ -293,6 +305,7 @@ int Storage::getSubscribersCount(storage::DBMSSession &dbSession, const std::str
   return (--subscribersCount);
 }
 void Storage::updateSubscribersCount(storage::DBMSSession &dbSession, const std::string &messageID) {
+  TRACE(log);
   std::stringstream sql;
   sql << "update " << STORAGE_CONFIG.messageJournal(_parent->name()) << " set subscribers_count = subscribers_count - 1 where message_id =\'"
       << messageID << "\';" << non_std_endl;
@@ -303,6 +316,7 @@ void Storage::updateSubscribersCount(storage::DBMSSession &dbSession, const std:
   TRY_EXECUTE(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
 }
 void Storage::deleteMessageInfoFromJournal(storage::DBMSSession &dbSession, const std::string &messageID) {
+  TRACE(log);
   std::stringstream sql;
   sql << "delete from " << STORAGE_CONFIG.messageJournal(_parent->name()) << " where message_id = \'" << messageID << "\';";
   OnError onError;
@@ -311,6 +325,7 @@ void Storage::deleteMessageInfoFromJournal(storage::DBMSSession &dbSession, cons
   TRY_EXECUTE(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
 }
 void Storage::deleteMessageDataIfExists(const std::string &messageID, bool persistent) {
+  TRACE(log);
   if (persistent) {
     std::string mID = Poco::replace(messageID, ":", "_");
     Poco::Path msgFile = STORAGE_CONFIG.data.get();
@@ -322,6 +337,7 @@ void Storage::deleteMessageDataIfExists(const std::string &messageID, bool persi
   }
 }
 void Storage::removeMessage(const std::string &messageID, storage::DBMSSession &extDBSession) {
+  TRACE(log);
   bool externConnection = extDBSession.isValid();
   std::unique_ptr<storage::DBMSSession> tempDBMSSession;
   if (!externConnection) {
@@ -349,6 +365,7 @@ void Storage::removeMessage(const std::string &messageID, storage::DBMSSession &
 const std::string &Storage::messageTableID() const { return _messageTableID; }
 const std::string &Storage::propertyTableID() const { return _propertyTableID; }
 void Storage::saveMessageHeader(const upmq::broker::Session &session, const MessageDataContainer &sMessage) {
+  TRACE(log);
   storage::DBMSSession &dbs = *session.currentDBSession;
   const Proto::Message &message = sMessage.message();
   bool persistent = message.persistent();
@@ -381,8 +398,6 @@ void Storage::saveMessageHeader(const upmq::broker::Session &session, const Mess
   sql << "," << nextParam();
   sql << "," << nextParam() << ");";
 
-  // Save header
-
   OnError onError;
   onError.setError(Proto::ERROR_ON_SAVE_MESSAGE).setSql(sql.str()).setInfo("failed to save message header id : " + message.message_id());
   TRY_EXECUTE(([&dbs, &message, &priority, &persistent, &timestamp, &ttl, &expiration, &bodyType, &sMessage, &groupSeq, &sql]() {
@@ -407,6 +422,7 @@ void Storage::saveMessageHeader(const upmq::broker::Session &session, const Mess
               onError);
 }
 void Storage::save(const upmq::broker::Session &session, const MessageDataContainer &sMessage) {
+  TRACE(log);
   const Proto::Message &message = sMessage.message();
   const std::string &messageID = message.message_id();
 
@@ -431,6 +447,7 @@ void Storage::save(const upmq::broker::Session &session, const MessageDataContai
   }
 }
 bool Storage::checkTTLIsOut(const Poco::DateTime &messageTime, Poco::Int64 ttl) {
+  TRACE(log);
   if (ttl <= 0) {
     return false;
   }
@@ -439,6 +456,7 @@ bool Storage::checkTTLIsOut(const Poco::DateTime &messageTime, Poco::Int64 ttl) 
   return ((messageTime + ttlTimespan).timestamp() < currentDateTime.timestamp());
 }
 std::shared_ptr<MessageDataContainer> Storage::get(const Consumer &consumer, bool useFileLink) {
+  TRACE(log);
   std::stringstream sql;
   storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
 
@@ -510,6 +528,7 @@ std::shared_ptr<MessageDataContainer> Storage::get(const Consumer &consumer, boo
 void Storage::setParent(const broker::Destination *parent) { _parent = parent; }
 const std::string &Storage::uri() const { return _parent ? _parent->uri() : emptyString; }
 void Storage::saveMessageProperties(const upmq::broker::Session &session, const Proto::Message &message) {
+  TRACE(log);
   std::vector<MessagePropertyInfo::MsgTuple> messageProperties(message.property_size());
   size_t i = 0;
   for (auto it = message.property().begin(); it != message.property().end(); ++it) {
@@ -632,6 +651,7 @@ void Storage::saveMessageProperties(const upmq::broker::Session &session, const 
   }
 }
 void Storage::begin(const Session &session, const std::string &extParentId) {
+  TRACE(log);
   {
     upmq::ScopedWriteRWLock writeRWLock(_txSessionsLock);
     if (_txSessions.find(session.id()) == _txSessions.end()) {
@@ -671,6 +691,7 @@ void Storage::begin(const Session &session, const std::string &extParentId) {
   }
 }
 void Storage::commit(const Session &session) {
+  TRACE(log);
   std::string mainTXTable = "\"" + std::to_string(Poco::hash(_extParentID + "_" + session.txName())) + "\"";
   std::stringstream sql;
   sql << "insert into " << _messageTableID
@@ -708,6 +729,7 @@ void Storage::commit(const Session &session) {
   _parent->postNewMessageEvent();
 }
 void Storage::abort(const Session &session) {
+  TRACE(log);
   std::string mainTXTable = "\"" + std::to_string(Poco::hash(_extParentID + "_" + session.txName())) + "\"";
   std::stringstream sql;
   bool tbExist = false;
@@ -760,6 +782,7 @@ void Storage::abort(const Session &session) {
   _parent->postNewMessageEvent();
 }
 void Storage::dropTXTable(storage::DBMSSession &dbSession, const std::string &mainTXTable) const {
+  TRACE(log);
   std::stringstream sql;
   sql << "drop table if exists " << mainTXTable << ";";
   dbSession << sql.str(), Poco::Data::Keywords::now;
@@ -794,6 +817,7 @@ std::vector<MessageInfo> Storage::getMessagesBelow(const Session &session, const
   return result;
 }
 void Storage::setMessageToWasSent(const std::string &messageID, storage::DBMSSession &dbSession, const Consumer &consumer) {
+  TRACE(log);
   std::stringstream sql;
   sql << "update " << _messageTableID << " set delivery_status = " << message::WAS_SENT << ",    consumer_id = \'" << consumer.id << "\'"
       << ",    delivery_count  = delivery_count + 1";
@@ -810,6 +834,7 @@ void Storage::setMessageToWasSent(const std::string &messageID, storage::DBMSSes
   TRY_EXECUTE(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
 }
 void Storage::setMessagesToWasSent(storage::DBMSSession &dbSession, const Consumer &consumer) {
+  TRACE(log);
   if (!consumer.select->empty()) {
     std::stringstream sql;
     sql << "update " << _messageTableID << " set delivery_status = " << message::WAS_SENT << ",    consumer_id = \'" << consumer.id << "\'"
@@ -835,6 +860,7 @@ void Storage::setMessagesToWasSent(storage::DBMSSession &dbSession, const Consum
   }
 }
 void Storage::setMessageToDelivered(const upmq::broker::Session &session, const std::string &messageID) {
+  TRACE(log);
   std::stringstream sql;
   sql << "update " << _messageTableID << " set delivery_status = " << message::DELIVERED << " where message_id = \'" << messageID << "\'"
       << ";";
@@ -845,6 +871,7 @@ void Storage::setMessageToDelivered(const upmq::broker::Session &session, const 
   TRY_EXECUTE(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
 }
 void Storage::setMessageToLastInGroup(const Session &session, const std::string &messageID) {
+  TRACE(log);
   std::stringstream sql;
   bool externConnection = (session.currentDBSession != nullptr);
   std::unique_ptr<storage::DBMSSession> tempDBMSSession;
@@ -869,6 +896,7 @@ void Storage::setMessageToLastInGroup(const Session &session, const std::string 
   }
 }
 std::string Storage::saveTableName(const Session &session) const {
+  TRACE(log);
   std::string messageTable = _messageTableID;
   if (session.isTransactAcknowledge()) {
     messageTable = "\"" + std::to_string(Poco::hash(_extParentID + "_" + session.txName())) + "\"";
@@ -876,6 +904,7 @@ std::string Storage::saveTableName(const Session &session) const {
   return messageTable;
 }
 void Storage::setMessagesToNotSent(const Consumer &consumer) {
+  TRACE(log);
   OnError onError;
   onError.setError(Proto::ERROR_STORAGE).setInfo("can't set messages to not-sent");
   std::stringstream sql;
@@ -887,6 +916,7 @@ void Storage::setMessagesToNotSent(const Consumer &consumer) {
   TRY_EXECUTE_NOEXCEPT([&sql]() { dbms::Instance().doNow(sql.str()); }, onError);
 }
 void Storage::copyTo(Storage &storage, const Consumer &consumer) {
+  TRACE(log);
   storage.resetNonPersistent(_nonPersistent);
 
   bool withSelector = (consumer.selector && !consumer.selector->expression().empty());
@@ -987,10 +1017,12 @@ void Storage::copyTo(Storage &storage, const Consumer &consumer) {
   dbSession.commitTX();
 }
 void Storage::resetNonPersistent(const Storage::NonPersistentMessagesListType &nonPersistentMessagesList) {
+  TRACE(log);
   _nonPersistent.clear();
   _nonPersistent = nonPersistentMessagesList;
 }
 int64_t Storage::size() {
+  TRACE(log);
   std::stringstream sql;
   Poco::Int64 result = 0;
   OnError onError;
@@ -1011,6 +1043,7 @@ std::shared_ptr<MessageDataContainer> Storage::makeMessage(storage::DBMSSession 
                                                            const MessageInfo &msgInfo,
                                                            const Consumer &consumer,
                                                            bool useFileLink) {
+  TRACE(log);
   std::shared_ptr<MessageDataContainer> sMessage;
   if (!msgInfo.messageId().empty()) {
     Poco::DateTime messageDateTime = msgInfo.createdTime();
@@ -1027,7 +1060,6 @@ std::shared_ptr<MessageDataContainer> Storage::makeMessage(storage::DBMSSession 
       if (item.hasValue()) {
         sMessage = (*item);
       } else {
-        auto *log = &Poco::Logger::get(CONFIGURATION::Instance().log().name);
         log->warning("message : %s was not found in non-persistent storage dump : %s", msgInfo.messageId(), msgInfo.dump());
         removeMessage(msgInfo.messageId(), dbSession);
         return {};
@@ -1111,6 +1143,7 @@ std::shared_ptr<MessageDataContainer> Storage::makeMessage(storage::DBMSSession 
   return sMessage;
 }
 void Storage::fillProperties(storage::DBMSSession &dbSession, Proto::Message &message) {
+  TRACE(log);
   std::stringstream sql;
   sql << "select "
          " message_id,"
@@ -1202,6 +1235,7 @@ void Storage::fillProperties(storage::DBMSSession &dbSession, Proto::Message &me
               onError);
 }
 void Storage::dropTables() {
+  TRACE(log);
   OnError onError;
   onError.setError(Proto::ERROR_ON_UNSUBSCRIPTION).setInfo("can't drop table");
   std::stringstream sql;
@@ -1215,6 +1249,7 @@ void Storage::dropTables() {
   TRY_EXECUTE_NOEXCEPT([&sql]() { dbms::Instance().doNow(sql.str()); }, onError);
 }
 bool Storage::hasTransaction(const Session &session) const {
+  TRACE(log);
   upmq::ScopedReadRWLock readRWLock(_txSessionsLock);
   return (_txSessions.find(session.id()) != _txSessions.end());
 }

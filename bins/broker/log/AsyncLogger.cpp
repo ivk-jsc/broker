@@ -17,6 +17,7 @@
 #include "AsyncLogger.h"
 #include <iostream>
 #include <Poco/File.h>
+#include <Poco/String.h>
 #include "Defines.h"
 #include <Poco/Util/Application.h>
 #include <poco_pointers_helper.h>
@@ -126,5 +127,7 @@ bool AsyncLogger::exists(const std::string &name) {
   return loggetPtr.isNull();
 }
 
+Trace::Trace(Poco::Logger *l, std::string func) : _log(l), _func(Poco::replace(func, "upmq::broker::", "")) { _log->trace("beg %s", _func); }
+Trace::~Trace() noexcept { _log->trace("end %s", _func); }
 }  // namespace broker
 }  // namespace upmq

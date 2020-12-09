@@ -29,7 +29,9 @@ Exchange::Exchange()
       _destinationsT("\"" + BROKER::Instance().id() + "_destinations\""),
       _mutexDestinations(THREADS_CONFIG.subscribers),
       _conditionDestinations(_mutexDestinations.size()),
-      _threadPool("exchange", 1, static_cast<int>(_mutexDestinations.size()) + 1) {
+      _threadPool("\t\texchange\t\t", 1, static_cast<int>(_mutexDestinations.size()) + 1) {
+  log = &Poco::Logger::get(CONFIGURATION::Instance().log().name);
+  TRACE(log);
   std::stringstream sql;
   sql << "create table if not exists " << _destinationsT << "("
       << " id text not null primary key"
@@ -46,12 +48,14 @@ Exchange::Exchange()
   TRY_EXECUTE(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
 }
 Exchange::~Exchange() {
+  TRACE(log);
   try {
     _destinations.clear();
   } catch (...) {
   }
 };
 Destination &Exchange::destination(const std::string &uri, Exchange::DestinationCreationMode creationMode) const {
+  TRACE(log);
   std::string mainDP;
   if (uri.find("://") != std::string::npos) {
     mainDP = mainDestinationPath(uri);
@@ -82,8 +86,9 @@ Destination &Exchange::destination(const std::string &uri, Exchange::Destination
     }
   }
   throw EXCEPTION("invalid creation mode", std::to_string(static_cast<int>(creationMode)), Proto::ERROR_UNKNOWN);
-}  // namespace broker
+}
 Destination &Exchange::getDestination(const std::string &id) const {
+  TRACE(log);
   auto it = _destinations.find(id);
   if (!it.hasValue()) {
     throw EXCEPTION("destination not found", id, Proto::ERROR_UNKNOWN);
@@ -91,6 +96,7 @@ Destination &Exchange::getDestination(const std::string &id) const {
   return *(*it);
 }
 void Exchange::deleteDestination(const std::string &uri) {
+  TRACE(log);
   std::string mainDP = mainDestinationPath(uri);
   _destinations.erase(mainDP);
 }
@@ -99,6 +105,7 @@ std::string Exchange::mainDestinationPath(const std::string &uri) {
   return DestinationFactory::destinationTypePrefix(uri) + DestinationFactory::destinationName(uri);
 }
 void Exchange::saveMessage(const Session &session, const MessageDataContainer &sMessage) {
+  TRACE(log);
   std::stringstream sql;
   const Proto::Message &message = sMessage.message();
   Destination &dest = destination(message.destination_uri(), DestinationCreationMode::NO_CREATE);
@@ -125,32 +132,39 @@ void Exchange::saveMessage(const Session &session, const MessageDataContainer &s
 }
 const std::string &Exchange::destinationsT() const { return _destinationsT; }
 void Exchange::removeConsumer(const std::string &sessionID, const std::string &destinationID, const std::string &subscriptionID, size_t tcpNum) {
+  TRACE(log);
   Destination &destination = getDestination(destinationID);
   destination.removeConsumer(sessionID, subscriptionID, tcpNum);
 }
 void Exchange::removeConsumer(const MessageDataContainer &sMessage, size_t tcpNum) {
+  TRACE(log);
   const Proto::Unsubscription &unsubscription = sMessage.unsubscription();
   const std::string destinationID = Exchange::mainDestinationPath(unsubscription.destination_uri());
   removeConsumer(unsubscription.session_id(), destinationID, unsubscription.subscription_name(), tcpNum);
 }
 void Exchange::begin(const upmq::broker::Session &session, const std::string &destinationID) {
+  TRACE(log);
   Destination &dest = destination(destinationID, DestinationCreationMode::NO_CREATE);
   dest.begin(session);
 }
 void Exchange::commit(const upmq::broker::Session &session, const std::string &destinationID) {
+  TRACE(log);
   Destination &destination = getDestination(destinationID);
   destination.commit(session);
 }
 void Exchange::abort(const upmq::broker::Session &session, const std::string &destinationID) {
+  TRACE(log);
   Destination &destination = getDestination(destinationID);
   destination.abort(session);
 }
 bool Exchange::isDestinationTemporary(const std::string &id) {
+  TRACE(log);
   Destination &destination = getDestination(id);
   return destination.isTemporary();
 }
 
 void Exchange::dropDestination(const std::string &id, DestinationOwner *owner) {
+  TRACE(log);
   bool needErase = false;
   {
     auto it = _destinations.find(id);
@@ -165,6 +179,7 @@ void Exchange::dropDestination(const std::string &id, DestinationOwner *owner) {
 }
 
 void Exchange::dropOwnedDestination(const std::string &clientId) {
+  TRACE(log);
   DestinationsList::ItemType::KeyType key;
   bool needErase = false;
   {
@@ -185,6 +200,7 @@ void Exchange::dropOwnedDestination(const std::string &clientId) {
 }
 
 void Exchange::addSubscription(const upmq::broker::Session &session, const MessageDataContainer &sMessage) {
+  TRACE(log);
   Destination &dest = destination(sMessage.subscription().destination_uri(), DestinationCreationMode::NO_CREATE);
   if (dest.isBindToSubscriber(sMessage.clientID)) {
     OnError onError;
@@ -199,6 +215,7 @@ void Exchange::addSubscription(const upmq::broker::Session &session, const Messa
   }
 }
 void Exchange::addSender(const upmq::broker::Session &session, const MessageDataContainer &sMessage) {
+  TRACE(log);
   Destination &dest = destination(sMessage.sender().destination_uri(), DestinationCreationMode::NO_CREATE);
   if (dest.isBindToPublisher(sMessage.clientID)) {
     dest.addSender(session, sMessage);
@@ -207,6 +224,7 @@ void Exchange::addSender(const upmq::broker::Session &session, const MessageData
   }
 }
 void Exchange::removeSender(const upmq::broker::Session &session, const MessageDataContainer &sMessage) {
+  TRACE(log);
   const Proto::Unsender &unsender = sMessage.unsender();
   if (unsender.destination_uri().empty()) {
     removeSenderFromAnyDest(session, unsender.sender_id());
@@ -219,12 +237,15 @@ void Exchange::removeSender(const upmq::broker::Session &session, const MessageD
   }
 }
 void Exchange::removeSenders(const upmq::broker::Session &session) {
+  TRACE(log);
   _destinations.changeForEach([&session](DestinationsList::ItemType::KVPair &dest) { dest.second->removeSenders(session); });
 }
 void Exchange::removeSenderFromAnyDest(const upmq::broker::Session &session, const std::string &senderID) {
+  TRACE(log);
   _destinations.changeForEach([&session, &senderID](DestinationsList::ItemType::KVPair &dest) { dest.second->removeSenderByID(session, senderID); });
 }
 void Exchange::start() {
+  TRACE(log);
   _threadAdapter = std::make_unique<Poco::RunnableAdapter<Exchange>>(*this, &Exchange::run);
   int count = _threadPool.capacity() - 1;
   _isRunning = true;
@@ -233,28 +254,30 @@ void Exchange::start() {
   }
 }
 void Exchange::stop() {
+  TRACE(log);
   if (_isRunning) {
     _isRunning = false;
     _threadPool.joinAll();
   }
 }
 void Exchange::postNewMessageEvent(const std::string &name) const {
+  TRACE(log);
   const int count = _threadPool.capacity() - 1;
-
   addNewMessageEvent(name);
-
   for (size_t i = 0; i < static_cast<size_t>(count); ++i) {
     _conditionDestinations[i].notify_one();
   }
 }
 
 void Exchange::addNewMessageEvent(const std::string &name) const {
+  TRACE(log);
   if (!name.empty()) {
     _destinationEvents.enqueue(name);
   }
 }
 
 void Exchange::run() {
+  TRACE(log);
   const size_t num = _thrNum++;
 
   std::string queueId;
@@ -271,7 +294,7 @@ void Exchange::run() {
                 break;
               }
             } catch (Poco::Exception &pex) {
-              std::cerr << "!!! " << pex.message() << " " << pex.className() << " " << pex.code() << std::endl;
+              log->error("%s %s %d", pex.message(), pex.className(), pex.code());
             }
           }
         }
@@ -285,6 +308,7 @@ void Exchange::run() {
   }
 }
 std::vector<Destination::Info> Exchange::info() const {
+  TRACE(log);
   std::vector<Destination::Info> infos;
   std::map<size_t, std::vector<Destination::Info>> infosGroup;
 

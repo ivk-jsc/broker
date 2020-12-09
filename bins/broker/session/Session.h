@@ -22,6 +22,7 @@
 #include <string>
 #include <mutex>
 #include <unordered_set>
+#include <Poco/Logger.h>
 #include "CircularQueue.h"
 #include "DBMSConnectionPool.h"
 #include "MessageDataContainer.h"
@@ -117,6 +118,7 @@ class Session {
   mutable std::atomic_int _txCounter;
   mutable CircularQueue<State> _stateStack;
   mutable std::recursive_mutex _rebeginMutex;
+  mutable Poco::Logger *log;
   void rebegin() const;
 
  public:

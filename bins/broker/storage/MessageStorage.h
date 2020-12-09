@@ -18,6 +18,7 @@
 #define BROKER_STORAGE_H
 
 #include <Poco/RWLock.h>
+#include <Poco/Logger.h>
 #include <memory>
 #include <string>
 #include "FixedSizeUnorderedMap.h"
@@ -49,6 +50,7 @@ class Storage {
   std::string _extParentID;
   TransactSessionsListType _txSessions;
   mutable upmq::MRWLock _txSessionsLock;
+  mutable Poco::Logger *log;
 
  private:
   std::string saveTableName(const upmq::broker::Session &session) const;

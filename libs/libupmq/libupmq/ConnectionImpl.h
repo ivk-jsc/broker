@@ -55,7 +55,7 @@ using namespace upmq::transport;
 class ConnectionImpl : public cms::Connection, public TransportListener {
  public:
   ConnectionImpl(const string &uri, const string &username, const string &password, const string &clientId);
-  ~ConnectionImpl();
+  ~ConnectionImpl() override;
 
   cms::Session *createSession() override;
   cms::Session *createSession(cms::Session::AcknowledgeMode ackMode) override;
@@ -100,7 +100,7 @@ class ConnectionImpl : public cms::Connection, public TransportListener {
 
   void addDispatcher(ConsumerImpl *consumerImpl);
   void removeDispatcher(ConsumerImpl *consumerImpl);
-  ConsumerImpl *getDispatcher(const string& objectId);
+  ConsumerImpl *getDispatcher(const string &objectId);
   void postDispatcher();
 
   void _checkClosed() const;

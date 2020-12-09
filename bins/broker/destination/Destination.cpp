@@ -37,6 +37,8 @@ Destination::Destination(const Exchange &exchange, const std::string &uri, Type 
       _exchange(exchange),
       _subscriptionsT("\"" + _id + "_subscriptions\""),
       _consumerMode(makeConsumerMode(_uri)) {
+  log = &Poco::Logger::get(CONFIGURATION::Instance().log().name);
+  TRACE(log);
   _storage.setParent(this);
   storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
   dbSession.beginTX(_id);
@@ -45,6 +47,7 @@ Destination::Destination(const Exchange &exchange, const std::string &uri, Type 
   dbSession.commitTX();
 }
 Destination::~Destination() {
+  TRACE(log);
   OnError onError;
   onError.setError(Proto::ERROR_DESTINATION).setInfo("can't update subscription count");
   try {
@@ -76,10 +79,11 @@ Destination::~Destination() {
       _storage.dropTables();
     }
   } catch (...) {
-    // TODO : make log
+    log->error("failed to delete destination %s", _name);
   }
 }
 void Destination::createSubscriptionsTable(storage::DBMSSession &dbSession) {
+  TRACE(log);
   std::stringstream sql;
   sql << "create table if not exists " << _subscriptionsT << "("
       << " id text not null primary key"
@@ -95,6 +99,7 @@ void Destination::createSubscriptionsTable(storage::DBMSSession &dbSession) {
   TRY_EXECUTE_NOEXCEPT(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
 }
 void Destination::createJournalTable(storage::DBMSSession &dbSession) {
+  TRACE(log);
   OnError onError;
   std::stringstream sql;
   sql << " create table if not exists " << STORAGE_CONFIG.messageJournal(_name) << "("
@@ -107,6 +112,7 @@ void Destination::createJournalTable(storage::DBMSSession &dbSession) {
   TRY_EXECUTE(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
 }
 std::string Destination::getStoredDestinationID(const Exchange &exchange, const std::string &name, Destination::Type type) {
+  // TODO : add trace
   std::string id = Poco::UUIDGenerator::defaultGenerator().createRandom().toString();
   storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
   dbSession.beginTX(id);
@@ -135,6 +141,7 @@ std::string Destination::getStoredDestinationID(const Exchange &exchange, const 
 }
 void Destination::saveDestinationId(
     const std::string &id, storage::DBMSSession &dbSession, const Exchange &exchange, const std::string &name, Destination::Type type) {
+  // TODO: add trace
   NextBindParam nextParam;
 
   std::stringstream sql;
@@ -151,6 +158,7 @@ void Destination::saveDestinationId(
   TRY_EXECUTE(([&dbSession, &sql, &name]() { dbSession << sql.str(), Poco::Data::Keywords::useRef(name), Poco::Data::Keywords::now; }), onError);
 }
 void Destination::subscribe(const MessageDataContainer &sMessage) {
+  TRACE(log);
   const Proto::Subscribe &subscribe = sMessage.subscribe();
   const std::string &name = subscribe.subscription_name();
 
@@ -167,6 +175,7 @@ void Destination::subscribe(const MessageDataContainer &sMessage) {
   }
 }
 void Destination::unsubscribe(const MessageDataContainer &sMessage) {
+  TRACE(log);
   const Proto::Unsubscribe &unsubscribe = sMessage.unsubscribe();
   const std::string &name = unsubscribe.subscription_name();
   auto it = _subscriptions.find(name);
@@ -182,6 +191,7 @@ void Destination::unsubscribe(const MessageDataContainer &sMessage) {
   }
 }
 void Destination::subscribeOnNotify(Subscription &subscription) const {
+  TRACE(log);
   {
     upmq::ScopedWriteRWLock writeRWLock(_routingLock);
     _routing.insert(std::make_pair(subscription.routingKey(), std::make_unique<Poco::FIFOEvent<const MessageDataContainer *>>()));
@@ -190,6 +200,7 @@ void Destination::subscribeOnNotify(Subscription &subscription) const {
   subscription.setHasNotify(true);
 }
 void Destination::unsubscribeFromNotify(Subscription &subscription) const {
+  TRACE(log);
   {
     upmq::ScopedWriteRWLock writeRWLock(_routingLock);
     auto item = _routing.find(subscription.routingKey());
@@ -220,6 +231,7 @@ const std::string &Destination::id() const { return _id; }
 const std::string &Destination::uri() const { return _uri; }
 bool Destination::isSubscriptionExists(const std::string &name) const { return _subscriptions.contains(name); }
 bool Destination::isSubscriptionBrowser(const std::string &name) const {
+  TRACE(log);
   auto it = _subscriptions.find(name);
   if (it.hasValue()) {
     return it->isBrowser();
@@ -227,6 +239,7 @@ bool Destination::isSubscriptionBrowser(const std::string &name) const {
   return false;
 }
 Subscription &Destination::subscription(const Session &session, const MessageDataContainer &sMessage) {
+  TRACE(log);
   Subscription::LocalMode localMode = Subscription::LocalMode::DEFAULT;
   const Proto::Subscription &subscription = sMessage.subscription();
   if (subscription.no_local()) {
@@ -270,6 +283,7 @@ Subscription &Destination::subscription(const Session &session, const MessageDat
   return subs;
 }
 Subscription::ConsumerMode Destination::makeConsumerMode(const std::string &uri) {
+  // TODO: add trace
   Poco::URI tURI(uri);
   if (tURI.getScheme() == TOPIC_PREFIX) {
     return Subscription::ConsumerMode::EXCLUSIVE;
@@ -293,6 +307,7 @@ bool Destination::isTempQueue() const { return _type == Type::TEMPORARY_QUEUE; }
 bool Destination::isTopicFamily() const { return isTopic() || isTempTopic(); }
 bool Destination::isQueueFamily() const { return isQueue() || isTempQueue(); }
 std::string Destination::routingKey(const std::string &uri) {
+  // TODO: add trace
   Poco::StringTokenizer URI(uri, ":", Poco::StringTokenizer::TOK_TRIM);
   std::string routingKey = URI[1];
   routingKey = Poco::replace(routingKey, "//", " ");
@@ -310,17 +325,20 @@ void Destination::ack(const Session &session, const MessageDataContainer &sMessa
 }
 const std::string &Destination::subscriptionsT() const { return _subscriptionsT; }
 void Destination::begin(const Session &session) {
+  TRACE(log);
   if (session.stateStack().front() == Session::State::BEGIN) {
     return;
   }
 }
 void Destination::commit(const Session &session) {
+  TRACE(log);
   if (session.stateStack().front() == Session::State::COMMIT) {
     return;
   }
 }
 
 void Destination::abort(const Session &session) {
+  TRACE(log);
   if (session.stateStack().front() == Session::State::ABORT) {
     return;
   }
@@ -328,10 +346,12 @@ void Destination::abort(const Session &session) {
 }
 
 void Destination::resetConsumersCache() {
+  TRACE(log);
   _subscriptions.changeForEach([](SubscriptionsList::ItemType::KVPair &pair) { pair.second.resetConsumersCache(); });
 }
 
 size_t Destination::subscriptionsCount() const {
+  TRACE(log);
   size_t result = 0;
 
   if (isQueueFamily()) {
@@ -356,6 +376,7 @@ size_t Destination::subscriptionsCount() const {
 size_t Destination::subscriptionsTrueCount() const { return _subscriptions.size(); }
 const std::string &Destination::name() const { return _name; }
 void Destination::removeMessageOrGroup(const Session &session, Storage &storage, const MessageInfo &msg, message::GroupStatus groupStatus) {
+  TRACE(log);
   if (groupStatus == message::LAST_IN_GROUP) {
     storage.removeGroupMessage(msg.tuple.get<message::field::GroupId::POSITION>().value(), session);
   }
@@ -372,6 +393,7 @@ void Destination::removeMessageOrGroup(const Session &session, Storage &storage,
 }
 void Destination::doAck(
     const Session &session, const MessageDataContainer &sMessage, Storage &storage, bool browser, const std::vector<MessageInfo> &messages) {
+  TRACE(log);
   message::GroupStatus groupStatus = message::NOT_IN_GROUP;
   for (const auto &msg : messages) {
     groupStatus = getMsgGroupStatus(msg);
@@ -396,6 +418,7 @@ void Destination::doAck(
   postNewMessageEvent();
 }
 message::GroupStatus Destination::getMsgGroupStatus(const MessageInfo &msg) const {
+  TRACE(log);
   message::GroupStatus groupStatus = message::NOT_IN_GROUP;
   if (!msg.tuple.get<message::field::GroupId::POSITION>().isNull() && !msg.tuple.get<message::field::GroupId::POSITION>().value().empty()) {
     if (msg.tuple.get<message::field::LastInGroup::POSITION>()) {
@@ -407,6 +430,7 @@ message::GroupStatus Destination::getMsgGroupStatus(const MessageInfo &msg) cons
   return groupStatus;
 }
 void Destination::increaseNotAcknowledged(const std::string &objectID) {
+  TRACE(log);
   upmq::ScopedReadRWLock readRWLock(_notAckLock);
   auto it = _notAckList.find(objectID);
   if (it != _notAckList.end()) {
@@ -414,12 +438,14 @@ void Destination::increaseNotAcknowledged(const std::string &objectID) {
   }
 }
 void Destination::increaseNotAcknowledgedAll() {
+  TRACE(log);
   upmq::ScopedReadRWLock readRWLock(_notAckLock);
   for (auto &it : _notAckList) {
     ++(*it.second);
   }
 }
 bool Destination::canSendNextMessages(const std::string &objectID) const {
+  TRACE(log);
   upmq::ScopedReadRWLock readRWLock(_notAckLock);
   const auto it = _notAckList.find(objectID);
   if (it != _notAckList.end()) {
@@ -428,6 +454,7 @@ bool Destination::canSendNextMessages(const std::string &objectID) const {
   return false;
 }
 void Destination::decreesNotAcknowledged(const std::string &objectID) const {
+  TRACE(log);
   upmq::ScopedReadRWLock readRWLock(_notAckLock);
   auto it = _notAckList.find(objectID);
   if (it != _notAckList.end()) {
@@ -435,20 +462,24 @@ void Destination::decreesNotAcknowledged(const std::string &objectID) const {
   }
 }
 void Destination::addToNotAckList(const std::string &objectID, int count) const {
+  TRACE(log);
   upmq::ScopedWriteRWLock writeRWLock(_notAckLock);
   _notAckList.insert(std::make_pair(objectID, std::make_unique<std::atomic_int>(count)));
 }
 void Destination::remFromNotAck(const std::string &objectID) const {
+  TRACE(log);
   upmq::ScopedWriteRWLock writeRWLock(_notAckLock);
   _notAckList.erase(objectID);
 }
 void Destination::postNewMessageEvent() const {
+  TRACE(log);
   const size_t subsCnt = isTopicFamily() ? subscriptionsTrueCount() : 1;
   for (size_t i = 0; i < subsCnt; ++i) {
     EXCHANGE::Instance().postNewMessageEvent(name());
   }
 }
 bool Destination::removeConsumer(const std::string &sessionID, const std::string &subscriptionID, size_t tcpNum) {
+  TRACE(log);
   std::string toerase;
   bool result = false;
   {
@@ -471,6 +502,7 @@ bool Destination::removeConsumer(const std::string &sessionID, const std::string
 }
 Storage &Destination::storage() const { return _storage; }
 int64_t Destination::initBrowser(const std::string &subscriptionName) {
+  TRACE(log);
   auto it = _subscriptions.find(subscriptionName);
   if (!it.hasValue()) {
     throw EXCEPTION("subscription not found", subscriptionName, Proto::ERROR_ON_BROWSER);
@@ -487,16 +519,19 @@ int64_t Destination::initBrowser(const std::string &subscriptionName) {
 }
 // NOTE: browser subscription has only one consumer
 void Destination::copyMessagesTo(Subscription &subscription) {
+  TRACE(log);
   const Consumer *consumer = subscription.at(0);
   if (consumer != nullptr) {
     _storage.copyTo(subscription.storage(), *consumer);
   }
 }
 void Destination::addS2Subs(const std::string &sesionID, const std::string &subsID) {
+  TRACE(log);
   upmq::ScopedWriteRWLock writeRWLock(_s2subsLock);
   _s2subsList.insert(std::make_pair(sesionID, subsID));
 }
 void Destination::remS2Subs(const std::string &sessionID, const std::string &subsID) {
+  TRACE(log);
   auto item = _s2subsList.equal_range(sessionID);
   for (auto itRg = item.first; itRg != item.second; ++itRg) {
     if ((*itRg).second == subsID) {
@@ -506,6 +541,7 @@ void Destination::remS2Subs(const std::string &sessionID, const std::string &sub
   }
 }
 void Destination::closeAllSubscriptions(const Session &session, size_t tcpNum) {
+  TRACE(log);
   upmq::ScopedWriteRWLock writeRWLock(_s2subsLock);
   auto item = _s2subsList.equal_range(session.id());
   do {
@@ -519,6 +555,7 @@ void Destination::closeAllSubscriptions(const Session &session, size_t tcpNum) {
   postNewMessageEvent();
 }
 bool Destination::getNexMessageForAllSubscriptions() {
+  TRACE(log);
   bool result = false;
   _subscriptions.changeForEach([&result](SubscriptionsList::ItemType::KVPair &pair) {
     if (pair.second.isRunning()) {
@@ -534,6 +571,7 @@ bool Destination::getNexMessageForAllSubscriptions() {
   return result;
 }
 void Destination::loadDurableSubscriptions() {
+  TRACE(log);
   std::stringstream sql;
   std::string id;
   std::string name;
@@ -566,14 +604,17 @@ void Destination::loadDurableSubscriptions() {
   dbSession.commitTX();
 }
 void Destination::bindWithSubscriber(const std::string &clientID, bool useFileLink) {
+  TRACE(log);
   upmq::ScopedWriteRWLock writeRWLock(_predefSubscribersLock);
   _predefinedSubscribers.insert({clientID, useFileLink});
 }
 void Destination::unbindFromSubscriber(const std::string &clientID) {
+  TRACE(log);
   upmq::ScopedWriteRWLock writeRWLock(_predefSubscribersLock);
   _predefinedSubscribers.erase(clientID);
 }
 bool Destination::isBindToSubscriber(const std::string &clientID) const {
+  TRACE(log);
   upmq::ScopedReadRWLock readRWLock(_predefSubscribersLock);
   if (_predefinedSubscribers.empty()) {
     return true;
@@ -581,6 +622,7 @@ bool Destination::isBindToSubscriber(const std::string &clientID) const {
   return (_predefinedSubscribers.find(clientID) != _predefinedPublisher.end());
 }
 bool Destination::isSubscriberUseFileLink(const std::string &clientID) const {
+  TRACE(log);
   upmq::ScopedReadRWLock readRWLock(_predefSubscribersLock);
   auto it = _predefinedSubscribers.find(clientID);
   if (it != _predefinedSubscribers.end()) {
@@ -589,14 +631,17 @@ bool Destination::isSubscriberUseFileLink(const std::string &clientID) const {
   return false;
 }
 void Destination::bindWithPublisher(const std::string &clientID, bool useFileLink) {
+  TRACE(log);
   upmq::ScopedWriteRWLock writeRWLock(_predefPublishersLock);
   _predefinedPublisher.insert({clientID, useFileLink});
 }
 void Destination::unbindFromPublisher(const std::string &clientID) {
+  TRACE(log);
   upmq::ScopedWriteRWLock writeRWLock(_predefPublishersLock);
   _predefinedPublisher.erase(clientID);
 }
 bool Destination::isBindToPublisher(const std::string &clientID) const {
+  TRACE(log);
   upmq::ScopedReadRWLock readRWLock(_predefPublishersLock);
   if (_predefinedPublisher.empty()) {
     return true;
@@ -604,6 +649,7 @@ bool Destination::isBindToPublisher(const std::string &clientID) const {
   return (_predefinedPublisher.count(clientID) > 0);
 }
 bool Destination::isPublisherUseFileLink(const std::string &clientID) const {
+  TRACE(log);
   upmq::ScopedReadRWLock readRWLock(_predefPublishersLock);
   auto it = _predefinedPublisher.find(clientID);
   if (it != _predefinedPublisher.end()) {
@@ -612,6 +658,7 @@ bool Destination::isPublisherUseFileLink(const std::string &clientID) const {
   return false;
 }
 void Destination::setOwner(const std::string &clientID, size_t tcpID) {
+  TRACE(log);
   if (_owner == nullptr) {
     _owner = std::make_unique<upmq::broker::DestinationOwner>(clientID, tcpID);
   }
@@ -619,6 +666,7 @@ void Destination::setOwner(const std::string &clientID, size_t tcpID) {
 const DestinationOwner &Destination::owner() const { return *_owner; }
 bool Destination::hasOwner() const { return _owner != nullptr; }
 Destination::Info Destination::info() const {
+  TRACE(log);
   Destination::Info dinfo(_uri,
                           _id,
                           DestinationFactory::destinationName(_uri),

@@ -174,7 +174,7 @@ void PlatformThread::interruptibleWaitOnCondition(decaf_condition_t condition, d
     if (complete()) {
       break;
     }
-
+    yeild();
   } while (true);
 }
 
@@ -209,7 +209,7 @@ bool PlatformThread::interruptibleWaitOnCondition(
     if (complete(false)) {
       break;
     }
-
+    yeild();
   } while (true);
 
   return result;

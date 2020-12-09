@@ -18,6 +18,8 @@
 #define BROKER_TOPICDESTINATION_H
 
 #include "Destination.h"
+#include <Poco/Logger.h>
+
 namespace upmq {
 namespace broker {
 
@@ -49,6 +51,7 @@ class TopicDestination : public Destination {
  private:
   SenderCache _senderCache;
   upmq::MRWLock _senderCacheLock;
+  mutable Poco::Logger *log;
 };
 }  // namespace broker
 }  // namespace upmq

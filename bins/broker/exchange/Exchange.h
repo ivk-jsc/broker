@@ -47,6 +47,7 @@ class Exchange {
   std::atomic_size_t _thrNum{0};
   using BQ = moodycamel::ConcurrentQueue<std::string>;
   mutable BQ _destinationEvents;
+  mutable Poco::Logger *log;
 
  public:
   Exchange();

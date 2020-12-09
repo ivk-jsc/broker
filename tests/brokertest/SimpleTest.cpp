@@ -637,25 +637,26 @@ TEST_F(SimpleTest, testRoundRobin) {
   size_t in2Counter = 0;
 
   std::array<int, 10> items = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-  for (int count(0); count < 5; ++count) {
-    in1.reset(consumer2->receive(cmsProvider->maxTimeout));
-    EXPECT_TRUE((in1 != nullptr));
-    if (in1) {
+  in1.reset(consumer2->receive(cmsProvider->maxTimeout));
+  in2.reset(consumer1->receive(cmsProvider->maxTimeout));
+  while (in1 != nullptr || in2 != nullptr) {
+    if (in1 != nullptr) {
       int fromIn1 = in1->getIntProperty("num");
       EXPECT_TRUE(std::any_of(items.begin(), items.end(), [&fromIn1](int i) { return i == fromIn1; }))
           << "invalid order msg : " << in1->getCMSMessageID();
       ++in1Counter;
     }
-  }
-  for (int count(0); count < 5; ++count) {
-    in2.reset(consumer1->receive(cmsProvider->maxTimeout));
-    EXPECT_TRUE((in2 != nullptr));
-    if (in2) {
+    if (in2 != nullptr) {
       int fromIn2 = in2->getIntProperty("num");
       EXPECT_TRUE(std::any_of(items.begin(), items.end(), [&fromIn2](int i) { return i == fromIn2; }))
           << "invalid order msg : " << in2->getCMSMessageID();
       ++in2Counter;
     }
+    if (in1Counter + in2Counter == items.size()) {
+      break;
+    }
+    in2.reset(consumer1->receive(cmsProvider->maxTimeout));
+    in1.reset(consumer2->receive(cmsProvider->maxTimeout));
   }
   EXPECT_EQ((in1Counter + in2Counter), items.size()) << "expected " << items.size() << " messages, but had received " << (in1Counter + in2Counter);
 

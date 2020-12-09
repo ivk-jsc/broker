@@ -18,6 +18,7 @@
 #define BROKER_CONNECTION_H
 
 #include <Poco/RWLock.h>
+#include <Poco/Logger.h>
 #include <atomic>
 #include <string>
 #include <unordered_map>
@@ -46,6 +47,7 @@ class Connection {
 
   const std::string _sessionsT;
   const std::string _tcpT;
+  mutable Poco::Logger *log{nullptr};
 
  public:
   explicit Connection(const std::string &clientID);

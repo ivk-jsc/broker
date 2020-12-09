@@ -24,6 +24,7 @@
 #endif
 
 #include <Poco/FIFOEvent.h>
+#include <Poco/Logger.h>
 #include <memory>
 #include <utility>
 #include "DestinationOwner.h"
@@ -99,6 +100,7 @@ class Destination {
   std::unique_ptr<DestinationOwner> _owner;
   std::unique_ptr<Poco::Timestamp> _created{new Poco::Timestamp};
   Subscription::ConsumerMode _consumerMode{Subscription::ConsumerMode::ROUND_ROBIN};
+  mutable Poco::Logger *log;
 
  private:
   void addS2Subs(const std::string &sesionID, const std::string &subsID);

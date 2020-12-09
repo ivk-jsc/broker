@@ -21,6 +21,7 @@
 #include "DBMSSession.h"
 #include "Exception.h"
 #include "Exchange.h"
+#include "AsyncLogger.h"
 
 namespace upmq {
 namespace broker {
@@ -31,6 +32,9 @@ Connection::Connection(const std::string &clientID)
       _sessions(SESSIONS_CONFIG.maxCount),
       _sessionsT("\"" + clientID + "_sessions\""),
       _tcpT("\"" + clientID + "_tcp_connections\"") {
+  log = &Poco::Logger::get(CONFIGURATION::Instance().log().name);
+  TRACE(log);
+
   std::stringstream sql;
   storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
   dbSession.beginTX(_clientID);
@@ -67,6 +71,7 @@ Connection::Connection(const std::string &clientID)
   dbSession.commitTX();
 }
 Connection::~Connection() {
+  TRACE(log);
   try {
     _sessions.clear();
   } catch (...) {
@@ -94,6 +99,7 @@ Connection::~Connection() {
 }
 const std::string &Connection::clientID() const { return _clientID; }
 void Connection::setClientID(const std::string &clientID) {
+  TRACE(log);
   if (_clientID.empty()) {
     _clientID = clientID;
 
@@ -108,6 +114,7 @@ void Connection::setClientID(const std::string &clientID) {
   }
 }
 void Connection::addTcpConnection(size_t tcpConnectionNum) {
+  TRACE(log);
   upmq::ScopedWriteRWLockWithUnlock writeRWLock(_tcpLock);
   auto it = _tcpConnections.find(tcpConnectionNum);
   if (it == _tcpConnections.end()) {
@@ -133,6 +140,7 @@ void Connection::addTcpConnection(size_t tcpConnectionNum) {
   throw EXCEPTION("connection already exists", _clientID + " : " + std::to_string(tcpConnectionNum), Proto::ERROR_CLIENT_ID_EXISTS);
 }
 void Connection::removeTcpConnection(size_t tcpConnectionNum) {
+  TRACE(log);
   upmq::ScopedWriteRWLockWithUnlock writeRWLock(_tcpLock);
   auto it = _tcpConnections.find(tcpConnectionNum);
   if (it != _tcpConnections.end()) {
@@ -147,11 +155,13 @@ void Connection::removeTcpConnection(size_t tcpConnectionNum) {
   }
 }
 bool Connection::isTcpConnectionExists(size_t tcpConnectionNum) const {
+  TRACE(log);
   upmq::ScopedReadRWLock readRWLock(_tcpLock);
   auto it = _tcpConnections.find(tcpConnectionNum);
   return (it != _tcpConnections.end());
 }
 void Connection::addSession(const std::string &sessionID, Proto::Acknowledge acknowledgeType) {
+  TRACE(log);
   auto it = _sessions.find(sessionID);
   if (it.hasValue()) {
     throw EXCEPTION("session already exists", sessionID, Proto::ERROR_ON_SESSION);
@@ -159,6 +169,7 @@ void Connection::addSession(const std::string &sessionID, Proto::Acknowledge ack
   _sessions.insert(std::make_pair(sessionID, std::make_unique<upmq::broker::Session>(*this, sessionID, acknowledgeType)));
 }
 void Connection::removeSession(const std::string &sessionID, size_t tcpNum) {
+  TRACE(log);
   {
     auto it = _sessions.find(sessionID);
     if (it.hasValue()) {
@@ -176,6 +187,7 @@ void Connection::removeSession(const std::string &sessionID, size_t tcpNum) {
   _sessions.erase(sessionID);
 }
 void Connection::beginTX(const std::string &sessionID) {
+  TRACE(log);
   auto it = _sessions.find(sessionID);
   if (!it.hasValue()) {
     throw EXCEPTION("session not found", sessionID, Proto::ERROR_ON_BEGIN);
@@ -183,6 +195,7 @@ void Connection::beginTX(const std::string &sessionID) {
   (*it)->begin();
 }
 void Connection::commitTX(const std::string &sessionID) {
+  TRACE(log);
   auto it = _sessions.find(sessionID);
   if (!it.hasValue()) {
     throw EXCEPTION("session not found", sessionID, Proto::ERROR_ON_COMMIT);
@@ -190,6 +203,7 @@ void Connection::commitTX(const std::string &sessionID) {
   (*it)->commit();
 }
 void Connection::abortTX(const std::string &sessionID) {
+  TRACE(log);
   auto it = _sessions.find(sessionID);
   if (!it.hasValue()) {
     throw EXCEPTION("session not found", sessionID, Proto::ERROR_ON_ABORT);
@@ -197,6 +211,7 @@ void Connection::abortTX(const std::string &sessionID) {
   (*it)->abort();
 }
 void Connection::saveMessage(const MessageDataContainer &sMessage) {
+  TRACE(log);
   auto it = _sessions.find(sMessage.message().session_id());
   if (!it.hasValue()) {
     throw EXCEPTION("session not found", sMessage.message().session_id(), Proto::ERROR_ON_SAVE_MESSAGE);
@@ -206,6 +221,7 @@ void Connection::saveMessage(const MessageDataContainer &sMessage) {
 const std::string &Connection::sessionsT() const { return _sessionsT; }
 const std::string &Connection::tcpT() const { return _tcpT; }
 void Connection::addSender(const MessageDataContainer &sMessage) {
+  TRACE(log);
   const Proto::Sender &sender = sMessage.sender();
   auto it = _sessions.find(sender.session_id());
   if (!it.hasValue()) {
@@ -214,12 +230,14 @@ void Connection::addSender(const MessageDataContainer &sMessage) {
   (*it)->addSender(sMessage);
 }
 void Connection::removeSender(const MessageDataContainer &sMessage) {
+  TRACE(log);
   auto it = _sessions.find(sMessage.unsender().session_id());
   if (it.hasValue()) {
     (*it)->removeSender(sMessage);
   }
 }
 void Connection::addSubscription(const MessageDataContainer &sMessage) {
+  TRACE(log);
   auto it = _sessions.find(sMessage.subscription().session_id());
   if (!it.hasValue()) {
     throw EXCEPTION("session not found", sMessage.subscription().session_id(), Proto::ERROR_ON_SUBSCRIPTION);
@@ -228,6 +246,7 @@ void Connection::addSubscription(const MessageDataContainer &sMessage) {
   (*it)->addSubscription(sMessage);
 }
 void Connection::removeConsumer(const MessageDataContainer &sMessage, size_t tcpNum) {
+  TRACE(log);
   {
     auto it = _sessions.find(sMessage.unsubscription().session_id());
     if (!it.hasValue()) {
@@ -238,6 +257,7 @@ void Connection::removeConsumer(const MessageDataContainer &sMessage, size_t tcp
   EXCHANGE::Instance().removeConsumer(sMessage, tcpNum);
 }
 void Connection::removeConsumers(const std::string &destinationID, const std::string &subscriptionID, size_t tcpNum) {
+  TRACE(log);
   std::vector<std::string> ids;
   {
     ids.reserve(_sessions.size());
@@ -248,6 +268,7 @@ void Connection::removeConsumers(const std::string &destinationID, const std::st
   });
 }
 void Connection::processAcknowledge(const MessageDataContainer &sMessage) {
+  TRACE(log);
   auto it = _sessions.find(sMessage.ack().session_id());
   if (!it.hasValue()) {
     throw EXCEPTION("session not found", sMessage.ack().session_id(), Proto::ERROR_ON_ACK_MESSAGE);
@@ -255,6 +276,7 @@ void Connection::processAcknowledge(const MessageDataContainer &sMessage) {
   (*it)->processAcknowledge(sMessage);
 }
 int Connection::maxNotAcknowledgedMessages(size_t tcpConnectionNum) const {
+  TRACE(log);
   auto handler = AHRegestry::Instance().aHandler(tcpConnectionNum);
   if (handler) {
     return handler->maxNotAcknowledgedMessages();
@@ -262,6 +284,7 @@ int Connection::maxNotAcknowledgedMessages(size_t tcpConnectionNum) const {
   return 100;
 }
 std::string Connection::transactionID(const std::string &sessionID) const {
+  TRACE(log);
   auto it = _sessions.find(sessionID);
   if (!it.hasValue()) {
     throw EXCEPTION("session not found", sessionID, Proto::ERROR_ON_SESSION);
@@ -269,6 +292,7 @@ std::string Connection::transactionID(const std::string &sessionID) const {
   return (*it)->txName();
 }
 size_t Connection::tcpConnectionsCount() const {
+  TRACE(log);
   upmq::ScopedReadRWLock readRWLock(_tcpLock);
   return _tcpConnections.size();
 }

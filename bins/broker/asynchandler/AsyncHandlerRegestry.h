@@ -30,7 +30,7 @@ namespace broker {
 
 class AsyncHandlerRegestry : public Poco::Runnable {
  public:
-  typedef std::vector<std::shared_ptr<AsyncTCPHandler>> ConnectionsListType;
+  using ConnectionsListType = std::vector<std::shared_ptr<AsyncTCPHandler>>;
   AsyncHandlerRegestry();
   ~AsyncHandlerRegestry() override;
   void addAHandler(AsyncTCPHandler* ahandler);
@@ -48,13 +48,12 @@ class AsyncHandlerRegestry : public Poco::Runnable {
  private:
   size_t _size{0};
   Poco::Thread _thread;
-  Poco::FastMutex _mutex;
-  Poco::Condition _condition;
   ConnectionsListType _connections;
   mutable moodycamel::BlockingConcurrentQueue<int> _freeNums{};
   moodycamel::BlockingConcurrentQueue<int> _needToErase{};
   std::atomic_bool _isRunning;
   std::atomic_size_t _current_size;
+  mutable Poco::Logger* log{nullptr};
   int erasedConnections();
   int freeNum() const;
 
