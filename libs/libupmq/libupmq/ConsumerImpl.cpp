@@ -554,11 +554,7 @@ Pointer<Command> ConsumerImpl::dequeue(long long timeout) {
   try {
     return _messageQueue->dequeue(timeout);
   } catch (InterruptedException &) {
-    // TODO check
     return Pointer<Command>();
-    // TODO:
-    // Thread.currentThread().interrupt();
-    // throw JMSException
   }
 }
 
