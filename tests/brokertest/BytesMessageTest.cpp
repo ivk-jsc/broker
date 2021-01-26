@@ -19,13 +19,12 @@
 #include <fake_cpp14.h>
 
 ////////////////////////////////////////////////////////////////////////////////
-void BytesMessageTest::SetUp() {
-  cmsProvider = std::make_unique<CMSProvider>(getBrokerURL());
-  cmsProvider->cleanUpDestination();
-}
+void BytesMessageTest::SetUp() { cmsProvider = std::make_unique<CMSProvider>(getBrokerURL()); }
 
 ////////////////////////////////////////////////////////////////////////////////
 TEST_F(BytesMessageTest, testSendRecvCloneBytesMessage) {
+  cmsProvider->cleanUpDestination();
+
   // Create CMS Object for Comms
   cms::Session *session(cmsProvider->getSession());
   cms::MessageConsumer *consumer = cmsProvider->getConsumer();
