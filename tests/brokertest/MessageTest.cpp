@@ -20,13 +20,12 @@
 #include "cms/Utils.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-void MessageTest::SetUp() {
-  cmsProvider = std::make_unique<CMSProvider>(getBrokerURL());
-  cmsProvider->cleanUpDestination();
-}
+void MessageTest::SetUp() { cmsProvider = std::make_unique<CMSProvider>(getBrokerURL()); }
 
 ////////////////////////////////////////////////////////////////////////////////
 TEST_F(MessageTest, testSendRecvCloneProperty) {
+  cmsProvider->cleanUpDestination();
+
   // Create CMS Object for Comms
   cms::Session *session(cmsProvider->getSession());
   cms::MessageConsumer *consumer = cmsProvider->getConsumer();

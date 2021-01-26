@@ -369,22 +369,23 @@ Subscription::ProcessMessageResult Subscription::getNextMessage() {
           sMessage->serialize();
           AHRegestry::Instance().put(consumer->tcpNum, std::move(sMessage));
           ++_messageCounter;
-          log->information(std::to_string(consumer->tcpNum)
-                               .append(" <= from subs => ")
-                               .append(_name)
-                               .append(" : consumer [")
-                               .append(std::to_string(consumer->num))
-                               .append(":")
-                               .append(consumer->clientID)
-                               .append(":")
-                               .append((useFileLink ? "use_file_link" : "standard"))
-                               .append("] to client : ")
-                               .append(consumer->objectID)
-                               .append(" >> send message [")
-                               .append(messageID)
-                               .append("] (")
-                               .append(std::to_string(_messageCounter))
-                               .append(")"));
+          INFO(log,
+               std::to_string(consumer->tcpNum)
+                   .append(" <= from subs => ")
+                   .append(_name)
+                   .append(" : consumer [")
+                   .append(std::to_string(consumer->num))
+                   .append(":")
+                   .append(consumer->clientID)
+                   .append(":")
+                   .append((useFileLink ? "use_file_link" : "standard"))
+                   .append("] to client : ")
+                   .append(consumer->objectID)
+                   .append(" >> send message [")
+                   .append(messageID)
+                   .append("] (")
+                   .append(std::to_string(_messageCounter))
+                   .append(")"));
 
           _destination.decreesNotAcknowledged(consumer->objectID);
           if (consumer->session.type == Proto::Acknowledge::CLIENT_ACKNOWLEDGE || !consumer->select->empty()) {

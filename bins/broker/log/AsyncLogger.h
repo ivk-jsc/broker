@@ -105,5 +105,9 @@ using ASYNCLOGGER = Singleton<upmq::broker::AsyncLogger>;
 #define __PRETTY_FUNCTION__ __FUNCTION__
 #endif
 
-#define TRACE(log) upmq::broker::Trace trace(log, __PRETTY_FUNCTION__)
+#define TRACE(log) \
+  if (log->getLevel() >= Poco::Message::PRIO_TRACE) upmq::broker::Trace trace(log, __PRETTY_FUNCTION__)
+#define INFO(logger, ...) \
+  if (logger->getLevel() >= Poco::Message::PRIO_INFORMATION) logger->information(__VA_ARGS__)
+
 #endif  // BROKERSTORAGELOGGER_H

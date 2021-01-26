@@ -42,7 +42,7 @@ using send_size_t = size_t;
 namespace upmq {
 namespace broker {
 
-AsyncTCPHandler::AsyncTCPHandler(Poco::Net::StreamSocket &socket, upmq::Net::SocketReactor &reactor)
+AsyncTCPHandler::AsyncTCPHandler(Poco::Net::StreamSocket &socket, PNet::SocketReactor &reactor)
     : _socket(socket),
       _reactor(reactor),
       _peerAddress(socket.peerAddress().toString()),
@@ -66,14 +66,15 @@ AsyncTCPHandler::AsyncTCPHandler(Poco::Net::StreamSocket &socket, upmq::Net::Soc
   _socket.setNoDelay(true);
   _socket.setBlocking(false);
 
-  log->information(std::to_string(num)
-                       .append(" => new asynchandler from ")
-                       .append(_peerAddress)
-                       .append(" q-num : ")
-                       .append(std::to_string(queueNum))
-                       .append(" ( ")
-                       .append(std::to_string(AHRegestry::Instance().size()))
-                       .append(" asynchandlers now )"));
+  INFO(log,
+       std::to_string(num)
+           .append(" => new asynchandler from ")
+           .append(_peerAddress)
+           .append(" q-num : ")
+           .append(std::to_string(queueNum))
+           .append(" ( ")
+           .append(std::to_string(AHRegestry::Instance().size()))
+           .append(" asynchandlers now )"));
 
   _reactor.addEventHandler(_socket, _readableCallBack);
   _reactor.addEventHandler(_socket, _shutdownCallBack);
@@ -123,10 +124,10 @@ AsyncTCPHandler::~AsyncTCPHandler() {
     log->critical(std::to_string(num).append(" => ").append(std::string(ex.what())));
   }
 
-  log->information(std::to_string(num).append(" => destruct asynchandler from ").append(_peerAddress));
+  INFO(log, std::to_string(num).append(" => destruct asynchandler from ").append(_peerAddress));
 }
 
-void AsyncTCPHandler::onReadable(const AutoPtr<upmq::Net::ReadableNotification> &pNf) {
+void AsyncTCPHandler::onReadable(const AutoPtr<PNet::ReadableNotification> &pNf) {
   if (_needErase && !_readComplete) {
     _readComplete = true;
     return;
@@ -153,14 +154,14 @@ void AsyncTCPHandler::put(std::shared_ptr<MessageDataContainer> sMessage) {
   BROKER::Instance().putWritable(_queueWriteNum, num);
 }
 
-void AsyncTCPHandler::onShutdown(const AutoPtr<upmq::Net::ShutdownNotification> &pNf) {
+void AsyncTCPHandler::onShutdown(const AutoPtr<PNet::ShutdownNotification> &pNf) {
   TRACE(log);
   UNUSED_VAR(pNf);
   log->warning(std::to_string(num).append(" => shutdown : ").append(_peerAddress));
   emitCloseEvent();
 }
 
-void AsyncTCPHandler::onError(const AutoPtr<upmq::Net::ErrorNotification> &pNf) {
+void AsyncTCPHandler::onError(const AutoPtr<PNet::ErrorNotification> &pNf) {
   TRACE(log);
   UNUSED_VAR(pNf);
   log->error(std::to_string(num).append(" => network error : ").append(_peerAddress));

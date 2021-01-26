@@ -20,13 +20,12 @@
 #include <fake_cpp14.h>
 
 ////////////////////////////////////////////////////////////////////////////////
-void MapMessageTest::SetUp() {
-  cmsProvider = std::make_unique<CMSProvider>(getBrokerURL());
-  cmsProvider->cleanUpDestination();
-}
+void MapMessageTest::SetUp() { cmsProvider = std::make_unique<CMSProvider>(getBrokerURL()); }
 
 ////////////////////////////////////////////////////////////////////////////////
 TEST_F(MapMessageTest, testSendRecvCloneMapMessage) {
+  cmsProvider->cleanUpDestination();
+
   Session *session = cmsProvider->getSession();
   cms::MessageConsumer *consumer = cmsProvider->getConsumer();
   cms::MessageProducer *producer = cmsProvider->getProducer();
@@ -84,6 +83,8 @@ TEST_F(MapMessageTest, testSendRecvCloneMapMessage) {
 
 ////////////////////////////////////////////////////////////////////////////////
 TEST_F(MapMessageTest, testEmptyMapSendReceive) {
+  cmsProvider->cleanUpDestination();
+
   // Create CMS Object for Comms
   cms::Session *session(cmsProvider->getSession());
   cms::MessageConsumer *consumer = cmsProvider->getConsumer();
@@ -105,6 +106,8 @@ TEST_F(MapMessageTest, testEmptyMapSendReceive) {
 
 ////////////////////////////////////////////////////////////////////////////////
 TEST_F(MapMessageTest, testMapWithEmptyStringValue) {
+  cmsProvider->cleanUpDestination();
+
   // Create CMS Object for Comms
   cms::Session *session(cmsProvider->getSession());
   cms::MessageConsumer *consumer = cmsProvider->getConsumer();
@@ -133,6 +136,8 @@ TEST_F(MapMessageTest, testMapWithEmptyStringValue) {
 
 ////////////////////////////////////////////////////////////////////////////////
 TEST_F(MapMessageTest, testMapSetEmptyBytesVector) {
+  cmsProvider->cleanUpDestination();
+
   // Create CMS Object for Comms
   cms::Session *session(cmsProvider->getSession());
   cms::MessageConsumer *consumer = cmsProvider->getConsumer();
@@ -474,6 +479,8 @@ TEST_F(MapMessageTest, testClearBody) {
 
 ////////////////////////////////////////////////////////////////////////////////
 TEST_F(MapMessageTest, testReadOnlyBody) {
+  cmsProvider->cleanUpDestination();
+
   Session *session = cmsProvider->getSession();
   cms::MessageConsumer *consumer = cmsProvider->getConsumer();
   cms::MessageProducer *producer = cmsProvider->getProducer();

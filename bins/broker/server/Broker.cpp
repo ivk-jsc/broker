@@ -68,7 +68,7 @@ Broker::~Broker() {
 const std::string &Broker::id() const { return _id; }
 void Broker::onEvent(const AsyncTCPHandler &ahandler, MessageDataContainer &sMessage) {
   TRACE(log);
-  log->information(std::to_string(sMessage.handlerNum).append(" => ").append(sMessage.typeName()));
+  INFO(log, std::to_string(sMessage.handlerNum).append(" => ").append(sMessage.typeName()));
   std::shared_ptr<MessageDataContainer> outMessage = std::make_shared<MessageDataContainer>(new Proto::ProtoMessage());
   try {
     switch (static_cast<int>(sMessage.type())) {
@@ -157,7 +157,7 @@ void Broker::onEvent(const AsyncTCPHandler &ahandler, MessageDataContainer &sMes
     outMessage->setRRID(sMessage.rrID());
     outMessage->serialize();
     const_cast<AsyncTCPHandler &>(ahandler).put(std::move(outMessage));
-    log->information(std::to_string(sMessage.handlerNum).append(" <= send reply on ").append(sMessage.typeName()));
+    INFO(log, std::to_string(sMessage.handlerNum).append(" <= send reply on ").append(sMessage.typeName()));
   }
 }
 void Broker::onConnect(const AsyncTCPHandler &tcpHandler, const MessageDataContainer &sMessage, MessageDataContainer &outMessage) {
@@ -206,7 +206,7 @@ void Broker::removeTcpConnection(const std::string &clientID, size_t tcpConnecti
   }
   if (needErase) {
     eraseConnection(clientID, tcpConnectionNum);
-    log->information(std::to_string(tcpConnectionNum).append(" => erase connection ").append(clientID));
+    INFO(log, std::to_string(tcpConnectionNum).append(" => erase connection ").append(clientID));
   }
 }
 void Broker::removeConsumers(const std::string &destinationID, const std::string &subscriptionID, size_t tcpNum) {
@@ -220,12 +220,13 @@ void Broker::onSetClientId(const AsyncTCPHandler &tcpHandler, const MessageDataC
   UNUSED_VAR(tcpHandler);
   UNUSED_VAR(outMessage);
   const Proto::ClientInfo &clientInfo = sMessage.clientInfo();
-  tcpHandler.log->information(std::to_string(sMessage.handlerNum)
-                                  .append(" => ")
-                                  .append(" : from ")
-                                  .append(clientInfo.old_client_id())
-                                  .append(" to ")
-                                  .append(clientInfo.new_client_id()));
+  INFO(tcpHandler.log,
+       std::to_string(sMessage.handlerNum)
+           .append(" => ")
+           .append(" : from ")
+           .append(clientInfo.old_client_id())
+           .append(" to ")
+           .append(clientInfo.new_client_id()));
 
   if (isConnectionExists(clientInfo.new_client_id())) {
     throw EXCEPTION("connection already exists", clientInfo.new_client_id(), Proto::ERROR_CLIENT_ID_EXISTS);
@@ -247,23 +248,24 @@ void Broker::onSetClientId(const AsyncTCPHandler &tcpHandler, const MessageDataC
 void Broker::eraseConnection(const std::string &connectionID, size_t num) {
   TRACE(log);
   _connections.erase(connectionID);
-  log->information(std::to_string(num).append(" => erased ").append(connectionID));
+  INFO(log, std::to_string(num).append(" => erased ").append(connectionID));
 }
 void Broker::onDisconnect(const AsyncTCPHandler &tcpHandler, const MessageDataContainer &sMessage, MessageDataContainer &outMessage) {
   TRACE(tcpHandler.log);
   const Proto::Disconnect &disconnect = sMessage.disconnect();
-  tcpHandler.log->information(std::to_string(sMessage.handlerNum).append(" => id : ").append(disconnect.client_id()));
+  INFO(tcpHandler.log, std::to_string(sMessage.handlerNum).append(" => id : ").append(disconnect.client_id()));
   outMessage.toDisconnect = true;
 }
 void Broker::onCreateSession(const AsyncTCPHandler &tcpHandler, const MessageDataContainer &sMessage, MessageDataContainer &outMessage) {
   TRACE(tcpHandler.log);
   UNUSED_VAR(outMessage);
   const Proto::Session &session = sMessage.session();
-  tcpHandler.log->information(std::to_string(sMessage.handlerNum)
-                                  .append(" => id : ")
-                                  .append(session.session_id())
-                                  .append(" ack : ")
-                                  .append(Session::acknowlegeName(session.acknowledge_type())));
+  INFO(tcpHandler.log,
+       std::to_string(sMessage.handlerNum)
+           .append(" => id : ")
+           .append(session.session_id())
+           .append(" ack : ")
+           .append(Session::acknowlegeName(session.acknowledge_type())));
   if (tcpHandler.connection() == nullptr) {
     throw EXCEPTION("connection not found", sMessage.clientID, Proto::ERROR_ON_SESSION);
   }
@@ -273,7 +275,7 @@ void Broker::onCloseSession(const AsyncTCPHandler &tcpHandler, const MessageData
   TRACE(tcpHandler.log);
   UNUSED_VAR(outMessage);
   const Proto::Unsession &unsession = sMessage.unsession();
-  tcpHandler.log->information(std::to_string(sMessage.handlerNum).append(" => id : ").append(unsession.session_id()));
+  INFO(tcpHandler.log, std::to_string(sMessage.handlerNum).append(" => id : ").append(unsession.session_id()));
   if (tcpHandler.connection() == nullptr) {
     throw EXCEPTION("connection not found", sMessage.clientID, Proto::ERROR_ON_UNSESSION);
   }
@@ -283,7 +285,7 @@ void Broker::onBegin(const AsyncTCPHandler &tcpHandler, const MessageDataContain
   TRACE(tcpHandler.log);
   UNUSED_VAR(outMessage);
   const Proto::Begin &begin = sMessage.begin();
-  tcpHandler.log->information(std::to_string(sMessage.handlerNum).append(" => on session : ").append(begin.session_id()));
+  INFO(tcpHandler.log, std::to_string(sMessage.handlerNum).append(" => on session : ").append(begin.session_id()));
   if (tcpHandler.connection() == nullptr) {
     throw EXCEPTION("connection not found", sMessage.clientID, Proto::ERROR_ON_BEGIN);
   }
@@ -293,7 +295,7 @@ void Broker::onCommit(const AsyncTCPHandler &tcpHandler, const MessageDataContai
   TRACE(tcpHandler.log);
   UNUSED_VAR(outMessage);
   const Proto::Commit &commit = sMessage.commit();
-  tcpHandler.log->information(std::to_string(sMessage.handlerNum).append(" => on session : ").append(commit.session_id()));
+  INFO(tcpHandler.log, std::to_string(sMessage.handlerNum).append(" => on session : ").append(commit.session_id()));
 
   if (tcpHandler.connection() == nullptr) {
     throw EXCEPTION("connection not found", sMessage.clientID, Proto::ERROR_ON_COMMIT);
@@ -304,7 +306,7 @@ void Broker::onAbort(const AsyncTCPHandler &tcpHandler, const MessageDataContain
   TRACE(tcpHandler.log);
   UNUSED_VAR(outMessage);
   const Proto::Abort &abort = sMessage.abort();
-  tcpHandler.log->information(std::to_string(sMessage.handlerNum).append(" => on session : ").append(abort.session_id()));
+  INFO(tcpHandler.log, std::to_string(sMessage.handlerNum).append(" => on session : ").append(abort.session_id()));
   if (tcpHandler.connection() == nullptr) {
     throw EXCEPTION("connection not found", sMessage.clientID, Proto::ERROR_ON_COMMIT);
   }
@@ -346,18 +348,20 @@ void Broker::onMessage(const AsyncTCPHandler &tcpHandler, const MessageDataConta
       }
     }
   }
-  tcpHandler.log->information(std::to_string(sMessage.handlerNum)
-                                  .append(" => id [")
-                                  .append(constMessage.message_id())
-                                  .append("] : into destination : ")
-                                  .append(constMessage.destination_uri()));
+  INFO(tcpHandler.log,
+       std::to_string(sMessage.handlerNum)
+           .append(" => id [")
+           .append(constMessage.message_id())
+           .append("] : into destination : ")
+           .append(constMessage.destination_uri()));
   tcpHandler.connection()->saveMessage(sMessage);
-  tcpHandler.log->information(std::to_string(sMessage.handlerNum)
-                                  .append(" => id [")
-                                  .append(constMessage.message_id())
-                                  .append("] : into destination : ")
-                                  .append(constMessage.destination_uri())
-                                  .append(" saved"));
+  INFO(tcpHandler.log,
+       std::to_string(sMessage.handlerNum)
+           .append(" => id [")
+           .append(constMessage.message_id())
+           .append("] : into destination : ")
+           .append(constMessage.destination_uri())
+           .append(" saved"));
   EXCHANGE::Instance().postNewMessageEvent(dest.name());
 }
 void Broker::onSender(const AsyncTCPHandler &tcpHandler, const MessageDataContainer &sMessage, MessageDataContainer &outMessage) {
@@ -387,8 +391,8 @@ void Broker::onSubscription(const AsyncTCPHandler &tcpHandler, const MessageData
   if (tcpHandler.connection() == nullptr) {
     throw EXCEPTION("connection not found", sMessage.clientID, Proto::ERROR_ON_SUBSCRIPTION);
   }
-  tcpHandler.log->information(
-      std::to_string(sMessage.handlerNum).append(" => on destination [").append(sMessage.subscription().destination_uri()).append("]"));
+  INFO(tcpHandler.log,
+       std::to_string(sMessage.handlerNum).append(" => on destination [").append(sMessage.subscription().destination_uri()).append("]"));
   Destination &dest = EXCHANGE::Instance().destination(
       sMessage.subscription().destination_uri());  // NOTE: !NEED for pre-creation of destination, try to mitigate deadlock
   UNUSED_VAR(dest);
@@ -430,8 +434,8 @@ void Broker::onUnsubscription(const AsyncTCPHandler &tcpHandler, const MessageDa
       throw Exception(ex);
     }
   }
-  tcpHandler.log->information(
-      std::to_string(sMessage.handlerNum).append(" => from destination [").append(sMessage.unsubscription().destination_uri()).append("]"));
+  INFO(tcpHandler.log,
+       std::to_string(sMessage.handlerNum).append(" => from destination [").append(sMessage.unsubscription().destination_uri()).append("]"));
   tcpHandler.eraseSubscription(sMessage);
 }
 void Broker::onAcknowledge(const AsyncTCPHandler &tcpHandler, const MessageDataContainer &sMessage, MessageDataContainer &outMessage) {
@@ -440,7 +444,7 @@ void Broker::onAcknowledge(const AsyncTCPHandler &tcpHandler, const MessageDataC
   if (tcpHandler.connection() == nullptr) {
     throw EXCEPTION("connection not found", sMessage.clientID, Proto::ERROR_ON_ACK_MESSAGE);
   }
-  tcpHandler.log->information(std::to_string(sMessage.handlerNum).append(" => on message id [").append(sMessage.ack().message_id()).append("]"));
+  INFO(tcpHandler.log, std::to_string(sMessage.handlerNum).append(" => on message id [").append(sMessage.ack().message_id()).append("]"));
   tcpHandler.connection()->processAcknowledge(sMessage);
 }
 void Broker::onBrowser(const AsyncTCPHandler &tcpHandler, const MessageDataContainer &sMessage, MessageDataContainer &outMessage) {
@@ -458,15 +462,15 @@ void Broker::onDestination(const AsyncTCPHandler &tcpHandler, const MessageDataC
   UNUSED_VAR(outMessage);
   const Proto::Destination &destination = sMessage.destination();
   auto &dest = EXCHANGE::Instance().destination(destination.destination_uri());
-  tcpHandler.log->information(
-      std::to_string(sMessage.handlerNum).append(" => create destination (").append(destination.destination_uri()).append(")"));
+  INFO(tcpHandler.log, std::to_string(sMessage.handlerNum).append(" => create destination (").append(destination.destination_uri()).append(")"));
   if (!dest.hasOwner()) {
-    tcpHandler.log->information(std::to_string(sMessage.handlerNum)
-                                    .append(" => set owner (")
-                                    .append(sMessage.clientID)
-                                    .append(" : ")
-                                    .append(std::to_string(tcpHandler.num))
-                                    .append(")"));
+    INFO(tcpHandler.log,
+         std::to_string(sMessage.handlerNum)
+             .append(" => set owner (")
+             .append(sMessage.clientID)
+             .append(" : ")
+             .append(std::to_string(tcpHandler.num))
+             .append(")"));
     dest.setOwner(sMessage.clientID, tcpHandler.num);
   }
 }
@@ -478,14 +482,15 @@ void Broker::onUndestination(const AsyncTCPHandler &tcpHandler, const MessageDat
     auto &dest = EXCHANGE::Instance().destination(undestination.destination_uri(), Exchange::DestinationCreationMode::NO_CREATE);
     if (dest.hasOwner() && (dest.owner().clientID == sMessage.clientID) && (dest.owner().tcpID == tcpHandler.num)) {
       EXCHANGE::Instance().deleteDestination(undestination.destination_uri());
-      tcpHandler.log->information(std::to_string(sMessage.handlerNum)
-                                      .append(" => delete destination (")
-                                      .append(undestination.destination_uri())
-                                      .append(") owner (")
-                                      .append(sMessage.clientID)
-                                      .append(" : ")
-                                      .append(std::to_string(tcpHandler.num))
-                                      .append(")"));
+      INFO(tcpHandler.log,
+           std::to_string(sMessage.handlerNum)
+               .append(" => delete destination (")
+               .append(undestination.destination_uri())
+               .append(") owner (")
+               .append(sMessage.clientID)
+               .append(" : ")
+               .append(std::to_string(tcpHandler.num))
+               .append(")"));
     }
   } catch (Exception &) {  // -V565
     // NOTE : if destination not exists then do nothing
@@ -545,16 +550,17 @@ bool Broker::write(size_t num) {
             do {
               status = ahandler->sendHeaderAndData(*sMessage);
               if (status == AsyncTCPHandler::DataStatus::OK) {
-                ahandler->log->information(std::to_string(num)
-                                               .append(" <= sent ")
-                                               .append(sMessage->typeName())
-                                               .append(" id[")
-                                               .append(messageId)
-                                               .append("] to (")
-                                               .append(sMessage->objectID())
-                                               .append("/")
-                                               .append(ahandler->peerAddress())
-                                               .append(")"));
+                INFO(ahandler->log,
+                     std::to_string(num)
+                         .append(" <= sent ")
+                         .append(sMessage->typeName())
+                         .append(" id[")
+                         .append(messageId)
+                         .append("] to (")
+                         .append(sMessage->objectID())
+                         .append("/")
+                         .append(ahandler->peerAddress())
+                         .append(")"));
                 if (sMessage->toDisconnect) {
                   ahandler->onWritableLock.unlock();
                   ahandler->emitCloseEvent();
@@ -737,16 +743,16 @@ bool Broker::read(size_t num) {
 
         switch (static_cast<int>(sMessage.type())) {
           case Proto::ProtoMessage::kConnect: {
-            ahandler->log->information(std::to_string(num).append(" => get connect frame"));
+            INFO(ahandler->log, std::to_string(num).append(" => get connect frame"));
             ahandler->storeClientInfo(sMessage);
-            ahandler->log->information(std::to_string(num).append(" => ").append(ahandler->toString()));
+            INFO(ahandler->log, std::to_string(num).append(" => ").append(ahandler->toString()));
           } break;
           case Proto::ProtoMessage::kSubscription: {
-            ahandler->log->information(std::to_string(num).append(" => get subscription frame"));
+            INFO(ahandler->log, std::to_string(num).append(" => get subscription frame"));
             ahandler->initSubscription(sMessage);
           } break;
           default: {
-            ahandler->log->information(std::to_string(num).append(" => get ").append(sMessage.typeName()).append(" frame"));
+            INFO(ahandler->log, std::to_string(num).append(" => get ").append(sMessage.typeName()).append(" frame"));
             break;
           }
         }

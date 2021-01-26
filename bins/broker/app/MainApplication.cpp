@@ -32,8 +32,7 @@
 #include "Exchange.h"
 #include "MainApplication.h"
 #include "Version.hpp"
-#include "ParallelSocketReactor.h"
-#include "ParallelSocketAcceptor.h"
+#include "ReactorHeaders.h"
 
 #ifdef ENABLE_WEB_ADMIN
 #include "WebAdminRequestHandlerFactory.h"
@@ -130,11 +129,11 @@ int MainApplication::main(const std::vector<std::string> &args) {
 #endif
   const int lvl = log->getLevel();
   log->setLevel(Poco::Message::PRIO_INFORMATION);
-  log->information("<<========= start =========>>");
-  log->information(std::string("version\t\t\t: ").append(About::version()));
-  log->information("configuration\t\t=> ");
+  INFO(log, "<<========= start =========>>");
+  INFO(log, std::string("version\t\t\t: ").append(About::version()));
+  INFO(log, "configuration\t\t=> ");
   auto configStrings = CONFIGURATION::Instance().toStringLines();
-  std::for_each(configStrings.begin(), configStrings.end(), [this](const std::string &line) { log->information("%s", line); });
+  std::for_each(configStrings.begin(), configStrings.end(), [this](const std::string &line) { INFO(log, "%s", line); });
 
   std::string webuiStatus = "disabled";
 #ifdef ENABLE_WEB_ADMIN
@@ -142,7 +141,7 @@ int MainApplication::main(const std::vector<std::string> &args) {
     webuiStatus = "enabled";
   }
 #endif
-  log->information(std::string("webui\t\t: ").append(webuiStatus));
+  INFO(log, std::string("webui\t\t: ").append(webuiStatus));
   log->setLevel(lvl);
 
   // TODO(bas) : refactor this
@@ -184,8 +183,8 @@ int MainApplication::main(const std::vector<std::string> &args) {
   svs.setReusePort(false);
   svs.setReuseAddress(false);
 
-  upmq::Net::SocketReactor reactor(CONFIGURATION::Instance().net().maxConnections);
-  auto acceptor = std::make_unique<upmq::Net::ParallelSocketAcceptor<AsyncTCPHandler, upmq::Net::SocketReactor>>(
+  PNet::SocketReactor reactor(CONFIGURATION::Instance().net().maxConnections);
+  auto acceptor = std::make_unique<PNet::ParallelSocketAcceptor<AsyncTCPHandler, PNet::SocketReactor>>(
       svs, reactor, CONFIGURATION::Instance().threads().accepters);
   Thread thread;
   thread.start(reactor);
@@ -220,7 +219,7 @@ int MainApplication::main(const std::vector<std::string> &args) {
 
   acceptor.reset(nullptr);
   log->setLevel(Poco::Message::PRIO_INFORMATION);
-  log->information(">>========= stop =========<<");
+  INFO(log, ">>========= stop =========<<");
   log->setLevel(lvl);
   ASYNCLOGGER::Instance().destroy(CONFIGURATION::Instance().log().name);
   return Application::EXIT_OK;
