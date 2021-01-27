@@ -91,9 +91,16 @@ class AsyncLogger {
 class Trace {
   Poco::Logger *_log{nullptr};
   std::string _func;
+  int64_t _localCounter{0};
+  std::string _beg;
+  std::string _end;
+  static thread_local std::atomic_int64_t _counter;
 
  public:
   explicit Trace(Poco::Logger *l, std::string func);
+  Trace(const Trace &) = delete;
+  Trace(Trace &&o) noexcept;
+  Trace() = default;
   ~Trace() noexcept;
 };
 
@@ -106,7 +113,7 @@ using ASYNCLOGGER = Singleton<upmq::broker::AsyncLogger>;
 #endif
 
 #define TRACE(log) \
-  if (log->getLevel() >= Poco::Message::PRIO_TRACE) upmq::broker::Trace trace(log, __PRETTY_FUNCTION__)
+  upmq::broker::Trace trace((log->getLevel() >= Poco::Message::PRIO_TRACE) ? upmq::broker::Trace(log, __PRETTY_FUNCTION__) : upmq::broker::Trace())
 #define INFO(logger, ...) \
   if (logger->getLevel() >= Poco::Message::PRIO_INFORMATION) logger->information(__VA_ARGS__)
 

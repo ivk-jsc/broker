@@ -8,7 +8,6 @@ add_executable(broker)
 
 include_directories(${SHARE_DIR})
 include_directories(${EXTERNAL_DIR}/concurrent_queue)
-include_directories(${EXTERNAL_DIR}/optional-lite)
 
 include_directories(app)
 include_directories(server)

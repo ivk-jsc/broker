@@ -25,7 +25,7 @@ using Poco::ErrorHandler;
 using Poco::Exception;
 using Poco::FastMutex;
 
-std::size_t Poco::hash(const Poco::Net::Socket& socket) { return Poco::hash(static_cast<UInt64>(socket.impl()->sockfd())); }
+std::size_t Poco::hash(const Poco::Net::Socket& socket) { return (static_cast<size_t>(socket.impl()->sockfd())); }
 
 namespace upmq {
 namespace Net {

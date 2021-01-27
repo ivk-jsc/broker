@@ -48,3 +48,4 @@ COMMIT.txt
 /cmake-build-debug-asan/
 /cmake-build-debug-remote/
 /cmake-build-relwithdebinfo-remote/
+/cmake-build-debug-tsan/

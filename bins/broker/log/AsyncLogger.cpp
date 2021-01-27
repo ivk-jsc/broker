@@ -127,7 +127,19 @@ bool AsyncLogger::exists(const std::string &name) {
   return loggetPtr.isNull();
 }
 
-Trace::Trace(Poco::Logger *l, std::string func) : _log(l), _func(Poco::replace(func, "upmq::broker::", "")) { _log->trace("beg %s", _func); }
-Trace::~Trace() noexcept { _log->trace("end %s", _func); }
+thread_local std::atomic_int64_t Trace::_counter = {0};
+Trace::Trace(Poco::Logger *l, std::string func)
+    : _log(l), _func(Poco::replace(func, "upmq::broker::", "")), _localCounter(_counter.load()), _beg(_localCounter, '>'), _end(_beg) {
+  _counter++;
+  _log->trace("%sbeg %s", _beg, _func);
+}
+Trace::~Trace() noexcept {
+  if (_log) {
+    _log->trace("%send %s", _end, _func);
+    _counter--;
+  }
+}
+Trace::Trace(Trace &&o) noexcept
+    : _log(o._log), _func(std::move(o._func)), _localCounter(o._localCounter), _beg(std::move(o._beg)), _end(std::move(o._end)) {}
 }  // namespace broker
 }  // namespace upmq
