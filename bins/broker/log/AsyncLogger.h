@@ -38,6 +38,7 @@
 
 #include "Singleton.h"
 #include <memory>
+#include <atomic>
 
 using Poco::SplitterChannel;
 #ifdef POCO_OS_FAMILY_WINDOWS
