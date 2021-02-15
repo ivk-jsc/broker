@@ -51,7 +51,7 @@ AsyncTCPHandler::AsyncTCPHandler(Poco::Net::StreamSocket &socket, PNet::SocketRe
       _shutdownCallBack(*this, &AsyncTCPHandler::onShutdown),
       _wasError(false),
       _needErase(false),
-      _maxNotAcknowledgedMessages(0),
+      _maxNotAcknowledgedMessages(1),
       _connection(nullptr),
       _readComplete(true) {
   AHRegestry::Instance().addAHandler(this);
@@ -146,11 +146,15 @@ void AsyncTCPHandler::onReadable(const AutoPtr<PNet::ReadableNotification> &pNf)
   }
 }
 void AsyncTCPHandler::put(std::shared_ptr<MessageDataContainer> sMessage) {
-  do {
-    if (_needErase) {
-      return;
-    }
-  } while (!outputQueue.enqueue(sMessage));
+  {
+    Poco::FastMutex::ScopedLock scopedLock(onWritableLock);
+    //    do {
+    //      if (_needErase) {
+    //        return;
+    //      }
+    //    } while (!outputQueue.enqueue(sMessage));
+    outputQueue.push(std::move(sMessage));
+  }
   BROKER::Instance().putWritable(_queueWriteNum, num);
 }
 
@@ -213,7 +217,7 @@ AsyncTCPHandler::DataStatus AsyncTCPHandler::sendHeaderAndData(MessageDataContai
     if (!sendfile()) {
       return DataStatus::AS_ERROR;
     }
-#else  // !ENABLE_USING_SENDFILE
+#else   // !ENABLE_USING_SENDFILE
     sent = 0;
     do {
       int tmpDataSize = ((dataSize - sent) < BUFFER_SIZE) ? static_cast<int>(dataSize - sent) : BUFFER_SIZE;
@@ -294,7 +298,7 @@ void AsyncTCPHandler::storeClientInfo(const MessageDataContainer &sMessage) {
   heartbeat.sendTimeout = hb.send_timeout();
   heartbeat.recvTimeout = hb.recv_timeout();
 
-  _maxNotAcknowledgedMessages = connect.max_not_acknowledged_messages();
+  //  _maxNotAcknowledgedMessages = connect.max_not_acknowledged_messages();
 
   setClientID(connect.client_id());
 }

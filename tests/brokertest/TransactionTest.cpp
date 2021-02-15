@@ -89,6 +89,8 @@ TEST_F(TransactionTest, testSendRollback) {
   std::unique_ptr<TextMessage> inbound1;
   EXPECT_NO_THROW(inbound1.reset(dynamic_cast<TextMessage *>(consumer->receive(cmsProvider->minTimeout))));
 
+  cmsSleep(10);  // FIXME bas : if you remove this then next receive will return null always
+
   // receives the second message
   std::unique_ptr<TextMessage> inbound2;
   EXPECT_NO_THROW(inbound2.reset(dynamic_cast<TextMessage *>(consumer->receive(cmsProvider->minTimeout))));

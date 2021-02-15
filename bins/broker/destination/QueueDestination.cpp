@@ -74,7 +74,8 @@ void QueueDestination::commit(const Session &session) {
 void QueueDestination::abort(const Session &session) {
   TRACE(log);
   Destination::abort(session);
-  _storage.abort(session);
+  size_t revertedMsgs = _storage.abort(session);
+  resetNotAcknowledged(revertedMsgs == 0 ? 1 : revertedMsgs);
   postNewMessageEvent();
 }
 

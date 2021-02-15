@@ -399,7 +399,9 @@ cms::Message *ConsumerImpl::receive(int timeout) {
 
       if (command == nullptr) {
         if (_session != nullptr) {
-          if (_session->_connection->_transportFailed.get()) throw cms::CMSException("transport failed");
+          if (_session->_connection->_transportFailed.get()) {
+            throw cms::CMSException("transport failed");
+          }
         }
         return nullptr;
       }

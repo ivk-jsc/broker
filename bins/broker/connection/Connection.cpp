@@ -28,7 +28,6 @@ namespace broker {
 
 Connection::Connection(const std::string &clientID)
     : _clientID(clientID),
-      _clientIDWasSet(!clientID.empty()),
       _sessions(SESSIONS_CONFIG.maxCount),
       _sessionsT("\"" + clientID + "_sessions\""),
       _tcpT("\"" + clientID + "_tcp_connections\"") {

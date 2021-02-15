@@ -77,7 +77,9 @@ void TopicDestination::commit(const Session &session) {
 void TopicDestination::abort(const Session &session) {
   TRACE(log);
   Destination::abort(session);
-  _subscriptions.changeForEach([&session](SubscriptionsList::ItemType::KVPair &pair) { pair.second.abort(session); });
+  size_t revertedMsgs = 0;
+  _subscriptions.changeForEach([&session, &revertedMsgs](SubscriptionsList::ItemType::KVPair &pair) { revertedMsgs += pair.second.abort(session); });
+  resetNotAcknowledged(revertedMsgs == 0 ? 1 : revertedMsgs);
 }
 
 Subscription TopicDestination::createSubscription(const std::string &name, const std::string &routingKey, Subscription::Type type) {

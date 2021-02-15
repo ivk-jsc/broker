@@ -99,7 +99,7 @@ void OnError::make(OnError::Mode mode) const {
                                     _error,
                                     _file,
                                     _line);
-      break;
+      // break;
     case NO_THROW:
       ASYNCLOGGER::Instance().get(LOG_CONFIG.name).error("- ! => %s : %s : %s : %d", _info, _sql, _errorDescription, _error);
       break;

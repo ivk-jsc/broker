@@ -155,6 +155,7 @@ class Destination {
   void increaseNotAcknowledged(const std::string &objectID);
   void increaseNotAcknowledgedAll();
   void decreesNotAcknowledged(const std::string &objectID) const;
+  void resetNotAcknowledged(int count);
   bool canSendNextMessages(const std::string &objectID) const;
   void addToNotAckList(const std::string &objectID, int count) const;
   void remFromNotAck(const std::string &objectID) const;

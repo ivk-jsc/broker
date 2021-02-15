@@ -173,6 +173,7 @@ void Destination::subscribe(const MessageDataContainer &sMessage) {
   } else {
     throw EXCEPTION("subscription not found", name, Proto::ERROR_ON_SUBSCRIBE);
   }
+  postNewMessageEvent();
 }
 void Destination::unsubscribe(const MessageDataContainer &sMessage) {
   TRACE(log);
@@ -189,6 +190,7 @@ void Destination::unsubscribe(const MessageDataContainer &sMessage) {
     subs.stop(consumer);
     subs.recover(consumer);
   }
+  postNewMessageEvent();
 }
 void Destination::subscribeOnNotify(Subscription &subscription) const {
   TRACE(log);
@@ -461,6 +463,13 @@ void Destination::decreesNotAcknowledged(const std::string &objectID) const {
     --(*it->second);
   }
 }
+void Destination::resetNotAcknowledged(int count) {
+  TRACE(log);
+  upmq::ScopedReadRWLock readRWLock(_notAckLock);
+  for (auto &item : _notAckList) {
+    *item.second = count;
+  }
+}
 void Destination::addToNotAckList(const std::string &objectID, int count) const {
   TRACE(log);
   upmq::ScopedWriteRWLock writeRWLock(_notAckLock);
@@ -556,15 +565,50 @@ void Destination::closeAllSubscriptions(const Session &session, size_t tcpNum) {
 }
 bool Destination::getNexMessageForAllSubscriptions() {
   TRACE(log);
+  auto getResult = [this](Subscription::ProcessMessageResult pmr) -> bool {
+    bool result = false;
+    std::string info;
+    switch (pmr) {
+      case Subscription::ProcessMessageResult::OK_COMPLETE:
+        info = "OK_COMPLETE";
+        result = false;
+        break;
+      case Subscription::ProcessMessageResult::CONSUMER_LOCKED:
+        info = "CONSUMER_LOCKED";
+        result = true;
+        break;
+      case Subscription::ProcessMessageResult::CONSUMER_NOT_RAN:
+        info = "CONSUMER_NOT_RAN";
+        result = true;
+        break;
+      case Subscription::ProcessMessageResult::CONSUMER_CANT_SEND:
+        info = "CONSUMER_CANT_SEND";
+        result = true;
+        break;
+      case Subscription::ProcessMessageResult::NO_MESSAGE:
+        info = "NO_MESSAGE";
+        result = false;
+        break;
+      case Subscription::ProcessMessageResult::SOME_ERROR:
+        info = "SOME_ERROR";
+        result = false;
+        break;
+    }
+    if (log->getLevel() >= Poco::Message::PRIO_TRACE) {
+      log->trace("getNextMessage result %s", info);
+    }
+    return result;
+  };
   bool result = false;
-  _subscriptions.changeForEach([&result](SubscriptionsList::ItemType::KVPair &pair) {
+  _subscriptions.changeForEach([&result, &getResult](SubscriptionsList::ItemType::KVPair &pair) {
     if (pair.second.isRunning()) {
       Subscription::ProcessMessageResult pmr = pair.second.getNextMessage();
+      bool currentResult = getResult(pmr);
       if (!result) {
-        result = (pmr == Subscription::ProcessMessageResult::CONSUMER_NOT_RAN);
+        result = currentResult;
       }
     } else {
-      result = true;
+      //      result = true;
     }
   });
 

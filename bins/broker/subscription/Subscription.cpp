@@ -149,10 +149,11 @@ void Subscription::commit(const Session &session) {
   _storage.commit(session);
   _destination.postNewMessageEvent();
 }
-void Subscription::abort(const Session &session) {
+size_t Subscription::abort(const Session &session) {
   TRACE(log);
-  _storage.abort(session);
+  size_t revertedMessages = _storage.abort(session);
   _destination.postNewMessageEvent();
+  return revertedMessages;
 }
 
 void Subscription::addClient(
@@ -387,13 +388,15 @@ Subscription::ProcessMessageResult Subscription::getNextMessage() {
                    .append(std::to_string(_messageCounter))
                    .append(")"));
 
-          _destination.decreesNotAcknowledged(consumer->objectID);
           if (consumer->session.type == Proto::Acknowledge::CLIENT_ACKNOWLEDGE || !consumer->select->empty()) {
             EXCHANGE::Instance().addNewMessageEvent(_destination.name());
           }
+          if (consumer->session.type != Proto::Acknowledge::CLIENT_ACKNOWLEDGE) {
+            _destination.decreesNotAcknowledged(consumer->objectID);
+          }
           if (_destination.isQueueFamily() && _destination.consumerMode() == ConsumerMode::ROUND_ROBIN) {
             for (const auto &cn : _consumers) {
-              if (cn.second.objectID != consumer->objectID) {
+              if (cn.second.objectID != consumer->objectID && cn.second.session.type != Proto::Acknowledge::CLIENT_ACKNOWLEDGE) {
                 _destination.decreesNotAcknowledged(cn.second.objectID);
               }
             }

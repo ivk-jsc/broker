@@ -40,7 +40,6 @@ class Connection {
 
  private:
   std::string _clientID;
-  std::atomic_bool _clientIDWasSet;
   mutable TCPConnectionsList _tcpConnections;
   mutable upmq::MRWLock _tcpLock;
   SessionsList _sessions;

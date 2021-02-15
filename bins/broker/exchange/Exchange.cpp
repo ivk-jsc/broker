@@ -28,7 +28,6 @@ Exchange::Exchange()
     : _destinations(DESTINATION_CONFIG.maxCount),
       _destinationsT("\"" + BROKER::Instance().id() + "_destinations\""),
       _mutexDestinations(THREADS_CONFIG.subscribers),
-      _conditionDestinations(_mutexDestinations.size()),
       _threadPool("\t\texchange\t\t", 1, static_cast<int>(_mutexDestinations.size()) + 1) {
   log = &Poco::Logger::get(CONFIGURATION::Instance().log().name);
   TRACE(log);
@@ -264,9 +263,6 @@ void Exchange::postNewMessageEvent(const std::string &name) const {
   TRACE(log);
   const int count = _threadPool.capacity() - 1;
   addNewMessageEvent(name);
-  for (size_t i = 0; i < static_cast<size_t>(count); ++i) {
-    _conditionDestinations[i].notify_one();
-  }
 }
 
 void Exchange::addNewMessageEvent(const std::string &name) const {
@@ -278,13 +274,13 @@ void Exchange::addNewMessageEvent(const std::string &name) const {
 
 void Exchange::run() {
   TRACE(log);
-  const size_t num = _thrNum++;
+  BQ::consumer_token_t token(_destinationEvents);
 
   std::string queueId;
   while (_isRunning) {
     do {
       queueId.clear();
-      if (_destinationEvents.try_dequeue(queueId)) {
+      if (_destinationEvents.wait_dequeue_timed(token, queueId, 10000000)) {
         if (!queueId.empty()) {
           auto item = _destinations.find(queueId);
           if (item.hasValue()) {
@@ -300,11 +296,6 @@ void Exchange::run() {
         }
       }
     } while (!queueId.empty());
-
-    auto &mut = _mutexDestinations[num];
-
-    std::unique_lock<std::mutex> lock(mut);
-    _conditionDestinations[num].wait_for(lock, std::chrono::milliseconds(1000));
   }
 }
 std::vector<Destination::Info> Exchange::info() const {

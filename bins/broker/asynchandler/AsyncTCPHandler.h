@@ -35,6 +35,7 @@
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>
+#include <queue>
 #include "AsyncLogger.h"
 #include "MessageDataContainer.h"
 #include "ConcurrentQueueHeader.h"
@@ -125,7 +126,8 @@ class AsyncTCPHandler {
   void allowPutReadEvent();
 
  public:
-  moodycamel::ConcurrentQueue<std::shared_ptr<MessageDataContainer>> outputQueue;
+  //  moodycamel::ConcurrentQueue<std::shared_ptr<MessageDataContainer>> outputQueue;
+  std::queue<std::shared_ptr<MessageDataContainer>> outputQueue;
   Poco::FastMutex onWritableLock;
   Poco::FastMutex onReadableLock;
   char pBuffer[BUFFER_SIZE]{};

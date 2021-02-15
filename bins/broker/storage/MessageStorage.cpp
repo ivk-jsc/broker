@@ -196,7 +196,7 @@ void Storage::removeMessagesBySession(const upmq::broker::Session &session) {
               }),
               onError);
 }
-void Storage::resetMessagesBySession(const upmq::broker::Session &session) {
+size_t Storage::resetMessagesBySession(const upmq::broker::Session &session) {
   TRACE(log);
   std::stringstream sql;
 
@@ -210,7 +210,9 @@ void Storage::resetMessagesBySession(const upmq::broker::Session &session) {
   sql << " and (delivery_status = " << message::DELIVERED << transactionExclusion << ")"
       << ";" << non_std_endl;
 
-  *session.currentDBSession << sql.str(), Poco::Data::Keywords::now;
+  Poco::Data::Statement update(session.currentDBSession->operator()());
+  update << sql.str();
+  return update.execute();
 }
 void Storage::removeGroupMessage(const std::string &groupID, const upmq::broker::Session &session) {
   TRACE(log);
@@ -713,6 +715,10 @@ void Storage::commit(const Session &session) {
 
   TRY_EXECUTE(([&dbSession, &mainTXTable, this]() { dropTXTable(*dbSession, mainTXTable); }), onError);
 
+  dbSession->commitTX();  // ATTENTION: this commit is important
+
+  dbSession->beginTX(session.id());
+
   onError.setInfo("can't commit (removeMessagesBySession) for session : " + session.id()).setExpression([&session]() {
     session.currentDBSession.reset(nullptr);
   });
@@ -728,7 +734,7 @@ void Storage::commit(const Session &session) {
 
   _parent->postNewMessageEvent();
 }
-void Storage::abort(const Session &session) {
+size_t Storage::abort(const Session &session) {
   TRACE(log);
   std::string mainTXTable = "\"" + std::to_string(Poco::hash(_extParentID + "_" + session.txName())) + "\"";
   std::stringstream sql;
@@ -771,15 +777,17 @@ void Storage::abort(const Session &session) {
   }
 
   onError.setSql("func:resetMessagesBySession").setInfo("can't abort").setExpression([&session]() { session.currentDBSession.reset(nullptr); });
-  TRY_EXECUTE(([&dbSession, &session, this]() {
+  size_t revertedMessages = 0;
+  TRY_EXECUTE(([&dbSession, &session, &revertedMessages, this]() {
                 session.currentDBSession = std::move(dbSession);
-                resetMessagesBySession(session);
+                revertedMessages = resetMessagesBySession(session);
               }),
               onError);
 
   session.currentDBSession->commitTX();
   session.currentDBSession.reset(nullptr);
   _parent->postNewMessageEvent();
+  return revertedMessages;
 }
 void Storage::dropTXTable(storage::DBMSSession &dbSession, const std::string &mainTXTable) const {
   TRACE(log);

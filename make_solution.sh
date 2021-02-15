@@ -1,14 +1,14 @@
 #!/bin/bash
 
-if [ ! $1  ]; then
-    echo "please, set configuration, Debug or Release"
-    echo "for ex., ./make_solution Debug"
-    exit 1
+if [ ! "$1" ]; then
+  echo "please, set configuration, Debug or Release"
+  echo "for ex., ./make_solution Debug"
+  exit 1
 fi
 
-NCPU=$([[ $(uname) = 'Darwin' ]] &&
-                       sysctl -n hw.logicalcpu_max ||
-                       lscpu -p | egrep -v '^#' | wc -l)
+NCPU=$([[ $(uname) == 'Darwin' ]] &&
+  sysctl -n hw.logicalcpu_max ||
+  lscpu -p | grep -E -c -v '^#')
 
 CMAKE_EXECUTABLE="cmake"
 SOURCE_DIR=$PWD
@@ -20,12 +20,12 @@ fi
 
 mkdir "${BUILD_DIR}"
 
-cd "${BUILD_DIR}"
-${CMAKE_EXECUTABLE} -DCMAKE_BUILD_TYPE=$1 -DCMAKE_INSTALL_PREFIX="~/upmq-$1" "${SOURCE_DIR}"
-cd "${SOURCE_DIR}"
+cd "${BUILD_DIR}" || exit
+${CMAKE_EXECUTABLE} -DCMAKE_BUILD_TYPE="$1" -DCMAKE_INSTALL_PREFIX="~/upmq-$1" "${SOURCE_DIR}"
+cd "${SOURCE_DIR}" || exit
 
-${CMAKE_EXECUTABLE} --build "${BUILD_DIR}" -- -j${NCPU}
+${CMAKE_EXECUTABLE} --build "${BUILD_DIR}" -- -j"${NCPU}"
 
 if [ "$2" == "install" ]; then
-    ${CMAKE_EXECUTABLE} --build "${BUILD_DIR}" --target install
+  ${CMAKE_EXECUTABLE} --build "${BUILD_DIR}" --target install
 fi

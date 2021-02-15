@@ -81,12 +81,12 @@ class Storage {
   std::shared_ptr<MessageDataContainer> get(const Consumer &consumer, bool useFileLink);
   void removeGroupMessage(const std::string &groupID, const upmq::broker::Session &session);
   void removeMessagesBySession(const upmq::broker::Session &session);
-  void resetMessagesBySession(const upmq::broker::Session &session);
+  size_t resetMessagesBySession(const upmq::broker::Session &session);
   void removeMessage(const std::string &messageID, storage::DBMSSession &extDBSession);
   const std::string &uri() const;
   void begin(const upmq::broker::Session &session, const std::string &extParentId = "");
   void commit(const upmq::broker::Session &session);
-  void abort(const upmq::broker::Session &session);
+  size_t abort(const upmq::broker::Session &session);
 
   std::string generateSQLMainTable(const std::string &tableName) const;
   std::vector<std::string> generateSQLMainTableIndexes(const std::string &tableName) const;

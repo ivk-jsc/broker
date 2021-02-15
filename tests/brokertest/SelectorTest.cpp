@@ -27,7 +27,7 @@ using namespace cms;
 ////////////////////////////////////////////////////////////////////////////////
 void SelectorTest::SetUp() {
   cmsProvider = std::make_unique<CMSProvider>(getBrokerURL());
-  cmsProvider->cleanUpDestination();
+  //  cmsProvider->cleanUpDestination();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -161,20 +161,20 @@ void SelectorTest::assertInvalidSelector(const std::string &selector) {
 ////////////////////////////////////////////////////////////////////////////////
 void SelectorTest::assertSelector(const std::string &selector, bool expected) {
   std::unique_ptr<cms::Session> session(cmsProvider->getConnection()->createSession());
-  std::unique_ptr<cms::MessageProducer> producer(session->createProducer(cmsProvider->getDestination()));
-  std::unique_ptr<cms::MessageConsumer> consumer(session->createConsumer(cmsProvider->getDestination(), selector));
+  std::unique_ptr<cms::MessageProducer> producer(session->createProducer(cmsProvider->getTempDestination()));
+  std::unique_ptr<cms::MessageConsumer> consumer(session->createConsumer(cmsProvider->getTempDestination(), selector));
 
   std::unique_ptr<cms::Message> msg(session->createMessage());
 
   doMessage(msg.get());
   producer->send(msg.get());
 
-  const std::unique_ptr<cms::Message> msgret(consumer->receive(cmsProvider->minTimeout));
+  const std::unique_ptr<cms::Message> msgret(consumer->receive(expected ? cmsProvider->maxTimeout : cmsProvider->minTimeout));
 
   if (expected) {
     EXPECT_TRUE(msgret != nullptr);
   } else {
-    doClean();
+    //    doClean();
     EXPECT_TRUE(msgret == nullptr);
   }
 

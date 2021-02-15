@@ -188,10 +188,6 @@ void Session::saveMessage(const MessageDataContainer &sMessage) {
 }
 std::string Session::txName() const {
   TRACE(log);
-  if (isTransactAcknowledge()) {
-    std::lock_guard<std::recursive_mutex> lock(_rebeginMutex);
-    return _id + "_" + std::to_string(_txCounter);
-  }
   return _id + "_" + std::to_string(_txCounter);
 }
 void Session::addSender(const MessageDataContainer &sMessage) {

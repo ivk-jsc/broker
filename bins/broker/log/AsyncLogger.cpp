@@ -55,7 +55,7 @@ AutoPtr<FormattingChannel> AsyncLogger::createFormatter(const std::string &name,
   AutoPtr<FileChannel> fileChannel = Poco::MakeAuto<FileChannel>(name + ".log");
   AutoPtr<Poco::AsyncChannel> fileAsyncChannel = Poco::MakeAuto<Poco::AsyncChannel>(fileChannel);
 
-  fileChannel->setProperty("rotation", "10 M");
+  fileChannel->setProperty("rotation", "100 M");
   fileChannel->setProperty("times", "local");
   fileAsyncChannel->setProperty("priority", "lowest");
   splitter->addChannel(fileAsyncChannel);
@@ -80,8 +80,8 @@ Logger &AsyncLogger::add(const std::string &name, const std::string &subdir) {
 #else
     Poco::Logger *
 #endif
-        loggetPtr = Logger::has(name);
-    if (loggetPtr == emptyLoggerPtr) {
+        loggerPtr = Logger::has(name);
+    if (loggerPtr == emptyLoggerPtr) {
       Poco::Path dirpath;
       dirpath.parse(subdir);
       if (isInteractive || !Poco::Util::Application::instance().config().getBool("application.runAsDaemon", false)) {
@@ -95,7 +95,7 @@ Logger &AsyncLogger::add(const std::string &name, const std::string &subdir) {
       _formattingChannel = createFormatter(dirpath.toString(), isInteractive);
       return Logger::create(name, _formattingChannel, logPriority);
     }
-    return *loggetPtr;
+    return *loggerPtr;
   } catch (Poco::Exception &ex) {
     std::cerr << ex.displayText() << non_std_endl;
   }
@@ -123,8 +123,8 @@ void AsyncLogger::remove(const std::string &name, const std::string &subdir) {
 }
 
 bool AsyncLogger::exists(const std::string &name) {
-  Poco::AutoPtr<Poco::Logger> loggetPtr = Logger::has(name);
-  return loggetPtr.isNull();
+  Poco::AutoPtr<Poco::Logger> loggerPtr = Logger::has(name);
+  return loggerPtr.isNull();
 }
 
 thread_local std::atomic_int64_t Trace::_counter = {0};

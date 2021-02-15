@@ -41,11 +41,9 @@ class Exchange {
   const std::string _destinationsT;
   std::atomic_bool _isRunning{false};
   mutable std::vector<std::mutex> _mutexDestinations;
-  mutable std::vector<std::condition_variable> _conditionDestinations;
   Poco::ThreadPool _threadPool;
   std::unique_ptr<Poco::RunnableAdapter<Exchange>> _threadAdapter;
-  std::atomic_size_t _thrNum{0};
-  using BQ = moodycamel::ConcurrentQueue<std::string>;
+  using BQ = moodycamel::BlockingConcurrentQueue<std::string>;
   mutable BQ _destinationEvents;
   mutable Poco::Logger *log;
 
@@ -83,6 +81,6 @@ class Exchange {
 }  // namespace broker
 }  // namespace upmq
 
-typedef Singleton<upmq::broker::Exchange> EXCHANGE;
+using EXCHANGE = Singleton<upmq::broker::Exchange>;
 
 #endif  // BROKER_EXCHANGE_H
