@@ -2,7 +2,7 @@
 
 if [ ! "$1" ]; then
   echo "please, set configuration, Debug or Release"
-  echo "for ex., ./make_solution Debug"
+  echo "for example, # ./make_solution Debug"
   exit 1
 fi
 
