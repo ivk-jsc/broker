@@ -254,7 +254,6 @@ void IOTransport::run() {
     fire(exl);
   } catch (...) {
     transport::UPMQException ex(__FILE__, __LINE__, "IOTransport::run - caught unknown exception");
-    // LOGDECAF_WARN(logger, ex.getStackTraceString());
     fire(ex);
   }
 }

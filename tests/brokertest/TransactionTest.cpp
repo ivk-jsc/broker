@@ -140,6 +140,8 @@ TEST_F(TransactionTest, testSendRollbackCommitRollback) {
 
   session->rollback();
 
+  cmsSleep(10); // FIXME bas: if you remove this, then next message will be empty
+
   inbound1.reset(dynamic_cast<TextMessage *>(consumer->receive(cmsProvider->minTimeout)));
   inboundEmpty.reset(dynamic_cast<TextMessage *>(consumer->receive(cmsProvider->minTimeout)));
   EXPECT_TRUE(nullptr == inboundEmpty) << "expect empty, but got =>" << inboundEmpty->getText();
