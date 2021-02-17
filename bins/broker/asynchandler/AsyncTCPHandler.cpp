@@ -148,11 +148,6 @@ void AsyncTCPHandler::onReadable(const AutoPtr<PNet::ReadableNotification> &pNf)
 void AsyncTCPHandler::put(std::shared_ptr<MessageDataContainer> sMessage) {
   {
     Poco::FastMutex::ScopedLock scopedLock(onWritableLock);
-    //    do {
-    //      if (_needErase) {
-    //        return;
-    //      }
-    //    } while (!outputQueue.enqueue(sMessage));
     outputQueue.push(std::move(sMessage));
   }
   BROKER::Instance().putWritable(_queueWriteNum, num);

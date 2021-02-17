@@ -290,9 +290,9 @@ void TcpSocket::connect(const std::string &hostname, int bindPort, int timeout) 
     // Create the Address data
     impl->remoteAddress = std::make_unique<Poco::Net::SocketAddress>(Poco::Net::AddressFamily::IPv4, hostname, static_cast<Poco::UInt16>(bindPort));
 
-    bool oldNonblockSetting = 0;
-    Poco::Timespan oldRecvTimeoutSetting = 0;
-    Poco::Timespan oldSendTimeoutSetting = 0;
+    bool oldNonblockSetting = false;
+    Poco::Timespan oldRecvTimeoutSetting;
+    Poco::Timespan oldSendTimeoutSetting;
 
     // Record the old settings.
     oldNonblockSetting = impl->socketHandle->getBlocking();
@@ -304,8 +304,8 @@ void TcpSocket::connect(const std::string &hostname, int bindPort, int timeout) 
 
     // Timeout and non-timeout case require very different logic.
     if (timeout > 0) {
-      impl->socketHandle->setReceiveTimeout(Poco::Timespan(timeout, 0));
-      impl->socketHandle->setSendTimeout(Poco::Timespan(timeout, 0));
+      impl->socketHandle->setReceiveTimeout(Poco::Timespan(0, timeout * 1000));
+      impl->socketHandle->setSendTimeout(Poco::Timespan(0, timeout * 1000));
     }
 
     // try to Connect to the provided address.
@@ -622,7 +622,7 @@ int TcpSocket::read(unsigned char *buffer, int size, int offset, int length) {
     unsigned char *lbuffer = buffer + offset;
 
     try {
-      recvSize = impl->socketHandle->receiveBytes(lbuffer, length);
+      recvSize = impl->socketHandle->receiveBytes(lbuffer, length, 0);
     } catch (Poco::TimeoutException &) {
       if (!impl->socketHandle->getBlocking()) {
         result = 0;
@@ -640,7 +640,6 @@ int TcpSocket::read(unsigned char *buffer, int size, int offset, int length) {
         result = -1;
       }
     }
-    //    recvSize += currentRecvSize;
 
     // Check for EOF, on windows we only get size==0 so check that to, if we
     // were closed though then we throw an IOException so the caller knows we
