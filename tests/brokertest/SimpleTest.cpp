@@ -55,7 +55,7 @@ TEST_F(SimpleTest, testAutoAck) {
 
   consumer->setMessageListener(&listener);
 
-  listener.asyncWaitForMessages(IntegrationCommon::defaultMsgCount * 2);
+  listener.asyncWaitForMessages(IntegrationCommon::defaultMsgCount * 2, cmsProvider->minTimeout);
 
   unsigned int numReceived = listener.getNumReceived();
   EXPECT_EQ(numReceived, (IntegrationCommon::defaultMsgCount * 2)) << "invalid order or count => " << listener.inputMessagesToString();
@@ -89,7 +89,7 @@ TEST_F(SimpleTest, testClientAck) {
   consumer->setMessageListener(&listener);
 
   // Wait for the messages to get here
-  listener.asyncWaitForMessages(IntegrationCommon::defaultMsgCount * 2);
+  listener.asyncWaitForMessages(IntegrationCommon::defaultMsgCount * 2, cmsProvider->minTimeout);
 
   unsigned int numReceived = listener.getNumReceived();
   EXPECT_EQ(numReceived, IntegrationCommon::defaultMsgCount * 2) << "invalid order or count => " << listener.inputMessagesToString();
@@ -111,7 +111,7 @@ TEST_F(SimpleTest, testProducerWithNullDestination) {
   producer->send(cmsProvider->getDestination(), txtMessage.get());
   consumer->setMessageListener(&listener);
   // Wait for the messages to get here
-  listener.asyncWaitForMessages(1);
+  listener.asyncWaitForMessages(1, cmsProvider->minTimeout);
 
   unsigned int numReceived = listener.getNumReceived();
   EXPECT_TRUE(numReceived == 1);

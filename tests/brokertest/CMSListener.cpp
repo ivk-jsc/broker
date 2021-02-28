@@ -36,7 +36,7 @@ void CMSListener::reset() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void CMSListener::asyncWaitForMessages(unsigned int count) {
+void CMSListener::asyncWaitForMessages(unsigned int count, int timeout) {
   try {
     unsigned int retryNum = 0;
     while (true) {  //
@@ -46,7 +46,7 @@ void CMSListener::asyncWaitForMessages(unsigned int count) {
       if (retryNum >= count) {
         break;
       }
-      cmsSleep(3000);
+      cmsSleep(timeout);
       retryNum++;
     }
 

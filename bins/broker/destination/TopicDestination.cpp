@@ -73,13 +73,19 @@ void TopicDestination::commit(const Session &session) {
   TRACE(log);
   Destination::commit(session);
   _subscriptions.changeForEach([&session](SubscriptionsList::ItemType::KVPair &pair) { pair.second.commit(session); });
+  increaseNotAcknowledgedAll();
+  postNewMessageEvent();
 }
 void TopicDestination::abort(const Session &session) {
   TRACE(log);
   Destination::abort(session);
   size_t revertedMsgs = 0;
   _subscriptions.changeForEach([&session, &revertedMsgs](SubscriptionsList::ItemType::KVPair &pair) { revertedMsgs += pair.second.abort(session); });
-  resetNotAcknowledged(revertedMsgs == 0 ? 1 : revertedMsgs);
+  INFO(log, std::string("session aborted try to reset ").append(std::to_string(revertedMsgs)).append(" messages"));
+  if (revertedMsgs > 0) {
+    increaseNotAcknowledgedAll();
+  }
+  postNewMessageEvent();
 }
 
 Subscription TopicDestination::createSubscription(const std::string &name, const std::string &routingKey, Subscription::Type type) {

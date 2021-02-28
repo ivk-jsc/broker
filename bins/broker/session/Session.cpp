@@ -140,7 +140,7 @@ void Session::begin() const {
     return;
   }
   ++_txCounter;
-
+  //  INFO(log, std::string(_id + "_" + std::to_string(_txCounter)));
   _stateStack.push(State::BEGIN);
 }
 void Session::rebegin() const {

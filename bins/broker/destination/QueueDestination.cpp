@@ -69,13 +69,17 @@ void QueueDestination::commit(const Session &session) {
   TRACE(log);
   Destination::commit(session);
   _storage.commit(session);
+  increaseNotAcknowledgedAll();
   postNewMessageEvent();
 }
 void QueueDestination::abort(const Session &session) {
   TRACE(log);
   Destination::abort(session);
   size_t revertedMsgs = _storage.abort(session);
-  resetNotAcknowledged(revertedMsgs == 0 ? 1 : revertedMsgs);
+  INFO(log, std::string("session aborted try to reset ").append(std::to_string(revertedMsgs)).append(" messages"));
+  if (revertedMsgs > 0) {
+    increaseNotAcknowledgedAll();
+  }
   postNewMessageEvent();
 }
 

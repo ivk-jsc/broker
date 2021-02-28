@@ -166,7 +166,8 @@ void Storage::removeMessagesBySession(const upmq::broker::Session &session) {
   std::stringstream sql;
   sql << "select * from " << _messageTableID << " where consumer_id like \'%" << session.id() << "%\'";
   if (session.isTransactAcknowledge()) {
-    sql << " and transaction_id = \'" << session.txName() << "\'";
+    sql << " and transaction_id = \'" << session.txName() << "\'"
+        << " and delivery_status = " << message::DELIVERED;
   }
   sql << ";" << non_std_endl;
 
@@ -204,9 +205,6 @@ size_t Storage::resetMessagesBySession(const upmq::broker::Session &session) {
 
   sql << "update " << _messageTableID << " set delivery_status = " << message::NOT_SENT << " , consumer_id = '' "
       << " where consumer_id like \'%" << session.id() << "%\'";
-  if (session.isTransactAcknowledge()) {
-    sql << " and transaction_id = \'" << session.txName() << "\'";
-  }
   sql << " and (delivery_status = " << message::DELIVERED << transactionExclusion << ")"
       << ";" << non_std_endl;
 
@@ -359,7 +357,7 @@ void Storage::removeMessage(const std::string &messageID, storage::DBMSSession &
   } else {
     updateSubscribersCount(dbSession, messageID);
   }
-
+  INFO(log, std::string("try to remove message : ").append(messageID));
   if (!externConnection) {
     dbSession.commitTX();
   }
@@ -513,7 +511,9 @@ std::shared_ptr<MessageDataContainer> Storage::get(const Consumer &consumer, boo
                       }
                     }
                   }
-                  setMessagesToWasSent(dbSession, consumer);
+                  if (!consumer.select->empty()) {
+                    setMessagesToWasSent(dbSession, consumer);
+                  }
                 }),
                 onError);
     dbSession.commitTX();
@@ -715,9 +715,9 @@ void Storage::commit(const Session &session) {
 
   TRY_EXECUTE(([&dbSession, &mainTXTable, this]() { dropTXTable(*dbSession, mainTXTable); }), onError);
 
-  dbSession->commitTX();  // ATTENTION: this commit is important
-
-  dbSession->beginTX(session.id());
+  //  dbSession->commitTX();  // ATTENTION: this commit is important
+  //
+  //  dbSession->beginTX(session.id());
 
   onError.setInfo("can't commit (removeMessagesBySession) for session : " + session.id()).setExpression([&session]() {
     session.currentDBSession.reset(nullptr);
@@ -731,8 +731,6 @@ void Storage::commit(const Session &session) {
 
   session.currentDBSession->commitTX();
   session.currentDBSession.reset(nullptr);
-
-  _parent->postNewMessageEvent();
 }
 size_t Storage::abort(const Session &session) {
   TRACE(log);
@@ -786,7 +784,6 @@ size_t Storage::abort(const Session &session) {
 
   session.currentDBSession->commitTX();
   session.currentDBSession.reset(nullptr);
-  _parent->postNewMessageEvent();
   return revertedMessages;
 }
 void Storage::dropTXTable(storage::DBMSSession &dbSession, const std::string &mainTXTable) const {
@@ -843,29 +840,28 @@ void Storage::setMessageToWasSent(const std::string &messageID, storage::DBMSSes
 }
 void Storage::setMessagesToWasSent(storage::DBMSSession &dbSession, const Consumer &consumer) {
   TRACE(log);
-  if (!consumer.select->empty()) {
-    std::stringstream sql;
-    sql << "update " << _messageTableID << " set delivery_status = " << message::WAS_SENT << ",    consumer_id = \'" << consumer.id << "\'"
-        << ",    delivery_count  = delivery_count + 1";
-    if (consumer.session.type == Proto::SESSION_TRANSACTED) {
-      consumer.session.txName = BROKER::Instance().currentTransaction(consumer.clientID, consumer.session.id);
-      sql << ",  transaction_id = \'" << consumer.session.txName << "\'";
-    }
-    sql << " where ";
-    const std::deque<std::shared_ptr<MessageDataContainer>> &messages = *consumer.select;
-    for (size_t i = 0; i < messages.size(); ++i) {
-      if (i > 0) {
-        sql << " or ";
-      }
-      sql << "message_id = \'" << messages[i]->message().message_id() << "\'";
-    }
-    sql << ";";
 
-    OnError onError;
-    onError.setError(Proto::ERROR_STORAGE).setSql(sql.str()).setInfo("can't set message to was_sent");
-
-    TRY_EXECUTE(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
+  std::stringstream sql;
+  sql << "update " << _messageTableID << " set delivery_status = " << message::WAS_SENT << ",    consumer_id = \'" << consumer.id << "\'"
+      << ",    delivery_count  = delivery_count + 1";
+  if (consumer.session.type == Proto::SESSION_TRANSACTED) {
+    consumer.session.txName = BROKER::Instance().currentTransaction(consumer.clientID, consumer.session.id);
+    sql << ",  transaction_id = \'" << consumer.session.txName << "\'";
   }
+  sql << " where ";
+  const std::deque<std::shared_ptr<MessageDataContainer>> &messages = *consumer.select;
+  for (size_t i = 0; i < messages.size(); ++i) {
+    if (i > 0) {
+      sql << " or ";
+    }
+    sql << "message_id = \'" << messages[i]->message().message_id() << "\'";
+  }
+  sql << ";";
+
+  OnError onError;
+  onError.setError(Proto::ERROR_STORAGE).setSql(sql.str()).setInfo("can't set message to was_sent");
+
+  TRY_EXECUTE(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
 }
 void Storage::setMessageToDelivered(const upmq::broker::Session &session, const std::string &messageID) {
   TRACE(log);

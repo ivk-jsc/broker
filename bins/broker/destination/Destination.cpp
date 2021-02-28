@@ -437,6 +437,7 @@ void Destination::increaseNotAcknowledged(const std::string &objectID) {
   auto it = _notAckList.find(objectID);
   if (it != _notAckList.end()) {
     ++(*it->second);
+    //    INFO(log, std::string("not-ack-cnt increased for ").append(it->first).append(" to ").append(std::to_string((*it->second))));
   }
 }
 void Destination::increaseNotAcknowledgedAll() {
@@ -444,6 +445,7 @@ void Destination::increaseNotAcknowledgedAll() {
   upmq::ScopedReadRWLock readRWLock(_notAckLock);
   for (auto &it : _notAckList) {
     ++(*it.second);
+    //    INFO(log, std::string("not-ack-cnt increased for ").append(it.first).append(" to ").append(std::to_string((*it.second))));
   }
 }
 bool Destination::canSendNextMessages(const std::string &objectID) const {
@@ -451,6 +453,7 @@ bool Destination::canSendNextMessages(const std::string &objectID) const {
   upmq::ScopedReadRWLock readRWLock(_notAckLock);
   const auto it = _notAckList.find(objectID);
   if (it != _notAckList.end()) {
+    //    INFO(log, std::string("not-ack-cnt current state for ").append(it->first).append(" is ").append(std::to_string((*it->second))));
     return (*(it->second) > 0);
   }
   return false;
@@ -461,6 +464,7 @@ void Destination::decreesNotAcknowledged(const std::string &objectID) const {
   auto it = _notAckList.find(objectID);
   if (it != _notAckList.end()) {
     --(*it->second);
+    //    INFO(log, std::string("not-ack-cnt decreased for ").append(it->first).append(" to ").append(std::to_string((*it->second))));
   }
 }
 void Destination::resetNotAcknowledged(int count) {

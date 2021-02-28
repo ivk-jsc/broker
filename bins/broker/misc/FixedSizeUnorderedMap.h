@@ -274,9 +274,20 @@ class FSUnorderedMap {
     _validIndexes.clear();
   }
 
-  void checkSize() const {
+  void checkSize(const char *filename, int line) const {
     if (_realSize + 1 == _size) {
-      throw EXCEPTION("FSUnorderedMap is full", std::to_string(_realSize), -1);
+      //      throw EXCEPTION("FSUnorderedMap is full", std::to_string(_realSize), -1);
+      upmq::broker::Exception("FSUnorderedMap is full",
+                              std::string("real size ")
+                                  .append(std::to_string(_realSize))
+                                  .append(" and size ")
+                                  .append(std::to_string(_size))
+                                  .append(" native(")
+                                  .append(std::to_string(Poco::Error::last()))
+                                  .append(")"),
+                              -1,
+                              filename,
+                              line);
     }
   }
 
@@ -325,21 +336,21 @@ class FSUnorderedMap {
     return _items.at(index).contains(key);
   }
   void insert(const std::pair<Key, Value> &pair) {
-    checkSize();
+    checkSize(__FILE__, __LINE__);
     size_t index = Poco::hash(pair.first) % _size;
     if (_items.at(index).append(pair)) {
       incValidIndex(index);
     }
   }
   void insert(std::pair<Key, Value> &&pair) {
-    checkSize();
+    checkSize(__FILE__, __LINE__);
     size_t index = Poco::hash(pair.first) % _size;
     if (_items.at(index).append(std::move(pair))) {
       incValidIndex(index);
     }
   }
   void emplace(Key &&key, Value &&value) {
-    checkSize();
+    checkSize(__FILE__, __LINE__);
     size_t index = Poco::hash(key) % _size;
     if (_items.at(index).append(std::pair<Key, Value>(std::move(key), std::move(value)))) {
       incValidIndex(index);
