@@ -575,7 +575,7 @@ bool Destination::getNexMessageForAllSubscriptions() {
     switch (pmr) {
       case Subscription::ProcessMessageResult::OK_COMPLETE:
         info = "OK_COMPLETE";
-        result = true;
+        result = false;
         break;
       case Subscription::ProcessMessageResult::CONSUMER_LOCKED:
         info = "CONSUMER_LOCKED";
