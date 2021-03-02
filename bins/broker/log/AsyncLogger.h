@@ -26,6 +26,7 @@
 #include <Poco/PatternFormatter.h>
 #include <Poco/AutoPtr.h>
 #include <Poco/Path.h>
+#include <Poco/Optional.h>
 
 #ifdef POCO_OS_FAMILY_UNIX
 #include <Poco/SyslogChannel.h>
@@ -91,10 +92,10 @@ class AsyncLogger {
 
 class Trace {
   Poco::Logger *_log{nullptr};
-  std::string _func;
+  Poco::Optional<std::string> _func;
   int64_t _localCounter{0};
-  std::string _beg;
-  std::string _end;
+  Poco::Optional<std::string> _beg;
+  Poco::Optional<std::string> _end;
   static thread_local std::atomic_int64_t _counter;
 
  public:

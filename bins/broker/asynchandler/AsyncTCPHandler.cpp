@@ -146,10 +146,7 @@ void AsyncTCPHandler::onReadable(const AutoPtr<PNet::ReadableNotification> &pNf)
   }
 }
 void AsyncTCPHandler::put(std::shared_ptr<MessageDataContainer> sMessage) {
-  {
-    Poco::FastMutex::ScopedLock scopedLock(onWritableLock);
-    outputQueue.push(std::move(sMessage));
-  }
+  outputQueue.enqueue(std::move(sMessage));
   BROKER::Instance().putWritable(_queueWriteNum, num);
 }
 
@@ -293,7 +290,7 @@ void AsyncTCPHandler::storeClientInfo(const MessageDataContainer &sMessage) {
   heartbeat.sendTimeout = hb.send_timeout();
   heartbeat.recvTimeout = hb.recv_timeout();
 
-  //  _maxNotAcknowledgedMessages = connect.max_not_acknowledged_messages();
+  _maxNotAcknowledgedMessages = connect.max_not_acknowledged_messages();
 
   setClientID(connect.client_id());
 }

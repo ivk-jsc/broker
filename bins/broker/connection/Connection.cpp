@@ -260,7 +260,7 @@ void Connection::removeConsumers(const std::string &destinationID, const std::st
   std::vector<std::string> ids;
   {
     ids.reserve(_sessions.size());
-    _sessions.applyForEach([&ids](const SessionsList::ItemType::KVPair &pair) { ids.emplace_back(pair.second->id()); });
+    _sessions.applyForEach([&ids](SessionsList::ItemType::ConstIterator &pair) { ids.emplace_back(pair->second->id()); });
   }
   std::for_each(ids.begin(), ids.end(), [&destinationID, &subscriptionID, &tcpNum](const std::string &sessionId) {
     EXCHANGE::Instance().removeConsumer(sessionId, destinationID, subscriptionID, tcpNum);

@@ -60,9 +60,9 @@ Destination::~Destination() {
       TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
     }
     {
-      _subscriptions.changeForEach([this](SubscriptionsList::ItemType::KVPair &pair) {
-        unsubscribeFromNotify((pair.second));
-        pair.second.destroy();
+      _subscriptions.changeForEach([this](SubscriptionsList::ItemType::Iterator &pair) {
+        unsubscribeFromNotify((pair->second));
+        pair->second.destroy();
       });
     }
     if (isTemporary()) {
@@ -349,7 +349,7 @@ void Destination::abort(const Session &session) {
 
 void Destination::resetConsumersCache() {
   TRACE(log);
-  _subscriptions.changeForEach([](SubscriptionsList::ItemType::KVPair &pair) { pair.second.resetConsumersCache(); });
+  _subscriptions.changeForEach([](SubscriptionsList::ItemType::Iterator &pair) { pair->second.resetConsumersCache(); });
 }
 
 size_t Destination::subscriptionsCount() const {
@@ -359,8 +359,8 @@ size_t Destination::subscriptionsCount() const {
   if (isQueueFamily()) {
     result = _subscriptions.size();
   } else {
-    _subscriptions.applyForEach([this, &result](const SubscriptionsList::ItemType::KVPair &pair) {
-      TopicDestination::ParentTopics parentTopics = TopicDestination::generateParentTopics(pair.second.routingKey());  //_uri
+    _subscriptions.applyForEach([this, &result](SubscriptionsList::ItemType::ConstIterator &pair) {
+      TopicDestination::ParentTopics parentTopics = TopicDestination::generateParentTopics(pair->second.routingKey());  //_uri
       {
         upmq::ScopedReadRWLock readRWLock(_routingLock);
         for (const auto &routing : _routing) {
@@ -575,7 +575,7 @@ bool Destination::getNexMessageForAllSubscriptions() {
     switch (pmr) {
       case Subscription::ProcessMessageResult::OK_COMPLETE:
         info = "OK_COMPLETE";
-        result = false;
+        result = true;
         break;
       case Subscription::ProcessMessageResult::CONSUMER_LOCKED:
         info = "CONSUMER_LOCKED";
@@ -604,15 +604,13 @@ bool Destination::getNexMessageForAllSubscriptions() {
     return result;
   };
   bool result = false;
-  _subscriptions.changeForEach([&result, &getResult](SubscriptionsList::ItemType::KVPair &pair) {
-    if (pair.second.isRunning()) {
-      Subscription::ProcessMessageResult pmr = pair.second.getNextMessage();
+  _subscriptions.changeForEach([&result, &getResult](SubscriptionsList::ItemType::Iterator &pair) {
+    if (pair->second.isRunning()) {
+      Subscription::ProcessMessageResult pmr = pair->second.getNextMessage();
       bool currentResult = getResult(pmr);
       if (!result) {
         result = currentResult;
       }
-    } else {
-      //      result = true;
     }
   });
 
@@ -722,7 +720,7 @@ Destination::Info Destination::info() const {
                           Poco::DateTimeFormatter::format(*_created, DT_FORMAT_SIMPLE),
                           Exchange::mainDestinationPath(_uri),
                           static_cast<uint64_t>(storage().size()));
-  _subscriptions.applyForEach([&dinfo](const SubscriptionsList::ItemType::KVPair &pair) { dinfo.subscriptions.emplace_back(pair.second.info()); });
+  _subscriptions.applyForEach([&dinfo](SubscriptionsList::ItemType::ConstIterator &pair) { dinfo.subscriptions.emplace_back(pair->second.info()); });
   return dinfo;
 }
 std::string Destination::typeName(Destination::Type type) {

@@ -74,17 +74,17 @@ void SocketReactor::run() {
       writable.reserve(cnt);
       int nSockets = 0;
 
-      _handlers.applyForEach([&readable, &writable, &except, &nSockets, this](const EventHandlerMap::ItemType::KVPair& it) {
-        if (it.second->accepts(_pReadableNotification)) {
-          readable.push_back(it.first);
+      _handlers.applyForEach([&readable, &writable, &except, &nSockets, this](EventHandlerMap::ItemType::ConstIterator& it) {
+        if (it->second->accepts(_pReadableNotification)) {
+          readable.push_back(it->first);
           nSockets++;
         }
-        if (it.second->accepts(_pWritableNotification)) {
-          writable.push_back(it.first);
+        if (it->second->accepts(_pWritableNotification)) {
+          writable.push_back(it->first);
           nSockets++;
         }
-        if (it.second->accepts(_pErrorNotification)) {
-          except.push_back(it.first);
+        if (it->second->accepts(_pErrorNotification)) {
+          except.push_back(it->first);
           nSockets++;
         }
       });
@@ -199,7 +199,7 @@ void SocketReactor::dispatch(const Poco::Net::Socket& socket, SocketNotification
 
 void SocketReactor::dispatch(SocketNotification* pNotification) {
   _handlers.applyForEach(
-      [&pNotification, this](const EventHandlerMap::ItemType::KVPair& it) { dispatch(const_cast<NotifierPtr&>(it.second), pNotification); });
+      [&pNotification, this](EventHandlerMap::ItemType::ConstIterator& it) { dispatch(const_cast<NotifierPtr&>(it->second), pNotification); });
 }
 
 void SocketReactor::dispatch(NotifierPtr& pNotifier, SocketNotification* pNotification) {

@@ -72,8 +72,8 @@ TEST_F(SimpleRollbackTest, testRollbacks) {
     session->commit();
 
     // Wait for the messages to get here
-    listener.asyncWaitForMessages(1, cmsProvider->minTimeout);
-    EXPECT_TRUE(listener.getNumReceived() == 1);
+    listener.asyncWaitForMessages(1, cmsProvider->maxTimeout);
+    EXPECT_TRUE(listener.getNumReceived() == 1) << " but current value is " << listener.getNumReceived();
 
     listener.reset();
     txtMessage->setText("SimpleTest - Message after Rollback");

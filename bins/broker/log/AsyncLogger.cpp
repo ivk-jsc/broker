@@ -129,13 +129,13 @@ bool AsyncLogger::exists(const std::string &name) {
 
 thread_local std::atomic_int64_t Trace::_counter = {0};
 Trace::Trace(Poco::Logger *l, std::string func)
-    : _log(l), _func(Poco::replace(func, "upmq::broker::", "")), _localCounter(_counter.load()), _beg(_localCounter, '>'), _end(_beg) {
+    : _log(l), _func(Poco::replace(func, "upmq::broker::", "")), _localCounter(_counter.load()), _beg(std::string(_localCounter, '>')), _end(_beg) {
   _counter++;
-  _log->trace("%sbeg %s", _beg, _func);
+  _log->trace("%sbeg %s", _beg.value(), _func.value());
 }
 Trace::~Trace() noexcept {
   if (_log) {
-    _log->trace("%send %s", _end, _func);
+    _log->trace("%send %s", _end.value(), _func.value());
     _counter--;
   }
 }

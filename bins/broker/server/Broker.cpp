@@ -211,8 +211,8 @@ void Broker::removeTcpConnection(const std::string &clientID, size_t tcpConnecti
 }
 void Broker::removeConsumers(const std::string &destinationID, const std::string &subscriptionID, size_t tcpNum) {
   TRACE(log);
-  _connections.applyForEach([&destinationID, &subscriptionID, &tcpNum](const ConnectionsList::ItemType::KVPair &conn) {
-    conn.second->removeConsumers(destinationID, subscriptionID, tcpNum);
+  _connections.applyForEach([&destinationID, &subscriptionID, &tcpNum](ConnectionsList::ItemType::ConstIterator &conn) {
+    conn->second->removeConsumers(destinationID, subscriptionID, tcpNum);
   });
 }
 void Broker::onSetClientId(const AsyncTCPHandler &tcpHandler, const MessageDataContainer &sMessage, MessageDataContainer &outMessage) {
@@ -541,11 +541,12 @@ bool Broker::write(size_t num) {
         }
         try {
           sMessage.reset();
-          if (!ahandler->outputQueue.empty()) {
-            sMessage = ahandler->outputQueue.front();
-          }
+          ahandler->outputQueue.try_dequeue(sMessage);
+          //          if (!ahandler->outputQueue.empty()) {
+          //            sMessage = ahandler->outputQueue.front();
+          //          }
           if (sMessage != nullptr) {
-            ahandler->outputQueue.pop();
+            //            ahandler->outputQueue.pop();
             if (sMessage->header.empty()) {
               sMessage->serialize();
             }

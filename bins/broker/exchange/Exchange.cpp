@@ -182,7 +182,7 @@ void Exchange::dropOwnedDestination(const std::string &clientId) {
   DestinationsList::ItemType::KeyType key;
   bool needErase = false;
   {
-    auto dest = _destinations.findIf([&clientId](const DestinationsList::ItemType::KVPair &pair) {
+    auto dest = _destinations.findIf([&clientId](DestinationsList::ItemType::ConstKVPair &pair) {
       if (pair.second->isTemporary() && pair.second->hasOwner()) {
         return pair.second->owner().clientID == clientId;
       }
@@ -237,11 +237,12 @@ void Exchange::removeSender(const upmq::broker::Session &session, const MessageD
 }
 void Exchange::removeSenders(const upmq::broker::Session &session) {
   TRACE(log);
-  _destinations.changeForEach([&session](DestinationsList::ItemType::KVPair &dest) { dest.second->removeSenders(session); });
+  _destinations.changeForEach([&session](DestinationsList::ItemType::Iterator &dest) { dest->second->removeSenders(session); });
 }
 void Exchange::removeSenderFromAnyDest(const upmq::broker::Session &session, const std::string &senderID) {
   TRACE(log);
-  _destinations.changeForEach([&session, &senderID](DestinationsList::ItemType::KVPair &dest) { dest.second->removeSenderByID(session, senderID); });
+  _destinations.changeForEach(
+      [&session, &senderID](DestinationsList::ItemType::Iterator &dest) { dest->second->removeSenderByID(session, senderID); });
 }
 void Exchange::start() {
   TRACE(log);
@@ -275,28 +276,23 @@ void Exchange::addNewMessageEvent(const std::string &name) const {
 void Exchange::run() {
   TRACE(log);
   BQ::consumer_token_t token(_destinationEvents);
-
   std::string queueId;
-  while (_isRunning) {
-    do {
-      queueId.clear();
-      if (_destinationEvents.wait_dequeue_timed(token, queueId, 10000000)) {
-        if (!queueId.empty()) {
-          auto item = _destinations.find(queueId);
-          if (item.hasValue()) {
-            try {
-              if ((*item)->getNexMessageForAllSubscriptions()) {
-                _destinationEvents.enqueue(queueId);
-                break;
-              }
-            } catch (Poco::Exception &pex) {
-              log->error("%s %s %d", pex.message(), pex.className(), pex.code());
-            }
+
+  do {
+    bool ok = _destinationEvents.wait_dequeue_timed(token, queueId, 1000000);
+    if (ok && !queueId.empty()) {
+      auto item = _destinations.find(queueId);
+      if (item.hasValue()) {
+        try {
+          if ((*item)->getNexMessageForAllSubscriptions()) {
+            _destinationEvents.enqueue(queueId);
           }
+        } catch (Poco::Exception &pex) {
+          log->error("%s %s %d", pex.message(), pex.className(), pex.code());
         }
       }
-    } while (!queueId.empty());
-  }
+    }
+  } while (_isRunning);
 }
 std::vector<Destination::Info> Exchange::info() const {
   TRACE(log);
@@ -313,8 +309,8 @@ std::vector<Destination::Info> Exchange::info() const {
     return has;
   };
 
-  _destinations.applyForEach([&containDigit, &infosGroup](const DestinationsList::ItemType::KVPair &dest) {
-    auto info = dest.second->info();
+  _destinations.applyForEach([&containDigit, &infosGroup](DestinationsList::ItemType::ConstIterator &dest) {
+    auto info = dest->second->info();
     size_t sz = 0;
     if (containDigit(info.name)) {
       sz = info.name.size();

@@ -17,7 +17,7 @@
 #ifndef FIXED_SIZE_UNORDERD_MAP_H
 #define FIXED_SIZE_UNORDERD_MAP_H
 #include <vector>
-#include <list>
+#include <map>
 #include <algorithm>
 #include <set>
 #include "MoveableRWLock.h"
@@ -110,12 +110,15 @@ template <typename Key, typename Value>
 class FSUnorderedNode {
  public:
   using KVPair = std::pair<Key, Value>;
+  using ConstKVPair = const std::pair<const Key, Value>;
+  using Iterator = typename std::map<Key, Value>::iterator;
+  using ConstIterator = typename std::map<Key, Value>::const_iterator;
   using KeyType = Key;
   using ValueType = Value;
 
  private:
   mutable MRWLock _rwLock;
-  std::list<KVPair> _items;
+  std::map<Key, Value> _items;
 
  public:
   FSUnorderedNode() = default;
@@ -136,7 +139,7 @@ class FSUnorderedNode {
   }
   FSReadLockedValue<Key, Value> find(const Key &key) const {
     _rwLock.readLock();
-    auto item = std::find_if(_items.begin(), _items.end(), [&key](const KVPair &pair) { return pair.first == key; });
+    auto item = _items.find(key);
     if (item != _items.end()) {
       return FSReadLockedValue<Key, Value>(_rwLock, item->first, item->second);
     }
@@ -155,44 +158,22 @@ class FSUnorderedNode {
   }
   bool contains(const Key &key) const {
     ScopedReadRWLock readRWLock(_rwLock);
-    auto item = std::find_if(_items.begin(), _items.end(), [&key](const KVPair &pair) { return pair.first == key; });
+    auto item = _items.find(key);
     return (item != _items.end());
   }
   bool append(const KVPair &pair) {
-    _rwLock.writeLock();
-    auto item = std::find_if(_items.begin(), _items.end(), [&pair](const KVPair &p) { return p.first == pair.first; });
-    if (item != _items.end()) {
-      _rwLock.unlockWrite();
-      return false;
-    }
-    try {
-      _items.push_back(pair);
-    } catch (...) {
-      _rwLock.unlockWrite();
-      return false;
-    }
-    _rwLock.unlockWrite();
-    return true;
+    ScopedWriteRWLock writeRwLock(_rwLock);
+    auto result = _items.template insert(pair);
+    return result.second;
   }
   bool append(KVPair &&pair) {
-    _rwLock.writeLock();
-    auto item = std::find_if(_items.begin(), _items.end(), [&pair](const KVPair &p) { return p.first == pair.first; });
-    if (item != _items.end()) {
-      _rwLock.unlockWrite();
-      return false;
-    }
-    try {
-      _items.emplace_back(std::move(pair));
-    } catch (...) {
-      _rwLock.unlockWrite();
-      return false;
-    }
-    _rwLock.unlockWrite();
-    return true;
+    ScopedWriteRWLock writeRwLock(_rwLock);
+    auto result = _items.template insert(std::move(pair));
+    return result.second;
   }
   bool erase(const Key &key) {
     ScopedWriteRWLock writeRWLock(_rwLock);
-    auto item = std::find_if(_items.begin(), _items.end(), [&key](const KVPair &p) { return p.first == key; });
+    auto item = _items.find(key);
     if (item != _items.end()) {
       _items.erase(item);
       return true;
@@ -225,14 +206,14 @@ class FSUnorderedNode {
   template <typename F>
   void applyForEach(const F &f) const {
     ScopedReadRWLock readRWLock(_rwLock);
-    for (const auto &item : _items) {
+    for (auto item = _items.begin(); item != _items.end(); ++item) {
       f(item);
     }
   }
   template <typename F>
   void changeForEach(const F &f) {
     ScopedReadRWLock readRWLock(_rwLock);
-    for (auto &item : _items) {
+    for (auto item = _items.begin(); item != _items.end(); ++item) {
       f(item);
     }
   }
@@ -276,7 +257,6 @@ class FSUnorderedMap {
 
   void checkSize(const char *filename, int line) const {
     if (_realSize + 1 == _size) {
-      //      throw EXCEPTION("FSUnorderedMap is full", std::to_string(_realSize), -1);
       upmq::broker::Exception("FSUnorderedMap is full",
                               std::string("real size ")
                                   .append(std::to_string(_realSize))

@@ -56,9 +56,9 @@ void TopicDestination::ack(const Session &session, const MessageDataContainer &s
   const std::string &subscriptionName = ack.subscription_name();
 
   if (session.isClientAcknowledge()) {
-    _subscriptions.changeForEach([this, &session, &messageID, &sMessage](SubscriptionsList::ItemType::KVPair &pair) {
-      std::vector<MessageInfo> sentMsgs = pair.second.storage().getMessagesBelow(session, messageID);
-      Destination::doAck(session, sMessage, pair.second.storage(), false, sentMsgs);
+    _subscriptions.changeForEach([this, &session, &messageID, &sMessage](SubscriptionsList::ItemType::Iterator &pair) {
+      std::vector<MessageInfo> sentMsgs = pair->second.storage().getMessagesBelow(session, messageID);
+      Destination::doAck(session, sMessage, pair->second.storage(), false, sentMsgs);
     });
   } else {
     auto it = _subscriptions.find(subscriptionName);
@@ -72,7 +72,7 @@ void TopicDestination::ack(const Session &session, const MessageDataContainer &s
 void TopicDestination::commit(const Session &session) {
   TRACE(log);
   Destination::commit(session);
-  _subscriptions.changeForEach([&session](SubscriptionsList::ItemType::KVPair &pair) { pair.second.commit(session); });
+  _subscriptions.changeForEach([&session](SubscriptionsList::ItemType::Iterator &pair) { pair->second.commit(session); });
   increaseNotAcknowledgedAll();
   postNewMessageEvent();
 }
@@ -80,7 +80,8 @@ void TopicDestination::abort(const Session &session) {
   TRACE(log);
   Destination::abort(session);
   size_t revertedMsgs = 0;
-  _subscriptions.changeForEach([&session, &revertedMsgs](SubscriptionsList::ItemType::KVPair &pair) { revertedMsgs += pair.second.abort(session); });
+  _subscriptions.changeForEach(
+      [&session, &revertedMsgs](SubscriptionsList::ItemType::Iterator &pair) { revertedMsgs += pair->second.abort(session); });
   INFO(log, std::string("session aborted try to reset ").append(std::to_string(revertedMsgs)).append(" messages"));
   if (revertedMsgs > 0) {
     increaseNotAcknowledgedAll();
@@ -95,7 +96,7 @@ Subscription TopicDestination::createSubscription(const std::string &name, const
 void TopicDestination::begin(const Session &session) {
   TRACE(log);
   Destination::begin(session);
-  _subscriptions.changeForEach([&session](SubscriptionsList::ItemType::KVPair &pair) { pair.second.storage().begin(session, pair.second.id()); });
+  _subscriptions.changeForEach([&session](SubscriptionsList::ItemType::Iterator &pair) { pair->second.storage().begin(session, pair->second.id()); });
 }
 void TopicDestination::addSender(const Session &session, const MessageDataContainer &sMessage) {
   TRACE(log);

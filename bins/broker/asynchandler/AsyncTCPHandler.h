@@ -126,7 +126,7 @@ class AsyncTCPHandler {
   void allowPutReadEvent();
 
  public:
-  std::queue<std::shared_ptr<MessageDataContainer>> outputQueue;
+  moodycamel::ConcurrentQueue<std::shared_ptr<MessageDataContainer>> outputQueue;
   Poco::FastMutex onWritableLock;
   Poco::FastMutex onReadableLock;
   char pBuffer[BUFFER_SIZE]{};
