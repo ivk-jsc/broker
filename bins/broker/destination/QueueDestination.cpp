@@ -16,28 +16,36 @@
 
 #include "QueueDestination.h"
 #include "Exchange.h"
-#include "MiscDefines.h"
+#include "Exception.h"
 #include "QueueSender.h"
 #include "Session.h"
 
 namespace upmq {
 namespace broker {
 
-QueueDestination::QueueDestination(const Exchange &exchange, const std::string &uri, Destination::Type type) : Destination(exchange, uri, type) {}
-QueueDestination::~QueueDestination() {}
+QueueDestination::QueueDestination(const Exchange &exchange, const std::string &uri, Destination::Type type) : Destination(exchange, uri, type) {
+  log = &Poco::Logger::get(CONFIGURATION::Instance().log().name);
+  TRACE(log);
+}
+QueueDestination::~QueueDestination() { TRACE(log); }
 void QueueDestination::save(const Session &session, const MessageDataContainer &sMessage) {
+  TRACE(log);
   _senders.fixMessageInGroup(sMessage.message().sender_id(), session, sMessage);
   if (session.isTransactAcknowledge() && !_storage.hasTransaction(session)) {
     begin(session);
   }
-  TRY_POCO_DATA_EXCEPTION { _storage.save(session, sMessage); }
-  CATCH_POCO_DATA_EXCEPTION_NO_INVALID_SQL("can't save message", "", session.currentDBSession->rollbackTX(), ERROR_ON_SAVE_MESSAGE)
+  OnError onError;
+  onError.setError(Proto::ERROR_ON_SAVE_MESSAGE).setInfo("can't save message").setExpression([&session]() {
+    session.currentDBSession->rollbackTX();
+  });
+  TRY_EXECUTE(([this, &session, &sMessage]() { _storage.save(session, sMessage); }), onError);
 
   session.currentDBSession->commitTX();
 
   postNewMessageEvent();
 }
 void QueueDestination::ack(const Session &session, const MessageDataContainer &sMessage) {
+  TRACE(log);
   const Proto::Ack &ack = sMessage.ack();
   const std::string &messageID = ack.message_id();
   const std::string &subscriptionName = ack.subscription_name();
@@ -50,7 +58,7 @@ void QueueDestination::ack(const Session &session, const MessageDataContainer &s
     if (it.hasValue()) {
       storage = &(it->storage());
     } else {
-      throw EXCEPTION("can't find browser subscription", subscriptionName, ERROR_ON_ACK_MESSAGE);
+      throw EXCEPTION("can't find browser subscription", subscriptionName, Proto::ERROR_ON_ACK_MESSAGE);
     }
   }
 
@@ -58,17 +66,25 @@ void QueueDestination::ack(const Session &session, const MessageDataContainer &s
   Destination::doAck(session, sMessage, *storage, browser, sentMsgs);
 }
 void QueueDestination::commit(const Session &session) {
+  TRACE(log);
   Destination::commit(session);
   _storage.commit(session);
+  increaseNotAcknowledgedAll();
   postNewMessageEvent();
 }
 void QueueDestination::abort(const Session &session) {
+  TRACE(log);
   Destination::abort(session);
-  _storage.abort(session);
+  size_t revertedMsgs = _storage.abort(session);
+  INFO(log, std::string("session aborted try to reset ").append(std::to_string(revertedMsgs)).append(" messages"));
+  if (revertedMsgs > 0) {
+    increaseNotAcknowledgedAll();
+  }
   postNewMessageEvent();
 }
 
 Subscription QueueDestination::createSubscription(const std::string &name, const std::string &routingKey, Subscription::Type type) {
+  TRACE(log);
   std::string id;
   if (type != Subscription::Type::BROWSER) {
     id = _id;
@@ -76,27 +92,33 @@ Subscription QueueDestination::createSubscription(const std::string &name, const
   return Subscription(*this, id, name, routingKey, type);
 }
 void QueueDestination::begin(const Session &session) {
+  TRACE(log);
   Destination::begin(session);
   _storage.begin(session);
 }
 void QueueDestination::addSender(const Session &session, const MessageDataContainer &sMessage) {
+  TRACE(log);
   const Proto::Sender &sender = sMessage.sender();
   std::unique_ptr<Sender> pSender(new QueueSender(sender.sender_id(), session, *this));
   _senders.addSender(std::move(pSender));
 }
 void QueueDestination::removeSender(const Session &session, const MessageDataContainer &sMessage) {
+  TRACE(log);
   removeSenderByID(session, sMessage.unsender().sender_id());
 }
 void QueueDestination::removeSenders(const Session &session) {
+  TRACE(log);
   _senders.closeGroups(session);
   _senders.removeSenders(session);
 }
 void QueueDestination::addSendersFromCache(const Session &session, const MessageDataContainer &sMessage, Subscription &subscription) {
+  TRACE(log);
   UNUSED_VAR(session);
   UNUSED_VAR(sMessage);
   UNUSED_VAR(subscription);
 }
 void QueueDestination::removeSenderByID(const Session &session, const std::string &senderID) {
+  TRACE(log);
   _senders.closeGroup(senderID, session);
   _senders.removeSender(senderID);
 }

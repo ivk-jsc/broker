@@ -48,7 +48,7 @@ TEST_F(AsyncSenderTest, testAsyncSends) {
 
   EXPECT_NO_THROW(consumer->setMessageListener(&listener));
 
-  EXPECT_NO_THROW(listener.asyncWaitForMessages(IntegrationCommon::defaultMsgCount * 2));
+  EXPECT_NO_THROW(listener.asyncWaitForMessages(IntegrationCommon::defaultMsgCount * 2, cmsProvider->minTimeout));
 
   const unsigned int numReceived = listener.getNumReceived();
   EXPECT_TRUE(numReceived == IntegrationCommon::defaultMsgCount * 2);

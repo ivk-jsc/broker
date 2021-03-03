@@ -125,7 +125,7 @@ void IOTransport::oneway(Pointer<Command> command) {
 
     synchronized(impl->outputStream) {
       // Write the command to the output stream.
-      this->impl->wireFormat->marshal(std::move(command), this, this->impl->outputStream);
+      this->impl->wireFormat->marshal(command, this, this->impl->outputStream);
       this->impl->outputStream->flush();
     }
   }
@@ -254,7 +254,6 @@ void IOTransport::run() {
     fire(exl);
   } catch (...) {
     transport::UPMQException ex(__FILE__, __LINE__, "IOTransport::run - caught unknown exception");
-    // LOGDECAF_WARN(logger, ex.getStackTraceString());
     fire(ex);
   }
 }

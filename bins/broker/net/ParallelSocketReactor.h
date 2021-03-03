@@ -18,7 +18,7 @@
 #define UPMQ_Net_ParallelSocketReactor_INCLUDED
 
 #include "SocketReactor.h"
-#include "Poco/Net/SocketNotification.h"
+#include "SocketNotification.h"
 #include "Poco/Net/StreamSocket.h"
 #include "Poco/Net/ServerSocket.h"
 #include "Poco/NObserver.h"
@@ -42,7 +42,7 @@ class ParallelSocketReactor : public SR {
  public:
   typedef Poco::SharedPtr<ParallelSocketReactor> Ptr;
 
-  explicit ParallelSocketReactor(Args... args) : SR(args...) { _thread.start(*this); }
+  explicit ParallelSocketReactor(Args... args) : SR(args...), _thread("\t\tsocket-reactor\t\t") { _thread.start(*this); }
   ~ParallelSocketReactor() override;
 
  protected:

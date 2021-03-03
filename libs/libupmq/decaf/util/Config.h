@@ -174,10 +174,10 @@
 #ifndef HAVE_ERRNO_H
 #define HAVE_ERRNO_H
 #endif
-#ifndef __APPLE__
 #ifndef HAVE_ATOMIC_BUILTINS
 #define HAVE_ATOMIC_BUILTINS
 #endif
+#ifndef __APPLE__
 #ifndef HAVE_SYS_IOCTL_H
 #define HAVE_SYS_IOCTL_H
 #endif

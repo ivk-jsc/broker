@@ -16,15 +16,18 @@
 
 #include <utility>
 #include "Connection.h"
-#include "Defines.h"
 #include "Exchange.h"
-#include "MiscDefines.h"
+#include "Exception.h"
+#include "AsyncLogger.h"
 
 namespace upmq {
 namespace broker {
 
 Session::Session(const Connection &connection, std::string id, Proto::Acknowledge acknowledgeType)
     : _id(std::move(id)), _acknowledgeType(acknowledgeType), _connection(connection), _txCounter(0), _stateStack(2) {
+  log = &Poco::Logger::get(CONFIGURATION::Instance().log().name);
+  TRACE(log);
+
   if (isTransactAcknowledge()) {
     begin();
   }
@@ -38,10 +41,13 @@ Session::Session(const Connection &connection, std::string id, Proto::Acknowledg
       << "\'" << _id << "\'"
       << "," << _acknowledgeType << ")"
       << ";";
-  TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
-  CATCH_POCO_DATA_EXCEPTION_PURE("can't create session", sql.str(), ERROR_ON_SESSION);
+  OnError onError;
+  onError.setError(Proto::ERROR_ON_SESSION).setInfo("can't create session").setSql(sql.str());
+
+  TRY_EXECUTE(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
 }
 Session::~Session() {
+  TRACE(log);
   if (isTransactAcknowledge()) {
     try {
       abort(true);
@@ -56,12 +62,14 @@ Session::~Session() {
   }
 }
 void Session::removeSenders() const {
+  TRACE(log);
   try {
     EXCHANGE::Instance().removeSenders(*this);
   } catch (...) {  // -V565
   }
 }
 void Session::dropTemporaryDestination() const {
+  TRACE(log);
   for (const auto &destination : _destinations) {
     try {
       if (EXCHANGE::Instance().isDestinationTemporary(destination)) {
@@ -73,29 +81,32 @@ void Session::dropTemporaryDestination() const {
   }
 }
 void Session::deleteFromConnectionTable() const {
+  TRACE(log);
+  OnError onError;
   std::stringstream sql;
   sql << "delete from " << _connection.sessionsT() << " where id = \'" << _id << "\';";
-  TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
-  CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't delete from session table", sql.str(), ERROR_ON_UNSESSION)
+  onError.setError(Proto::ERROR_ON_UNSESSION).setInfo("can't delete from session table").setSql(sql.str());
+  TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
 }
 std::string Session::acknowlegeName(Proto::Acknowledge acknowledgeType) {
   switch (acknowledgeType) {
-    case SESSION_TRANSACTED:
+    case Proto::SESSION_TRANSACTED:
       return MakeStringify(SESSION_TRANSACTED);
-    case AUTO_ACKNOWLEDGE:
+    case Proto::AUTO_ACKNOWLEDGE:
       return MakeStringify(AUTO_ACKNOWLEDGE);
-    case CLIENT_ACKNOWLEDGE:
+    case Proto::CLIENT_ACKNOWLEDGE:
       return MakeStringify(CLIENT_ACKNOWLEDGE);
-    case DUPS_OK_ACKNOWLEDGE:
+    case Proto::DUPS_OK_ACKNOWLEDGE:
       return MakeStringify(DUPS_OK_ACKNOWLEDGE);
   }
   return emptyString;
 }
-bool Session::isAutoAcknowledge() const { return _acknowledgeType == AUTO_ACKNOWLEDGE; }
-bool Session::isDupsOkAcknowledge() const { return _acknowledgeType == DUPS_OK_ACKNOWLEDGE; }
-bool Session::isClientAcknowledge() const { return _acknowledgeType == CLIENT_ACKNOWLEDGE; }
-bool Session::isTransactAcknowledge() const { return _acknowledgeType == SESSION_TRANSACTED; }
+bool Session::isAutoAcknowledge() const { return _acknowledgeType == Proto::AUTO_ACKNOWLEDGE; }
+bool Session::isDupsOkAcknowledge() const { return _acknowledgeType == Proto::DUPS_OK_ACKNOWLEDGE; }
+bool Session::isClientAcknowledge() const { return _acknowledgeType == Proto::CLIENT_ACKNOWLEDGE; }
+bool Session::isTransactAcknowledge() const { return _acknowledgeType == Proto::SESSION_TRANSACTED; }
 void Session::addToUsed(const std::string &uri) {
+  TRACE(log);
   DestinationsList::iterator it;
   const std::string destName = Exchange::mainDestinationPath(uri);
   {
@@ -116,6 +127,7 @@ void Session::addToUsed(const std::string &uri) {
   }
 }
 void Session::removeFromUsed(const std::string &destinationID) {
+  TRACE(log);
   upmq::ScopedWriteRWLock writeRWLock(_destinationsLock);
   auto it = _destinations.find(destinationID);
   if (it != _destinations.end()) {
@@ -123,14 +135,16 @@ void Session::removeFromUsed(const std::string &destinationID) {
   }
 }
 void Session::begin() const {
+  TRACE(log);
   if (!_stateStack.empty() && (_stateStack.last() == State::BEGIN)) {
     return;
   }
   ++_txCounter;
-
+  //  INFO(log, std::string(_id + "_" + std::to_string(_txCounter)));
   _stateStack.push(State::BEGIN);
 }
 void Session::rebegin() const {
+  TRACE(log);
   begin();
   for (const auto &item : _destinations) {
     EXCHANGE::Instance().begin(*this, item);
@@ -138,6 +152,7 @@ void Session::rebegin() const {
   _rebeginMutex.unlock();
 }
 void Session::commit() const {
+  TRACE(log);
   if (_stateStack.last() == State::COMMIT) {
     return;
   }
@@ -151,6 +166,7 @@ void Session::commit() const {
   rebegin();
 }
 void Session::abort(bool destruct) const {
+  TRACE(log);
   if (_stateStack.last() == State::ABORT) {
     return;
   }
@@ -166,28 +182,35 @@ void Session::abort(bool destruct) const {
   }
 }
 void Session::saveMessage(const MessageDataContainer &sMessage) {
+  TRACE(log);
   addToUsed(sMessage.message().destination_uri());
   EXCHANGE::Instance().saveMessage(*this, sMessage);
 }
 std::string Session::txName() const {
-  if (isTransactAcknowledge()) {
-    std::lock_guard<std::recursive_mutex> lock(_rebeginMutex);
-    return _id + "_" + std::to_string(_txCounter);
-  }
+  TRACE(log);
   return _id + "_" + std::to_string(_txCounter);
 }
 void Session::addSender(const MessageDataContainer &sMessage) {
+  TRACE(log);
   addToUsed(sMessage.sender().destination_uri());
   EXCHANGE::Instance().addSender(*this, sMessage);
 }
-void Session::removeSender(const MessageDataContainer &sMessage) { EXCHANGE::Instance().removeSender(*this, sMessage); }
+void Session::removeSender(const MessageDataContainer &sMessage) {
+  TRACE(log);
+  EXCHANGE::Instance().removeSender(*this, sMessage);
+}
 void Session::addSubscription(const MessageDataContainer &sMessage) {
+  TRACE(log);
   const Proto::Subscription &subscription = sMessage.subscription();
   EXCHANGE::Instance().addSubscription(*this, sMessage);
   addToUsed(subscription.destination_uri());
 }
-void Session::removeConsumer(const MessageDataContainer &sMessage, size_t tcpNum) { EXCHANGE::Instance().removeConsumer(sMessage, tcpNum); }
+void Session::removeConsumer(const MessageDataContainer &sMessage, size_t tcpNum) {
+  TRACE(log);
+  EXCHANGE::Instance().removeConsumer(sMessage, tcpNum);
+}
 void Session::removeConsumers(const std::string &destinationID, const std::string &subscriptionID, size_t tcpNum) {
+  TRACE(log);
   EXCHANGE::Instance().removeConsumer(_id, destinationID, subscriptionID, tcpNum);
 }
 const CircularQueue<Session::State> &Session::stateStack() const { return _stateStack; }
@@ -195,6 +218,7 @@ const Connection &Session::connection() const { return _connection; }
 const std::string &Session::id() const { return _id; }
 Proto::Acknowledge Session::type() const { return _acknowledgeType; }
 void Session::processAcknowledge(const MessageDataContainer &sMessage) {
+  TRACE(log);
   const Proto::Ack &ack = sMessage.ack();
   currentDBSession = dbms::Instance().dbmsSessionPtr();
   currentDBSession->beginTX(ack.message_id() + "ack");
@@ -206,7 +230,7 @@ void Session::processAcknowledge(const MessageDataContainer &sMessage) {
         try {
           EXCHANGE::Instance().destination(destination, Exchange::DestinationCreationMode::NO_CREATE).ack(*this, sMessage);
         } catch (Exception &ex) {
-          if (ex.error() == ERROR_UNKNOWN) {
+          if (ex.error() == Proto::ERROR_UNKNOWN) {
             toerase.emplace_back(destination);
           } else {
             throw Exception(ex);
@@ -224,18 +248,20 @@ void Session::processAcknowledge(const MessageDataContainer &sMessage) {
   currentDBSession.reset(nullptr);
 }
 void Session::closeSubscriptions(size_t tcpNum) {
+  TRACE(log);
   upmq::ScopedReadRWLock readRWLock(_destinationsLock);
   for (const auto &destination : _destinations) {
     try {
       EXCHANGE::Instance().destination(destination, Exchange::DestinationCreationMode::NO_CREATE).closeAllSubscriptions(*this, tcpNum);
     } catch (Exception &ex) {
-      if ((ex.error() != ERROR_UNKNOWN) || (ex.message().find("destination not found") == std::string::npos)) {
+      if ((ex.error() != Proto::ERROR_UNKNOWN) || (ex.message().find("destination not found") == std::string::npos)) {
         throw Exception(ex);
       }
     }
   }
 }
 bool Session::canResetCurrentDBSession() const {
+  TRACE(log);
   if (currentDBSession == nullptr) {
     return true;
   }

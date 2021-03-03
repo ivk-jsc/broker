@@ -15,7 +15,7 @@
  */
 
 #include "TopicDestination.h"
-#include "MiscDefines.h"
+#include "Exception.h"
 #include "TopicSender.h"
 #include <Poco/StringTokenizer.h>
 #include <Poco/Hash.h>
@@ -24,35 +24,41 @@ namespace upmq {
 namespace broker {
 
 TopicDestination::TopicDestination(const Exchange &exchange, const std::string &uri, Destination::Type type) : Destination(exchange, uri, type) {
+  log = &Poco::Logger::get(CONFIGURATION::Instance().log().name);
+  TRACE(log);
   loadDurableSubscriptions();
 }
 void TopicDestination::save(const Session &session, const MessageDataContainer &sMessage) {
+  TRACE(log);
   session.currentDBSession->commitTX();
 
-  TRY_POCO_DATA_EXCEPTION {
-    std::string routingK = routingKey(sMessage.message().destination_uri());
-    ParentTopics parentTopics = generateParentTopics(routingK);
-    bool needRemoveBody = true;
-    for (const auto &topic : parentTopics) {
-      if (notifySubscription(topic, session, sMessage)) {
-        needRemoveBody = false;
-      }
-    }
-    if (needRemoveBody) {
-      const_cast<MessageDataContainer &>(sMessage).removeLinkedFile();
-    }
-  }
-  CATCH_POCO_DATA_EXCEPTION_PURE("can't save message", "", ERROR_ON_SAVE_MESSAGE)
+  OnError onError;
+  onError.setError(Proto::ERROR_ON_SAVE_MESSAGE).setInfo("can't save message");
+  TRY_EXECUTE(([&sMessage, &session, this]() {
+                std::string routingK = routingKey(sMessage.message().destination_uri());
+                ParentTopics parentTopics = generateParentTopics(routingK);
+                bool needRemoveBody = true;
+                for (const auto &topic : parentTopics) {
+                  if (notifySubscription(topic, session, sMessage)) {
+                    needRemoveBody = false;
+                  }
+                }
+                if (needRemoveBody) {
+                  const_cast<MessageDataContainer &>(sMessage).removeLinkedFile();
+                }
+              }),
+              onError);
 }
 void TopicDestination::ack(const Session &session, const MessageDataContainer &sMessage) {
+  TRACE(log);
   const Proto::Ack &ack = sMessage.ack();
   const std::string &messageID = ack.message_id();
   const std::string &subscriptionName = ack.subscription_name();
 
   if (session.isClientAcknowledge()) {
-    _subscriptions.changeForEach([this, &session, &messageID, &sMessage](SubscriptionsList::ItemType::KVPair &pair) {
-      std::vector<MessageInfo> sentMsgs = pair.second.storage().getMessagesBelow(session, messageID);
-      Destination::doAck(session, sMessage, pair.second.storage(), false, sentMsgs);
+    _subscriptions.changeForEach([this, &session, &messageID, &sMessage](SubscriptionsList::ItemType::Iterator &pair) {
+      std::vector<MessageInfo> sentMsgs = pair->second.storage().getMessagesBelow(session, messageID);
+      Destination::doAck(session, sMessage, pair->second.storage(), false, sentMsgs);
     });
   } else {
     auto it = _subscriptions.find(subscriptionName);
@@ -64,22 +70,36 @@ void TopicDestination::ack(const Session &session, const MessageDataContainer &s
   }
 }
 void TopicDestination::commit(const Session &session) {
+  TRACE(log);
   Destination::commit(session);
-  _subscriptions.changeForEach([&session](SubscriptionsList::ItemType::KVPair &pair) { pair.second.commit(session); });
+  _subscriptions.changeForEach([&session](SubscriptionsList::ItemType::Iterator &pair) { pair->second.commit(session); });
+  increaseNotAcknowledgedAll();
+  postNewMessageEvent();
 }
 void TopicDestination::abort(const Session &session) {
+  TRACE(log);
   Destination::abort(session);
-  _subscriptions.changeForEach([&session](SubscriptionsList::ItemType::KVPair &pair) { pair.second.abort(session); });
+  size_t revertedMsgs = 0;
+  _subscriptions.changeForEach(
+      [&session, &revertedMsgs](SubscriptionsList::ItemType::Iterator &pair) { revertedMsgs += pair->second.abort(session); });
+  INFO(log, std::string("session aborted try to reset ").append(std::to_string(revertedMsgs)).append(" messages"));
+  if (revertedMsgs > 0) {
+    increaseNotAcknowledgedAll();
+  }
+  postNewMessageEvent();
 }
 
 Subscription TopicDestination::createSubscription(const std::string &name, const std::string &routingKey, Subscription::Type type) {
+  TRACE(log);
   return Subscription(*this, "", name, routingKey, type);
 }
 void TopicDestination::begin(const Session &session) {
+  TRACE(log);
   Destination::begin(session);
-  _subscriptions.changeForEach([&session](SubscriptionsList::ItemType::KVPair &pair) { pair.second.storage().begin(session, pair.second.id()); });
+  _subscriptions.changeForEach([&session](SubscriptionsList::ItemType::Iterator &pair) { pair->second.storage().begin(session, pair->second.id()); });
 }
 void TopicDestination::addSender(const Session &session, const MessageDataContainer &sMessage) {
+  TRACE(log);
   const Proto::Sender &sender = sMessage.sender();
   std::string routingKey = Destination::routingKey(sender.destination_uri());
   {
@@ -95,6 +115,7 @@ void TopicDestination::addSender(const Session &session, const MessageDataContai
   _senderCache.insert(std::make_pair(routingKey, sender.sender_id()));
 }
 void TopicDestination::removeSender(const Session &session, const MessageDataContainer &sMessage) {
+  TRACE(log);
   const Proto::Unsender &unsender = sMessage.unsender();
   std::string routingKey = Destination::routingKey(unsender.destination_uri());
   {
@@ -118,6 +139,7 @@ void TopicDestination::removeSender(const Session &session, const MessageDataCon
   }
 }
 void TopicDestination::removeSenders(const Session &session) {
+  TRACE(log);
   upmq::ScopedReadRWLock readRWLock(_routingLock);
   const MessageDataContainer *dc = nullptr;
   for (const auto &item : _routing) {
@@ -125,6 +147,7 @@ void TopicDestination::removeSenders(const Session &session) {
   }
 }
 void TopicDestination::removeSenderByID(const Session &session, const std::string &senderID) {
+  TRACE(log);
   MessageDataContainer messageDataContainer;
   Proto::Unsender &unsender = messageDataContainer.createUnsender(senderID);
   unsender.set_sender_id(senderID);
@@ -139,6 +162,7 @@ void TopicDestination::removeSenderByID(const Session &session, const std::strin
 }
 
 TopicDestination::ParentTopics TopicDestination::generateParentTopics(const std::string &routingKey) {
+  // TODO: add trace
   Poco::StringTokenizer topicLevels(routingKey, "/", Poco::StringTokenizer::TOK_TRIM);
   ParentTopics parentTopics;
   size_t levels = topicLevels.count();
@@ -160,6 +184,7 @@ TopicDestination::ParentTopics TopicDestination::generateParentTopics(const std:
 }
 
 bool TopicDestination::notifySubscription(const std::string &routingKey, const Session &session, const MessageDataContainer &sMessage) {
+  TRACE(log);
   upmq::ScopedReadRWLock readRWLock(_routingLock);
   auto it = _routing.find(routingKey);
   if (it != _routing.end()) {
@@ -170,6 +195,7 @@ bool TopicDestination::notifySubscription(const std::string &routingKey, const S
   return false;
 }
 void TopicDestination::addSendersFromCache(const Session &session, const MessageDataContainer &sMessage, Subscription &subscription) {
+  TRACE(log);
   upmq::ScopedReadRWLock readRWLock(_senderCacheLock);
   const std::string &routingKey = subscription.routingKey();
   auto cacheItem = _senderCache.equal_range(routingKey);

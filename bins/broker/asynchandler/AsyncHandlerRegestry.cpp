@@ -23,40 +23,51 @@ namespace upmq {
 namespace broker {
 AsyncHandlerRegestry::AsyncHandlerRegestry()
     : _size(static_cast<size_t>(NET_CONFIG.maxConnections)),
-      _thread("AsyncHandlerRegestry"),
+      _thread("\tasync-handler-registry\t"),
       _connections(_size),
       _isRunning(false),
       _current_size(0),
       _connectionCounter(0) {
+  log = &Poco::Logger::get(CONFIGURATION::Instance().log().name);
+
+  TRACE(log);
+
   for (int i = 0; i < static_cast<int>(_size); ++i) {
     _freeNums.enqueue(i);
   }
 }
 
 void AsyncHandlerRegestry::addAHandler(AsyncTCPHandler *ahandler) {
+  TRACE(log);
   int nextNum = freeNum();
   if (nextNum != -1) {
     ahandler->num = static_cast<size_t>(nextNum);
     _connections[ahandler->num] = std::shared_ptr<AsyncTCPHandler>(ahandler);
     ++_current_size;
   } else {
-    throw EXCEPTION("can't get free connection handeler", "try to encrease max connections", -1);
+    throw EXCEPTION("can't get free connection handeler", "try to increase max connections", -1);
   }
 }
 
-std::shared_ptr<AsyncTCPHandler> AsyncHandlerRegestry::aHandler(size_t num) const { return _connections[num]; }
+std::shared_ptr<AsyncTCPHandler> AsyncHandlerRegestry::aHandler(size_t num) const {
+  TRACE(log);
+  return _connections[num];
+}
 
 void AsyncHandlerRegestry::deleteAHandler(size_t num) {
+  TRACE(log);
   _freeNums.enqueue(static_cast<int>(num));
   --_current_size;
 }
 void AsyncHandlerRegestry::put(size_t num, std::shared_ptr<MessageDataContainer> sMessage) {
+  TRACE(log);
   if (_connections[num] == nullptr) {
-    throw EXCEPTION("tcp connection not found", std::to_string(num), ERROR_CONNECTION);
+    throw EXCEPTION("tcp connection not found", std::to_string(num), Proto::ERROR_CONNECTION);
   }
   _connections[num]->put(std::move(sMessage));
 }
 void AsyncHandlerRegestry::run() {
+  TRACE(log);
   _isRunning = true;
   int num;
   while (_isRunning) {
@@ -106,6 +117,7 @@ void AsyncHandlerRegestry::run() {
   }
 }
 int AsyncHandlerRegestry::erasedConnections() {
+  TRACE(log);
   int erased = 0;
   for (auto &connection : _connections) {
     if (connection && connection->needErase()) {
@@ -116,6 +128,7 @@ int AsyncHandlerRegestry::erasedConnections() {
   return erased;
 }
 void AsyncHandlerRegestry::start() {
+  TRACE(log);
   if (_isRunning) {
     return;
   }
@@ -127,21 +140,29 @@ void AsyncHandlerRegestry::start() {
 }
 
 void AsyncHandlerRegestry::stop() {
+  TRACE(log);
   if (_isRunning) {
     _isRunning = false;
     _thread.join();
   }
 }
 
-size_t AsyncHandlerRegestry::size() const { return _current_size; }
+size_t AsyncHandlerRegestry::size() const {
+  TRACE(log);
+  return _current_size;
+}
 int AsyncHandlerRegestry::freeNum() const {
+  TRACE(log);
   int num = 0;
   if (!_freeNums.wait_dequeue_timed(num, 1000000)) {
     return -1;
   }
   return num;
 }
-AsyncHandlerRegestry::~AsyncHandlerRegestry() = default;
-void AsyncHandlerRegestry::needToErase(size_t num) { _needToErase.enqueue(static_cast<int>(num)); }
+AsyncHandlerRegestry::~AsyncHandlerRegestry() { TRACE(log); };
+void AsyncHandlerRegestry::needToErase(size_t num) {
+  TRACE(log);
+  _needToErase.enqueue(static_cast<int>(num));
+}
 }  // namespace broker
 }  // namespace upmq

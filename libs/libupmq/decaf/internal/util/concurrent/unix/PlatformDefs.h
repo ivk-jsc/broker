@@ -54,7 +54,10 @@ typedef void *PLATFORM_THREAD_ENTRY_ARG;
 
 typedef pthread_t decaf_thread_t;
 typedef pthread_key_t decaf_tls_key;
-typedef pthread_cond_t *decaf_condition_t;
+struct decaf_condition_t {
+  pthread_cond_t *value;
+  pthread_condattr_t *attr;
+};
 typedef pthread_mutex_t *decaf_mutex_t;
 typedef pthread_rwlock_t *decaf_rwmutex_t;
 }  // namespace concurrent

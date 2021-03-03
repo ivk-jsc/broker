@@ -18,6 +18,7 @@
 #define BROKER_STORAGE_H
 
 #include <Poco/RWLock.h>
+#include <Poco/Logger.h>
 #include <memory>
 #include <string>
 #include "FixedSizeUnorderedMap.h"
@@ -49,23 +50,24 @@ class Storage {
   std::string _extParentID;
   TransactSessionsListType _txSessions;
   mutable upmq::MRWLock _txSessionsLock;
+  mutable Poco::Logger *log;
 
  private:
   std::string saveTableName(const upmq::broker::Session &session) const;
   std::shared_ptr<MessageDataContainer> makeMessage(storage::DBMSSession &dbSession,
-                                                    const consumer::Msg &msgInfo,
+                                                    const MessageInfo &msgInfo,
                                                     const Consumer &consumer,
                                                     bool useFileLink);
   void fillProperties(storage::DBMSSession &dbSession, Proto::Message &message);
-  int deleteMessageHeader(storage::DBMSSession &dbSession, const std::string &messageID);
+  bool deleteMessageHeader(storage::DBMSSession &dbSession, const std::string &messageID);
   void deleteMessageProperties(storage::DBMSSession &dbSession, const std::string &messageID);
   int getSubscribersCount(storage::DBMSSession &dbSession, const std::string &messageID);
   void updateSubscribersCount(storage::DBMSSession &dbSession, const std::string &messageID);
   void deleteMessageInfoFromJournal(storage::DBMSSession &dbSession, const std::string &messageID);
-  void deleteMessageDataIfExists(const std::string &messageID, int persistent);
+  void deleteMessageDataIfExists(const std::string &messageID, bool persistent);
   void saveMessageHeader(const upmq::broker::Session &session, const MessageDataContainer &sMessage);
-  void saveMessageProperties(const upmq::broker::Session &session, const Message &message);
-  bool checkTTLIsOut(const std::string &stringMessageTime, Poco::Int64 ttl);
+  void saveMessageProperties(const upmq::broker::Session &session, const Proto::Message &message);
+  bool checkTTLIsOut(const Poco::DateTime &messageTime, Poco::Int64 ttl);
 
  public:
   explicit Storage(const std::string &messageTableID, size_t nonPersistentSize);
@@ -79,18 +81,18 @@ class Storage {
   std::shared_ptr<MessageDataContainer> get(const Consumer &consumer, bool useFileLink);
   void removeGroupMessage(const std::string &groupID, const upmq::broker::Session &session);
   void removeMessagesBySession(const upmq::broker::Session &session);
-  void resetMessagesBySession(const upmq::broker::Session &session);
+  size_t resetMessagesBySession(const upmq::broker::Session &session);
   void removeMessage(const std::string &messageID, storage::DBMSSession &extDBSession);
   const std::string &uri() const;
   void begin(const upmq::broker::Session &session, const std::string &extParentId = "");
   void commit(const upmq::broker::Session &session);
-  void abort(const upmq::broker::Session &session);
+  size_t abort(const upmq::broker::Session &session);
 
   std::string generateSQLMainTable(const std::string &tableName) const;
   std::vector<std::string> generateSQLMainTableIndexes(const std::string &tableName) const;
   std::string generateSQLProperties() const;
   std::vector<MessageInfo> getMessagesBelow(const upmq::broker::Session &session, const std::string &messageID) const;
-  void setMessageToWasSent(const std::string &messageID, const Consumer &consumer);
+  void setMessageToWasSent(const std::string &messageID, storage::DBMSSession &dbSession, const Consumer &consumer);
   void setMessagesToWasSent(storage::DBMSSession &dbSession, const Consumer &consumer);
   void setMessageToDelivered(const upmq::broker::Session &session, const std::string &messageID);
   void setMessagesToNotSent(const Consumer &consumer);

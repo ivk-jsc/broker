@@ -19,6 +19,7 @@
 
 #include <Poco/Nullable.h>
 #include <Poco/Tuple.h>
+#include <Poco/DateTime.h>
 #include <string>
 #include "MessageDefines.h"
 
@@ -27,56 +28,55 @@ namespace broker {
 
 class MessageInfo {
  public:
-  enum class Field : int {
-    num = 0,
-    message_id,
-    type,
-    body_type,
-    priority,
-    persistent,
-    correlation_id,
-    reply_to,
-    timestamp,
-    expiration,
-    ttl,
-    created_time,
-    delivery_count,
-    delivery_status,
-    client_id,
-    consumer_id,
-    group_id,
-    group_seq,
-    last_in_group,
-    transaction_id
-  };
-  struct FieldInfo {
-    constexpr explicit FieldInfo(Field ec_) : ec(ec_), position(static_cast<int>(ec)) {}
-    const Field ec;
-    const int position;
+  enum Field {
+    NUM = 0,
+    MESSAGE_ID,
+    TYPE,
+    BODY_TYPE,
+    PRIORITY,
+    PERSISTENT,
+    CORRELATION_ID,
+    REPLY_TO,
+    TIMESTAMP,
+    EXPIRATION,
+    TTL,
+    CREATED_TIME,
+    DELIVERY_COUNT,
+    DELIVERY_STATUS,
+    CLIENT_ID,
+    CONSUMER_ID,
+    GROUP_ID,
+    GROUP_SEQ,
+    LAST_IN_GROUP,
+    TRANSACTION_ID
   };
 
-  typedef Poco::Tuple<Poco::Int64,                  // num;
-                      std::string,                  // messageID;
-                      std::string,                  // type;
-                      int,                          // bodyType;
-                      int,                          // priority;
-                      bool,                         // persistent;
-                      Poco::Nullable<std::string>,  // correlationID;
-                      Poco::Nullable<std::string>,  // replyTo;
-                      Poco::Int64,                  // timestamp;
-                      Poco::Int64,                  // expiration;
-                      Poco::Int64,                  // timetolive;
-                      Poco::Int64,                  // createdTime;
-                      int,                          // deliveryCount;
-                      int,                          // deliveryStatus;
-                      Poco::Nullable<std::string>,  // clientID;
-                      Poco::Nullable<std::string>,  // consumerID;
-                      Poco::Nullable<std::string>,  // groupID;
-                      int,                          // groupSeq;
-                      bool,                         // lastInGroup;
-                      Poco::Nullable<std::string>   // transactionID;
-                      >
-      MsgTuple;
+  template <MessageInfo::Field field>
+  struct FieldInfo {
+    static constexpr int POSITION = static_cast<int>(field);
+  };
+
+  using MsgTuple = Poco::Tuple<Poco::Int64,                  // num;
+                               std::string,                  // messageID;
+                               std::string,                  // type;
+                               int,                          // bodyType;
+                               int,                          // priority;
+                               bool,                         // persistent;
+                               Poco::Nullable<std::string>,  // correlationID;
+                               Poco::Nullable<std::string>,  // replyTo;
+                               Poco::Int64,                  // timestamp;
+                               Poco::Int64,                  // expiration;
+                               Poco::Int64,                  // timetolive;
+                               Poco::DateTime,               // createdTime;
+                               int,                          // deliveryCount;
+                               int,                          // deliveryStatus;
+                               Poco::Nullable<std::string>,  // clientID;
+                               Poco::Nullable<std::string>,  // consumerID;
+                               Poco::Nullable<std::string>,  // groupID;
+                               int,                          // groupSeq;
+                               bool,                         // lastInGroup;
+                               Poco::Nullable<std::string>   // transactionID;
+                               >;
 
   MsgTuple tuple;
 
@@ -94,7 +94,7 @@ class MessageInfo {
                        Poco::Int64 timestamp,
                        Poco::Int64 expiration,
                        Poco::Int64 timetolive,
-                       Poco::Int64 createdTime,
+                       const Poco::DateTime &createdTime,
                        int deliveryCount,
                        int deliveryStatus,
                        const std::string &clientID,
@@ -103,48 +103,57 @@ class MessageInfo {
                        int groupSeq,
                        bool lastInGroup,
                        const std::string &transactionID);
+
+  const std::string &messageId() const;
+  Poco::Int64 num() const;
+  const std::string &type() const;
+  int bodyType() const;
+  int priority() const;
+  bool persistent() const;
+  const Poco::Nullable<std::string> &correlationID() const;
+  const Poco::Nullable<std::string> &replyTo() const;
+  Poco::Int64 timestamp() const;
+  Poco::Int64 expiration() const;
+  Poco::Int64 timetolive() const;
+  const Poco::DateTime &createdTime() const;
+  int deliveryCount() const;
+  int deliveryStatus() const;
+  const Poco::Nullable<std::string> &clientID() const;
+  const Poco::Nullable<std::string> &consumerID() const;
+  const Poco::Nullable<std::string> &groupID() const;
+  int groupSeq() const;
+  bool lastInGroup() const;
+  const Poco::Nullable<std::string> &transactionID() const;
+  void clear();
+  std::string dump() const;
 };
+
 }  // namespace broker
 }  // namespace upmq
 
 namespace message {
-static constexpr upmq::broker::MessageInfo::FieldInfo field_num = upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::num);
-static constexpr upmq::broker::MessageInfo::FieldInfo field_message_id =
-    upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::message_id);
-static constexpr upmq::broker::MessageInfo::FieldInfo field_type = upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::type);
-static constexpr upmq::broker::MessageInfo::FieldInfo field_body_type =
-    upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::body_type);
-static constexpr upmq::broker::MessageInfo::FieldInfo field_priority =
-    upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::priority);
-static constexpr upmq::broker::MessageInfo::FieldInfo field_persistent =
-    upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::persistent);
-static constexpr upmq::broker::MessageInfo::FieldInfo field_correlation_id =
-    upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::correlation_id);
-static constexpr upmq::broker::MessageInfo::FieldInfo field_reply_to =
-    upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::reply_to);
-static constexpr upmq::broker::MessageInfo::FieldInfo field_timestamp =
-    upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::timestamp);
-static constexpr upmq::broker::MessageInfo::FieldInfo field_expiration =
-    upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::expiration);
-static constexpr upmq::broker::MessageInfo::FieldInfo field_ttl = upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::ttl);
-static constexpr upmq::broker::MessageInfo::FieldInfo field_created_time =
-    upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::created_time);
-static constexpr upmq::broker::MessageInfo::FieldInfo field_delivery_count =
-    upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::delivery_count);
-static constexpr upmq::broker::MessageInfo::FieldInfo field_delivery_status =
-    upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::delivery_status);
-static constexpr upmq::broker::MessageInfo::FieldInfo field_client_id =
-    upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::client_id);
-static constexpr upmq::broker::MessageInfo::FieldInfo field_consumer_id =
-    upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::consumer_id);
-static constexpr upmq::broker::MessageInfo::FieldInfo field_group_id =
-    upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::group_id);
-static constexpr upmq::broker::MessageInfo::FieldInfo field_group_seq =
-    upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::group_seq);
-static constexpr upmq::broker::MessageInfo::FieldInfo field_last_in_group =
-    upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::last_in_group);
-static constexpr upmq::broker::MessageInfo::FieldInfo field_transaction_id =
-    upmq::broker::MessageInfo::FieldInfo(upmq::broker::MessageInfo::Field::transaction_id);
+namespace field {
+using Num = upmq::broker::MessageInfo::FieldInfo<upmq::broker::MessageInfo::NUM>;
+using MessageId = upmq::broker::MessageInfo::FieldInfo<upmq::broker::MessageInfo::MESSAGE_ID>;
+using Type = upmq::broker::MessageInfo::FieldInfo<upmq::broker::MessageInfo::TYPE>;
+using BodyType = upmq::broker::MessageInfo::FieldInfo<upmq::broker::MessageInfo::BODY_TYPE>;
+using Priority = upmq::broker::MessageInfo::FieldInfo<upmq::broker::MessageInfo::PRIORITY>;
+using Persistent = upmq::broker::MessageInfo::FieldInfo<upmq::broker::MessageInfo::PERSISTENT>;
+using CorrelationId = upmq::broker::MessageInfo::FieldInfo<upmq::broker::MessageInfo::CORRELATION_ID>;
+using ReplyTo = upmq::broker::MessageInfo::FieldInfo<upmq::broker::MessageInfo::REPLY_TO>;
+using Timestamp = upmq::broker::MessageInfo::FieldInfo<upmq::broker::MessageInfo::TIMESTAMP>;
+using Expiration = upmq::broker::MessageInfo::FieldInfo<upmq::broker::MessageInfo::EXPIRATION>;
+using TimeToLive = upmq::broker::MessageInfo::FieldInfo<upmq::broker::MessageInfo::TTL>;
+using CreatedTime = upmq::broker::MessageInfo::FieldInfo<upmq::broker::MessageInfo::CREATED_TIME>;
+using DeliveryCount = upmq::broker::MessageInfo::FieldInfo<upmq::broker::MessageInfo::DELIVERY_COUNT>;
+using DeliveryStatus = upmq::broker::MessageInfo::FieldInfo<upmq::broker::MessageInfo::DELIVERY_STATUS>;
+using ClientId = upmq::broker::MessageInfo::FieldInfo<upmq::broker::MessageInfo::CLIENT_ID>;
+using ConsumerId = upmq::broker::MessageInfo::FieldInfo<upmq::broker::MessageInfo::CONSUMER_ID>;
+using GroupId = upmq::broker::MessageInfo::FieldInfo<upmq::broker::MessageInfo::GROUP_ID>;
+using GroupSeq = upmq::broker::MessageInfo::FieldInfo<upmq::broker::MessageInfo::GROUP_SEQ>;
+using LastInGroup = upmq::broker::MessageInfo::FieldInfo<upmq::broker::MessageInfo::LAST_IN_GROUP>;
+using TransactionId = upmq::broker::MessageInfo::FieldInfo<upmq::broker::MessageInfo::TRANSACTION_ID>;
+}  // namespace field
 }  // namespace message
 
 #endif  // BROKER_MESSAGEINFO_H

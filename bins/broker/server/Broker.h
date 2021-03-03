@@ -58,7 +58,6 @@ class Broker {
   Poco::ThreadPool _writablePool;
   std::unique_ptr<Poco::RunnableAdapter<Broker>> _readbleAdapter;
   std::unique_ptr<Poco::RunnableAdapter<Broker>> _writableAdapter;
-  using BQ = moodycamel::ConcurrentQueue<std::pair<std::string, size_t>>;
   using BQIndexes = moodycamel::BlockingConcurrentQueue<size_t>;
   mutable std::vector<BQIndexes> _readableIndexes;
   mutable std::vector<BQIndexes> _writableIndexes;
@@ -97,7 +96,7 @@ class Broker {
   bool isConnectionExists(const std::string &clientID);
   std::string currentTransaction(const std::string &clientID, const std::string &sessionID) const;
 
-  void eraseConnection(const std::string &connectionID);
+  void eraseConnection(const std::string &connectionID, size_t num);
 
   void start();
   void stop();
@@ -115,6 +114,6 @@ class Broker {
 }  // namespace broker
 }  // namespace upmq
 
-typedef Singleton<upmq::broker::Broker> BROKER;
+using BROKER = Singleton<upmq::broker::Broker>;
 
 #endif  // BROKER_BROKER_H

@@ -1,34 +1,34 @@
 name: Build C++
-on: [push, pull_request]
+on: [ push, pull_request ]
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        os: [debian, centos, ubuntu18]
-        compiler: [clang, gcc]
+        os: [ debian, centos, ubuntu18 ]
+        compiler: [ clang, gcc ]
     container: ${{ format('registry.gitlab.com/s.arlyapov/broker_images/{0}:{1}', matrix.os, matrix.compiler) }}
     steps:
-    - uses: actions/checkout@v2
-    - name: Cmake
-      run: cmake .
-    - name: Build
-      run: cmake --build .
-    - name: Add log settings
-      run: echo '<config><broker><log><level>8</level><path windows="./" _nix="./">./</path><interactive>false</interactive></log></broker></config>' > broker.xml
-    - name: Start broker
-      run: ./bins/broker/broker &
-    - name: Test
-      id: test
-      run: ./tests/brokertest/brokertest && echo ::set-output name=status::success
-      continue-on-error: true
-    - name: Upload log
-      uses: actions/upload-artifact@v1
-      with:
-        name: ${{ format('{0}.{1}.log', matrix.os, matrix.compiler) }}
-        path: broker.log
-    - name: Check on failures
-      if: steps.test.outputs.status != 'success'
-      run: exit 1
+      - uses: actions/checkout@v2
+      - name: Cmake
+        run: cmake .
+      - name: Build
+        run: cmake --build .
+      - name: Add log settings
+        run: echo '<config><broker><log><level>7</level><path windows="./" _nix="./">./</path><interactive>false</interactive></log></broker></config>' > broker.xml
+      - name: Start broker
+        run: ./bins/broker/broker &
+      - name: Test
+        id: test
+        run: ./tests/brokertest/brokertest && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: Upload log
+        uses: actions/upload-artifact@v1
+        with:
+          name: ${{ format('{0}.{1}.log', matrix.os, matrix.compiler) }}
+          path: broker.log
+      - name: Check on failures
+        if: steps.test.outputs.status != 'success'
+        run: exit 1
 

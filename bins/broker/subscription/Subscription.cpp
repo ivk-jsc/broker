@@ -25,9 +25,8 @@
 #include "Exception.h"
 #include "Exchange.h"
 #include "MessageStorage.h"
-#include "MiscDefines.h"
+#include "Exception.h"
 #include "TopicSender.h"
-#include <fake_cpp14.h>
 
 namespace upmq {
 namespace broker {
@@ -49,12 +48,18 @@ Subscription::Subscription(const Destination &destination, const std::string &id
       _isInited(true),
       _hasSnapshot(false),
       _roundRobinCache(new std::deque<std::shared_ptr<MessageDataContainer>>) {
+  TRACE(log);
   _storage.setParent(&destination);
 
+  OnError onError;
+  storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
   std::stringstream sql;
+
+  dbSession.beginTX(_id);
   sql << "drop table if exists " << _consumersT << ";" << non_std_endl;
-  TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
-  CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't init consumers table for subscription", sql.str(), ERROR_UNKNOWN)
+  onError.setError(Proto::ERROR_UNKNOWN).setInfo("can't init consumers table for subscription").setSql(sql.str());
+  TRY_EXECUTE_NOEXCEPT(([&sql, &dbSession]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
+
   sql.str("");
   sql << "create table if not exists " << _consumersT << "("
       << " client_id text not null"
@@ -67,8 +72,9 @@ Subscription::Subscription(const Destination &destination, const std::string &id
       << ",constraint \"" << _id << "_tcp_index\" unique (client_id, tcp_id, session, selector)"
       << ")"
       << ";";
-  TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
-  CATCH_POCO_DATA_EXCEPTION_PURE("can't init destination", sql.str(), ERROR_DESTINATION)
+  onError.setError(Proto::ERROR_DESTINATION).setInfo("can't init destination").setSql(sql.str());
+  TRY_EXECUTE_NOEXCEPT(([&sql, &dbSession]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
+
   sql.str("");
   std::string ignorsert = "insert or ignore";
   std::string postfix;
@@ -88,15 +94,15 @@ Subscription::Subscription(const Destination &destination, const std::string &id
       << "," << nextParam();
   sql << "," << static_cast<int>(_type) << "," << nextParam() << ")" << postfix << ";";
 
-  storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
-  dbSession.beginTX(_id);
-  TRY_POCO_DATA_EXCEPTION {
-    dbSession << sql.str(), Poco::Data::Keywords::useRef(_name), Poco::Data::Keywords::useRef(_routingKey), Poco::Data::Keywords::now;
-  }
-  CATCH_POCO_DATA_EXCEPTION_NO_INVALID_SQL("can't create subscription", sql.str(), ;, ERROR_ON_SUBSCRIPTION)
+  onError.setError(Proto::ERROR_ON_SUBSCRIPTION).setSql(sql.str()).setInfo("can't create subscription");
+  TRY_EXECUTE(([&dbSession, &sql, this]() {
+                dbSession << sql.str(), Poco::Data::Keywords::useRef(_name), Poco::Data::Keywords::useRef(_routingKey), Poco::Data::Keywords::now;
+              }),
+              onError);
   dbSession.commitTX();
 }
 Subscription::~Subscription() noexcept {
+  TRACE(log);
   try {
     if (_isSubsNotify) {
       _destination.unsubscribeFromNotify(*this);
@@ -111,11 +117,12 @@ Subscription::~Subscription() noexcept {
   }
 }
 void Subscription::save(const Session &session, const MessageDataContainer &sMessage) {
+  TRACE(log);
   if (isBrowser()) {
     return;
   }
   if (!_destination.isQueueFamily()) {
-    const Message &message = sMessage.message();
+    const Proto::Message &message = sMessage.message();
     if (session.isTransactAcknowledge() && !_storage.hasTransaction(session)) {
       _storage.begin(session);
     }
@@ -127,23 +134,31 @@ void Subscription::save(const Session &session, const MessageDataContainer &sMes
     session.currentDBSession->commitTX();
 
     session.currentDBSession->beginTX(_id + message.message_id());
-    TRY_POCO_DATA_EXCEPTION { _storage.save(session, sMessage); }
-    CATCH_POCO_DATA_EXCEPTION_PURE("can't save message", "", ERROR_ON_SAVE_MESSAGE)
+
+    OnError onError;
+    onError.setError(Proto::ERROR_ON_SAVE_MESSAGE).setInfo("can't save message");
+
+    TRY_EXECUTE(([this, &session, &sMessage]() { _storage.save(session, sMessage); }), onError);
+
     session.currentDBSession->commitTX();
     _destination.postNewMessageEvent();
   }
 }
 void Subscription::commit(const Session &session) {
+  TRACE(log);
   _storage.commit(session);
   _destination.postNewMessageEvent();
 }
-void Subscription::abort(const Session &session) {
-  _storage.abort(session);
+size_t Subscription::abort(const Session &session) {
+  TRACE(log);
+  size_t revertedMessages = _storage.abort(session);
   _destination.postNewMessageEvent();
+  return revertedMessages;
 }
 
 void Subscription::addClient(
     const Session &session, size_t tcpConnectionNum, const std::string &objectID, const std::string &selector, Subscription::LocalMode localMode) {
+  TRACE(log);
   std::stringstream sql;
   // NOTE: if subscription is browser then make client_id more unique
   std::string clientID = session.connection().clientID();
@@ -153,6 +168,10 @@ void Subscription::addClient(
     clientID.append("-browser");
   }
   storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
+
+  OnError onError;
+  onError.setError(Proto::ERROR_ON_SUBSCRIPTION).setInfo("can't add consumer");
+
   if (!selector.empty()) {
     sql << "select count(*) from " << _consumersT << " where "
         << " client_id = \'" << clientID << "\'"
@@ -166,11 +185,13 @@ void Subscription::addClient(
 
     size_t count = 0;
     dbSession.beginTX(objectID);
-    TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::into(count), Poco::Data::Keywords::now; }
-    CATCH_POCO_DATA_EXCEPTION_PURE("can't add consumer", sql.str(), ERROR_ON_SUBSCRIPTION)
+
+    onError.setSql(sql.str());
+
+    TRY_EXECUTE(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
 
     if (count > 0) {
-      throw EXCEPTION("client already exists", sql.str(), ERROR_ON_SUBSCRIPTION);
+      throw EXCEPTION("client already exists", sql.str(), Proto::ERROR_ON_SUBSCRIPTION);
     }
   }
 
@@ -187,12 +208,15 @@ void Subscription::addClient(
   sql << "," << nextParam();
   sql << "," << nextParam() << ");";
 
-  TRY_POCO_DATA_EXCEPTION {
-    dbSession << sql.str(), Poco::Data::Keywords::use(clientID), Poco::Data::Keywords::use(tcpConnectionNum), Poco::Data::Keywords::useRef(selector),
-        Poco::Data::Keywords::useRef(objectID), Poco::Data::Keywords::useRef(session.id()), Poco::Data::Keywords::use(nolocal),
-        Poco::Data::Keywords::now;
-  }
-  CATCH_POCO_DATA_EXCEPTION_PURE("can't add consumer", sql.str(), ERROR_ON_SUBSCRIPTION)
+  onError.setSql(sql.str());
+
+  TRY_EXECUTE(([&dbSession, &sql, &clientID, &tcpConnectionNum, &objectID, &session, &nolocal, &selector]() {
+                dbSession << sql.str(), Poco::Data::Keywords::use(clientID), Poco::Data::Keywords::use(tcpConnectionNum),
+                    Poco::Data::Keywords::useRef(selector), Poco::Data::Keywords::useRef(objectID), Poco::Data::Keywords::useRef(session.id()),
+                    Poco::Data::Keywords::useRef(nolocal), Poco::Data::Keywords::now;
+              }),
+              onError);
+
   dbSession.commitTX();
 
   std::shared_ptr<std::deque<std::shared_ptr<MessageDataContainer>>> selectCache;
@@ -220,6 +244,7 @@ void Subscription::addClient(
 }
 const std::string &Subscription::routingKey() const { return _routingKey; }
 void Subscription::onEvent(const void *pSender, const MessageDataContainer *&sMessage) {
+  TRACE(log);
   if (sMessage == nullptr) {
     removeSenders(*((const Session *)pSender));
   } else {
@@ -236,6 +261,7 @@ void Subscription::onEvent(const void *pSender, const MessageDataContainer *&sMe
 bool Subscription::isDurable() const { return _type == Type::DURABLE; }
 bool Subscription::isBrowser() const { return _type == Type::BROWSER; }
 void Subscription::start() {
+  TRACE(log);
   _destination.postNewMessageEvent();
   if (*_isRunning) {
     return;
@@ -243,11 +269,13 @@ void Subscription::start() {
   *_isRunning = true;
 }
 void Subscription::stop() {
+  TRACE(log);
   if (*_isRunning) {
     *_isRunning = false;
   }
 }
 void Subscription::stop(const Consumer &consumer) {
+  TRACE(log);
   try {
     {
       upmq::ScopedReadRWLock readRWLock(_consumersLock);
@@ -262,6 +290,7 @@ void Subscription::stop(const Consumer &consumer) {
   }
 }
 void Subscription::start(const Consumer &consumer) {
+  TRACE(log);
   try {
     upmq::ScopedReadRWLock readRWLock(_consumersLock);
     const Consumer &cons = byClientAndHandlerAndSessionIDs(consumer.clientID, consumer.tcpNum, consumer.session.id);
@@ -273,6 +302,7 @@ void Subscription::start(const Consumer &consumer) {
   start();
 }
 void Subscription::recover() {
+  TRACE(log);
   upmq::ScopedReadRWLock readRWLock(_consumersLock);
   for (const auto &consumer : _consumers) {
     _storage.setMessagesToNotSent(consumer.second);
@@ -280,6 +310,7 @@ void Subscription::recover() {
   }
 }
 void Subscription::recover(const Consumer &consumer) {
+  TRACE(log);
   try {
     upmq::ScopedReadRWLock readRWLock(_consumersLock);
     const Consumer &cons = byClientAndHandlerAndSessionIDs(consumer.clientID, consumer.tcpNum, consumer.session.id);
@@ -290,6 +321,7 @@ void Subscription::recover(const Consumer &consumer) {
   }
 }
 Subscription::ProcessMessageResult Subscription::getNextMessage() {
+  TRACE(log);
   std::string groupID;
   std::string messageID;
   ScopedWriteTryLocker swTryLocker(_consumersLock, false);
@@ -314,12 +346,12 @@ Subscription::ProcessMessageResult Subscription::getNextMessage() {
         sMessage = storage.get(*consumer, useFileLink);
       } catch (Exception &ex) {
         consumer->select->clear();
-        log->error("%s", std::string(consumer->clientID).append(" ! <= [").append(std::string(__FUNCTION__)).append("] ").append(ex.message()));
+        log->error(std::string(consumer->clientID).append(" <= [").append(std::string(__FUNCTION__)).append("] ").append(ex.message()));
         swTryLocker.unlock();
         return ProcessMessageResult::SOME_ERROR;
       } catch (std::exception &stdex) {
         consumer->select->clear();
-        log->error("%s", std::string(consumer->clientID).append(" ! <= [").append(std::string(__FUNCTION__)).append("] ").append(stdex.what()));
+        log->error(std::string(consumer->clientID).append(" <= [").append(std::string(__FUNCTION__)).append("] ").append(stdex.what()));
         swTryLocker.unlock();
         return ProcessMessageResult::SOME_ERROR;
       }
@@ -338,34 +370,33 @@ Subscription::ProcessMessageResult Subscription::getNextMessage() {
           sMessage->serialize();
           AHRegestry::Instance().put(consumer->tcpNum, std::move(sMessage));
           ++_messageCounter;
-          const size_t tid = (size_t)(Poco::Thread::currentTid());
-          log->information("%s",
-                           std::to_string(consumer->tcpNum)
-                               .append(" * <= from subs => ")
-                               .append(_name)
-                               .append(" : consumer [ tid(")
-                               .append(std::to_string(tid))
-                               .append(") ")
-                               .append(std::to_string(consumer->num))
-                               .append(":")
-                               .append(consumer->clientID)
-                               .append(":")
-                               .append((useFileLink ? "use_file_link" : "standard"))
-                               .append("] to client : ")
-                               .append(consumer->objectID)
-                               .append(" >> send message [")
-                               .append(messageID)
-                               .append("] (")
-                               .append(std::to_string(_messageCounter))
-                               .append(")"));
+          INFO(log,
+               std::to_string(consumer->tcpNum)
+                   .append(" <= from subs => ")
+                   .append(_name)
+                   .append(" : consumer [")
+                   .append(std::to_string(consumer->num))
+                   .append(":")
+                   .append(consumer->clientID)
+                   .append(":")
+                   .append((useFileLink ? "use_file_link" : "standard"))
+                   .append("] to client : ")
+                   .append(consumer->objectID)
+                   .append(" >> send message [")
+                   .append(messageID)
+                   .append("] (")
+                   .append(std::to_string(_messageCounter))
+                   .append(")"));
 
-          _destination.decreesNotAcknowledged(consumer->objectID);
           if (consumer->session.type == Proto::Acknowledge::CLIENT_ACKNOWLEDGE || !consumer->select->empty()) {
             EXCHANGE::Instance().addNewMessageEvent(_destination.name());
           }
+          if (consumer->session.type != Proto::Acknowledge::CLIENT_ACKNOWLEDGE) {
+            _destination.decreesNotAcknowledged(consumer->objectID);
+          }
           if (_destination.isQueueFamily() && _destination.consumerMode() == ConsumerMode::ROUND_ROBIN) {
             for (const auto &cn : _consumers) {
-              if (cn.second.objectID != consumer->objectID) {
+              if (cn.second.objectID != consumer->objectID && cn.second.session.type != Proto::Acknowledge::CLIENT_ACKNOWLEDGE) {
                 _destination.decreesNotAcknowledged(cn.second.objectID);
               }
             }
@@ -373,8 +404,8 @@ Subscription::ProcessMessageResult Subscription::getNextMessage() {
           }
 
         } catch (Exception &ex) {
-          log->error("%s", std::to_string(consumer->tcpNum).append(" ! <= [").append(__FUNCTION__).append("] ").append(ex.message()));
-          if (ex.error() == ERROR_CONNECTION) {
+          log->error(std::to_string(consumer->tcpNum).append(" <= [").append(__FUNCTION__).append("] ").append(ex.message()));
+          if (ex.error() == Proto::ERROR_CONNECTION) {
             messageID.clear();
             removeConsumers(consumer->tcpNum);
             if (_consumers.empty()) {
@@ -399,6 +430,7 @@ Subscription::ProcessMessageResult Subscription::getNextMessage() {
   return ProcessMessageResult::CONSUMER_LOCKED;
 }
 void Subscription::changeCurrentConsumerNumber() const {
+  TRACE(log);
   if (_consumers.empty()) {
     _currentConsumerNumber = 0;
   } else {
@@ -408,6 +440,7 @@ void Subscription::changeCurrentConsumerNumber() const {
   EXCHANGE::Instance().addNewMessageEvent(_destination.name());
 }
 const Consumer *Subscription::at(size_t index) const {
+  TRACE(log);
   auto consEnd = _consumers.rend();
   size_t counter = 0;
   const size_t curSize = (_consumers.empty()) ? 0 : (_consumers.size() - 1);
@@ -423,15 +456,17 @@ const Consumer *Subscription::at(size_t index) const {
 }
 Storage &Subscription::storage() const { return _storage; }
 const Consumer &Subscription::byObjectID(const std::string &objectID) {
+  TRACE(log);
   auto consEnd = _consumers.rend();
   for (auto it = _consumers.rbegin(); it != consEnd; ++it) {
     if (it->second.objectID == objectID) {
       return it->second;
     }
   }
-  throw EXCEPTION("consumer not found", objectID, ERROR_UNKNOWN);
+  throw EXCEPTION("consumer not found", objectID, Proto::ERROR_UNKNOWN);
 }
 const Consumer &Subscription::byClientAndHandlerAndSessionIDs(const std::string &clientID, size_t handlerNum, const std::string &sessionID) {
+  TRACE(log);
   std::string tmpClientID = (isBrowser() ? clientID + "-browser" : clientID);
   auto consEnd = _consumers.rend();
   for (auto it = _consumers.rbegin(); it != consEnd; ++it) {
@@ -439,17 +474,20 @@ const Consumer &Subscription::byClientAndHandlerAndSessionIDs(const std::string 
       return it->second;
     }
   }
-  throw EXCEPTION("consumer not found", clientID + " : " + std::to_string(handlerNum), ERROR_UNKNOWN);
+  throw EXCEPTION("consumer not found", clientID + " : " + std::to_string(handlerNum), Proto::ERROR_UNKNOWN);
 }
 Subscription::ConsumersListType::iterator Subscription::eraseConsumer(ConsumersListType::iterator it) {
+  TRACE(log);
+  OnError onError;
+  onError.setError(Proto::ERROR_ON_UNSUBSCRIPTION).setInfo("can't remove consumer");
   std::stringstream sql;
   sql << "delete from " << _consumersT << " where object_id = \'" << it->second.objectID << "\';";
-  TRY_POCO_DATA_EXCEPTION { dbms::Instance().doNow(sql.str()); }
-  CATCH_POCO_DATA_EXCEPTION_PURE_NO_INVALIDEXCEPT_NO_EXCEPT("can't remove consumer", sql.str(), ERROR_ON_UNSUBSCRIPTION)
+  TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
   _destination.remFromNotAck(it->second.objectID);
   return _consumers.erase(it);
 }
 bool Subscription::removeClient(size_t tcpConnectionNum, const std::string &sessionID) {
+  TRACE(log);
   bool result = false;
   bool doStop = false;
   {
@@ -468,6 +506,7 @@ bool Subscription::removeClient(size_t tcpConnectionNum, const std::string &sess
   return result;
 }
 bool Subscription::removeConsumer(size_t tcpConnectionNum, const std::string &sessionID) {
+  TRACE(log);
   bool result = false;
   for (auto it = _consumers.begin(); it != _consumers.end();) {
     if ((it->second.tcpNum == tcpConnectionNum) && (it->second.session.id == sessionID)) {
@@ -482,6 +521,7 @@ bool Subscription::removeConsumer(size_t tcpConnectionNum, const std::string &se
 }
 
 void Subscription::removeConsumers(size_t tcpConnectionNum) {
+  TRACE(log);
   for (auto it = _consumers.begin(); it != _consumers.end();) {
     if (it->second.tcpNum == tcpConnectionNum) {
       _storage.setMessagesToNotSent(it->second);
@@ -492,6 +532,7 @@ void Subscription::removeConsumers(size_t tcpConnectionNum) {
   }
 }
 void Subscription::removeClients() {
+  TRACE(log);
   upmq::ScopedWriteRWLock writeRWLock(_consumersLock);
   for (auto it = _consumers.begin(); it != _consumers.end();) {
     _storage.setMessagesToNotSent(it->second);
@@ -502,27 +543,32 @@ void Subscription::removeClients() {
 bool Subscription::isRunning() const { return *_isRunning; }
 void Subscription::setHasNotify(bool hasNotify) { _isSubsNotify = hasNotify; }
 void Subscription::destroy() {
+  TRACE(log);
   removeClients();
   if (isBrowser() /*|| _destination.isTemporary()*/) {
     _storage.dropTables();
   }
 
+  OnError onError;
+  onError.setError(Proto::ERROR_ON_UNSUBSCRIPTION).setInfo("can't erase subscription");
   std::stringstream sql;
   sql << "drop table if exists " << _consumersT << ";" << non_std_endl;
   storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
   dbSession.beginTX(_id);
-  TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::now; }
-  CATCH_POCO_DATA_EXCEPTION_PURE_NO_INVALIDEXCEPT_NO_EXCEPT("can't erase subscription", sql.str(), ERROR_ON_UNSUBSCRIPTION)
+
+  onError.setSql(sql.str());
+  TRY_EXECUTE_NOEXCEPT(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
+
   if (!isDurable()) {
     sql.str("");
     sql << "delete from " << _destination.subscriptionsT() << " where id = \'" << _id << "\';";
-    TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::now; }
-    CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't erase subscription", sql.str(), ERROR_ON_UNSUBSCRIPTION)
+    onError.setSql(sql.str());
+    TRY_EXECUTE_NOEXCEPT(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
 
-    //    sql.str("");
-    //    sql << "update " << EXCHANGE::Instance().destinationsT() << " set subscriptions_count = " << _destination.subscriptionsTrueCount();
-    //    TRY_POCO_DATA_EXCEPTION { dbSession << sql.str(), Poco::Data::Keywords::now; }
-    //    CATCH_POCO_DATA_EXCEPTION_PURE_NO_EXCEPT("can't update subscriptions count", sql.str(), ERROR_ON_UNSUBSCRIPTION)
+    sql.str("");
+    sql << "update " << EXCHANGE::Instance().destinationsT() << " set subscriptions_count = " << _destination.subscriptionsTrueCount();
+    onError.setInfo("can't update subscriptions count").setSql(sql.str());
+    TRY_EXECUTE_NOEXCEPT(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
   }
   dbSession.commitTX();
   _isDestroyed = true;
@@ -531,20 +577,24 @@ const std::string &Subscription::id() const { return _id; }
 void Subscription::setInited(bool inited) { _isInited = inited; }
 bool Subscription::isInited() const { return _isInited; }
 void Subscription::addSender(const Session &session, const MessageDataContainer &sMessage) {
+  TRACE(log);
   const Proto::Sender &sender = sMessage.sender();
   std::unique_ptr<Sender> pSender = std::make_unique<TopicSender>(sender.sender_id(), session, *this);
   _senders.addSender(std::move(pSender));
 }
 void Subscription::removeSender(const Session &session, const MessageDataContainer &sMessage) {
+  TRACE(log);
   const std::string &senderID = sMessage.unsender().sender_id();
   _senders.closeGroup(senderID, session);
   _senders.removeSender(senderID);
 }
 void Subscription::removeSenders(const Session &session) {
+  TRACE(log);
   _senders.closeGroups(session);
   _senders.removeSenders(session);
 }
 bool Subscription::allConsumersStopped() {
+  TRACE(log);
   size_t stoppedCount = 0;
   for (const auto &item : _consumers) {
     if (!item.second.isRunning) {
@@ -554,6 +604,7 @@ bool Subscription::allConsumersStopped() {
   return (stoppedCount == _consumers.size());
 }
 bool Subscription::consumersWithSelectorsOnly() const {
+  TRACE(log);
   for (const auto &consumer : _consumers) {
     if (consumer.second.selector != nullptr) {
       return !consumer.second.selector->expression().empty();
@@ -564,11 +615,13 @@ bool Subscription::consumersWithSelectorsOnly() const {
 bool Subscription::hasSnapshot() const { return _hasSnapshot; }
 void Subscription::setHasSnapshot(bool hasSnapshot) { _hasSnapshot = hasSnapshot; }
 Subscription::Info Subscription::info() const {
+  TRACE(log);
   upmq::ScopedReadRWLock readRWLock(_consumersLock);
   return Subscription::Info(_id, _name, _type, static_cast<int>(_consumers.size()), _messageCounter, *_isRunning);
 }
 
 void Subscription::resetConsumersCache() {
+  TRACE(log);
   upmq::ScopedReadRWLock readRWLock(_consumersLock);
   for (auto &consumer : _consumers) {
     consumer.second.abort = true;

@@ -123,8 +123,6 @@ void *Atomics::getAndSet(volatile void **target, void *newValue) {
   return (void *)__sync_lock_test_and_set(target, newValue);
 #elif defined(SOLARIS2) && SOLARIS2 >= 10
   return atomic_swap_ptr(target, newValue);
-//#elif defined(__APPLE__)
-//    return atomic_swap_32(target, newValue);
 #else
   void *oldValue;
   PlatformThread::lockMutex(atomicMutex);

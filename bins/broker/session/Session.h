@@ -22,6 +22,7 @@
 #include <string>
 #include <mutex>
 #include <unordered_set>
+#include <Poco/Logger.h>
 #include "CircularQueue.h"
 #include "DBMSConnectionPool.h"
 #include "MessageDataContainer.h"
@@ -79,6 +80,9 @@ class Session {
       upmq::ScopedReadRWLock readRWLock(_rwLock);
       auto it = _currentSessions.find(Poco::Thread::currentTid());
       if (it == _currentSessions.end()) {
+        if (rhs == nullptr) {
+          return true;
+        }
         return false;
       }
       if (rhs == nullptr) {
@@ -114,6 +118,7 @@ class Session {
   mutable std::atomic_int _txCounter;
   mutable CircularQueue<State> _stateStack;
   mutable std::recursive_mutex _rebeginMutex;
+  mutable Poco::Logger *log;
   void rebegin() const;
 
  public:

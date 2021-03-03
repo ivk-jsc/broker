@@ -20,8 +20,6 @@
 #include "AsyncLogger.h"
 #include "Poco/RWLock.h"
 #include "ProtoBuf.h"
-#include "MiscDefines.h"
-#include "fake_cpp14.h"
 
 #include "SQlite/ConnectionPool.h"
 
@@ -38,37 +36,56 @@ namespace broker {
 namespace storage {
 
 DBMSConnectionPool::DBMSConnectionPool() {
+  log = &Poco::Logger::get(CONFIGURATION::Instance().log().name);
+  TRACE(log);
+  OnError onError;
+  onError.setError(Proto::ERROR_STORAGE).setInfo("can't create dbms connect");
   switch (STORAGE_CONFIG.connection.props.dbmsType) {
     case NO_TYPE:
       throw EXCEPTION("invalid DBMS", Configuration::Storage::typeName(STORAGE_CONFIG.connection.props.dbmsType), Proto::ERROR_STORAGE);
     case Postgresql:
 #ifdef HAS_POSTGRESQL
-      TRY_POCO_DATA_EXCEPTION { _impl.reset(new postgresql::ConnectionPool()); }
-      CATCH_POCO_DATA_EXCEPTION_PURE("create dbms connect", "", Proto::ERROR_STORAGE)
+      TRY_EXECUTE(([this]() { _impl.reset(new postgresql::ConnectionPool()); }), onError);
 #endif
       break;
     case SQLite:
       break;
     case SQLiteNative:
-      TRY_POCO_DATA_EXCEPTION { _impl.reset(new sqlite::ConnectionPool()); }
-      CATCH_POCO_DATA_EXCEPTION_PURE("create dbms connect", "", Proto::ERROR_STORAGE)
+      TRY_EXECUTE(([this]() { _impl.reset(new sqlite::ConnectionPool()); }), onError);
       break;
   }
   if (_impl == nullptr) {
     throw EXCEPTION("invalid DBMS", Configuration::Storage::typeName(STORAGE_CONFIG.connection.props.dbmsType), Proto::ERROR_STORAGE);
   }
 }
-DBMSConnectionPool::~DBMSConnectionPool() { _impl.reset(); }
+DBMSConnectionPool::~DBMSConnectionPool() {
+  TRACE(log);
+  _impl.reset();
+}
 
-std::shared_ptr<Poco::Data::Session> DBMSConnectionPool::dbmsConnection() const { return _impl->dbmsConnection(); }
-void DBMSConnectionPool::pushBack(std::shared_ptr<Poco::Data::Session> session) { _impl->pushBack(std::move(session)); }
+std::shared_ptr<Poco::Data::Session> DBMSConnectionPool::dbmsConnection() const {
+  TRACE(log);
+  return _impl->dbmsConnection();
+}
+void DBMSConnectionPool::pushBack(std::shared_ptr<Poco::Data::Session> session) {
+  TRACE(log);
+  _impl->pushBack(std::move(session));
+}
 
 void DBMSConnectionPool::beginTX(Poco::Data::Session &dbSession, const std::string &txName, storage::DBMSSession::TransactionMode mode) {
+  TRACE(log);
   _impl->beginTX(dbSession, txName, mode);
 }
-void DBMSConnectionPool::commitTX(Poco::Data::Session &dbSession, const std::string &txName) { _impl->commitTX(dbSession, txName); }
-void DBMSConnectionPool::rollbackTX(Poco::Data::Session &dbSession, const std::string &txName) { _impl->rollbackTX(dbSession, txName); }
+void DBMSConnectionPool::commitTX(Poco::Data::Session &dbSession, const std::string &txName) {
+  TRACE(log);
+  _impl->commitTX(dbSession, txName);
+}
+void DBMSConnectionPool::rollbackTX(Poco::Data::Session &dbSession, const std::string &txName) {
+  TRACE(log);
+  _impl->rollbackTX(dbSession, txName);
+}
 void DBMSConnectionPool::doNow(const std::string &sql, DBMSConnectionPool::TX tx) {
+  TRACE(log);
   storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
   std::string txName;
   if (tx == TX::USE) {
@@ -95,8 +112,12 @@ void DBMSConnectionPool::doNow(const std::string &sql, DBMSConnectionPool::TX tx
   }
 }
 
-DBMSSession DBMSConnectionPool::dbmsSession() const { return DBMSSession(dbmsConnection(), const_cast<DBMSConnectionPool &>(*this)); }
+DBMSSession DBMSConnectionPool::dbmsSession() const {
+  TRACE(log);
+  return DBMSSession(dbmsConnection(), const_cast<DBMSConnectionPool &>(*this));
+}
 std::unique_ptr<DBMSSession> DBMSConnectionPool::dbmsSessionPtr() const {
+  TRACE(log);
   return std::make_unique<DBMSSession>(dbmsConnection(), const_cast<DBMSConnectionPool &>(*this));
 }
 }  // namespace storage

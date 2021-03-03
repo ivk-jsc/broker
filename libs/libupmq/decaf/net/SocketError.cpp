@@ -16,6 +16,7 @@
 
 #include "SocketError.h"
 #include <decaf/util/Config.h>
+#include <Poco/Platform.h>
 #include <Poco/Net/SocketDefs.h>
 #include <Poco/Error.h>
 

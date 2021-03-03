@@ -309,7 +309,7 @@ void ConnectionImpl::removeDispatcher(ConsumerImpl *consumerImpl) {
   CATCH_ALL_THROW_CMSEXCEPTION
 }
 
-ConsumerImpl *ConnectionImpl::getDispatcher(const string& objectId) {
+ConsumerImpl *ConnectionImpl::getDispatcher(const string &objectId) {
   ConsumerImpl *consumer = nullptr;
   try {
     synchronized(&_lockCommand) { consumer = _dispatchersMap.at(objectId); }
@@ -338,25 +338,16 @@ void ConnectionImpl::onCommand(Pointer<Command> command) {
 
         synchronized(&_lockCommand) {
           // TODO what if ex on no dispatcher
-          ConsumerImpl *dispatcher = getDispatcher(((UPMQCommand *)command.get())->getObjectId());
+          ConsumerImpl *dispatcher = getDispatcher((upmqCommand)->getObjectId());
           if (dispatcher != nullptr) {
-            // Pointer<commands::Message> message = dispatch->getMessage();
-            //// Message == NULL to signal the end of a Queue Browse.
-            // if (message != NULL) {
-            //  message->setReadOnlyBody(true);
-            //  message->setReadOnlyProperties(true);
-            //  message->setRedeliveryCounter(dispatch->getRedeliveryCounter());
-            //  message->setConnection(this);
-            //}
-
-            long long ttl = ((UPMQCommand *)command.get())->_header->mutable_message()->timetolive();
+            Proto::Message *pMessage = (upmqCommand)->_header->mutable_message();
+            long long ttl = pMessage->timetolive();
             if (ttl > 0) {
-              ((UPMQCommand *)command.get())->_header->mutable_message()->set_expiration(ttl + System::currentTimeMillis());
+              pMessage->set_expiration(ttl + System::currentTimeMillis());
             }
 
-            ((UPMQCommand *)command.get())->_consumer = dispatcher;
+            (upmqCommand)->_consumer = dispatcher;
             dispatcher->dispatch(command);
-            // cout << " to consumer " << dispatcher->getObjectId() << endl;
           }
         }
       }

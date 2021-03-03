@@ -436,7 +436,7 @@ void CMSProvider::cleanUpDestination(const std::string &destinationName) {
 
   // lets consume any outstanding messages from previous test runs
   cms::Message *message;
-  while ((message = currentConsumer->receive(3000)) != nullptr) {
+  while ((message = currentConsumer->receive(minTimeout)) != nullptr) {
     delete message;
   }
   if (currentSession->isTransacted()) {

@@ -48,7 +48,7 @@ class CMSListener : public cms::MessageListener, public cms::ExceptionListener {
 
   virtual void reset();
 
-  void asyncWaitForMessages(unsigned int count);
+  void asyncWaitForMessages(unsigned int count, int timeout);
 
   void onException(const cms::CMSException &error) override;
 

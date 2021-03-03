@@ -44,7 +44,7 @@ class UPMQCPP_API SimplePriorityMessageDispatchChannel : public MessageDispatchC
 
   int enqueued;
 
-public:
+ public:
   SimplePriorityMessageDispatchChannel(const SimplePriorityMessageDispatchChannel&) = delete;
   SimplePriorityMessageDispatchChannel& operator=(const SimplePriorityMessageDispatchChannel&) = delete;
 

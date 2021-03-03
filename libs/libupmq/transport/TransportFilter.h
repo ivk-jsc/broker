@@ -107,22 +107,22 @@ class UPMQCPP_API TransportFilter : public Transport, public TransportListener {
  public:
   void oneway(Pointer<Command> command) override {
     checkClosed();
-    next->oneway(command);
+    next->oneway(std::move(command));
   }
 
   Pointer<FutureResponse> asyncRequest(Pointer<Command> command, Pointer<ResponseCallback> responseCallback) override {
     checkClosed();
-    return next->asyncRequest(command, responseCallback);
+    return next->asyncRequest(std::move(command), responseCallback);
   }
 
   Pointer<Response> request(Pointer<Command> command) override {
     checkClosed();
-    return next->request(command);
+    return next->request(std::move(command));
   }
 
   Pointer<Response> request(Pointer<Command> command, unsigned int timeout) override {
     checkClosed();
-    return next->request(command, timeout);
+    return next->request(std::move(command), timeout);
   }
 
   void setTransportListener(TransportListener *newListener) override { this->listener = newListener; }

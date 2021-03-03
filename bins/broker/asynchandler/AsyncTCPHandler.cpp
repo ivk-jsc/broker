@@ -42,7 +42,7 @@ using send_size_t = size_t;
 namespace upmq {
 namespace broker {
 
-AsyncTCPHandler::AsyncTCPHandler(Poco::Net::StreamSocket &socket, upmq::Net::SocketReactor &reactor)
+AsyncTCPHandler::AsyncTCPHandler(Poco::Net::StreamSocket &socket, PNet::SocketReactor &reactor)
     : _socket(socket),
       _reactor(reactor),
       _peerAddress(socket.peerAddress().toString()),
@@ -51,7 +51,7 @@ AsyncTCPHandler::AsyncTCPHandler(Poco::Net::StreamSocket &socket, upmq::Net::Soc
       _shutdownCallBack(*this, &AsyncTCPHandler::onShutdown),
       _wasError(false),
       _needErase(false),
-      _maxNotAcknowledgedMessages(0),
+      _maxNotAcknowledgedMessages(1),
       _connection(nullptr),
       _readComplete(true) {
   AHRegestry::Instance().addAHandler(this);
@@ -62,19 +62,19 @@ AsyncTCPHandler::AsyncTCPHandler(Poco::Net::StreamSocket &socket, upmq::Net::Soc
   _queueWriteNum = queueNum % THREADS_CONFIG.writers;
 
   log = &Poco::Logger::get(CONFIGURATION::Instance().log().name);
-
+  TRACE(log);
   _socket.setNoDelay(true);
   _socket.setBlocking(false);
 
-  log->information("%s",
-                   std::to_string(num)
-                       .append(" * => new asynchandler from ")
-                       .append(_peerAddress)
-                       .append(" q-num : ")
-                       .append(std::to_string(queueNum))
-                       .append(" ( ")
-                       .append(std::to_string(AHRegestry::Instance().size()))
-                       .append(" asynchandlers now )"));
+  INFO(log,
+       std::to_string(num)
+           .append(" => new asynchandler from ")
+           .append(_peerAddress)
+           .append(" q-num : ")
+           .append(std::to_string(queueNum))
+           .append(" ( ")
+           .append(std::to_string(AHRegestry::Instance().size()))
+           .append(" asynchandlers now )"));
 
   _reactor.addEventHandler(_socket, _readableCallBack);
   _reactor.addEventHandler(_socket, _shutdownCallBack);
@@ -82,6 +82,7 @@ AsyncTCPHandler::AsyncTCPHandler(Poco::Net::StreamSocket &socket, upmq::Net::Soc
 }
 
 void AsyncTCPHandler::removeErrorShutdownHandler() {
+  TRACE(log);
   if (_closeEventLock.tryLock(2000)) {
     _reactor.removeEventHandler(_socket, _shutdownCallBack);
     _reactor.removeEventHandler(_socket, _errorCallBack);
@@ -90,6 +91,7 @@ void AsyncTCPHandler::removeErrorShutdownHandler() {
 }
 
 void AsyncTCPHandler::removeConsumers() {
+  TRACE(log);
   for (const auto &dest : _subscriptions) {
     for (const auto &subs : dest.second) {
       try {
@@ -101,6 +103,7 @@ void AsyncTCPHandler::removeConsumers() {
 }
 
 AsyncTCPHandler::~AsyncTCPHandler() {
+  TRACE(log);
   try {
     while (!_readComplete) {
       Poco::Thread::sleep(100);
@@ -118,13 +121,13 @@ AsyncTCPHandler::~AsyncTCPHandler() {
     EXCHANGE::Instance().dropOwnedDestination(_clientID);
 
   } catch (std::exception &ex) {
-    log->critical("%s", std::to_string(num).append(" ! => ").append(std::string(ex.what())));
+    log->critical(std::to_string(num).append(" => ").append(std::string(ex.what())));
   }
 
-  log->information("%s", std::to_string(num).append(" * => destruct asynchandler from ").append(_peerAddress));
+  INFO(log, std::to_string(num).append(" => destruct asynchandler from ").append(_peerAddress));
 }
 
-void AsyncTCPHandler::onReadable(const AutoPtr<upmq::Net::ReadableNotification> &pNf) {
+void AsyncTCPHandler::onReadable(const AutoPtr<PNet::ReadableNotification> &pNf) {
   if (_needErase && !_readComplete) {
     _readComplete = true;
     return;
@@ -143,27 +146,26 @@ void AsyncTCPHandler::onReadable(const AutoPtr<upmq::Net::ReadableNotification> 
   }
 }
 void AsyncTCPHandler::put(std::shared_ptr<MessageDataContainer> sMessage) {
-  do {
-    if (_needErase) {
-      return;
-    }
-  } while (!outputQueue.enqueue(std::move(sMessage)));
+  outputQueue.enqueue(std::move(sMessage));
   BROKER::Instance().putWritable(_queueWriteNum, num);
 }
 
-void AsyncTCPHandler::onShutdown(const AutoPtr<upmq::Net::ShutdownNotification> &pNf) {
+void AsyncTCPHandler::onShutdown(const AutoPtr<PNet::ShutdownNotification> &pNf) {
+  TRACE(log);
   UNUSED_VAR(pNf);
-  log->notice("%s", std::to_string(num).append(" ! => shutdown : ").append(_peerAddress));
+  log->warning(std::to_string(num).append(" => shutdown : ").append(_peerAddress));
   emitCloseEvent();
 }
 
-void AsyncTCPHandler::onError(const AutoPtr<upmq::Net::ErrorNotification> &pNf) {
+void AsyncTCPHandler::onError(const AutoPtr<PNet::ErrorNotification> &pNf) {
+  TRACE(log);
   UNUSED_VAR(pNf);
-  log->error("%s", std::to_string(num).append(" ! => network error : ").append(_peerAddress));
+  log->error(std::to_string(num).append(" => network error : ").append(_peerAddress));
   emitCloseEvent(true);
 }
 
 AsyncTCPHandler::DataStatus AsyncTCPHandler::sendHeaderAndData(MessageDataContainer &sMessage) {
+  TRACE(log);
   uint32_t headerSize = static_cast<uint32_t>(sMessage.header.size());
   uint64_t dataSize = sMessage.dataSize();
 
@@ -207,7 +209,7 @@ AsyncTCPHandler::DataStatus AsyncTCPHandler::sendHeaderAndData(MessageDataContai
     if (!sendfile()) {
       return DataStatus::AS_ERROR;
     }
-#else  // !ENABLE_USING_SENDFILE
+#else   // !ENABLE_USING_SENDFILE
     sent = 0;
     do {
       int tmpDataSize = ((dataSize - sent) < BUFFER_SIZE) ? static_cast<int>(dataSize - sent) : BUFFER_SIZE;
@@ -240,6 +242,7 @@ void AsyncTCPHandler::emitCloseEvent(bool withError) {
   if (_needErase) {
     return;
   }
+  TRACE(log);
   if (_closeEventLock.tryLock()) {
     try {
       if (_needErase) {
@@ -271,6 +274,7 @@ void AsyncTCPHandler::setConnection(Connection *connection) const { _connection 
 Connection *AsyncTCPHandler::connection() const { return _connection; }
 int AsyncTCPHandler::maxNotAcknowledgedMessages() const { return _maxNotAcknowledgedMessages; }
 void AsyncTCPHandler::storeClientInfo(const MessageDataContainer &sMessage) {
+  TRACE(log);
   const Proto::Connect &connect = sMessage.connect();
   const Proto::ClientVersion &version = connect.client_version();
   clientVersion.vendorId = version.vendor_id();
@@ -291,6 +295,7 @@ void AsyncTCPHandler::storeClientInfo(const MessageDataContainer &sMessage) {
   setClientID(connect.client_id());
 }
 void AsyncTCPHandler::initSubscription(const MessageDataContainer &sMessage) const {
+  TRACE(log);
   const Proto::Subscription &subscription = sMessage.subscription();
   std::string destinationID = upmq::broker::Exchange::mainDestinationPath(subscription.destination_uri());
   auto subs = _subscriptions.find(destinationID);
@@ -301,6 +306,7 @@ void AsyncTCPHandler::initSubscription(const MessageDataContainer &sMessage) con
   subs->second.insert(subscription.subscription_name());
 }
 void AsyncTCPHandler::eraseSubscription(const MessageDataContainer &sMessage) const {
+  TRACE(log);
   const Proto::Unsubscription &unsubscription = sMessage.unsubscription();
   std::string destinationID = upmq::broker::Exchange::mainDestinationPath(unsubscription.destination_uri());
   auto subs = _subscriptions.find(destinationID);
@@ -310,10 +316,12 @@ void AsyncTCPHandler::eraseSubscription(const MessageDataContainer &sMessage) co
 }
 bool AsyncTCPHandler::needErase() const { return _needErase; }
 void AsyncTCPHandler::setNeedErase() {
+  TRACE(log);
   _needErase = true;
   AHRegestry::Instance().needToErase(num);
 }
 AsyncTCPHandler::DataStatus AsyncTCPHandler::fillHeaderBodyLens() {
+  TRACE(log);
   headerBodyLens.headerLen = 0;
   headerBodyLens.bodyLen = 0;
 
@@ -336,9 +344,6 @@ AsyncTCPHandler::DataStatus AsyncTCPHandler::fillHeaderBodyLens() {
       }
       return DataStatus::AS_ERROR;
     }
-    if (n == 0) {
-      break;
-    }
     tmpDtSize += static_cast<send_size_t>(n);
   } while (tmpDtSize != sizeof(hbLens));
 
@@ -356,6 +361,7 @@ AsyncTCPHandler::DataStatus AsyncTCPHandler::fillHeaderBodyLens() {
   return DataStatus::OK;
 }
 AsyncTCPHandler::DataStatus AsyncTCPHandler::fillHeader(MessageDataContainer &sMessage) {
+  TRACE(log);
   ptrdiff_t n = 0;
   do {
     send_size_t tmpHeaderSize =
@@ -381,6 +387,7 @@ AsyncTCPHandler::DataStatus AsyncTCPHandler::fillHeader(MessageDataContainer &sM
   return DataStatus::OK;
 }
 AsyncTCPHandler::DataStatus AsyncTCPHandler::fillBody(MessageDataContainer &sMessage) {
+  TRACE(log);
   ptrdiff_t n = 0;
   sMessage.initPersistentDataFileLink();
   do {
@@ -408,6 +415,7 @@ AsyncTCPHandler::DataStatus AsyncTCPHandler::fillBody(MessageDataContainer &sMes
   return DataStatus::OK;
 }
 AsyncTCPHandler::DataStatus AsyncTCPHandler::tryMoveBodyByLink(MessageDataContainer &sMessage) {
+  TRACE(log);
   auto &message = sMessage.message();
   auto &property = message.property();
   auto it = property.find(s2s::proto::upmq_data_link);

@@ -33,11 +33,7 @@
 
 #define MakeStringify(name) #name
 
-#define DT_FORMAT "%Y-%m-%d %H:%M:%s"
 #define DT_FORMAT_SIMPLE "%Y-%m-%d %H:%M:%S"
-#ifdef _WIN32
-#define atoll _atoi64
-#endif
 
 static const std::string emptyString;
 
@@ -48,5 +44,11 @@ static const std::string emptyString;
 #define ANY_PREFIX "*"
 
 #define non_std_endl '\n'
+
+#ifdef _DEBUG
+#define DEFAULT_LOG_LEVEL 7
+#else
+#define DEFAULT_LOG_LEVEL 4
+#endif
 
 #endif  // __BROKER_DEFINES_H__

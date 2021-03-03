@@ -18,8 +18,7 @@
 #include <Poco/String.h>
 #include <Poco/StringTokenizer.h>
 #include "Defines.h"
-#include "MiscDefines.h"
-#include "fake_cpp14.h"
+#include "Exception.h"
 #include <Poco/URI.h>
 namespace upmq {
 namespace broker {
@@ -41,7 +40,7 @@ std::vector<std::string> split(const std::string &s, char delim) {
 std::unique_ptr<Destination> DestinationFactory::createDestination(const Exchange &exchange, const std::string &uri) {
   switch (destinationType(uri)) {
     case Destination::Type::NONE:
-      throw EXCEPTION("invalid destination uri", uri, ERROR_DESTINATION);
+      throw EXCEPTION("invalid destination uri", uri, Proto::ERROR_DESTINATION);
     case Destination::Type::QUEUE:
       return std::make_unique<QueueDestination>(exchange, uri);
     case Destination::Type::TOPIC:

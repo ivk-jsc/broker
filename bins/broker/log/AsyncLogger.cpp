@@ -17,13 +17,14 @@
 #include "AsyncLogger.h"
 #include <iostream>
 #include <Poco/File.h>
+#include <Poco/String.h>
 #include "Defines.h"
 #include <Poco/Util/Application.h>
 #include <poco_pointers_helper.h>
 namespace upmq {
 namespace broker {
 
-constexpr char DEFAULT_PATTERN[] = "%Y-%m-%d %H:%M:%S:%i %t";
+constexpr char DEFAULT_PATTERN[] = "%Y-%m-%d %H:%M:%S:%i #%q [%I %T] - %t";
 
 AutoPtr<FormattingChannel> AsyncLogger::createFormatter(const std::string &name, bool interactive) {
 #if !defined(WIN32) && !defined(WIN32)
@@ -54,7 +55,7 @@ AutoPtr<FormattingChannel> AsyncLogger::createFormatter(const std::string &name,
   AutoPtr<FileChannel> fileChannel = Poco::MakeAuto<FileChannel>(name + ".log");
   AutoPtr<Poco::AsyncChannel> fileAsyncChannel = Poco::MakeAuto<Poco::AsyncChannel>(fileChannel);
 
-  fileChannel->setProperty("rotation", "10 M");
+  fileChannel->setProperty("rotation", "100 M");
   fileChannel->setProperty("times", "local");
   fileAsyncChannel->setProperty("priority", "lowest");
   splitter->addChannel(fileAsyncChannel);
@@ -79,8 +80,8 @@ Logger &AsyncLogger::add(const std::string &name, const std::string &subdir) {
 #else
     Poco::Logger *
 #endif
-        loggetPtr = Logger::has(name);
-    if (loggetPtr == emptyLoggerPtr) {
+        loggerPtr = Logger::has(name);
+    if (loggerPtr == emptyLoggerPtr) {
       Poco::Path dirpath;
       dirpath.parse(subdir);
       if (isInteractive || !Poco::Util::Application::instance().config().getBool("application.runAsDaemon", false)) {
@@ -94,7 +95,7 @@ Logger &AsyncLogger::add(const std::string &name, const std::string &subdir) {
       _formattingChannel = createFormatter(dirpath.toString(), isInteractive);
       return Logger::create(name, _formattingChannel, logPriority);
     }
-    return *loggetPtr;
+    return *loggerPtr;
   } catch (Poco::Exception &ex) {
     std::cerr << ex.displayText() << non_std_endl;
   }
@@ -122,9 +123,23 @@ void AsyncLogger::remove(const std::string &name, const std::string &subdir) {
 }
 
 bool AsyncLogger::exists(const std::string &name) {
-  Poco::AutoPtr<Poco::Logger> loggetPtr = Logger::has(name);
-  return loggetPtr.isNull();
+  Poco::AutoPtr<Poco::Logger> loggerPtr = Logger::has(name);
+  return loggerPtr.isNull();
 }
 
+thread_local std::atomic_int64_t Trace::_counter = {0};
+Trace::Trace(Poco::Logger *l, std::string func)
+    : _log(l), _func(Poco::replace(func, "upmq::broker::", "")), _localCounter(_counter.load()), _beg(std::string(_localCounter, '>')), _end(_beg) {
+  _counter++;
+  _log->trace("%sbeg %s", _beg.value(), _func.value());
+}
+Trace::~Trace() noexcept {
+  if (_log) {
+    _log->trace("%send %s", _end.value(), _func.value());
+    _counter--;
+  }
+}
+Trace::Trace(Trace &&o) noexcept
+    : _log(o._log), _func(std::move(o._func)), _localCounter(o._localCounter), _beg(std::move(o._beg)), _end(std::move(o._end)) {}
 }  // namespace broker
 }  // namespace upmq

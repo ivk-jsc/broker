@@ -29,13 +29,14 @@ namespace Data = SQL;
 #include <Poco/Tuple.h>
 #include <string>
 #include "MessageDefines.h"
+#include "MessageInfo.h"
 
 namespace upmq {
 namespace broker {
 
 class MessagePropertyInfo {
  public:
-  enum class Field : int {
+  enum Field {
     message_id = 0,
     property_name,  // 1
     property_type,  // 2
@@ -52,34 +53,33 @@ class MessagePropertyInfo {
     value_object,   // 13
     is_null
   };
+  template <MessagePropertyInfo::Field field>
   struct FieldInfo {
-    constexpr explicit FieldInfo(Field ec_) : ec(ec_), position(static_cast<int>(ec)) {}
-    const Field ec;
-    const int position;
+    static constexpr int POSITION = static_cast<int>(field);
+    static constexpr Field TYPE = field;
   };
 
-  typedef Poco::Tuple<std::string,                       // messageID;
-                      std::string,                       // property_name;
-                      int,                               // property_type;
-                      Poco::Nullable<std::string>,       // value_string;
-                      Poco::Nullable<int>,               // value_char;
-                      Poco::Nullable<bool>,              // value_bool;
-                      Poco::Nullable<int>,               // value_byte;
-                      Poco::Nullable<int>,               // value_short;
-                      Poco::Nullable<int>,               // value_int;
-                      Poco::Nullable<Poco::Int64>,       // value_long;
-                      Poco::Nullable<float>,             // value_float;
-                      Poco::Nullable<double>,            // value_double;
-                      Poco::Nullable<Poco::Data::BLOB>,  // value_bytes;
-                      Poco::Nullable<Poco::Data::BLOB>,  // value_object;
-                      bool                               // is_null;
-                      >
-      MsgTuple;
+  using MsgTuple = Poco::Tuple<std::string,                       // messageID;
+                               std::string,                       // property_name;
+                               int,                               // property_type;
+                               Poco::Nullable<std::string>,       // value_string;
+                               Poco::Nullable<int>,               // value_char;
+                               Poco::Nullable<bool>,              // value_bool;
+                               Poco::Nullable<int>,               // value_byte;
+                               Poco::Nullable<int>,               // value_short;
+                               Poco::Nullable<int>,               // value_int;
+                               Poco::Nullable<Poco::Int64>,       // value_long;
+                               Poco::Nullable<float>,             // value_float;
+                               Poco::Nullable<double>,            // value_double;
+                               Poco::Nullable<Poco::Data::BLOB>,  // value_bytes;
+                               Poco::Nullable<Poco::Data::BLOB>,  // value_object;
+                               bool                               // is_null;
+                               >;
 
   MsgTuple tuple{};
 
   explicit MessagePropertyInfo();
-  explicit MessagePropertyInfo(MsgTuple tuple_);
+  explicit MessagePropertyInfo(MsgTuple msgTuple);
   explicit MessagePropertyInfo(const std::string &messageID);
   MessagePropertyInfo(const std::string &messageID,
                       const std::string &propertyName,
@@ -112,43 +112,50 @@ class MessagePropertyInfo {
   bool valueNull() const;
   const Poco::Data::BLOB &valueBytes() const;
   const Poco::Data::BLOB &valueObject() const;
+  void setMessageID(const std::string &value);
+  void setPropertyName(const std::string &value);
+  void setPropertyType(int value);
+  void setValueString(const std::string &value);
+  void setValueChar(int value);
+  void setValueBool(bool value);
+  void setValueByte(int value);
+  void setValueShort(int value);
+  void setValueInt(int value);
+  void setValueLong(int64_t value);
+  void setValueFloat(float value);
+  void setValueDouble(double value);
+  void setValueNull(bool value);
+  void setValueBytes(const Poco::Data::BLOB &value);
+  void setValueObject(const Poco::Data::BLOB &value);
   bool isNull() const;
-  FieldInfo getNotNullValInfo() const;
+  Field getNotNullValInfo() const;
+  std::string dump() const;
+  static std::string dump(const MsgTuple &tuple);
 };
 }  // namespace broker
 }  // namespace upmq
 
 namespace message {
-static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_prop_message_id =
-    upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::message_id);
-static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_prop_name =
-    upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::property_name);
-static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_prop_type =
-    upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::property_type);
-static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_val_string =
-    upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::value_string);
-static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_val_char =
-    upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::value_char);
-static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_val_bool =
-    upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::value_bool);
-static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_val_byte =
-    upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::value_byte);
-static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_val_short =
-    upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::value_short);
-static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_val_int =
-    upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::value_int);
-static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_val_long =
-    upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::value_long);
-static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_val_float =
-    upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::value_float);
-static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_val_double =
-    upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::value_double);
-static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_val_bytes =
-    upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::value_bytes);
-static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_val_object =
-    upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::value_object);
-static constexpr upmq::broker::MessagePropertyInfo::FieldInfo field_is_null =
-    upmq::broker::MessagePropertyInfo::FieldInfo(upmq::broker::MessagePropertyInfo::Field::is_null);
+namespace property {
+using upmq::broker::MessagePropertyInfo;
+using MessageId = MessagePropertyInfo::FieldInfo<MessagePropertyInfo::message_id>;
+using Name = MessagePropertyInfo::FieldInfo<MessagePropertyInfo::property_name>;
+using Type = MessagePropertyInfo::FieldInfo<MessagePropertyInfo::property_type>;
+namespace value {
+using String = MessagePropertyInfo::FieldInfo<MessagePropertyInfo::value_string>;
+using Char = MessagePropertyInfo::FieldInfo<MessagePropertyInfo::value_char>;
+using Bool = MessagePropertyInfo::FieldInfo<MessagePropertyInfo::value_bool>;
+using Byte = MessagePropertyInfo::FieldInfo<MessagePropertyInfo::value_byte>;
+using Short = MessagePropertyInfo::FieldInfo<MessagePropertyInfo::value_short>;
+using Int = MessagePropertyInfo::FieldInfo<MessagePropertyInfo::value_int>;
+using Long = MessagePropertyInfo::FieldInfo<MessagePropertyInfo::value_long>;
+using Float = MessagePropertyInfo::FieldInfo<MessagePropertyInfo::value_float>;
+using Double = MessagePropertyInfo::FieldInfo<MessagePropertyInfo::value_double>;
+using Bytes = MessagePropertyInfo::FieldInfo<MessagePropertyInfo::value_bytes>;
+using Object = MessagePropertyInfo::FieldInfo<MessagePropertyInfo::value_object>;
+using IsNull = MessagePropertyInfo::FieldInfo<MessagePropertyInfo::is_null>;
+}  // namespace value
+}  // namespace property
 }  // namespace message
 
 #endif  // BROKER_MESSAGEPROPERTYINFO_H

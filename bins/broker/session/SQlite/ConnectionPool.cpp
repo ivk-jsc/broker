@@ -25,13 +25,16 @@
 #include "Poco/Data/SQLite/Connector.h"
 #include "Poco/Data/SQLite/SQLiteException.h"
 #include "Poco/Data/SQLite/Utility.h"
-#include "sqlite3.h"
+#include "fake_sqlite.h"
 #endif
-#include "MiscDefines.h"
 #include <Poco/Path.h>
 #include <Poco/File.h>
 #include <Poco/RWLock.h>
 #include "Configuration.h"
+
+#ifdef SQLITE_TRACE
+#include "AsyncLogger.h"
+#endif
 
 static constexpr char SQLITE_CONNECTOR_STR[] = "SQLite";
 
@@ -54,35 +57,22 @@ ConnectionPool::ConnectionPool()
     dbmsFilePath.append(dbmsString);
     dbmsString = dbmsFilePath.toString();
   }
+
   PDSQLITE::Connector::registerConnector();
+  PDSQLITE::Utility::setThreadMode(PDSQLITE::Utility::THREAD_MODE_MULTI);
   PDSQLITE::Connector::enableSharedCache();
 
   if (dbmsString.find(":memory:") != std::string::npos) {
+    if (dbmsString == ":memory:") {
+      dbmsString = "file::memory:?cache=shared";
+    }
     _inMemory = true;
     count = 0;
-    auto tempSession = makeSession();
-    initDB(*tempSession);
-  } else {
-    for (int i = 0; i < count; i++) {
-      std::shared_ptr<Poco::Data::Session> session = makeSession();
-      if (i == 0) {
-        initDB(*session);
-      }
-      sessions.enqueue(session);
-    }
   }
+  auto tempSession = makeSession();
+  initDB(*tempSession);
 }
-ConnectionPool::~ConnectionPool() {
-  if (dbmsString == ":memory:") {
-    _memorySession.clear();
-  } else {
-    std::shared_ptr<Poco::Data::Session> session;
-    for (int i = 0; i < count; i++) {
-      sessions.try_dequeue(session);
-      session.reset();
-    }
-  }
-}
+ConnectionPool::~ConnectionPool() { _memorySession.clear(); }
 void ConnectionPool::initDB(Poco::Data::Session &dbSession) {
   std::vector<std::string> drops;
   dbSession << "SELECT 'drop table if exists \"' || tbl_name || '\"' from "
@@ -93,6 +83,17 @@ void ConnectionPool::initDB(Poco::Data::Session &dbSession) {
   for (const auto &drop : drops) {
     dbSession << drop, Poco::Data::Keywords::now;
   }
+}
+std::shared_ptr<Poco::Data::Session> ConnectionPool::makeSession() const {
+  std::shared_ptr<Poco::Data::Session> session = std::make_shared<Poco::Data::Session>(SQLITE_CONNECTOR_STR, dbmsString);
+
+  *session << "PRAGMA case_sensitive_like = True;", Poco::Data::Keywords::now;
+  *session << "PRAGMA synchronous = " << (STORAGE_CONFIG.connection.props.useSync ? "ON" : "OFF") << ";", Poco::Data::Keywords::now;
+
+  *session << "PRAGMA journal_mode = " << STORAGE_CONFIG.connection.props.journalMode << " ;", Poco::Data::Keywords::now;
+
+  *session << "PRAGMA secure_delete = FALSE;", Poco::Data::Keywords::now;
+
 #ifdef SQLITE_TRACE
   unsigned uMask = SQLITE_TRACE_PROFILE;
   ASYNCLOGGER::Instance().add("sqlite_trace");
@@ -103,57 +104,32 @@ void ConnectionPool::initDB(Poco::Data::Session &dbSession) {
       double duration = dur / 1000000.0;
       std::string sql = std::string(sqlite3_sql(pStmt));
       Poco::Logger::get("sqlite_trace").trace("[%f msec] -> %s", duration, sql);
-      if (sql.find("begin") == 0) {
+      if (sql.find("begin") != std::string::npos) {
         ((Poco::Timestamp *)ctx)->update();
       } else if (sql.find("commit") == 0 || sql.find("rollback") == 0) {
         auto diff = ((Poco::Timestamp *)ctx)->elapsed();
-        Poco::Logger::get("sqlite_trace").trace("[%ld transaction duration]", diff);
+        Poco::Logger::get("sqlite_trace").trace("[%Ld transaction duration]", diff);
+        ((Poco::Timestamp *)ctx)->update();
       }
     }
     return 0;
   };
-  sqlite3_trace_v2(Poco::Data::SQLite::Utility::dbHandle(dbSession), uMask, callBack, &_lastBegin);
+  sqlite3_trace_v2(Poco::Data::SQLite::Utility::dbHandle(*session), uMask, callBack, &_lastBegin);
 #endif
-}
-std::shared_ptr<Poco::Data::Session> ConnectionPool::makeSession() const {
-  std::shared_ptr<Poco::Data::Session> session = std::make_shared<Poco::Data::Session>(SQLITE_CONNECTOR_STR, dbmsString);
-
-  *session << "PRAGMA case_sensitive_like = True;", Poco::Data::Keywords::now;
-  *session << "PRAGMA synchronous = " << (STORAGE_CONFIG.connection.props.useSync ? "ON" : "OFF") << ";", Poco::Data::Keywords::now;
-
-  *session << "PRAGMA journal_mode = " << STORAGE_CONFIG.connection.props.journalMode << " ;", Poco::Data::Keywords::now;
-
-  *session << "PRAGMA locking_mode = EXCLUSIVE;", Poco::Data::Keywords::now;
-  *session << "PRAGMA secure_delete = FALSE;", Poco::Data::Keywords::now;
 
   return session;
 }
 std::shared_ptr<Poco::Data::Session> ConnectionPool::dbmsConnection() const {
-  switch (static_cast<int>(_inMemory)) {
-    case 1: {
-      auto tid = reinterpret_cast<Poco::UInt64>(Poco::Thread::currentTid());
-      auto sess = _memorySession.find(tid);
-      if (!sess.hasValue()) {
-        _memorySession.emplace(Poco::UInt64(tid), makeSession());
-        sess = _memorySession.find(tid);
-      }
-      return *sess;
-    }
-    default: {
-      std::shared_ptr<Poco::Data::Session> session;
-      do {
-        sessions.try_dequeue(session);
-      } while (session == nullptr);
-      return session;
-    }
+  auto tid = reinterpret_cast<Poco::UInt64>(Poco::Thread::currentTid());
+  auto sess = _memorySession.find(tid);
+  if (!sess.hasValue()) {
+    _memorySession.emplace(Poco::UInt64(tid), makeSession());
+    sess = _memorySession.find(tid);
   }
+  return *sess;
 }
 void ConnectionPool::pushBack(std::shared_ptr<Poco::Data::Session> session) {
-  if (!_inMemory) {
-    if (session) {
-      sessions.enqueue(std::move(session));
-    }
-  }
+  // Do nothing
 }
 void ConnectionPool::beginTX(Poco::Data::Session &dbSession, const std::string &txName, storage::DBMSSession::TransactionMode mode) {
   bool locked;

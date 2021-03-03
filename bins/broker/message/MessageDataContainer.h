@@ -26,8 +26,7 @@
 #include "MessageInfo.h"
 #include "ProtoBuf.h"
 #include "StorageDefines.h"
-
-using namespace Proto;
+#include "PropertyHandler.h"
 
 namespace upmq {
 namespace broker {
@@ -36,8 +35,8 @@ class MessageDataContainer {
  public:
   MessageDataContainer();
   explicit MessageDataContainer(std::string path);
-  explicit MessageDataContainer(ProtoMessage *headerProtoMessage);
-  MessageDataContainer(ProtoMessage *headerProtoMessage, Body *dataBody);
+  explicit MessageDataContainer(Proto::ProtoMessage *headerProtoMessage);
+  MessageDataContainer(Proto::ProtoMessage *headerProtoMessage, Proto::Body *dataBody);
   MessageDataContainer(std::string path, std::string _header, std::string _data, bool useFileLink);
   MessageDataContainer &operator=(const MessageDataContainer &o) = delete;
   MessageDataContainer &operator=(MessageDataContainer &&o) = default;
@@ -122,9 +121,9 @@ class MessageDataContainer {
   void setDeliveryCount(int count);
   void debugPrintHeader() const;
   std::string typeName() const;
-  std::string header = "";
-  mutable std::string data = "";
-  std::string clientID = "";
+  std::string header;
+  mutable std::string data;
+  std::string clientID;
   size_t handlerNum = 0;
   void reparseHeader();
   void resetSessionId(const std::string &sessionID);
@@ -143,13 +142,17 @@ class MessageDataContainer {
   void moveDataTo(const std::string &uri) const;
   std::fstream &fileStream();
   bool toDisconnect = false;
+  void processProperties(upmq::broker::PropertyHandler &handler, const std::string &identifier) const;
+  int64_t created() const;
+  void setCreated(int64_t created);
 
  private:
   std::string _path;
-  mutable std::unique_ptr<ProtoMessage> _headerMessage;
-  mutable std::unique_ptr<Body> _dataMessage;
+  mutable std::unique_ptr<Proto::ProtoMessage> _headerMessage;
+  mutable std::unique_ptr<Proto::Body> _dataMessage;
   bool _withFile = false;
   std::unique_ptr<std::fstream> _dataFileStream;
+  int64_t _created;
   void initHeader() const;
   void newMessage(const std::string &objectID);
   void initDataFileStream();

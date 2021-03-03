@@ -8,7 +8,6 @@ add_executable(broker)
 
 include_directories(${SHARE_DIR})
 include_directories(${EXTERNAL_DIR}/concurrent_queue)
-include_directories(${EXTERNAL_DIR}/optional-lite)
 
 include_directories(app)
 include_directories(server)
@@ -34,7 +33,6 @@ include_directories(net)
 set(SOURCE_FILES
     version/About.cpp
     version/About.h
-    defines/MiscDefines.h
     defines/Defines.h
     defines/Exception.h
     defines/Exception.cpp
@@ -46,8 +44,6 @@ set(SOURCE_FILES
     log/AsyncLogger.cpp
     message/MessageDataContainer.h
     message/MessageDataContainer.cpp
-    message/MappedDBMessage.cpp
-    message/MappedDBMessage.h
     selector/Selector.cpp
     selector/Selector.h
     selector/SelectorExpression.cpp

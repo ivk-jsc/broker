@@ -21,10 +21,20 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <functional>
 #include <Poco/Error.h>
+#include <Poco/Nullable.h>
+#include <fake_cpp14.h>
+#include <unordered_map>
 #include "Defines.h"
 
-#include <unordered_map>
+#if POCO_VERSION_MAJOR > 1
+#include <Poco/SQL/SQLite/SQLiteException.h>
+namespace PDSQLITE = Poco::SQL::SQLite;
+#else
+#include <Poco/Data/SQLite/SQLiteException.h>
+namespace PDSQLITE = Poco::Data::SQLite;
+#endif
 
 namespace upmq {
 namespace broker {
@@ -37,12 +47,12 @@ class Exception : public std::exception {
   /// \param err - error number, for example, errno
   /// \param file - file name, use __FILE__ macro
   /// \param line - line number, use __LINE__ macro
-  Exception(const std::string& info, const std::string& errDescription, int err, const std::string& file, int line);
-  Exception(const Exception&);
-  Exception(Exception&&) noexcept;
-  Exception& operator=(const Exception&);
-  Exception& operator=(Exception&&) noexcept;
-  const char* what() const noexcept override;
+  Exception(const std::string &info, const std::string &errDescription, int err, const std::string &file, int line);
+  Exception(const Exception &);
+  Exception(Exception &&) noexcept;
+  Exception &operator=(const Exception &);
+  Exception &operator=(Exception &&) noexcept;
+  const char *what() const noexcept override;
   std::string message() const;
   int error() const;
   ~Exception() noexcept override;
@@ -51,11 +61,46 @@ class Exception : public std::exception {
   std::string _message{};
   int _error{0};
 };
-}  // namespace broker
-}  // namespace upmq
 
 #define EXCEPTION(_info, _errDescription, _err) \
   upmq::broker::Exception(                      \
       _info, std::string(_errDescription).append(" native(").append(std::to_string(Poco::Error::last())).append(")"), _err, __FILE__, __LINE__)
+
+class OnError {
+  std::string _info;
+  std::string _sql;
+  std::string _errorDescription;
+  int _error{0};
+  Poco::Nullable<std::function<void()>> _expression{};
+  std::string _file;
+  int _line{0};
+
+ public:
+  enum Mode { WITH_THROW, NO_THROW };
+  OnError() = default;
+  OnError &setInfo(std::string info);
+  OnError &setError(int error);
+  OnError &setSql(std::string sql);
+  OnError &setErrorDescription(std::string description);
+  OnError &setExpression(const std::function<void()> &expression);
+  OnError &setLine(int line);
+  OnError &setFile(std::string file);
+  const std::string &info() const;
+  const std::string &sql() const;
+  const std::string &errorDescription() const;
+  int error() const;
+  const Poco::Nullable<std::function<void()>> &expression() const;
+  const std::string &file() const;
+  int line() const;
+
+  void make(OnError::Mode mode) const;
+};
+
+void tryExecute(const std::function<void()> &call, OnError &onError, std::string file, int line, OnError::Mode mode = OnError::WITH_THROW);
+}  // namespace broker
+}  // namespace upmq
+
+#define TRY_EXECUTE(__call__, __onError__) upmq::broker::tryExecute((__call__), (__onError__), __FILE__, __LINE__)
+#define TRY_EXECUTE_NOEXCEPT(__call__, __onError__) upmq::broker::tryExecute((__call__), (__onError__), __FILE__, __LINE__, OnError::NO_THROW)
 
 #endif  // __UPMQ_EXCEPTION_H__

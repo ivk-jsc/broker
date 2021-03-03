@@ -19,12 +19,15 @@
 
 #include "Destination.h"
 #include "SenderList.h"
+#include <Poco/Logger.h>
+
 namespace upmq {
 namespace broker {
 
 class QueueDestination : public Destination {
  private:
   SenderList _senders;
+  mutable Poco::Logger *log;
 
  public:
   QueueDestination(const Exchange &exchange, const std::string &uri, Destination::Type type = Destination::Type::QUEUE);

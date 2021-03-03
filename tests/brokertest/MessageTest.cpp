@@ -20,13 +20,12 @@
 #include "cms/Utils.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-void MessageTest::SetUp() {
-  cmsProvider = std::make_unique<CMSProvider>(getBrokerURL());
-  cmsProvider->cleanUpDestination();
-}
+void MessageTest::SetUp() { cmsProvider = std::make_unique<CMSProvider>(getBrokerURL()); }
 
 ////////////////////////////////////////////////////////////////////////////////
 TEST_F(MessageTest, testSendRecvCloneProperty) {
+  cmsProvider->cleanUpDestination();
+
   // Create CMS Object for Comms
   cms::Session *session(cmsProvider->getSession());
   cms::MessageConsumer *consumer = cmsProvider->getConsumer();
@@ -53,7 +52,7 @@ TEST_F(MessageTest, testSendRecvCloneProperty) {
   // Send message
   producer->send(message.get());
 
-  message.reset(dynamic_cast<TextMessage *>(consumer->receive(3000)));
+  message.reset(dynamic_cast<TextMessage *>(consumer->receive(cmsProvider->minTimeout)));
   EXPECT_TRUE(message != nullptr);
   EXPECT_FALSE(message->getBooleanProperty("boolean"));
   EXPECT_TRUE(message->getByteProperty("byte") == 60);

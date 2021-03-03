@@ -22,9 +22,7 @@
 #include <Poco/FIFOEvent.h>
 #include <Poco/NObserver.h>
 #include <Poco/Net/NetException.h>
-#include "SocketNotifier.h"
-#include "SocketReactor.h"
-#include "SocketNotification.h"
+#include "ReactorHeaders.h"
 #include <Poco/Net/StreamSocket.h>
 #include <Poco/RWLock.h>
 #include <Poco/Thread.h>
@@ -37,12 +35,15 @@
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>
+#include <queue>
 #include "AsyncLogger.h"
 #include "MessageDataContainer.h"
 #include "ConcurrentQueueHeader.h"
 #include <Poco/Logger.h>
 #ifdef __APPLE__
+#ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0
+#endif
 #endif
 
 #ifdef _WIN32
@@ -57,7 +58,7 @@ class Connection;
 class AsyncTCPHandler {
  public:
   // SubscriptionsList - set<destination_id, set<subscription_id> >
-  using SubscriptionsList = std::unordered_map<std::string, std::unordered_set<std::string> >;
+  using SubscriptionsList = std::unordered_map<std::string, std::unordered_set<std::string>>;
   struct HeartBeat {
     int sendTimeout;
     int recvTimeout;
@@ -81,13 +82,13 @@ class AsyncTCPHandler {
 
   enum class DataStatus { AS_ERROR, TRYAGAIN, OK };
 
-  AsyncTCPHandler(Poco::Net::StreamSocket &socket, upmq::Net::SocketReactor &reactor);
+  AsyncTCPHandler(Poco::Net::StreamSocket &socket, PNet::SocketReactor &reactor);
   void removeErrorShutdownHandler();
   void removeConsumers();
   virtual ~AsyncTCPHandler();
-  void onReadable(const AutoPtr<upmq::Net::ReadableNotification> &pNf);
-  void onShutdown(const AutoPtr<upmq::Net::ShutdownNotification> &pNf);
-  void onError(const AutoPtr<upmq::Net::ErrorNotification> &pNf);
+  void onReadable(const AutoPtr<PNet::ReadableNotification> &pNf);
+  void onShutdown(const AutoPtr<PNet::ShutdownNotification> &pNf);
+  void onError(const AutoPtr<PNet::ErrorNotification> &pNf);
   void setClientID(const std::string &clientID);
   const std::string &clientID() const;
   void setConnection(Connection *connection) const;
@@ -117,7 +118,7 @@ class AsyncTCPHandler {
   enum { BUFFER_SIZE = 65536 };
 
   Poco::Net::StreamSocket _socket;
-  upmq::Net::SocketReactor &_reactor;
+  PNet::SocketReactor &_reactor;
   std::string _peerAddress;
   std::atomic_bool _allowPutEvent{true};
 
@@ -125,7 +126,7 @@ class AsyncTCPHandler {
   void allowPutReadEvent();
 
  public:
-  moodycamel::ConcurrentQueue<std::shared_ptr<MessageDataContainer> > outputQueue;
+  moodycamel::ConcurrentQueue<std::shared_ptr<MessageDataContainer>> outputQueue;
   Poco::FastMutex onWritableLock;
   Poco::FastMutex onReadableLock;
   char pBuffer[BUFFER_SIZE]{};
@@ -136,9 +137,9 @@ class AsyncTCPHandler {
   };
   HeaderBodyLens headerBodyLens;
 
-  Poco::NObserver<AsyncTCPHandler, upmq::Net::ReadableNotification> _readableCallBack;
-  Poco::NObserver<AsyncTCPHandler, upmq::Net::ErrorNotification> _errorCallBack;
-  Poco::NObserver<AsyncTCPHandler, upmq::Net::ShutdownNotification> _shutdownCallBack;
+  Poco::NObserver<AsyncTCPHandler, PNet::ReadableNotification> _readableCallBack;
+  Poco::NObserver<AsyncTCPHandler, PNet::ErrorNotification> _errorCallBack;
+  Poco::NObserver<AsyncTCPHandler, PNet::ShutdownNotification> _shutdownCallBack;
 
   size_t num{};
 

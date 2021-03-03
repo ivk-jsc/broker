@@ -46,3 +46,6 @@ COMMIT.txt
 /cmake-build-xcode/
 /cmake-vsc-build/
 /cmake-build-debug-asan/
+/cmake-build-debug-remote/
+/cmake-build-relwithdebinfo-remote/
+/cmake-build-debug-tsan/

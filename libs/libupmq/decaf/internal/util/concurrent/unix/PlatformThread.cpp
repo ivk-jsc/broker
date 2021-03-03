@@ -134,27 +134,42 @@ void PlatformThread::destroyRWMutex(decaf_rwmutex_t mutex) {
 
 ////////////////////////////////////////////////////////////////////////////////
 void PlatformThread::createCondition(decaf_condition_t *condition) {
-  *condition = new pthread_cond_t;
-
-  if (pthread_cond_init(*condition, nullptr) != 0) {
+  condition->value = new pthread_cond_t;
+  condition->attr = nullptr;
+#ifdef __linux__
+  condition->attr = new pthread_condattr_t;
+  pthread_condattr_init(condition->attr);
+  pthread_condattr_setclock(condition->attr, CLOCK_MONOTONIC);
+#endif
+  if (pthread_cond_init(condition->value, condition->attr) != 0) {
     throw RuntimeException(__FILE__, __LINE__, "Failed to initialize OS Condition object.");
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void PlatformThread::notify(decaf_condition_t condition) { pthread_cond_signal(condition); }
+void PlatformThread::notify(decaf_condition_t condition) { pthread_cond_signal(condition.value); }
 
 ////////////////////////////////////////////////////////////////////////////////
-void PlatformThread::notifyAll(decaf_condition_t condition) { pthread_cond_broadcast(condition); }
+void PlatformThread::notifyAll(decaf_condition_t condition) { pthread_cond_broadcast(condition.value); }
 
 ////////////////////////////////////////////////////////////////////////////////
-void PlatformThread::waitOnCondition(decaf_condition_t condition, decaf_mutex_t mutex) { pthread_cond_wait(condition, mutex); }
+void PlatformThread::waitOnCondition(decaf_condition_t condition, decaf_mutex_t mutex) { pthread_cond_wait(condition.value, mutex); }
 
 ////////////////////////////////////////////////////////////////////////////////
 bool PlatformThread::waitOnCondition(decaf_condition_t condition, decaf_mutex_t mutex, long long mills, int nanos) {
+  long long nsec = 0;
+
+#ifdef __linux__
+  struct timespec tv;
+  clock_gettime(CLOCK_MONOTONIC, &tv);
+  nsec = tv.tv_nsec;
+#else
   struct timeval tv;
   gettimeofday(&tv, nullptr);
-  long long timeNow = TimeUnit::SECONDS.toNanos(tv.tv_sec) + TimeUnit::MICROSECONDS.toNanos(tv.tv_usec);
+  nsec = TimeUnit::MICROSECONDS.toNanos(tv.tv_usec);
+#endif
+
+  long long timeNow = TimeUnit::SECONDS.toNanos(tv.tv_sec) + nsec;
 
   // Convert delay to nanoseconds and add it to now.
   long long delay = TimeUnit::MILLISECONDS.toNanos(mills) + nanos + timeNow;
@@ -163,27 +178,37 @@ bool PlatformThread::waitOnCondition(decaf_condition_t condition, decaf_mutex_t 
   abstime.tv_sec = TimeUnit::NANOSECONDS.toSeconds(delay);
   abstime.tv_nsec = delay % 1000000000;
 
-  return pthread_cond_timedwait(condition, mutex, &abstime) == ETIMEDOUT;
+  return pthread_cond_timedwait(condition.value, mutex, &abstime) == ETIMEDOUT;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void PlatformThread::interruptibleWaitOnCondition(decaf_condition_t condition, decaf_mutex_t mutex, CompletionCondition &complete) {
   do {
-    pthread_cond_wait(condition, mutex);
+    pthread_cond_wait(condition.value, mutex);
 
     if (complete()) {
       break;
     }
-
+    yeild();
   } while (true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 bool PlatformThread::interruptibleWaitOnCondition(
     decaf_condition_t condition, decaf_mutex_t mutex, long long mills, int nanos, CompletionCondition &complete) {
+  long long nsec = 0;
+
+#ifdef __linux__
+  struct timespec tv;
+  clock_gettime(CLOCK_MONOTONIC, &tv);
+  nsec = tv.tv_nsec;
+#else
   struct timeval tv;
   gettimeofday(&tv, nullptr);
-  long long timeNow = TimeUnit::SECONDS.toNanos(tv.tv_sec) + TimeUnit::MICROSECONDS.toNanos(tv.tv_usec);
+  nsec = TimeUnit::MICROSECONDS.toNanos(tv.tv_usec);
+#endif
+
+  long long timeNow = TimeUnit::SECONDS.toNanos(tv.tv_sec) + nsec;
 
   // Convert delay to nanoseconds and add it to now.
   long long delay = TimeUnit::MILLISECONDS.toNanos(mills) + nanos + timeNow;
@@ -195,7 +220,7 @@ bool PlatformThread::interruptibleWaitOnCondition(
   bool result = false;
 
   do {
-    if (pthread_cond_timedwait(condition, mutex, &abstime) == ETIMEDOUT) {
+    if (pthread_cond_timedwait(condition.value, mutex, &abstime) == ETIMEDOUT) {
       // interruption events take precedence over timeout.
       if (complete(true)) {
         break;
@@ -209,7 +234,7 @@ bool PlatformThread::interruptibleWaitOnCondition(
     if (complete(false)) {
       break;
     }
-
+    yeild();
   } while (true);
 
   return result;
@@ -217,8 +242,12 @@ bool PlatformThread::interruptibleWaitOnCondition(
 
 ////////////////////////////////////////////////////////////////////////////////
 void PlatformThread::destroyCondition(decaf_condition_t condition) {
-  pthread_cond_destroy(condition);
-  delete condition;
+#ifdef __linux__
+  pthread_condattr_destroy(condition.attr);
+  delete condition.attr;
+#endif
+  pthread_cond_destroy(condition.value);
+  delete condition.value;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

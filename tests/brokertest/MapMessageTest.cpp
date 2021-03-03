@@ -20,13 +20,12 @@
 #include <fake_cpp14.h>
 
 ////////////////////////////////////////////////////////////////////////////////
-void MapMessageTest::SetUp() {
-  cmsProvider = std::make_unique<CMSProvider>(getBrokerURL());
-  cmsProvider->cleanUpDestination();
-}
+void MapMessageTest::SetUp() { cmsProvider = std::make_unique<CMSProvider>(getBrokerURL()); }
 
 ////////////////////////////////////////////////////////////////////////////////
 TEST_F(MapMessageTest, testSendRecvCloneMapMessage) {
+  cmsProvider->cleanUpDestination();
+
   Session *session = cmsProvider->getSession();
   cms::MessageConsumer *consumer = cmsProvider->getConsumer();
   cms::MessageProducer *producer = cmsProvider->getProducer();
@@ -55,7 +54,7 @@ TEST_F(MapMessageTest, testSendRecvCloneMapMessage) {
 
   producer->send(message.get());
 
-  message.reset((cms::MapMessage *)consumer->receive(3000));
+  message.reset((cms::MapMessage *)consumer->receive(cmsProvider->minTimeout));
   EXPECT_TRUE(message != nullptr);
 
   EXPECT_FALSE(message->getBoolean("boolean"));
@@ -84,6 +83,8 @@ TEST_F(MapMessageTest, testSendRecvCloneMapMessage) {
 
 ////////////////////////////////////////////////////////////////////////////////
 TEST_F(MapMessageTest, testEmptyMapSendReceive) {
+  cmsProvider->cleanUpDestination();
+
   // Create CMS Object for Comms
   cms::Session *session(cmsProvider->getSession());
   cms::MessageConsumer *consumer = cmsProvider->getConsumer();
@@ -95,7 +96,7 @@ TEST_F(MapMessageTest, testEmptyMapSendReceive) {
   // Send some text messages
   producer->send(mapMessage.get());
 
-  std::unique_ptr<cms::Message> message(consumer->receive(3000));
+  std::unique_ptr<cms::Message> message(consumer->receive(cmsProvider->minTimeout));
   EXPECT_TRUE(message != nullptr);
 
   auto *recvMapMessage = dynamic_cast<cms::MapMessage *>(message.get());
@@ -105,6 +106,8 @@ TEST_F(MapMessageTest, testEmptyMapSendReceive) {
 
 ////////////////////////////////////////////////////////////////////////////////
 TEST_F(MapMessageTest, testMapWithEmptyStringValue) {
+  cmsProvider->cleanUpDestination();
+
   // Create CMS Object for Comms
   cms::Session *session(cmsProvider->getSession());
   cms::MessageConsumer *consumer = cmsProvider->getConsumer();
@@ -119,7 +122,7 @@ TEST_F(MapMessageTest, testMapWithEmptyStringValue) {
   // Send some text messages
   producer->send(mapMessage.get());
 
-  std::unique_ptr<cms::Message> message(consumer->receive(3000));
+  std::unique_ptr<cms::Message> message(consumer->receive(cmsProvider->minTimeout));
   EXPECT_TRUE(message != nullptr);
 
   auto *recvMapMessage = dynamic_cast<MapMessage *>(message.get());
@@ -133,6 +136,8 @@ TEST_F(MapMessageTest, testMapWithEmptyStringValue) {
 
 ////////////////////////////////////////////////////////////////////////////////
 TEST_F(MapMessageTest, testMapSetEmptyBytesVector) {
+  cmsProvider->cleanUpDestination();
+
   // Create CMS Object for Comms
   cms::Session *session(cmsProvider->getSession());
   cms::MessageConsumer *consumer = cmsProvider->getConsumer();
@@ -148,7 +153,7 @@ TEST_F(MapMessageTest, testMapSetEmptyBytesVector) {
   // Send some text messages
   producer->send(mapMessage.get());
 
-  std::unique_ptr<cms::Message> message(consumer->receive(3000));
+  std::unique_ptr<cms::Message> message(consumer->receive(cmsProvider->minTimeout));
   EXPECT_TRUE(message != nullptr);
 
   auto *recvMapMessage = dynamic_cast<MapMessage *>(message.get());
@@ -474,6 +479,8 @@ TEST_F(MapMessageTest, testClearBody) {
 
 ////////////////////////////////////////////////////////////////////////////////
 TEST_F(MapMessageTest, testReadOnlyBody) {
+  cmsProvider->cleanUpDestination();
+
   Session *session = cmsProvider->getSession();
   cms::MessageConsumer *consumer = cmsProvider->getConsumer();
   cms::MessageProducer *producer = cmsProvider->getProducer();
@@ -494,7 +501,7 @@ TEST_F(MapMessageTest, testReadOnlyBody) {
 
   producer->send(msg.get());
 
-  msg.reset((cms::MapMessage *)consumer->receive(3000));
+  msg.reset((cms::MapMessage *)consumer->receive(cmsProvider->minTimeout));
   EXPECT_TRUE(msg != nullptr);
 
   try {

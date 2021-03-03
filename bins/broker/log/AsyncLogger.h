@@ -26,6 +26,7 @@
 #include <Poco/PatternFormatter.h>
 #include <Poco/AutoPtr.h>
 #include <Poco/Path.h>
+#include <Poco/Optional.h>
 
 #ifdef POCO_OS_FAMILY_UNIX
 #include <Poco/SyslogChannel.h>
@@ -38,6 +39,7 @@
 
 #include "Singleton.h"
 #include <memory>
+#include <atomic>
 
 using Poco::SplitterChannel;
 #ifdef POCO_OS_FAMILY_WINDOWS
@@ -88,8 +90,33 @@ class AsyncLogger {
   static AutoPtr<FormattingChannel> createFormatter(const std::string &name, bool interactive);
 };
 
+class Trace {
+  Poco::Logger *_log{nullptr};
+  Poco::Optional<std::string> _func;
+  int64_t _localCounter{0};
+  Poco::Optional<std::string> _beg;
+  Poco::Optional<std::string> _end;
+  static thread_local std::atomic_int64_t _counter;
+
+ public:
+  explicit Trace(Poco::Logger *l, std::string func);
+  Trace(const Trace &) = delete;
+  Trace(Trace &&o) noexcept;
+  Trace() = default;
+  ~Trace() noexcept;
+};
+
 }  // namespace broker
 }  // namespace upmq
 using ASYNCLOGGER = Singleton<upmq::broker::AsyncLogger>;
+
+#ifdef _MSC_VER
+#define __PRETTY_FUNCTION__ __FUNCTION__
+#endif
+
+#define TRACE(log) \
+  upmq::broker::Trace trace((log->getLevel() >= Poco::Message::PRIO_TRACE) ? upmq::broker::Trace(log, __PRETTY_FUNCTION__) : upmq::broker::Trace())
+#define INFO(logger, ...) \
+  if (logger->getLevel() >= Poco::Message::PRIO_INFORMATION) logger->information(__VA_ARGS__)
 
 #endif  // BROKERSTORAGELOGGER_H

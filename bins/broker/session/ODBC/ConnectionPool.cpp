@@ -17,7 +17,7 @@
 #include <ProtoBuf.h>
 #include "Configuration.h"
 #include "ConnectionPool.h"
-#include "MiscDefines.h"
+#include "Exception.h"
 
 #if POCO_VERSION_MAJOR > 1
 #include <Poco/SQL/ODBC/Connector.h>

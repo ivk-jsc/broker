@@ -398,12 +398,15 @@ cms::Message *ConsumerImpl::receive(int timeout) {
       }
 
       if (command == nullptr) {
-        if (_session != nullptr)
-          if (_session->_connection->_transportFailed.get()) throw cms::CMSException("transport failed");
+        if (_session != nullptr) {
+          if (_session->_connection->_transportFailed.get()) {
+            throw cms::CMSException("transport failed");
+          }
+        }
         return nullptr;
       }
 
-      message = commandToMessage(std::move(command));
+      message = commandToMessage(command);
     } while (message->isExpired());
 
     if (_session->getAcknowledgeMode() != cms::Session::CLIENT_ACKNOWLEDGE) {
@@ -425,8 +428,9 @@ cms::Message *ConsumerImpl::receiveNoWait() {
     do {
       command = dequeue(0);
       if (command == nullptr) {
-        if (_session != nullptr)
+        if (_session != nullptr) {
           if (_session->_connection->_transportFailed.get()) throw cms::CMSException("transport failed");
+        }
         return nullptr;
       }
 
@@ -552,11 +556,7 @@ Pointer<Command> ConsumerImpl::dequeue(long long timeout) {
   try {
     return _messageQueue->dequeue(timeout);
   } catch (InterruptedException &) {
-    // TODO check
     return Pointer<Command>();
-    // TODO:
-    // Thread.currentThread().interrupt();
-    // throw JMSException
   }
 }
 
@@ -584,7 +584,7 @@ std::string ConsumerImpl::getSubscription() const { return _subscription; }
 
 void ConsumerImpl::setSubscription(std::string subscription) { _subscription = std::move(subscription); }
 
-cms::Message *ConsumerImpl::commandToMessage(const Pointer<Command>& comm) {
+cms::Message *ConsumerImpl::commandToMessage(const Pointer<Command> &comm) {
   UPMQCommand *command = dynamic_cast<UPMQCommand *>(comm.get());
   if (command == nullptr) {
     throw cms::CMSException("error message type");

@@ -21,7 +21,6 @@
 #include <memory>
 #include "Defines.h"
 #include "Exception.h"
-#include "fake_cpp14.h"
 #include <Poco/UTF8Encoding.h>
 #include <Poco/UnicodeConverter.h>
 
@@ -53,24 +52,24 @@ void MessageDataContainer::initDataFileStream() {
 #endif
       _dataFileStream->open(wFilePath, std::ios_base::out | std::ios_base::in | std::ios_base::binary | std::ios_base::app);
       if (!_dataFileStream->is_open()) {
-        throw EXCEPTION("can't open data file", dataFilePath.toString(), ERROR_UNKNOWN);
+        throw EXCEPTION("can't open data file", dataFilePath.toString(), Proto::ERROR_UNKNOWN);
       }
     }
   }
 }
-MessageDataContainer::MessageDataContainer(ProtoMessage *headerProtoMessage) : _headerMessage(headerProtoMessage) { data.clear(); }
-MessageDataContainer::MessageDataContainer(ProtoMessage *headerProtoMessage, Body *dataBody)
+MessageDataContainer::MessageDataContainer(Proto::ProtoMessage *headerProtoMessage) : _headerMessage(headerProtoMessage) { data.clear(); }
+MessageDataContainer::MessageDataContainer(Proto::ProtoMessage *headerProtoMessage, Proto::Body *dataBody)
     : _headerMessage(headerProtoMessage), _dataMessage(dataBody) {
   header = _headerMessage->SerializeAsString();
   data = _dataMessage->SerializeAsString();
 }
 MessageDataContainer::~MessageDataContainer() = default;
 bool MessageDataContainer::empty() const { return (!_headerMessage && !_dataMessage && header.empty() && data.empty()); }
-ProtoMessage &MessageDataContainer::protoMessage() const {
+Proto::ProtoMessage &MessageDataContainer::protoMessage() const {
   initHeader();
   return *_headerMessage;
 }
-const Connect &MessageDataContainer::connect() const {
+const Proto::Connect &MessageDataContainer::connect() const {
   initHeader();
   return _headerMessage->connect();
 }
@@ -80,36 +79,36 @@ const Proto::Disconnect &MessageDataContainer::disconnect() const {
 }
 void MessageDataContainer::initHeader() const {
   if (!header.empty() && !_headerMessage) {
-    _headerMessage = std::make_unique<ProtoMessage>();
+    _headerMessage = std::make_unique<Proto::ProtoMessage>();
     if (!_headerMessage->ParseFromString(header)) {
       _headerMessage->Clear();
     }
   }
 }
-ProtoMessage::ProtoMessageTypeCase MessageDataContainer::type() const {
+Proto::ProtoMessage::ProtoMessageTypeCase MessageDataContainer::type() const {
   initHeader();
   return _headerMessage->ProtoMessageType_case();
 }
-bool MessageDataContainer::isPing() const { return (type() == ProtoMessage::kPing); }
-bool MessageDataContainer::isConnect() const { return (type() == ProtoMessage::kConnect); }
-bool MessageDataContainer::isClientInfo() const { return (type() == ProtoMessage::kClientInfo); }
-bool MessageDataContainer::isDisconnect() const { return (type() == ProtoMessage::kDisconnect); }
-bool MessageDataContainer::isSession() const { return (type() == ProtoMessage::kSession); }
-bool MessageDataContainer::isUnsession() const { return (type() == ProtoMessage::kUnsession); }
-bool MessageDataContainer::isDestination() const { return (type() == ProtoMessage::kDestination); }
-bool MessageDataContainer::isUndestination() const { return (type() == ProtoMessage::kUndestination); }
-bool MessageDataContainer::isSender() const { return (type() == ProtoMessage::kSender); }
-bool MessageDataContainer::isUnsender() const { return (type() == ProtoMessage::kUnsender); }
-bool MessageDataContainer::isSubscription() const { return (type() == ProtoMessage::kSubscription); }
-bool MessageDataContainer::isSubscribe() const { return (type() == ProtoMessage::kSubscribe); }
-bool MessageDataContainer::isUnsubscribe() const { return (type() == ProtoMessage::kUnsubscribe); }
-bool MessageDataContainer::isUnsubscription() const { return (type() == ProtoMessage::kUnsubscription); }
-bool MessageDataContainer::isBegin() const { return (type() == ProtoMessage::kBegin); }
-bool MessageDataContainer::isCommit() const { return (type() == ProtoMessage::kCommit); }
-bool MessageDataContainer::isAbort() const { return (type() == ProtoMessage::kAbort); }
-bool MessageDataContainer::isAck() const { return (type() == ProtoMessage::kAck); }
-bool MessageDataContainer::isMessage() const { return (type() == ProtoMessage::kMessage); }
-bool MessageDataContainer::isBrowser() const { return (type() == ProtoMessage::kBrowser); }
+bool MessageDataContainer::isPing() const { return (type() == Proto::ProtoMessage::kPing); }
+bool MessageDataContainer::isConnect() const { return (type() == Proto::ProtoMessage::kConnect); }
+bool MessageDataContainer::isClientInfo() const { return (type() == Proto::ProtoMessage::kClientInfo); }
+bool MessageDataContainer::isDisconnect() const { return (type() == Proto::ProtoMessage::kDisconnect); }
+bool MessageDataContainer::isSession() const { return (type() == Proto::ProtoMessage::kSession); }
+bool MessageDataContainer::isUnsession() const { return (type() == Proto::ProtoMessage::kUnsession); }
+bool MessageDataContainer::isDestination() const { return (type() == Proto::ProtoMessage::kDestination); }
+bool MessageDataContainer::isUndestination() const { return (type() == Proto::ProtoMessage::kUndestination); }
+bool MessageDataContainer::isSender() const { return (type() == Proto::ProtoMessage::kSender); }
+bool MessageDataContainer::isUnsender() const { return (type() == Proto::ProtoMessage::kUnsender); }
+bool MessageDataContainer::isSubscription() const { return (type() == Proto::ProtoMessage::kSubscription); }
+bool MessageDataContainer::isSubscribe() const { return (type() == Proto::ProtoMessage::kSubscribe); }
+bool MessageDataContainer::isUnsubscribe() const { return (type() == Proto::ProtoMessage::kUnsubscribe); }
+bool MessageDataContainer::isUnsubscription() const { return (type() == Proto::ProtoMessage::kUnsubscription); }
+bool MessageDataContainer::isBegin() const { return (type() == Proto::ProtoMessage::kBegin); }
+bool MessageDataContainer::isCommit() const { return (type() == Proto::ProtoMessage::kCommit); }
+bool MessageDataContainer::isAbort() const { return (type() == Proto::ProtoMessage::kAbort); }
+bool MessageDataContainer::isAck() const { return (type() == Proto::ProtoMessage::kAck); }
+bool MessageDataContainer::isMessage() const { return (type() == Proto::ProtoMessage::kMessage); }
+bool MessageDataContainer::isBrowser() const { return (type() == Proto::ProtoMessage::kBrowser); }
 bool MessageDataContainer::isForServer() const {
   return (isConnect() || isClientInfo() || isDisconnect() || isSession() || isUnsession() || isDestination() || isUndestination() || isSender() ||
           isUnsender() || isSubscription() || isSubscribe() || isUnsubscribe() || isUnsubscription() || isBegin() || isCommit() || isAbort() ||
@@ -118,62 +117,62 @@ bool MessageDataContainer::isForServer() const {
 bool MessageDataContainer::isNotForServer() const { return !isForServer(); }
 std::string MessageDataContainer::typeName() const {
   switch (type()) {
-    case ProtoMessage::kConnect:
+    case Proto::ProtoMessage::kConnect:
       return "connect";
-    case ProtoMessage::kClientInfo:
+    case Proto::ProtoMessage::kClientInfo:
       return "client_info";
-    case ProtoMessage::kDisconnect:
+    case Proto::ProtoMessage::kDisconnect:
       return "disconnect";
-    case ProtoMessage::kSession:
+    case Proto::ProtoMessage::kSession:
       return "session";
-    case ProtoMessage::kUnsession:
+    case Proto::ProtoMessage::kUnsession:
       return "unsession";
-    case ProtoMessage::kDestination:
+    case Proto::ProtoMessage::kDestination:
       return "destination";
-    case ProtoMessage::kUndestination:
+    case Proto::ProtoMessage::kUndestination:
       return "undestination";
-    case ProtoMessage::kSender:
+    case Proto::ProtoMessage::kSender:
       return "sender";
-    case ProtoMessage::kUnsender:
+    case Proto::ProtoMessage::kUnsender:
       return "unsender";
-    case ProtoMessage::kSubscription:
+    case Proto::ProtoMessage::kSubscription:
       return "subscription";
-    case ProtoMessage::kSubscribe:
+    case Proto::ProtoMessage::kSubscribe:
       return "subscribe";
-    case ProtoMessage::kUnsubscribe:
+    case Proto::ProtoMessage::kUnsubscribe:
       return "unsubscribe";
-    case ProtoMessage::kUnsubscription:
+    case Proto::ProtoMessage::kUnsubscription:
       return "unsubscription";
-    case ProtoMessage::kBegin:
+    case Proto::ProtoMessage::kBegin:
       return "begin";
-    case ProtoMessage::kCommit:
+    case Proto::ProtoMessage::kCommit:
       return "commit";
-    case ProtoMessage::kAbort:
+    case Proto::ProtoMessage::kAbort:
       return "abort";
-    case ProtoMessage::kAck:
+    case Proto::ProtoMessage::kAck:
       return "ack";
-    case ProtoMessage::kMessage:
+    case Proto::ProtoMessage::kMessage:
       return "message";
-    case ProtoMessage::kConnected:
+    case Proto::ProtoMessage::kConnected:
       return "connected";
-    case ProtoMessage::kReceipt:
+    case Proto::ProtoMessage::kReceipt:
       return "receipt";
-    case ProtoMessage::kError:
+    case Proto::ProtoMessage::kError:
       return "error";
-    case ProtoMessage::kBrowser:
+    case Proto::ProtoMessage::kBrowser:
       return "browser";
-    case ProtoMessage::kBrowserInfo:
+    case Proto::ProtoMessage::kBrowserInfo:
       return "browser_info";
-    case ProtoMessage::kPing:
+    case Proto::ProtoMessage::kPing:
       return "ping";
-    case ProtoMessage::kPong:
+    case Proto::ProtoMessage::kPong:
       return "pong";
-    case ProtoMessage::PROTOMESSAGETYPE_NOT_SET:
+    case Proto::ProtoMessage::PROTOMESSAGETYPE_NOT_SET:
     default:
       return "protomessagetype_not_set";
   }
 }
-const Message &MessageDataContainer::message() const {
+const Proto::Message &MessageDataContainer::message() const {
   initHeader();
   return _headerMessage->message();
 }
@@ -184,71 +183,71 @@ Proto::Message &MessageDataContainer::mutableMessage() const {
 bool MessageDataContainer::isNeedReceipt() const {
   initHeader();
   switch (type()) {
-    case ProtoMessage::kDisconnect: {
+    case Proto::ProtoMessage::kDisconnect: {
       const Proto::Disconnect &aDisconnect = disconnect();
       return !(aDisconnect.receipt_id().empty());
     }
-    case ProtoMessage::kClientInfo: {
+    case Proto::ProtoMessage::kClientInfo: {
       const Proto::ClientInfo &aClientInfo = clientInfo();
       return !(aClientInfo.receipt_id().empty());
     }
-    case ProtoMessage::kSession: {
+    case Proto::ProtoMessage::kSession: {
       const Proto::Session &aSession = session();
       return !(aSession.receipt_id().empty());
     }
-    case ProtoMessage::kUnsession: {
+    case Proto::ProtoMessage::kUnsession: {
       const Proto::Unsession &aUnsession = unsession();
       return !(aUnsession.receipt_id().empty());
     }
-    case ProtoMessage::kDestination: {
+    case Proto::ProtoMessage::kDestination: {
       const Proto::Destination &aDestination = destination();
       return !(aDestination.receipt_id().empty());
     }
-    case ProtoMessage::kUndestination: {
+    case Proto::ProtoMessage::kUndestination: {
       const Proto::Undestination &aUndestination = undestination();
       return !(aUndestination.receipt_id().empty());
     }
-    case ProtoMessage::kSender: {
+    case Proto::ProtoMessage::kSender: {
       const Proto::Sender &aSender = sender();
       return !(aSender.receipt_id().empty());
     }
-    case ProtoMessage::kUnsender: {
+    case Proto::ProtoMessage::kUnsender: {
       const Proto::Unsender &aUnsender = unsender();
       return !(aUnsender.receipt_id().empty());
     }
-    case ProtoMessage::kSubscription: {
+    case Proto::ProtoMessage::kSubscription: {
       const Proto::Subscription &aSubscription = subscription();
       return !(aSubscription.receipt_id().empty());
     }
-    case ProtoMessage::kSubscribe: {
+    case Proto::ProtoMessage::kSubscribe: {
       const Proto::Subscribe &aSubscribe = subscribe();
       return !(aSubscribe.receipt_id().empty());
     }
-    case ProtoMessage::kUnsubscribe: {
+    case Proto::ProtoMessage::kUnsubscribe: {
       const Proto::Unsubscribe &aUnsubscribe = unsubscribe();
       return !(aUnsubscribe.receipt_id().empty());
     }
-    case ProtoMessage::kUnsubscription: {
+    case Proto::ProtoMessage::kUnsubscription: {
       const Proto::Unsubscription &aUnsubscription = unsubscription();
       return !(aUnsubscription.receipt_id().empty());
     }
-    case ProtoMessage::kBegin: {
+    case Proto::ProtoMessage::kBegin: {
       const Proto::Begin &aBegin = begin();
       return !(aBegin.receipt_id().empty());
     }
-    case ProtoMessage::kCommit: {
+    case Proto::ProtoMessage::kCommit: {
       const Proto::Commit &aCommit = commit();
       return !(aCommit.receipt_id().empty());
     }
-    case ProtoMessage::kAbort: {
+    case Proto::ProtoMessage::kAbort: {
       const Proto::Abort &aAbort = abort();
       return !(aAbort.receipt_id().empty());
     }
-    case ProtoMessage::kMessage: {
+    case Proto::ProtoMessage::kMessage: {
       const Proto::Message &aMessage = message();
       return !(aMessage.receipt_id().empty());
     }
-    case ProtoMessage::kAck: {
+    case Proto::ProtoMessage::kAck: {
       const Proto::Ack &aAck = ack();
       return !(aAck.receipt_id().empty());
     }
@@ -324,71 +323,71 @@ const Proto::Browser &MessageDataContainer::browser() const {
 std::string MessageDataContainer::receiptId() const {
   initHeader();
   switch (type()) {
-    case ProtoMessage::kDisconnect: {
+    case Proto::ProtoMessage::kDisconnect: {
       const Proto::Disconnect &aDisconnect = disconnect();
       return aDisconnect.receipt_id();
     }
-    case ProtoMessage::kClientInfo: {
+    case Proto::ProtoMessage::kClientInfo: {
       const Proto::ClientInfo &aClientInfo = clientInfo();
       return aClientInfo.receipt_id();
     }
-    case ProtoMessage::kSession: {
+    case Proto::ProtoMessage::kSession: {
       const Proto::Session &aSession = session();
       return aSession.receipt_id();
     }
-    case ProtoMessage::kUnsession: {
+    case Proto::ProtoMessage::kUnsession: {
       const Proto::Unsession &aUnsession = unsession();
       return aUnsession.receipt_id();
     }
-    case ProtoMessage::kDestination: {
+    case Proto::ProtoMessage::kDestination: {
       const Proto::Destination &aDestination = destination();
       return aDestination.receipt_id();
     }
-    case ProtoMessage::kUndestination: {
+    case Proto::ProtoMessage::kUndestination: {
       const Proto::Undestination &aUndestination = undestination();
       return aUndestination.receipt_id();
     }
-    case ProtoMessage::kSender: {
+    case Proto::ProtoMessage::kSender: {
       const Proto::Sender &aSender = sender();
       return aSender.receipt_id();
     }
-    case ProtoMessage::kUnsender: {
+    case Proto::ProtoMessage::kUnsender: {
       const Proto::Unsender &aUnsender = unsender();
       return aUnsender.receipt_id();
     }
-    case ProtoMessage::kSubscription: {
+    case Proto::ProtoMessage::kSubscription: {
       const Proto::Subscription &aSubscription = subscription();
       return aSubscription.receipt_id();
     }
-    case ProtoMessage::kSubscribe: {
+    case Proto::ProtoMessage::kSubscribe: {
       const Proto::Subscribe &aSubscribe = subscribe();
       return aSubscribe.receipt_id();
     }
-    case ProtoMessage::kUnsubscribe: {
+    case Proto::ProtoMessage::kUnsubscribe: {
       const Proto::Unsubscribe &aUnsubscribe = unsubscribe();
       return aUnsubscribe.receipt_id();
     }
-    case ProtoMessage::kUnsubscription: {
+    case Proto::ProtoMessage::kUnsubscription: {
       const Proto::Unsubscription &aUnsubscription = unsubscription();
       return aUnsubscription.receipt_id();
     }
-    case ProtoMessage::kBegin: {
+    case Proto::ProtoMessage::kBegin: {
       const Proto::Begin &aBegin = begin();
       return aBegin.receipt_id();
     }
-    case ProtoMessage::kCommit: {
+    case Proto::ProtoMessage::kCommit: {
       const Proto::Commit &aCommit = commit();
       return aCommit.receipt_id();
     }
-    case ProtoMessage::kAbort: {
+    case Proto::ProtoMessage::kAbort: {
       const Proto::Abort &aAbort = abort();
       return aAbort.receipt_id();
     }
-    case ProtoMessage::kMessage: {
+    case Proto::ProtoMessage::kMessage: {
       const Proto::Message &aMessage = message();
       return aMessage.message_id();
     }
-    case ProtoMessage::kAck: {
+    case Proto::ProtoMessage::kAck: {
       const Proto::Ack &aAck = ack();
       return aAck.receipt_id();
     }
@@ -425,8 +424,8 @@ void MessageDataContainer::setDeliveryCount(int count) {
   }
   _headerMessage->mutable_message()->set_delivery_count(count + 1);
 }
-bool MessageDataContainer::isReceipt() const { return type() == ProtoMessage::kReceipt; }
-bool MessageDataContainer::isError() const { return type() == ProtoMessage::kError; }
+bool MessageDataContainer::isReceipt() const { return type() == Proto::ProtoMessage::kReceipt; }
+bool MessageDataContainer::isError() const { return type() == Proto::ProtoMessage::kError; }
 Proto::Connect &MessageDataContainer::createConnect(const std::string &objectID) {
   newMessage(objectID);
   return *_headerMessage->mutable_connect();
@@ -500,7 +499,7 @@ Proto::Body &MessageDataContainer::createMessageBody() {
   if (_dataMessage) {
     _dataMessage.reset(nullptr);
   }
-  _dataMessage = std::make_unique<Body>();
+  _dataMessage = std::make_unique<Proto::Body>();
   return *_dataMessage;
 }
 void MessageDataContainer::newMessage(const std::string &objectID) {
@@ -512,7 +511,7 @@ void MessageDataContainer::newMessage(const std::string &objectID) {
   }
   header.clear();
   data.clear();
-  _headerMessage = std::make_unique<ProtoMessage>();
+  _headerMessage = std::make_unique<Proto::ProtoMessage>();
   _headerMessage->set_object_id(objectID);
 }
 void MessageDataContainer::serialize() {
@@ -533,7 +532,7 @@ void MessageDataContainer::reparseHeader() {
     if (_headerMessage) {
       _headerMessage.reset(nullptr);
     }
-    _headerMessage = std::make_unique<ProtoMessage>();
+    _headerMessage = std::make_unique<Proto::ProtoMessage>();
     if (!_headerMessage->ParseFromString(header)) {
       _headerMessage->Clear();
     }
@@ -670,5 +669,58 @@ std::fstream &MessageDataContainer::fileStream() {
   initDataFileStream();
   return *_dataFileStream;
 }
+void MessageDataContainer::processProperties(PropertyHandler &handler, const std::string &identifier) const {
+  Proto::Message &message = mutableMessage();
+
+  if (message.property_size() > 0) {
+    const auto &_properties = *message.mutable_property();
+    const auto item = _properties.find(identifier);
+    if (item != _properties.end()) {
+      const auto &property = item->second;
+      switch (property.PropertyValue_case()) {
+        case Proto::Property::kValueString: {
+          handler.handleString(identifier, property.value_string());
+        } break;
+
+        case Proto::Property::kValueChar: {
+          handler.handleInt8(identifier, static_cast<int8_t>(property.value_char()));
+        } break;
+
+        case Proto::Property::kValueBool: {
+          handler.handleBool(identifier, property.value_bool());
+        } break;
+
+        case Proto::Property::kValueByte: {
+          handler.handleUint8(identifier, static_cast<uint8_t>(property.value_byte()));
+        } break;
+
+        case Proto::Property::kValueShort: {
+          handler.handleInt16(identifier, static_cast<int16_t>(property.value_short()));
+        } break;
+
+        case Proto::Property::kValueInt: {
+          handler.handleInt32(identifier, property.value_int());
+        } break;
+
+        case Proto::Property::kValueLong: {
+          handler.handleInt64(identifier, property.value_long());
+        } break;
+
+        case Proto::Property::kValueFloat: {
+          handler.handleFloat(identifier, property.value_float());
+        } break;
+
+        case Proto::Property::kValueDouble: {
+          handler.handleDouble(identifier, property.value_double());
+        } break;
+
+        default:
+          break;
+      }
+    }
+  }
+}
+int64_t MessageDataContainer::created() const { return _created; }
+void MessageDataContainer::setCreated(int64_t created) { _created = created; }
 }  // namespace broker
 }  // namespace upmq

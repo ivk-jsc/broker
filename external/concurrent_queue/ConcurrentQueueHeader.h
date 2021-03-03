@@ -22,6 +22,7 @@
 #pragma GCC diagnostic ignored "-Wshadow"
 #endif
 #include "concurrentqueue.h"
+#include "blockingconcurrentqueue.h"
 #ifdef _MSC_VER
 #pragma warning(pop)
 #else

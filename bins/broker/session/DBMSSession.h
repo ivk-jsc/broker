@@ -24,6 +24,7 @@ namespace Data = SQL;
 #else
 #include <Poco/Data/Session.h>
 #endif
+#include <Poco/Logger.h>
 #include <memory>
 #include <atomic>
 
@@ -38,6 +39,7 @@ class DBMSSession {
   DBMSConnectionPool &_dbmsPool;
   std::string _lastTXName = "";
   bool _inTransaction = false;
+  mutable Poco::Logger *log;
 
  public:
   enum class TransactionMode { READ = 0, WRITE };
