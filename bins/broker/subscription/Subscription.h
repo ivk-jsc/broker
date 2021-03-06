@@ -89,6 +89,7 @@ class Subscription {
   mutable bool _isInited;
   mutable bool _hasSnapshot;
   std::shared_ptr<std::deque<std::shared_ptr<MessageDataContainer>>> _roundRobinCache;
+  moodycamel::ConcurrentQueue<std::string> _events;
 
  public:
   Subscription(const upmq::broker::Destination &destination,
