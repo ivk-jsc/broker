@@ -71,6 +71,7 @@ class Exchange {
   void stop();
   void postNewMessageEvent(const std::string &name) const;
   void addNewMessageEvent(const std::string &name) const;
+  void addNewMessageEventBulk(const std::array<std::string, 100> &names, size_t count) const;
   std::vector<Destination::Info> info() const;
 
  private:

@@ -542,11 +542,7 @@ bool Broker::write(size_t num) {
         try {
           sMessage.reset();
           ahandler->outputQueue.try_dequeue(sMessage);
-          //          if (!ahandler->outputQueue.empty()) {
-          //            sMessage = ahandler->outputQueue.front();
-          //          }
           if (sMessage != nullptr) {
-            //            ahandler->outputQueue.pop();
             if (sMessage->header.empty()) {
               sMessage->serialize();
             }

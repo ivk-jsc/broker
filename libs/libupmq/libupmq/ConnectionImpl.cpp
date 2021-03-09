@@ -334,11 +334,9 @@ void ConnectionImpl::onCommand(Pointer<Command> command) {
     UPMQCommand *upmqCommand = (UPMQCommand *)command.get();
     if (upmqCommand != nullptr) {
       if (upmqCommand->_header->ProtoMessageType_case() == Proto::ProtoMessage::kMessage) {
-        // cout << "< message id " << ((UPMQCommand *)command.get())->getMessage().message_id();
-
         synchronized(&_lockCommand) {
           // TODO what if ex on no dispatcher
-          ConsumerImpl *dispatcher = getDispatcher((upmqCommand)->getObjectId());
+          ConsumerImpl *dispatcher = _dispatchersMap.at((upmqCommand)->getObjectId());
           if (dispatcher != nullptr) {
             Proto::Message *pMessage = (upmqCommand)->_header->mutable_message();
             long long ttl = pMessage->timetolive();

@@ -120,6 +120,18 @@ class DECAF_API Date : public lang::Comparable<Date> {
    */
   std::string toString() const;
 
+  /**
+   *
+   * The date/time format defined in the ISO 8601 standard,
+   * with fractional seconds.
+   * Examples:
+   *   2005-01-01T12:00:00.000000+01:00
+   *   2005-01-01T11:00:00.000000Z
+   *
+   * @return the String representation of the Date object.
+   */
+  std::string toISOString() const;
+
  public:  // Comparable
   virtual int compareTo(const Date &value) const;
 

@@ -486,7 +486,7 @@ void Destination::remFromNotAck(const std::string &objectID) const {
 }
 void Destination::postNewMessageEvent() const {
   TRACE(log);
-  const size_t subsCnt = isTopicFamily() ? subscriptionsTrueCount() : 1;
+  const size_t subsCnt = subscriptionsTrueCount();
   for (size_t i = 0; i < subsCnt; ++i) {
     EXCHANGE::Instance().postNewMessageEvent(name());
   }
@@ -579,7 +579,7 @@ bool Destination::getNexMessageForAllSubscriptions() {
         break;
       case Subscription::ProcessMessageResult::CONSUMER_LOCKED:
         info = "CONSUMER_LOCKED";
-        result = true;
+        result = false;
         break;
       case Subscription::ProcessMessageResult::CONSUMER_NOT_RAN:
         info = "CONSUMER_NOT_RAN";
@@ -587,7 +587,7 @@ bool Destination::getNexMessageForAllSubscriptions() {
         break;
       case Subscription::ProcessMessageResult::CONSUMER_CANT_SEND:
         info = "CONSUMER_CANT_SEND";
-        result = true;
+        result = false;
         break;
       case Subscription::ProcessMessageResult::NO_MESSAGE:
         info = "NO_MESSAGE";
@@ -598,9 +598,9 @@ bool Destination::getNexMessageForAllSubscriptions() {
         result = false;
         break;
     }
-    if (log->getLevel() >= Poco::Message::PRIO_TRACE) {
-      log->trace("getNextMessage result %s", info);
-    }
+    //    if (log->getLevel() >= Poco::Message::PRIO_INFORMATION) {
+    //      log->information("getNextMessage result %s", info);
+    //    }
     return result;
   };
   bool result = false;

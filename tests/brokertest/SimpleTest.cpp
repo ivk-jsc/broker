@@ -26,6 +26,8 @@
 #include <array>
 #include <algorithm>
 
+#define GTEST_COUT std::cout << "[          ] [ INFO ]"
+
 using namespace cms;
 ////////////////////////////////////////////////////////////////////////////////
 void SimpleTest::SetUp() {
@@ -645,12 +647,14 @@ TEST_F(SimpleTest, testRoundRobin) {
       EXPECT_TRUE(std::any_of(items.begin(), items.end(), [&fromIn1](int i) { return i == fromIn1; }))
           << "invalid order msg : " << in1->getCMSMessageID();
       ++in1Counter;
+      //      GTEST_COUT << "got for c2 msg " << in1->getCMSMessageID() << std::endl;
     }
     if (in2 != nullptr) {
       int fromIn2 = in2->getIntProperty("num");
       EXPECT_TRUE(std::any_of(items.begin(), items.end(), [&fromIn2](int i) { return i == fromIn2; }))
           << "invalid order msg : " << in2->getCMSMessageID();
       ++in2Counter;
+      //      GTEST_COUT << "got for c1 msg " << in2->getCMSMessageID() << std::endl;
     }
     if (in1Counter + in2Counter == items.size()) {
       break;

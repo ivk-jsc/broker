@@ -325,7 +325,24 @@ Subscription::ProcessMessageResult Subscription::getNextMessage() {
   std::string groupID;
   std::string messageID;
   ScopedWriteTryLocker swTryLocker(_consumersLock, false);
+
+  class ScopedEventPusher {
+    moodycamel::ConcurrentQueue<std::string> &_ev;
+
+   public:
+    explicit ScopedEventPusher(moodycamel::ConcurrentQueue<std::string> &ev) : _ev(ev) {}
+    ~ScopedEventPusher() noexcept {
+      try {
+        std::array<std::string, 100> names;
+        size_t count = _ev.try_dequeue_bulk(&names[0], 100);
+        EXCHANGE::Instance().addNewMessageEventBulk(names, count);
+      } catch (...) {
+      }
+    }
+  };
+
   if (swTryLocker.tryLock()) {
+    ScopedEventPusher eventPusher(_events);
     const Consumer *consumer = at(_currentConsumerNumber);
     if ((consumer == nullptr) || !consumer->isRunning) {
       changeCurrentConsumerNumber();
@@ -365,6 +382,7 @@ Subscription::ProcessMessageResult Subscription::getNextMessage() {
 
         messageID = sMessage->message().message_id();
         sMessage->protoMessage().set_request_reply_id(0);
+        sMessage->setObjectID(consumer->objectID);  // reset object id for messages from cache
 
         try {
           sMessage->serialize();
@@ -426,6 +444,8 @@ Subscription::ProcessMessageResult Subscription::getNextMessage() {
     } while (consumersSize == 1 && !consumer->select->empty());
     swTryLocker.unlock();
     return ProcessMessageResult::OK_COMPLETE;
+  } else {
+    _events.enqueue(_destination.name());
   }
   return ProcessMessageResult::CONSUMER_LOCKED;
 }

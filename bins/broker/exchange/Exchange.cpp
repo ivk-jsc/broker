@@ -262,14 +262,22 @@ void Exchange::stop() {
 }
 void Exchange::postNewMessageEvent(const std::string &name) const {
   TRACE(log);
-  const int count = _threadPool.capacity() - 1;
   addNewMessageEvent(name);
 }
 
 void Exchange::addNewMessageEvent(const std::string &name) const {
   TRACE(log);
   if (!name.empty()) {
+    //    INFO(log, std::string("put new event for ").append(name));
     _destinationEvents.enqueue(name);
+  }
+}
+
+void Exchange::addNewMessageEventBulk(const std::array<std::string, 100> &names, size_t count) const {
+  TRACE(log);
+  if (!names.empty() && count > 0) {
+    //    INFO(log, std::string("put new event for ").append(names[0]));
+    _destinationEvents.enqueue_bulk(&names[0], count);
   }
 }
 
@@ -283,6 +291,7 @@ void Exchange::run() {
     if (ok && !queueId.empty()) {
       auto item = _destinations.find(queueId);
       if (item.hasValue()) {
+        //        INFO(log, std::string("process event for ").append(queueId));
         try {
           if ((*item)->getNexMessageForAllSubscriptions()) {
             _destinationEvents.enqueue(queueId);
