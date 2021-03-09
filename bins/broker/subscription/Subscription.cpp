@@ -382,6 +382,7 @@ Subscription::ProcessMessageResult Subscription::getNextMessage() {
 
         messageID = sMessage->message().message_id();
         sMessage->protoMessage().set_request_reply_id(0);
+        sMessage->setObjectID(consumer->objectID);  // reset object id for messages from cache
 
         try {
           sMessage->serialize();

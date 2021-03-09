@@ -15,6 +15,7 @@
  */
 
 #include "LoggingTransport.h"
+#include "decaf/util/Date.h"
 #include <iomanip>
 
 using namespace std;
@@ -30,10 +31,8 @@ LoggingTransport::LoggingTransport(Pointer<Transport> next_) : TransportFilter(s
 
 ////////////////////////////////////////////////////////////////////////////////
 void LoggingTransport::onCommand(Pointer<Command> command) {
-  char buff[20] = {0};
-  auto now = time(nullptr);
-  strftime(buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&now));
-  std::cout << buff << " |RECV: " << command->toString() << std::endl;
+  decaf::util::Date date;
+  std::cout << date.toISOString() << " |RECV: " << command->toString() << std::endl;
 
   // Delegate to the base class.
   TransportFilter::onCommand(std::move(command));
@@ -42,10 +41,8 @@ void LoggingTransport::onCommand(Pointer<Command> command) {
 ////////////////////////////////////////////////////////////////////////////////
 void LoggingTransport::oneway(Pointer<Command> command) {
   try {
-    char buff[20] = {0};
-    auto now = time(nullptr);
-    strftime(buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&now));
-    std::cout << buff << " |SEND: " << command->toString() << std::endl;
+    decaf::util::Date date;
+    std::cout << date.toISOString() << " |SEND: " << command->toString() << std::endl;
 
     // Delegate to the base class.
     TransportFilter::oneway(std::move(command));
@@ -59,10 +56,8 @@ void LoggingTransport::oneway(Pointer<Command> command) {
 ////////////////////////////////////////////////////////////////////////////////
 Pointer<Response> LoggingTransport::request(Pointer<Command> command) {
   try {
-    char buff[20] = {0};
-    auto now = time(nullptr);
-    strftime(buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&now));
-    std::cout << buff << " |SEND: " << command->toString() << std::endl;
+    decaf::util::Date date;
+    std::cout << date.toISOString() << " |SEND: " << command->toString() << std::endl;
 
     // Delegate to the base class.
     Pointer<Response> response = TransportFilter::request(std::move(command));
@@ -78,10 +73,8 @@ Pointer<Response> LoggingTransport::request(Pointer<Command> command) {
 ////////////////////////////////////////////////////////////////////////////////
 Pointer<Response> LoggingTransport::request(Pointer<Command> command, unsigned int timeout) {
   try {
-    char buff[20] = {0};
-    auto now = time(nullptr);
-    strftime(buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&now));
-    std::cout << buff << " |SEND: " << command->toString() << std::endl;
+    decaf::util::Date date;
+    std::cout << date.toISOString() << " |SEND: " << command->toString() << std::endl;
 
     // Delegate to the base class.
     Pointer<Response> response = TransportFilter::request(std::move(command), timeout);

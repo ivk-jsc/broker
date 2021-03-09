@@ -88,3 +88,9 @@ std::string Date::toString() const {
 
   return Poco::DateTimeFormatter::format(timestamp, format);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+std::string Date::toISOString() const {
+  Poco::Timestamp timestamp(time * 1000);
+  return Poco::DateTimeFormatter::format(timestamp, Poco::DateTimeFormat::ISO8601_FRAC_FORMAT);
+}

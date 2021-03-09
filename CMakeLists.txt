@@ -8,7 +8,7 @@ project(upmq
 option(ENABLE_TESTS "Enable tests" ON)
 option(ENABLE_EXAMPLES "Enable examples" ON)
 option(ENABLE_WEB_ADMIN "Enable web-admin gui for broker" ON)
-option(ENABLE_POSTGRESQL "Enable PostgreSQL support (usefull only for POCO greater or equal  1.10)" OFF)
+option(ENABLE_POSTGRESQL "Enable PostgreSQL support (usefull only for POCO greater or equal  1.10)" ON)
 option(ENABLE_ODBC "Enable ODBC support" OFF)
 option(ENABLE_USING_SENDFILE "Enable using SendFile for file transfering (not applyable with cygwin)" ON)
 option(MAKE_DISTR_BY_CPACK "Make distribuive with cpack" OFF)
@@ -47,14 +47,14 @@ set(CMAKE_C_STANDARD 11)
 # Set a default build type if none was specified
 set(default_build_type "Release")
 
-if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
   set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE
       STRING "Choose the type of build." FORCE)
   # Set the possible values of build type for cmake-gui
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
                "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
-endif()
+endif ()
 
 if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
   include(CheckIPOSupported)

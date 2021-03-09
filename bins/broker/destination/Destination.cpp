@@ -598,9 +598,9 @@ bool Destination::getNexMessageForAllSubscriptions() {
         result = false;
         break;
     }
-    if (log->getLevel() >= Poco::Message::PRIO_INFORMATION) {
-      log->information("getNextMessage result %s", info);
-    }
+    //    if (log->getLevel() >= Poco::Message::PRIO_INFORMATION) {
+    //      log->information("getNextMessage result %s", info);
+    //    }
     return result;
   };
   bool result = false;
