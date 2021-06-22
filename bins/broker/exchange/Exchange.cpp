@@ -44,7 +44,7 @@ Exchange::Exchange()
   OnError onError;
   onError.setError(Proto::ERROR_STORAGE).setInfo("can't init exchange").setSql(sql.str());
 
-  TRY_EXECUTE(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
+  TRY_EXECUTE(([&sql]() { dbms::Instance().doNow(dbms::Instance().dbmsSession(), sql.str()); }), onError);
 }
 Exchange::~Exchange() {
   TRACE(log);
@@ -100,7 +100,6 @@ void Exchange::deleteDestination(const std::string &uri) {
   _destinations.erase(mainDP);
 }
 std::string Exchange::mainDestinationPath(const std::string &uri) {
-  Poco::StringTokenizer URI(uri, ":", Poco::StringTokenizer::TOK_TRIM);
   return DestinationFactory::destinationTypePrefix(uri) + DestinationFactory::destinationName(uri);
 }
 void Exchange::saveMessage(const Session &session, const MessageDataContainer &sMessage) {
@@ -125,7 +124,7 @@ void Exchange::saveMessage(const Session &session, const MessageDataContainer &s
     session.currentDBSession.reset(nullptr);
   });
 
-  TRY_EXECUTE_NOEXCEPT(([&session, &sql]() { (*session.currentDBSession) << sql.str(), Poco::Data::Keywords::now; }), onError);
+  TRY_EXECUTE_NOEXCEPT(([&session, &sql]() { session.currentDBSession->runSimple(sql.str()); }), onError);
 
   dest.save(session, sMessage);
 }
@@ -208,7 +207,7 @@ void Exchange::addSubscription(const upmq::broker::Session &session, const Messa
     std::stringstream sql;
     sql << "update " << _destinationsT << " set subscriptions_count = " << dest.subscriptionsTrueCount() << ";";
     onError.setSql(sql.str());
-    TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
+    TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(dbms::Instance().dbmsSession(), sql.str()); }), onError);
   } else {
     throw EXCEPTION("this destination was bound to another subscriber", dest.name() + " : " + sMessage.clientID, Proto::ERROR_ON_SUBSCRIPTION);
   }

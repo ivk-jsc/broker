@@ -130,7 +130,7 @@ ExceptionData *Exception::releaseData() {
 ////////////////////////////////////////////////////////////////////////////////
 void Exception::setMark(const char *file, const int lineNumber) {
   // Add this mark to the end of the stack trace.
-  this->data->stackTrace.emplace_back(std::string(file), static_cast<int>(lineNumber));
+  this->data->stackTrace.emplace_back(std::string(file), lineNumber);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

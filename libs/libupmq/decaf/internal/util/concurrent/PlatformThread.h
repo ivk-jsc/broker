@@ -31,12 +31,12 @@ namespace concurrent {
 struct ThreadHandle;
 
 class DECAF_API PlatformThread {
- private:
-  PlatformThread();
-  PlatformThread(const PlatformThread &);
-  PlatformThread &operator=(const PlatformThread &);
+ public:
+  PlatformThread() = delete;
+  PlatformThread(const PlatformThread &) = delete;
+  PlatformThread &operator=(const PlatformThread &) = delete;
 
- public:  // Mutex processing methods
+  // Mutex processing methods
   /**
    * Creates a new Mutex instance at the location given by the mutex pointer
    * argument.  The mutex must be destroyed by calling the destoryMutex

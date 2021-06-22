@@ -25,10 +25,11 @@ namespace transport {
 class UPMQCPP_API UPMQCPP {
  protected:
   UPMQCPP();
-  UPMQCPP(const UPMQCPP &);
-  UPMQCPP &operator=(const UPMQCPP &);
 
  public:
+  UPMQCPP(const UPMQCPP &) = delete;
+  UPMQCPP &operator=(const UPMQCPP &) = delete;
+
   virtual ~UPMQCPP();
 
   /**

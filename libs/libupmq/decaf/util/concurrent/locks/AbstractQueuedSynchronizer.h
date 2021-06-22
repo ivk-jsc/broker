@@ -51,13 +51,12 @@ class DECAF_API AbstractQueuedSynchronizer : public AbstractOwnableSynchronizer 
    private:
     friend class AbstractQueuedSynchronizer;
 
-   private:
-    ConditionObject(const ConditionObject &);
-    ConditionObject &operator=(const ConditionObject &);
-
    public:
+    ConditionObject(const ConditionObject &) = delete;
+    ConditionObject &operator=(const ConditionObject &) = delete;
+
     ConditionObject() : Condition() {}
-    virtual ~ConditionObject() {}
+    ~ConditionObject() override = default;
 
    protected:
     /**
@@ -93,7 +92,7 @@ class DECAF_API AbstractQueuedSynchronizer : public AbstractOwnableSynchronizer 
   };
 
  public:
-  virtual ~AbstractQueuedSynchronizer();
+  ~AbstractQueuedSynchronizer() override;
 
   /**
    * Acquire the lock exclusively, ignoring interrupts.  This method will call tryAcquire at least

@@ -400,9 +400,9 @@ float Math::signum(float value) {
   if (Float::isNaN(value)) {
     return Float::NaN;
   } else if (value > 0) {
-    return 1.0;
+    return 1.0F;
   } else if (value < 0) {
-    return -1.0;
+    return -1.0F;
   }
 
   return value;

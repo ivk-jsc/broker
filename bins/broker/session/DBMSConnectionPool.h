@@ -40,7 +40,7 @@ class DBMSConnectionPool {
   std::shared_ptr<Poco::Data::Session> dbmsConnection() const;
 
   void pushBack(std::shared_ptr<Poco::Data::Session> session);
-  void doNow(const std::string &sql, DBMSConnectionPool::TX tx = TX::USE);
+  void doNow(const DBMSSession &dbmsSession, const std::string &sql, DBMSConnectionPool::TX tx = TX::USE);
 
   void beginTX(Poco::Data::Session &dbSession,
                const std::string &txName,

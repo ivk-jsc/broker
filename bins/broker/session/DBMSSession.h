@@ -55,6 +55,7 @@ class DBMSSession {
   Poco::Data::Statement operator<<(const T &t) {
     return *_session << t;
   }
+  void runSimple(const std::string &sql);
   Poco::Data::Session &operator()() const;
   void close();
   bool isValid() const;

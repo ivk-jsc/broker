@@ -44,11 +44,10 @@ namespace transport {
 namespace failover {
 
 class BackupTransportPoolImpl {
- private:
-  BackupTransportPoolImpl(const BackupTransportPoolImpl &);
-  BackupTransportPoolImpl &operator=(const BackupTransportPoolImpl &);
-
  public:
+  BackupTransportPoolImpl(const BackupTransportPoolImpl &) = delete;
+  BackupTransportPoolImpl &operator=(const BackupTransportPoolImpl &) = delete;
+
   LinkedList<Pointer<BackupTransport> > backups;
   volatile bool pending;
   volatile bool closed;

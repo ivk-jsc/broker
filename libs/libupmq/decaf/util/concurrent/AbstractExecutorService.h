@@ -36,10 +36,10 @@ namespace concurrent {
 class DECAF_API AbstractExecutorService : public ExecutorService {
  public:
   AbstractExecutorService();
-  virtual ~AbstractExecutorService();
+  ~AbstractExecutorService() override;
 
  protected:
-  virtual void doSubmit(FutureType *future);
+  void doSubmit(FutureType *future) override;
 };
 }  // namespace concurrent
 }  // namespace util

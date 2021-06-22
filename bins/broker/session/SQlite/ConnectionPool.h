@@ -46,6 +46,7 @@ class ConnectionPool : public IConnectionPool {
   void beginTX(Poco::Data::Session &dbSession, const std::string &txName, storage::DBMSSession::TransactionMode mode) override;
   void commitTX(Poco::Data::Session &dbSession, const std::string &txName) override;
   void rollbackTX(Poco::Data::Session &dbSession, const std::string &txName) override;
+  void runSimple(Poco::Data::Session &dbSession, const std::string &sql) override;
 };
 }  // namespace sqlite
 }  // namespace storage

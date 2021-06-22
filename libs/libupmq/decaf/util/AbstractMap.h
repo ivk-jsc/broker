@@ -66,7 +66,7 @@ class AbstractMap : public decaf::util::Map<K, V> {
 
   AbstractMap(const AbstractMap<K, V> &map DECAF_UNUSED) : Map<K, V>(), mutex() {}
 
-  virtual ~AbstractMap() {}
+  virtual ~AbstractMap() = default;
 
  public:
   virtual void lock() { mutex.lock(); }

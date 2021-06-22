@@ -455,7 +455,7 @@ class SynchronizerState {
     }
 
     if (successor != nullptr) {
-      LockSupport::unpark((Thread *)successor->thread);
+      LockSupport::unpark(successor->thread);
     }
   }
 
@@ -866,7 +866,7 @@ class SynchronizerState {
     Node *t = tail.get();
     Thread *firstThread = nullptr;
     while (t != nullptr && t != head.get()) {
-      Thread *tt = (Thread *)t->thread;
+      Thread *tt = t->thread;
       if (tt != nullptr) {
         firstThread = tt;
       }
@@ -955,7 +955,7 @@ class SynchronizerState {
     Node *p = node->prev;
     int ws = p->waitStatus;
     if (ws > 0 || !compareAndSetWaitStatus(p, ws, Node::SIGNAL)) {
-      LockSupport::unpark((Thread *)node->thread);
+      LockSupport::unpark(node->thread);
     }
 
     return true;
@@ -1278,7 +1278,7 @@ class DefaultConditionObject : public AbstractQueuedSynchronizer::ConditionObjec
 
     for (Node *w = head; w != nullptr; w = w->nextWaiter) {
       if (w->waitStatus == Node::CONDITION) {
-        Thread *t = (Thread *)w->thread;
+        Thread *t = w->thread;
         if (t != nullptr) {
           list->add(t);
         }
@@ -1602,7 +1602,7 @@ Collection<Thread *> *AbstractQueuedSynchronizer::getQueuedThreads() const {
   ArrayList<Thread *> *list = new ArrayList<Thread *>();
 
   for (Node *p = this->impl->tail.get(); p != nullptr; p = p->prev) {
-    Thread *t = (Thread *)p->thread;
+    Thread *t = p->thread;
     if (t != nullptr) {
       list->add(t);
     }
@@ -1617,7 +1617,7 @@ Collection<Thread *> *AbstractQueuedSynchronizer::getExclusiveQueuedThreads() co
 
   for (Node *p = this->impl->tail.get(); p != nullptr; p = p->prev) {
     if (!p->isShared()) {
-      Thread *t = (Thread *)p->thread;
+      Thread *t = p->thread;
       if (t != nullptr) {
         list->add(t);
       }
@@ -1633,7 +1633,7 @@ Collection<Thread *> *AbstractQueuedSynchronizer::getSharedQueuedThreads() const
 
   for (Node *p = this->impl->tail.get(); p != nullptr; p = p->prev) {
     if (p->isShared()) {
-      Thread *t = (Thread *)p->thread;
+      Thread *t = p->thread;
       if (t != nullptr) {
         list->add(t);
       }

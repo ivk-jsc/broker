@@ -63,7 +63,7 @@ Pointer<Command> FifoMessageDispatchChannel::dequeue(long long timeout) {
       if (timeout == -1) {
         channel.wait();
       } else {
-        channel.wait(static_cast<unsigned long>(timeout));
+        channel.wait(timeout);
         break;
       }
     }

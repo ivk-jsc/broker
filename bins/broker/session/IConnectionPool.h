@@ -46,6 +46,7 @@ class IConnectionPool {
   virtual void beginTX(Poco::Data::Session &dbSession, const std::string &txName, storage::DBMSSession::TransactionMode mode) = 0;
   virtual void commitTX(Poco::Data::Session &dbSession, const std::string &txName) = 0;
   virtual void rollbackTX(Poco::Data::Session &dbSession, const std::string &txName) = 0;
+  virtual void runSimple(Poco::Data::Session &dbSession, const std::string &sql) = 0;
 };
 }  // namespace storage
 }  // namespace broker

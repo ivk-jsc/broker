@@ -53,7 +53,7 @@ class DECAF_API AtomicInteger : public decaf::lang::Number {
    */
   AtomicInteger(int initialValue);
 
-  virtual ~AtomicInteger() {}
+  ~AtomicInteger() override = default;
 
   /**
    * Gets the current value.
@@ -136,7 +136,7 @@ class DECAF_API AtomicInteger : public decaf::lang::Number {
    * @return the numeric value represented by this object after conversion
    * to type int.
    */
-  int intValue() const;
+  int intValue() const override;
 
   /**
    * Description copied from class: Number
@@ -145,7 +145,7 @@ class DECAF_API AtomicInteger : public decaf::lang::Number {
    * @return the numeric value represented by this object after conversion
    * to type long long.
    */
-  long long longValue() const;
+  long long longValue() const override;
 
   /**
    * Description copied from class: Number
@@ -154,7 +154,7 @@ class DECAF_API AtomicInteger : public decaf::lang::Number {
    * @return the numeric value represented by this object after conversion
    * to type float.
    */
-  float floatValue() const;
+  float floatValue() const override;
 
   /**
    * Description copied from class: Number
@@ -163,7 +163,7 @@ class DECAF_API AtomicInteger : public decaf::lang::Number {
    * @return the numeric value represented by this object after conversion
    * to type double.
    */
-  double doubleValue() const;
+  double doubleValue() const override;
 };
 }  // namespace atomic
 }  // namespace concurrent

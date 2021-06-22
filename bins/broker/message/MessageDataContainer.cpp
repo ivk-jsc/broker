@@ -19,6 +19,7 @@
 #include <Poco/File.h>
 #include <Poco/Path.h>
 #include <memory>
+#include <utility>
 #include "Defines.h"
 #include "Exception.h"
 #include <Poco/UTF8Encoding.h>
@@ -29,10 +30,12 @@ namespace broker {
 
 MessageDataContainer::MessageDataContainer() = default;
 
-MessageDataContainer::MessageDataContainer(std::string path) : _path(std::move(path)) {}
+MessageDataContainer::MessageDataContainer(std::string path) : _path(path) {}
+
+MessageDataContainer::MessageDataContainer(Poco::Path path) : _path(std::move(path)) {}
 
 MessageDataContainer::MessageDataContainer(std::string path, std::string _header, std::string _data, bool useFileLink)
-    : header(std::move(_header)), data(std::move(_data)), _path(std::move(path)), _withFile(useFileLink) {}
+    : header(std::move(_header)), data(std::move(_data)), _path(path), _withFile(useFileLink) {}
 void MessageDataContainer::initDataFileStream() {
   if (_withFile) {
     if (!_dataFileStream) {
@@ -613,7 +616,8 @@ void MessageDataContainer::flushData() {
     }
   }
 }
-const std::string &MessageDataContainer::path() const { return _path; }
+const Poco::Path &MessageDataContainer::path() const { return _path; }
+
 void MessageDataContainer::removeLinkedFile() {
   if (_withFile) {
     if (_dataFileStream) {

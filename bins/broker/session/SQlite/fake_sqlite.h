@@ -7,7 +7,7 @@
 
 // NOTE : sqlite is a build-in component of PocoDataSqlite
 
-enum SqliteErrors { SQLITE_BUSY = 5, SQLITE_LOCKED = 6, SQLITE_BUSY_SNAPSHOT = 517 };
+enum SqliteErrors { SQLITE_OK = 0, SQLITE_BUSY = 5, SQLITE_LOCKED = 6, SQLITE_BUSY_SNAPSHOT = 517 };
 
 #define SQLITE_TRACE_PROFILE 0x02
 
@@ -22,5 +22,7 @@ int sqlite3_exec(sqlite3 *,                                      /* An open data
 const char *sqlite3_sql(sqlite3_stmt *pStmt);
 
 int sqlite3_trace_v2(sqlite3 *, unsigned uMask, int (*xCallback)(unsigned, void *, void *, void *), void *pCtx);
+
+const char *sqlite3_errmsg(sqlite3 *);
 }
 #endif  // UPMQ_BINS_BROKER_SESSION_SQLITE_FAKE_SQLITE_H_

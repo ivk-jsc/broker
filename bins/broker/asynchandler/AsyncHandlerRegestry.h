@@ -63,6 +63,6 @@ class AsyncHandlerRegestry : public Poco::Runnable {
 }  // namespace broker
 }  // namespace upmq
 
-typedef Singleton<upmq::broker::AsyncHandlerRegestry> AHRegestry;
+using AHRegestry = Singleton<upmq::broker::AsyncHandlerRegestry>;
 
 #endif  // BROKER_ASYNCHANDLERREGESTRY_H

@@ -57,7 +57,7 @@ Destination::~Destination() {
           << " where id = \'" << _id << "\'"
           << ";";
       onError.setSql(sql.str());
-      TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
+      TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(dbms::Instance().dbmsSession(), sql.str()); }), onError);
     }
     {
       _subscriptions.changeForEach([this](SubscriptionsList::ItemType::Iterator &pair) {
@@ -68,13 +68,13 @@ Destination::~Destination() {
     if (isTemporary()) {
       sql << "drop table if exists " << _subscriptionsT << ";" << non_std_endl;
       onError.setInfo("can't drop temporary destination table for subscriptions").setSql(sql.str());
-      TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
+      TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(dbms::Instance().dbmsSession(), sql.str()); }), onError);
 
       sql.str("");
       sql << "delete from " << _exchange.destinationsT() << " where id = \'" << _id << "\'"
           << ";";
       onError.setInfo("can't delete record with temporary destination table").setSql(sql.str());
-      TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
+      TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(dbms::Instance().dbmsSession(), sql.str()); }), onError);
 
       _storage.dropTables();
     }
@@ -383,15 +383,8 @@ void Destination::removeMessageOrGroup(const Session &session, Storage &storage,
     storage.removeGroupMessage(msg.tuple.get<message::field::GroupId::POSITION>().value(), session);
   }
 
-  auto &txName = msg.tuple.get<message::field::MessageId::POSITION>();
-  if (session.currentDBSession == nullptr) {
-    storage::DBMSSession dbmsSession = dbms::Instance().dbmsSession();
-    dbmsSession.beginTX(txName);
-    storage.removeMessage(txName, dbmsSession);
-    dbmsSession.commitTX();
-  } else {
-    storage.removeMessage(txName, *session.currentDBSession);
-  }
+  auto &messageId = msg.tuple.get<message::field::MessageId::POSITION>();
+  storage.removeMessage(messageId, *session.currentDBSession);
 }
 void Destination::doAck(
     const Session &session, const MessageDataContainer &sMessage, Storage &storage, bool browser, const std::vector<MessageInfo> &messages) {
@@ -598,9 +591,9 @@ bool Destination::getNexMessageForAllSubscriptions() {
         result = false;
         break;
     }
-    //    if (log->getLevel() >= Poco::Message::PRIO_INFORMATION) {
-    //      log->information("getNextMessage result %s", info);
-    //    }
+    if (log->getLevel() >= Poco::Message::PRIO_TRACE) {
+      log->information("%s | getNextMessage result %s", __PRETTY_FUNCTION__, info);
+    }
     return result;
   };
   bool result = false;

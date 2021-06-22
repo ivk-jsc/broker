@@ -77,10 +77,8 @@ std::string DestinationFactory::destinationTypePrefix(const std::string &uri) {
   return Poco::toLower(tURI.getScheme()) + "/";
 }
 std::string DestinationFactory::destinationName(const std::string &uri) {
-  Poco::StringTokenizer URI(uri, ":", Poco::StringTokenizer::TOK_TRIM);
-  std::string destName = split(Poco::trim(Poco::replace(URI[1], "//", " ")), '/')[0];
-  removeParamsAndFragmentFromURI(destName);
-  return destName;
+  Poco::URI puri(uri);
+  return puri.getHost();
 }
 void DestinationFactory::removeParamsAndFragmentFromURI(std::string &uri) {
   std::string::size_type pos = uri.find('?');

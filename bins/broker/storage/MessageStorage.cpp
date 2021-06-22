@@ -276,7 +276,7 @@ bool Storage::deleteMessageHeader(storage::DBMSSession &dbSession, const std::st
   OnError onError;
   onError.setError(Proto::ERROR_UNKNOWN).setInfo("can't erase message").setSql(sql.str());
 
-  TRY_EXECUTE(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
+  TRY_EXECUTE(([&dbSession, &sql]() { dbSession.runSimple(sql.str()); }), onError);
 
   return persistent;
 }
@@ -288,7 +288,7 @@ void Storage::deleteMessageProperties(storage::DBMSSession &dbSession, const std
   OnError onError;
   onError.setError(Proto::ERROR_UNKNOWN).setInfo("can't erase message properties").setSql(sql.str());
 
-  TRY_EXECUTE(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
+  TRY_EXECUTE(([&dbSession, &sql]() { dbSession.runSimple(sql.str()); }), onError);
 }
 int Storage::getSubscribersCount(storage::DBMSSession &dbSession, const std::string &messageID) {
   TRACE(log);
@@ -313,7 +313,7 @@ void Storage::updateSubscribersCount(storage::DBMSSession &dbSession, const std:
   OnError onError;
   onError.setError(Proto::ERROR_UNKNOWN).setInfo("can't update subscribers count").setSql(sql.str());
 
-  TRY_EXECUTE(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
+  TRY_EXECUTE(([&dbSession, &sql]() { dbSession.runSimple(sql.str()); }), onError);
 }
 void Storage::deleteMessageInfoFromJournal(storage::DBMSSession &dbSession, const std::string &messageID) {
   TRACE(log);
@@ -322,7 +322,7 @@ void Storage::deleteMessageInfoFromJournal(storage::DBMSSession &dbSession, cons
   OnError onError;
   onError.setError(Proto::ERROR_UNKNOWN).setInfo("can't delete message from journal").setSql(sql.str());
 
-  TRY_EXECUTE(([&dbSession, &sql]() { dbSession << sql.str(), Poco::Data::Keywords::now; }), onError);
+  TRY_EXECUTE(([&dbSession, &sql]() { dbSession.runSimple(sql.str()); }), onError);
 }
 void Storage::deleteMessageDataIfExists(const std::string &messageID, bool persistent) {
   TRACE(log);
@@ -338,16 +338,7 @@ void Storage::deleteMessageDataIfExists(const std::string &messageID, bool persi
 }
 void Storage::removeMessage(const std::string &messageID, storage::DBMSSession &extDBSession) {
   TRACE(log);
-  bool externConnection = extDBSession.isValid();
-  std::unique_ptr<storage::DBMSSession> tempDBMSSession;
-  if (!externConnection) {
-    tempDBMSSession = dbms::Instance().dbmsSessionPtr();
-  }
-  storage::DBMSSession &dbSession = externConnection ? extDBSession : *tempDBMSSession;
-  if (!externConnection) {
-    dbSession.beginTX(messageID);
-  }
-
+  storage::DBMSSession &dbSession = extDBSession;
   const bool wasPersistent = deleteMessageHeader(dbSession, messageID);
   deleteMessageProperties(dbSession, messageID);
   const int subscribersCount = getSubscribersCount(dbSession, messageID);
@@ -358,9 +349,6 @@ void Storage::removeMessage(const std::string &messageID, storage::DBMSSession &
     updateSubscribersCount(dbSession, messageID);
   }
   INFO(log, std::string("try to remove message : ").append(messageID));
-  if (!externConnection) {
-    dbSession.commitTX();
-  }
 }
 const std::string &Storage::messageTableID() const { return _messageTableID; }
 const std::string &Storage::propertyTableID() const { return _propertyTableID; }
@@ -917,7 +905,7 @@ void Storage::setMessagesToNotSent(const Consumer &consumer) {
     sql << " and transaction_id = \'" << consumer.session.txName << "\'";
   }
   sql << ";";
-  TRY_EXECUTE_NOEXCEPT([&sql]() { dbms::Instance().doNow(sql.str()); }, onError);
+  TRY_EXECUTE_NOEXCEPT([&sql]() { dbms::Instance().doNow(dbms::Instance().dbmsSession(), sql.str()); }, onError);
 }
 void Storage::copyTo(Storage &storage, const Consumer &consumer) {
   TRACE(log);
@@ -1245,12 +1233,12 @@ void Storage::dropTables() {
   std::stringstream sql;
   sql << "drop table if exists " << _messageTableID << ";" << non_std_endl;
   onError.setSql(sql.str());
-  TRY_EXECUTE_NOEXCEPT([&sql]() { dbms::Instance().doNow(sql.str()); }, onError);
+  TRY_EXECUTE_NOEXCEPT([&sql]() { dbms::Instance().doNow(dbms::Instance().dbmsSession(), sql.str()); }, onError);
 
   sql.str("");
   sql << "drop table if exists " << _propertyTableID << ";";
   onError.setSql(sql.str());
-  TRY_EXECUTE_NOEXCEPT([&sql]() { dbms::Instance().doNow(sql.str()); }, onError);
+  TRY_EXECUTE_NOEXCEPT([&sql]() { dbms::Instance().doNow(dbms::Instance().dbmsSession(), sql.str()); }, onError);
 }
 bool Storage::hasTransaction(const Session &session) const {
   TRACE(log);

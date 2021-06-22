@@ -132,7 +132,7 @@ class DECAF_API Buffer {
  public:
   Buffer(int capactiy);
   Buffer(const Buffer &other);
-  virtual ~Buffer() {}
+  virtual ~Buffer() = default;
 
  public:
   /**

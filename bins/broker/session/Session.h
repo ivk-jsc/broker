@@ -65,8 +65,7 @@ class Session {
     }
     void set(std::unique_ptr<storage::DBMSSession> currDBSession) noexcept {
       upmq::ScopedWriteRWLock writeRWLock(_rwLock);
-      _currentSessions.erase(Poco::Thread::currentTid());
-      _currentSessions.emplace(Poco::Thread::currentTid(), std::move(currDBSession));
+      _currentSessions[Poco::Thread::currentTid()] = std::move(currDBSession);
     }
     CurrentDBSession &operator=(std::unique_ptr<storage::DBMSSession> currDBSession) noexcept {
       this->set(std::move(currDBSession));

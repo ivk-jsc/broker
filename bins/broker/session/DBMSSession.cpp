@@ -88,3 +88,4 @@ const std::shared_ptr<Poco::Data::Session> &upmq::broker::storage::DBMSSession::
   return _session;
 }
 bool upmq::broker::storage::DBMSSession::inTransaction() const { return _inTransaction; }
+void upmq::broker::storage::DBMSSession::runSimple(const std::string &sql) { dbms::Instance().doNow(*this, sql, DBMSConnectionPool::TX::NOT_USE); }

@@ -52,7 +52,7 @@ class DECAF_API Boolean : public Comparable<Boolean>, public Comparable<bool> {
    */
   Boolean(const String &value);
 
-  virtual ~Boolean() {}
+  ~Boolean() override = default;
 
   /**
    * @return the primitive boolean value of this object
@@ -72,14 +72,14 @@ class DECAF_API Boolean : public Comparable<Boolean>, public Comparable<bool> {
    * argument represents false; and a negative value if this object
    * represents false and the argument represents true
    */
-  virtual int compareTo(const Boolean &b) const;
+  int compareTo(const Boolean &b) const override;
 
   /**
    * Compares equality between this object and the one passed.
    * @param value - the value to be compared to this one.
    * @return true if this object is equal to the one passed.
    */
-  virtual bool operator==(const Boolean &value) const;
+  bool operator==(const Boolean &value) const override;
 
   /**
    * Compares this object to another and returns true if this object
@@ -87,12 +87,12 @@ class DECAF_API Boolean : public Comparable<Boolean>, public Comparable<bool> {
    * @param value - the value to be compared to this one.
    * @return true if this object is equal to the one passed.
    */
-  virtual bool operator<(const Boolean &value) const;
+  bool operator<(const Boolean &value) const override;
 
   /**
    * @return true if the two Boolean Objects have the same value.
    */
-  bool equals(const Boolean &b) const { return this->value == b.value; }
+  bool equals(const Boolean &b) const override { return this->value == b.value; }
 
   /**
    * Compares this Boolean instance with another.
@@ -102,14 +102,14 @@ class DECAF_API Boolean : public Comparable<Boolean>, public Comparable<bool> {
    * argument represents false; and a negative value if this object
    * represents false and the argument represents true
    */
-  virtual int compareTo(const bool &b) const;
+  int compareTo(const bool &b) const override;
 
   /**
    * Compares equality between this object and the one passed.
    * @param value - the value to be compared to this one.
    * @return true if this object is equal to the one passed.
    */
-  virtual bool operator==(const bool &value) const;
+  bool operator==(const bool &value) const override;
 
   /**
    * Compares this object to another and returns true if this object
@@ -117,12 +117,12 @@ class DECAF_API Boolean : public Comparable<Boolean>, public Comparable<bool> {
    * @param value - the value to be compared to this one.
    * @return true if this object is equal to the one passed.
    */
-  virtual bool operator<(const bool &value) const;
+  bool operator<(const bool &value) const override;
 
   /**
    * @return true if the two Boolean Objects have the same value.
    */
-  bool equals(const bool &b) const { return this->value == b; }
+  bool equals(const bool &b) const override { return this->value == b; }
 
  public:
   /**

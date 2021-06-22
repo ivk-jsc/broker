@@ -44,9 +44,9 @@ namespace util {
 template <typename E>
 class AbstractSet : public virtual decaf::util::Set<E>, public virtual decaf::util::AbstractCollection<E> {
  public:
-  AbstractSet() {}
+  AbstractSet() = default;
 
-  virtual ~AbstractSet() {}
+  virtual ~AbstractSet() = default;
 
   /**
    * {@inheritDoc}

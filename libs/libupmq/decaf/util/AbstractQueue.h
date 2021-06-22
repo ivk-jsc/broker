@@ -47,7 +47,7 @@ class AbstractQueue : public decaf::util::Queue<E>, public decaf::util::Abstract
  public:
   AbstractQueue() : Queue<E>() {}
 
-  virtual ~AbstractQueue() {}
+  virtual ~AbstractQueue() = default;
 
   /**
    * {@inheritDoc}

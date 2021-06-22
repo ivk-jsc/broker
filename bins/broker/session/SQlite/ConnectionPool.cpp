@@ -174,6 +174,15 @@ void ConnectionPool::rollbackTX(Poco::Data::Session &dbSession, const std::strin
     }
   } while (locked);
 }
+void ConnectionPool::runSimple(Poco::Data::Session &dbSession, const std::string &sql) {
+  sqlite3 *pSqlite3 = Poco::Data::SQLite::Utility::dbHandle(dbSession);
+  const char *cquery = sql.c_str();
+  int result = sqlite3_exec(pSqlite3, cquery, nullptr, nullptr, nullptr);
+  if (result != SQLITE_OK) {
+    std::string errMsg = sqlite3_errmsg(pSqlite3);
+    Poco::Data::SQLite::Utility::throwException(pSqlite3, result, errMsg);
+  }
+}
 }  // namespace sqlite
 }  // namespace storage
 }  // namespace broker
