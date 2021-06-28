@@ -592,7 +592,7 @@ bool Destination::getNexMessageForAllSubscriptions() {
         break;
     }
     if (log->getLevel() >= Poco::Message::PRIO_TRACE) {
-      log->information("%s | getNextMessage result %s", __PRETTY_FUNCTION__, info);
+      log->information("%s | getNextMessage result %s", std::string(__PRETTY_FUNCTION__), info);
     }
     return result;
   };
