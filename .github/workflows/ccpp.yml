@@ -19,16 +19,834 @@ jobs:
         run: echo '<config><broker><log><level>7</level><path windows="./" _nix="./">./</path><interactive>false</interactive></log></broker></config>' > broker.xml
       - name: Start broker
         run: ./bins/broker/broker &
-      - name: Test
-        id: test
-        run: ./tests/brokertest/brokertest && echo ::set-output name=status::success
+      - name: AsyncSenderTest_testAsyncSends
+        id: AsyncSenderTest_testAsyncSends
+        run: ./tests/brokertest/brokertest --gtest_filter=AsyncSenderTest.testAsyncSends && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: BytesMessageTest_testSendRecvCloneBytesMessage
+        id: BytesMessageTest_testSendRecvCloneBytesMessage
+        run: ./tests/brokertest/brokertest --gtest_filter=BytesMessageTest.testSendRecvCloneBytesMessage && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: BytesMessageTest_testGetBodyLength
+        id: BytesMessageTest_testGetBodyLength
+        run: ./tests/brokertest/brokertest --gtest_filter=BytesMessageTest.testGetBodyLength && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: BytesMessageTest_testReadBoolean
+        id: BytesMessageTest_testReadBoolean
+        run: ./tests/brokertest/brokertest --gtest_filter=BytesMessageTest.testReadBoolean && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: BytesMessageTest_testReadByte
+        id: BytesMessageTest_testReadByte
+        run: ./tests/brokertest/brokertest --gtest_filter=BytesMessageTest.testReadByte && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: BytesMessageTest_testReadShort
+        id: BytesMessageTest_testReadShort
+        run: ./tests/brokertest/brokertest --gtest_filter=BytesMessageTest.testReadShort && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: BytesMessageTest_testReadUnsignedShort
+        id: BytesMessageTest_testReadUnsignedShort
+        run: ./tests/brokertest/brokertest --gtest_filter=BytesMessageTest.testReadUnsignedShort && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: BytesMessageTest_testReadChar
+        id: BytesMessageTest_testReadChar
+        run: ./tests/brokertest/brokertest --gtest_filter=BytesMessageTest.testReadChar && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: BytesMessageTest_testReadInt
+        id: BytesMessageTest_testReadInt
+        run: ./tests/brokertest/brokertest --gtest_filter=BytesMessageTest.testReadInt && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: BytesMessageTest_testReadLong
+        id: BytesMessageTest_testReadLong
+        run: ./tests/brokertest/brokertest --gtest_filter=BytesMessageTest.testReadLong && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: BytesMessageTest_testReadFloat
+        id: BytesMessageTest_testReadFloat
+        run: ./tests/brokertest/brokertest --gtest_filter=BytesMessageTest.testReadFloat && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: BytesMessageTest_testReadDouble
+        id: BytesMessageTest_testReadDouble
+        run: ./tests/brokertest/brokertest --gtest_filter=BytesMessageTest.testReadDouble && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: BytesMessageTest_testReadString
+        id: BytesMessageTest_testReadString
+        run: ./tests/brokertest/brokertest --gtest_filter=BytesMessageTest.testReadString && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: BytesMessageTest_testReadUTF
+        id: BytesMessageTest_testReadUTF
+        run: ./tests/brokertest/brokertest --gtest_filter=BytesMessageTest.testReadUTF && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: BytesMessageTest_testReadBytesbyteArray
+        id: BytesMessageTest_testReadBytesbyteArray
+        run: ./tests/brokertest/brokertest --gtest_filter=BytesMessageTest.testReadBytesbyteArray && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: BytesMessageTest_testReadBytesbyteArray2
+        id: BytesMessageTest_testReadBytesbyteArray2
+        run: ./tests/brokertest/brokertest --gtest_filter=BytesMessageTest.testReadBytesbyteArray2 && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: BytesMessageTest_testGetBodyBytes
+        id: BytesMessageTest_testGetBodyBytes
+        run: ./tests/brokertest/brokertest --gtest_filter=BytesMessageTest.testGetBodyBytes && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: BytesMessageTest_testClearBody
+        id: BytesMessageTest_testClearBody
+        run: ./tests/brokertest/brokertest --gtest_filter=BytesMessageTest.testClearBody && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: BytesMessageTest_testReset
+        id: BytesMessageTest_testReset
+        run: ./tests/brokertest/brokertest --gtest_filter=BytesMessageTest.testReset && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: BytesMessageTest_testReadOnlyBody
+        id: BytesMessageTest_testReadOnlyBody
+        run: ./tests/brokertest/brokertest --gtest_filter=BytesMessageTest.testReadOnlyBody && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: BytesMessageTest_testWriteOnlyBody
+        id: BytesMessageTest_testWriteOnlyBody
+        run: ./tests/brokertest/brokertest --gtest_filter=BytesMessageTest.testWriteOnlyBody && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: ClientAckTest_testAckedMessageAreConsumed
+        id: ClientAckTest_testAckedMessageAreConsumed
+        run: ./tests/brokertest/brokertest --gtest_filter=ClientAckTest.testAckedMessageAreConsumed && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: ClientAckTest_testLastMessageAcked
+        id: ClientAckTest_testLastMessageAcked
+        run: ./tests/brokertest/brokertest --gtest_filter=ClientAckTest.testLastMessageAcked && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: ClientAckTest_testFirstMessageAcked
+        id: ClientAckTest_testFirstMessageAcked
+        run: ./tests/brokertest/brokertest --gtest_filter=ClientAckTest.testFirstMessageAcked && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: ClientAckTest_testUnAckedMessageAreNotConsumedOnSessionClose
+        id: ClientAckTest_testUnAckedMessageAreNotConsumedOnSessionClose
+        run: ./tests/brokertest/brokertest --gtest_filter=ClientAckTest.testUnAckedMessageAreNotConsumedOnSessionClose && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: ClientAckTest_testAckedMessageAreConsumedAsync
+        id: ClientAckTest_testAckedMessageAreConsumedAsync
+        run: ./tests/brokertest/brokertest --gtest_filter=ClientAckTest.testAckedMessageAreConsumedAsync && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: ClientAckTest_testUnAckedMessageAreNotConsumedOnSessionCloseAsync
+        id: ClientAckTest_testUnAckedMessageAreNotConsumedOnSessionCloseAsync
+        run: ./tests/brokertest/brokertest --gtest_filter=ClientAckTest.testUnAckedMessageAreNotConsumedOnSessionCloseAsync && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: ConnectionStartStopTest_testStoppedConsumerHoldsMessagesTillStarted
+        id: ConnectionStartStopTest_testStoppedConsumerHoldsMessagesTillStarted
+        run: ./tests/brokertest/brokertest --gtest_filter=ConnectionStartStopTest.testStoppedConsumerHoldsMessagesTillStarted && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: ConnectionStartStopTest_testMultipleConnectionStops
+        id: ConnectionStartStopTest_testMultipleConnectionStops
+        run: ./tests/brokertest/brokertest --gtest_filter=ConnectionStartStopTest.testMultipleConnectionStops && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: DurableTest_testDurableConsumer
+        id: DurableTest_testDurableConsumer
+        run: ./tests/brokertest/brokertest --gtest_filter=DurableTest.testDurableConsumer && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: JmsMessageGroupTest_testMessageSend
+        id: JmsMessageGroupTest_testMessageSend
+        run: ./tests/brokertest/brokertest --gtest_filter=JmsMessageGroupTest.testMessageSend && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MapMessageTest_testSendRecvCloneMapMessage
+        id: MapMessageTest_testSendRecvCloneMapMessage
+        run: ./tests/brokertest/brokertest --gtest_filter=MapMessageTest.testSendRecvCloneMapMessage && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MapMessageTest_testEmptyMapSendReceive
+        id: MapMessageTest_testEmptyMapSendReceive
+        run: ./tests/brokertest/brokertest --gtest_filter=MapMessageTest.testEmptyMapSendReceive && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MapMessageTest_testMapWithEmptyStringValue
+        id: MapMessageTest_testMapWithEmptyStringValue
+        run: ./tests/brokertest/brokertest --gtest_filter=MapMessageTest.testMapWithEmptyStringValue && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MapMessageTest_testMapSetEmptyBytesVector
+        id: MapMessageTest_testMapSetEmptyBytesVector
+        run: ./tests/brokertest/brokertest --gtest_filter=MapMessageTest.testMapSetEmptyBytesVector && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MapMessageTest_testBytesConversion
+        id: MapMessageTest_testBytesConversion
+        run: ./tests/brokertest/brokertest --gtest_filter=MapMessageTest.testBytesConversion && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MapMessageTest_testGetBoolean
+        id: MapMessageTest_testGetBoolean
+        run: ./tests/brokertest/brokertest --gtest_filter=MapMessageTest.testGetBoolean && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MapMessageTest_testGetByte
+        id: MapMessageTest_testGetByte
+        run: ./tests/brokertest/brokertest --gtest_filter=MapMessageTest.testGetByte && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MapMessageTest_testGetShort
+        id: MapMessageTest_testGetShort
+        run: ./tests/brokertest/brokertest --gtest_filter=MapMessageTest.testGetShort && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MapMessageTest_testGetChar
+        id: MapMessageTest_testGetChar
+        run: ./tests/brokertest/brokertest --gtest_filter=MapMessageTest.testGetChar && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MapMessageTest_testGetInt
+        id: MapMessageTest_testGetInt
+        run: ./tests/brokertest/brokertest --gtest_filter=MapMessageTest.testGetInt && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MapMessageTest_testGetLong
+        id: MapMessageTest_testGetLong
+        run: ./tests/brokertest/brokertest --gtest_filter=MapMessageTest.testGetLong && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MapMessageTest_testGetFloat
+        id: MapMessageTest_testGetFloat
+        run: ./tests/brokertest/brokertest --gtest_filter=MapMessageTest.testGetFloat && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MapMessageTest_testGetDouble
+        id: MapMessageTest_testGetDouble
+        run: ./tests/brokertest/brokertest --gtest_filter=MapMessageTest.testGetDouble && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MapMessageTest_testGetString
+        id: MapMessageTest_testGetString
+        run: ./tests/brokertest/brokertest --gtest_filter=MapMessageTest.testGetString && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MapMessageTest_testGetBytes
+        id: MapMessageTest_testGetBytes
+        run: ./tests/brokertest/brokertest --gtest_filter=MapMessageTest.testGetBytes && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MapMessageTest_testGetMapNames
+        id: MapMessageTest_testGetMapNames
+        run: ./tests/brokertest/brokertest --gtest_filter=MapMessageTest.testGetMapNames && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MapMessageTest_testItemExists
+        id: MapMessageTest_testItemExists
+        run: ./tests/brokertest/brokertest --gtest_filter=MapMessageTest.testItemExists && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MapMessageTest_testClearBody
+        id: MapMessageTest_testClearBody
+        run: ./tests/brokertest/brokertest --gtest_filter=MapMessageTest.testClearBody && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MapMessageTest_testReadOnlyBody
+        id: MapMessageTest_testReadOnlyBody
+        run: ./tests/brokertest/brokertest --gtest_filter=MapMessageTest.testReadOnlyBody && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MessageTest_testSendRecvCloneProperty
+        id: MessageTest_testSendRecvCloneProperty
+        run: ./tests/brokertest/brokertest --gtest_filter=MessageTest.testSendRecvCloneProperty && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MessageTest_testCopy
+        id: MessageTest_testCopy
+        run: ./tests/brokertest/brokertest --gtest_filter=MessageTest.testCopy && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MessageTest_testClearProperties
+        id: MessageTest_testClearProperties
+        run: ./tests/brokertest/brokertest --gtest_filter=MessageTest.testClearProperties && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MessageTest_testPropertyExists
+        id: MessageTest_testPropertyExists
+        run: ./tests/brokertest/brokertest --gtest_filter=MessageTest.testPropertyExists && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MessageTest_testGetBooleanProperty
+        id: MessageTest_testGetBooleanProperty
+        run: ./tests/brokertest/brokertest --gtest_filter=MessageTest.testGetBooleanProperty && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MessageTest_testGetByteProperty
+        id: MessageTest_testGetByteProperty
+        run: ./tests/brokertest/brokertest --gtest_filter=MessageTest.testGetByteProperty && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MessageTest_testGetShortProperty
+        id: MessageTest_testGetShortProperty
+        run: ./tests/brokertest/brokertest --gtest_filter=MessageTest.testGetShortProperty && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MessageTest_testGetIntProperty
+        id: MessageTest_testGetIntProperty
+        run: ./tests/brokertest/brokertest --gtest_filter=MessageTest.testGetIntProperty && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MessageTest_testGetLongProperty
+        id: MessageTest_testGetLongProperty
+        run: ./tests/brokertest/brokertest --gtest_filter=MessageTest.testGetLongProperty && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MessageTest_testGetFloatProperty
+        id: MessageTest_testGetFloatProperty
+        run: ./tests/brokertest/brokertest --gtest_filter=MessageTest.testGetFloatProperty && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MessageTest_testGetDoubleProperty
+        id: MessageTest_testGetDoubleProperty
+        run: ./tests/brokertest/brokertest --gtest_filter=MessageTest.testGetDoubleProperty && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MessageTest_testGetStringProperty
+        id: MessageTest_testGetStringProperty
+        run: ./tests/brokertest/brokertest --gtest_filter=MessageTest.testGetStringProperty && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MessageTest_testGetPropertyNames
+        id: MessageTest_testGetPropertyNames
+        run: ./tests/brokertest/brokertest --gtest_filter=MessageTest.testGetPropertyNames && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MessageTest_testSetEmptyPropertyName
+        id: MessageTest_testSetEmptyPropertyName
+        run: ./tests/brokertest/brokertest --gtest_filter=MessageTest.testSetEmptyPropertyName && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MessageTest_testGetAndSetCMSXDeliveryCount
+        id: MessageTest_testGetAndSetCMSXDeliveryCount
+        run: ./tests/brokertest/brokertest --gtest_filter=MessageTest.testGetAndSetCMSXDeliveryCount && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MessageTest_testBooleanPropertyConversion
+        id: MessageTest_testBooleanPropertyConversion
+        run: ./tests/brokertest/brokertest --gtest_filter=MessageTest.testBooleanPropertyConversion && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MessageTest_testBytePropertyConversion
+        id: MessageTest_testBytePropertyConversion
+        run: ./tests/brokertest/brokertest --gtest_filter=MessageTest.testBytePropertyConversion && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MessageTest_testShortPropertyConversion
+        id: MessageTest_testShortPropertyConversion
+        run: ./tests/brokertest/brokertest --gtest_filter=MessageTest.testShortPropertyConversion && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MessageTest_testIntPropertyConversion
+        id: MessageTest_testIntPropertyConversion
+        run: ./tests/brokertest/brokertest --gtest_filter=MessageTest.testIntPropertyConversion && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MessageTest_testLongPropertyConversion
+        id: MessageTest_testLongPropertyConversion
+        run: ./tests/brokertest/brokertest --gtest_filter=MessageTest.testLongPropertyConversion && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MessageTest_testFloatPropertyConversion
+        id: MessageTest_testFloatPropertyConversion
+        run: ./tests/brokertest/brokertest --gtest_filter=MessageTest.testFloatPropertyConversion && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MessageTest_testDoublePropertyConversion
+        id: MessageTest_testDoublePropertyConversion
+        run: ./tests/brokertest/brokertest --gtest_filter=MessageTest.testDoublePropertyConversion && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: MessageTest_testStringPropertyConversion
+        id: MessageTest_testStringPropertyConversion
+        run: ./tests/brokertest/brokertest --gtest_filter=MessageTest.testStringPropertyConversion && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: QueueBrowserTest_testReceiveBrowseReceive
+        id: QueueBrowserTest_testReceiveBrowseReceive
+        run: ./tests/brokertest/brokertest --gtest_filter=QueueBrowserTest.testReceiveBrowseReceive && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: QueueBrowserTest_testBrowseReceive
+        id: QueueBrowserTest_testBrowseReceive
+        run: ./tests/brokertest/brokertest --gtest_filter=QueueBrowserTest.testBrowseReceive && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: QueueBrowserTest_testQueueBrowserWith2Consumers
+        id: QueueBrowserTest_testQueueBrowserWith2Consumers
+        run: ./tests/brokertest/brokertest --gtest_filter=QueueBrowserTest.testQueueBrowserWith2Consumers && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: SelectorTest_testBasicSelectors
+        id: SelectorTest_testBasicSelectors
+        run: ./tests/brokertest/brokertest --gtest_filter=SelectorTest.testBasicSelectors && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: SelectorTest_testBooleanSelector
+        id: SelectorTest_testBooleanSelector
+        run: ./tests/brokertest/brokertest --gtest_filter=SelectorTest.testBooleanSelector && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: SelectorTest_testJMSPropertySelectors
+        id: SelectorTest_testJMSPropertySelectors
+        run: ./tests/brokertest/brokertest --gtest_filter=SelectorTest.testJMSPropertySelectors && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: SelectorTest_testPropertyTypes
+        id: SelectorTest_testPropertyTypes
+        run: ./tests/brokertest/brokertest --gtest_filter=SelectorTest.testPropertyTypes && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: SelectorTest_testAndSelectors
+        id: SelectorTest_testAndSelectors
+        run: ./tests/brokertest/brokertest --gtest_filter=SelectorTest.testAndSelectors && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: SelectorTest_testOrSelectors
+        id: SelectorTest_testOrSelectors
+        run: ./tests/brokertest/brokertest --gtest_filter=SelectorTest.testOrSelectors && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: SelectorTest_testBetween
+        id: SelectorTest_testBetween
+        run: ./tests/brokertest/brokertest --gtest_filter=SelectorTest.testBetween && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: SelectorTest_testIn
+        id: SelectorTest_testIn
+        run: ./tests/brokertest/brokertest --gtest_filter=SelectorTest.testIn && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: SelectorTest_testIsNull
+        id: SelectorTest_testIsNull
+        run: ./tests/brokertest/brokertest --gtest_filter=SelectorTest.testIsNull && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: SelectorTest_testStringQuoteParsing
+        id: SelectorTest_testStringQuoteParsing
+        run: ./tests/brokertest/brokertest --gtest_filter=SelectorTest.testStringQuoteParsing && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: SelectorTest_testLikeComparisons
+        id: SelectorTest_testLikeComparisons
+        run: ./tests/brokertest/brokertest --gtest_filter=SelectorTest.testLikeComparisons && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: SelectorTest_testInvalidSelector
+        id: SelectorTest_testInvalidSelector
+        run: ./tests/brokertest/brokertest --gtest_filter=SelectorTest.testInvalidSelector && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: SimpleRollbackTest_testRollbacks
+        id: SimpleRollbackTest_testRollbacks
+        run: ./tests/brokertest/brokertest --gtest_filter=SimpleRollbackTest.testRollbacks && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: SimpleTest_testAutoAck
+        id: SimpleTest_testAutoAck
+        run: ./tests/brokertest/brokertest --gtest_filter=SimpleTest.testAutoAck && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: SimpleTest_testClientAck
+        id: SimpleTest_testClientAck
+        run: ./tests/brokertest/brokertest --gtest_filter=SimpleTest.testClientAck && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: SimpleTest_testProducerWithNullDestination
+        id: SimpleTest_testProducerWithNullDestination
+        run: ./tests/brokertest/brokertest --gtest_filter=SimpleTest.testProducerWithNullDestination && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: SimpleTest_testProducerSendWithNullDestination
+        id: SimpleTest_testProducerSendWithNullDestination
+        run: ./tests/brokertest/brokertest --gtest_filter=SimpleTest.testProducerSendWithNullDestination && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: SimpleTest_testProducerSendToNonDefaultDestination
+        id: SimpleTest_testProducerSendToNonDefaultDestination
+        run: ./tests/brokertest/brokertest --gtest_filter=SimpleTest.testProducerSendToNonDefaultDestination && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: SimpleTest_testSyncReceive
+        id: SimpleTest_testSyncReceive
+        run: ./tests/brokertest/brokertest --gtest_filter=SimpleTest.testSyncReceive && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: SimpleTest_testSyncReceiveClientAck
+        id: SimpleTest_testSyncReceiveClientAck
+        run: ./tests/brokertest/brokertest --gtest_filter=SimpleTest.testSyncReceiveClientAck && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: SimpleTest_testMultipleConnections
+        id: SimpleTest_testMultipleConnections
+        run: ./tests/brokertest/brokertest --gtest_filter=SimpleTest.testMultipleConnections && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: SimpleTest_testMultipleSessions
+        id: SimpleTest_testMultipleSessions
+        run: ./tests/brokertest/brokertest --gtest_filter=SimpleTest.testMultipleSessions && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: SimpleTest_testReceiveAlreadyInQueue
+        id: SimpleTest_testReceiveAlreadyInQueue
+        run: ./tests/brokertest/brokertest --gtest_filter=SimpleTest.testReceiveAlreadyInQueue && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: SimpleTest_testQuickCreateAndDestroy
+        id: SimpleTest_testQuickCreateAndDestroy
+        run: ./tests/brokertest/brokertest --gtest_filter=SimpleTest.testQuickCreateAndDestroy && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: SimpleTest_testBytesMessageSendRecv
+        id: SimpleTest_testBytesMessageSendRecv
+        run: ./tests/brokertest/brokertest --gtest_filter=SimpleTest.testBytesMessageSendRecv && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: SimpleTest_testBytesMessageSendRecvAsync
+        id: SimpleTest_testBytesMessageSendRecvAsync
+        run: ./tests/brokertest/brokertest --gtest_filter=SimpleTest.testBytesMessageSendRecvAsync && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: SimpleTest_testNewCloseDelete
+        id: SimpleTest_testNewCloseDelete
+        run: ./tests/brokertest/brokertest --gtest_filter=SimpleTest.testNewCloseDelete && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: SimpleTest_testDeleteDestinationWithSubscribersFails
+        id: SimpleTest_testDeleteDestinationWithSubscribersFails
+        run: ./tests/brokertest/brokertest --gtest_filter=SimpleTest.testDeleteDestinationWithSubscribersFails && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: SimpleTest_testPublishFailsForDestoryedTempDestination
+        id: SimpleTest_testPublishFailsForDestoryedTempDestination
+        run: ./tests/brokertest/brokertest --gtest_filter=SimpleTest.testPublishFailsForDestoryedTempDestination && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: SimpleTest_testDuplicateClientID
+        id: SimpleTest_testDuplicateClientID
+        run: ./tests/brokertest/brokertest --gtest_filter=SimpleTest.testDuplicateClientID && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: SimpleTest_testClientTimeToLive
+        id: SimpleTest_testClientTimeToLive
+        run: ./tests/brokertest/brokertest --gtest_filter=SimpleTest.testClientTimeToLive && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: SimpleTest_testServerTimeToLive
+        id: SimpleTest_testServerTimeToLive
+        run: ./tests/brokertest/brokertest --gtest_filter=SimpleTest.testServerTimeToLive && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: SimpleTest_testPriority
+        id: SimpleTest_testPriority
+        run: ./tests/brokertest/brokertest --gtest_filter=SimpleTest.testPriority && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: SimpleTest_testRoundRobin
+        id: SimpleTest_testRoundRobin
+        run: ./tests/brokertest/brokertest --gtest_filter=SimpleTest.testRoundRobin && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: TextMessageTest_testSendRecvCloneTextMessage
+        id: TextMessageTest_testSendRecvCloneTextMessage
+        run: ./tests/brokertest/brokertest --gtest_filter=TextMessageTest.testSendRecvCloneTextMessage && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: TextMessageTest_testClearBody
+        id: TextMessageTest_testClearBody
+        run: ./tests/brokertest/brokertest --gtest_filter=TextMessageTest.testClearBody && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: TransactionTest_testSendReceiveTransactedBatches
+        id: TransactionTest_testSendReceiveTransactedBatches
+        run: ./tests/brokertest/brokertest --gtest_filter=TransactionTest.testSendReceiveTransactedBatches && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: TransactionTest_testSendRollback
+        id: TransactionTest_testSendRollback
+        run: ./tests/brokertest/brokertest --gtest_filter=TransactionTest.testSendRollback && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: TransactionTest_testSendRollbackCommitRollback
+        id: TransactionTest_testSendRollbackCommitRollback
+        run: ./tests/brokertest/brokertest --gtest_filter=TransactionTest.testSendRollbackCommitRollback && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: TransactionTest_testSendSessionClose
+        id: TransactionTest_testSendSessionClose
+        run: ./tests/brokertest/brokertest --gtest_filter=TransactionTest.testSendSessionClose && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: TransactionTest_testWithTTLSet
+        id: TransactionTest_testWithTTLSet
+        run: ./tests/brokertest/brokertest --gtest_filter=TransactionTest.testWithTTLSet && echo ::set-output name=status::success
+        continue-on-error: true
+      - name: TransactionTest_testSessionCommitAfterConsumerClosed
+        id: TransactionTest_testSessionCommitAfterConsumerClosed
+        run: ./tests/brokertest/brokertest --gtest_filter=TransactionTest.testSessionCommitAfterConsumerClosed && echo ::set-output name=status::success
         continue-on-error: true
       - name: Upload log
         uses: actions/upload-artifact@v1
         with:
           name: ${{ format('{0}.{1}.log', matrix.os, matrix.compiler) }}
           path: broker.log
-      - name: Check on failures
-        if: steps.test.outputs.status != 'success'
-        run: exit 1
-
+      - name: Check on failures AsyncSenderTest_testAsyncSends
+        if: steps.AsyncSenderTest_testAsyncSends.outputs.status != 'success'
+        exit 1
+      - name: Check on failures BytesMessageTest_testSendRecvCloneBytesMessage
+        if: steps.BytesMessageTest_testSendRecvCloneBytesMessage.outputs.status != 'success'
+        exit 1
+      - name: Check on failures BytesMessageTest_testGetBodyLength
+        if: steps.BytesMessageTest_testGetBodyLength.outputs.status != 'success'
+        exit 1
+      - name: Check on failures BytesMessageTest_testReadBoolean
+        if: steps.BytesMessageTest_testReadBoolean.outputs.status != 'success'
+        exit 1
+      - name: Check on failures BytesMessageTest_testReadByte
+        if: steps.BytesMessageTest_testReadByte.outputs.status != 'success'
+        exit 1
+      - name: Check on failures BytesMessageTest_testReadShort
+        if: steps.BytesMessageTest_testReadShort.outputs.status != 'success'
+        exit 1
+      - name: Check on failures BytesMessageTest_testReadUnsignedShort
+        if: steps.BytesMessageTest_testReadUnsignedShort.outputs.status != 'success'
+        exit 1
+      - name: Check on failures BytesMessageTest_testReadChar
+        if: steps.BytesMessageTest_testReadChar.outputs.status != 'success'
+        exit 1
+      - name: Check on failures BytesMessageTest_testReadInt
+        if: steps.BytesMessageTest_testReadInt.outputs.status != 'success'
+        exit 1
+      - name: Check on failures BytesMessageTest_testReadLong
+        if: steps.BytesMessageTest_testReadLong.outputs.status != 'success'
+        exit 1
+      - name: Check on failures BytesMessageTest_testReadFloat
+        if: steps.BytesMessageTest_testReadFloat.outputs.status != 'success'
+        exit 1
+      - name: Check on failures BytesMessageTest_testReadDouble
+        if: steps.BytesMessageTest_testReadDouble.outputs.status != 'success'
+        exit 1
+      - name: Check on failures BytesMessageTest_testReadString
+        if: steps.BytesMessageTest_testReadString.outputs.status != 'success'
+        exit 1
+      - name: Check on failures BytesMessageTest_testReadUTF
+        if: steps.BytesMessageTest_testReadUTF.outputs.status != 'success'
+        exit 1
+      - name: Check on failures BytesMessageTest_testReadBytesbyteArray
+        if: steps.BytesMessageTest_testReadBytesbyteArray.outputs.status != 'success'
+        exit 1
+      - name: Check on failures BytesMessageTest_testReadBytesbyteArray2
+        if: steps.BytesMessageTest_testReadBytesbyteArray2.outputs.status != 'success'
+        exit 1
+      - name: Check on failures BytesMessageTest_testGetBodyBytes
+        if: steps.BytesMessageTest_testGetBodyBytes.outputs.status != 'success'
+        exit 1
+      - name: Check on failures BytesMessageTest_testClearBody
+        if: steps.BytesMessageTest_testClearBody.outputs.status != 'success'
+        exit 1
+      - name: Check on failures BytesMessageTest_testReset
+        if: steps.BytesMessageTest_testReset.outputs.status != 'success'
+        exit 1
+      - name: Check on failures BytesMessageTest_testReadOnlyBody
+        if: steps.BytesMessageTest_testReadOnlyBody.outputs.status != 'success'
+        exit 1
+      - name: Check on failures BytesMessageTest_testWriteOnlyBody
+        if: steps.BytesMessageTest_testWriteOnlyBody.outputs.status != 'success'
+        exit 1
+      - name: Check on failures ClientAckTest_testAckedMessageAreConsumed
+        if: steps.ClientAckTest_testAckedMessageAreConsumed.outputs.status != 'success'
+        exit 1
+      - name: Check on failures ClientAckTest_testLastMessageAcked
+        if: steps.ClientAckTest_testLastMessageAcked.outputs.status != 'success'
+        exit 1
+      - name: Check on failures ClientAckTest_testFirstMessageAcked
+        if: steps.ClientAckTest_testFirstMessageAcked.outputs.status != 'success'
+        exit 1
+      - name: Check on failures ClientAckTest_testUnAckedMessageAreNotConsumedOnSessionClose
+        if: steps.ClientAckTest_testUnAckedMessageAreNotConsumedOnSessionClose.outputs.status != 'success'
+        exit 1
+      - name: Check on failures ClientAckTest_testAckedMessageAreConsumedAsync
+        if: steps.ClientAckTest_testAckedMessageAreConsumedAsync.outputs.status != 'success'
+        exit 1
+      - name: Check on failures ClientAckTest_testUnAckedMessageAreNotConsumedOnSessionCloseAsync
+        if: steps.ClientAckTest_testUnAckedMessageAreNotConsumedOnSessionCloseAsync.outputs.status != 'success'
+        exit 1
+      - name: Check on failures ConnectionStartStopTest_testStoppedConsumerHoldsMessagesTillStarted
+        if: steps.ConnectionStartStopTest_testStoppedConsumerHoldsMessagesTillStarted.outputs.status != 'success'
+        exit 1
+      - name: Check on failures ConnectionStartStopTest_testMultipleConnectionStops
+        if: steps.ConnectionStartStopTest_testMultipleConnectionStops.outputs.status != 'success'
+        exit 1
+      - name: Check on failures DurableTest_testDurableConsumer
+        if: steps.DurableTest_testDurableConsumer.outputs.status != 'success'
+        exit 1
+      - name: Check on failures JmsMessageGroupTest_testMessageSend
+        if: steps.JmsMessageGroupTest_testMessageSend.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MapMessageTest_testSendRecvCloneMapMessage
+        if: steps.MapMessageTest_testSendRecvCloneMapMessage.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MapMessageTest_testEmptyMapSendReceive
+        if: steps.MapMessageTest_testEmptyMapSendReceive.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MapMessageTest_testMapWithEmptyStringValue
+        if: steps.MapMessageTest_testMapWithEmptyStringValue.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MapMessageTest_testMapSetEmptyBytesVector
+        if: steps.MapMessageTest_testMapSetEmptyBytesVector.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MapMessageTest_testBytesConversion
+        if: steps.MapMessageTest_testBytesConversion.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MapMessageTest_testGetBoolean
+        if: steps.MapMessageTest_testGetBoolean.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MapMessageTest_testGetByte
+        if: steps.MapMessageTest_testGetByte.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MapMessageTest_testGetShort
+        if: steps.MapMessageTest_testGetShort.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MapMessageTest_testGetChar
+        if: steps.MapMessageTest_testGetChar.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MapMessageTest_testGetInt
+        if: steps.MapMessageTest_testGetInt.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MapMessageTest_testGetLong
+        if: steps.MapMessageTest_testGetLong.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MapMessageTest_testGetFloat
+        if: steps.MapMessageTest_testGetFloat.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MapMessageTest_testGetDouble
+        if: steps.MapMessageTest_testGetDouble.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MapMessageTest_testGetString
+        if: steps.MapMessageTest_testGetString.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MapMessageTest_testGetBytes
+        if: steps.MapMessageTest_testGetBytes.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MapMessageTest_testGetMapNames
+        if: steps.MapMessageTest_testGetMapNames.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MapMessageTest_testItemExists
+        if: steps.MapMessageTest_testItemExists.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MapMessageTest_testClearBody
+        if: steps.MapMessageTest_testClearBody.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MapMessageTest_testReadOnlyBody
+        if: steps.MapMessageTest_testReadOnlyBody.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MessageTest_testSendRecvCloneProperty
+        if: steps.MessageTest_testSendRecvCloneProperty.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MessageTest_testCopy
+        if: steps.MessageTest_testCopy.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MessageTest_testClearProperties
+        if: steps.MessageTest_testClearProperties.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MessageTest_testPropertyExists
+        if: steps.MessageTest_testPropertyExists.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MessageTest_testGetBooleanProperty
+        if: steps.MessageTest_testGetBooleanProperty.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MessageTest_testGetByteProperty
+        if: steps.MessageTest_testGetByteProperty.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MessageTest_testGetShortProperty
+        if: steps.MessageTest_testGetShortProperty.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MessageTest_testGetIntProperty
+        if: steps.MessageTest_testGetIntProperty.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MessageTest_testGetLongProperty
+        if: steps.MessageTest_testGetLongProperty.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MessageTest_testGetFloatProperty
+        if: steps.MessageTest_testGetFloatProperty.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MessageTest_testGetDoubleProperty
+        if: steps.MessageTest_testGetDoubleProperty.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MessageTest_testGetStringProperty
+        if: steps.MessageTest_testGetStringProperty.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MessageTest_testGetPropertyNames
+        if: steps.MessageTest_testGetPropertyNames.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MessageTest_testSetEmptyPropertyName
+        if: steps.MessageTest_testSetEmptyPropertyName.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MessageTest_testGetAndSetCMSXDeliveryCount
+        if: steps.MessageTest_testGetAndSetCMSXDeliveryCount.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MessageTest_testBooleanPropertyConversion
+        if: steps.MessageTest_testBooleanPropertyConversion.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MessageTest_testBytePropertyConversion
+        if: steps.MessageTest_testBytePropertyConversion.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MessageTest_testShortPropertyConversion
+        if: steps.MessageTest_testShortPropertyConversion.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MessageTest_testIntPropertyConversion
+        if: steps.MessageTest_testIntPropertyConversion.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MessageTest_testLongPropertyConversion
+        if: steps.MessageTest_testLongPropertyConversion.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MessageTest_testFloatPropertyConversion
+        if: steps.MessageTest_testFloatPropertyConversion.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MessageTest_testDoublePropertyConversion
+        if: steps.MessageTest_testDoublePropertyConversion.outputs.status != 'success'
+        exit 1
+      - name: Check on failures MessageTest_testStringPropertyConversion
+        if: steps.MessageTest_testStringPropertyConversion.outputs.status != 'success'
+        exit 1
+      - name: Check on failures QueueBrowserTest_testReceiveBrowseReceive
+        if: steps.QueueBrowserTest_testReceiveBrowseReceive.outputs.status != 'success'
+        exit 1
+      - name: Check on failures QueueBrowserTest_testBrowseReceive
+        if: steps.QueueBrowserTest_testBrowseReceive.outputs.status != 'success'
+        exit 1
+      - name: Check on failures QueueBrowserTest_testQueueBrowserWith2Consumers
+        if: steps.QueueBrowserTest_testQueueBrowserWith2Consumers.outputs.status != 'success'
+        exit 1
+      - name: Check on failures SelectorTest_testBasicSelectors
+        if: steps.SelectorTest_testBasicSelectors.outputs.status != 'success'
+        exit 1
+      - name: Check on failures SelectorTest_testBooleanSelector
+        if: steps.SelectorTest_testBooleanSelector.outputs.status != 'success'
+        exit 1
+      - name: Check on failures SelectorTest_testJMSPropertySelectors
+        if: steps.SelectorTest_testJMSPropertySelectors.outputs.status != 'success'
+        exit 1
+      - name: Check on failures SelectorTest_testPropertyTypes
+        if: steps.SelectorTest_testPropertyTypes.outputs.status != 'success'
+        exit 1
+      - name: Check on failures SelectorTest_testAndSelectors
+        if: steps.SelectorTest_testAndSelectors.outputs.status != 'success'
+        exit 1
+      - name: Check on failures SelectorTest_testOrSelectors
+        if: steps.SelectorTest_testOrSelectors.outputs.status != 'success'
+        exit 1
+      - name: Check on failures SelectorTest_testBetween
+        if: steps.SelectorTest_testBetween.outputs.status != 'success'
+        exit 1
+      - name: Check on failures SelectorTest_testIn
+        if: steps.SelectorTest_testIn.outputs.status != 'success'
+        exit 1
+      - name: Check on failures SelectorTest_testIsNull
+        if: steps.SelectorTest_testIsNull.outputs.status != 'success'
+        exit 1
+      - name: Check on failures SelectorTest_testStringQuoteParsing
+        if: steps.SelectorTest_testStringQuoteParsing.outputs.status != 'success'
+        exit 1
+      - name: Check on failures SelectorTest_testLikeComparisons
+        if: steps.SelectorTest_testLikeComparisons.outputs.status != 'success'
+        exit 1
+      - name: Check on failures SelectorTest_testInvalidSelector
+        if: steps.SelectorTest_testInvalidSelector.outputs.status != 'success'
+        exit 1
+      - name: Check on failures SimpleRollbackTest_testRollbacks
+        if: steps.SimpleRollbackTest_testRollbacks.outputs.status != 'success'
+        exit 1
+      - name: Check on failures SimpleTest_testAutoAck
+        if: steps.SimpleTest_testAutoAck.outputs.status != 'success'
+        exit 1
+      - name: Check on failures SimpleTest_testClientAck
+        if: steps.SimpleTest_testClientAck.outputs.status != 'success'
+        exit 1
+      - name: Check on failures SimpleTest_testProducerWithNullDestination
+        if: steps.SimpleTest_testProducerWithNullDestination.outputs.status != 'success'
+        exit 1
+      - name: Check on failures SimpleTest_testProducerSendWithNullDestination
+        if: steps.SimpleTest_testProducerSendWithNullDestination.outputs.status != 'success'
+        exit 1
+      - name: Check on failures SimpleTest_testProducerSendToNonDefaultDestination
+        if: steps.SimpleTest_testProducerSendToNonDefaultDestination.outputs.status != 'success'
+        exit 1
+      - name: Check on failures SimpleTest_testSyncReceive
+        if: steps.SimpleTest_testSyncReceive.outputs.status != 'success'
+        exit 1
+      - name: Check on failures SimpleTest_testSyncReceiveClientAck
+        if: steps.SimpleTest_testSyncReceiveClientAck.outputs.status != 'success'
+        exit 1
+      - name: Check on failures SimpleTest_testMultipleConnections
+        if: steps.SimpleTest_testMultipleConnections.outputs.status != 'success'
+        exit 1
+      - name: Check on failures SimpleTest_testMultipleSessions
+        if: steps.SimpleTest_testMultipleSessions.outputs.status != 'success'
+        exit 1
+      - name: Check on failures SimpleTest_testReceiveAlreadyInQueue
+        if: steps.SimpleTest_testReceiveAlreadyInQueue.outputs.status != 'success'
+        exit 1
+      - name: Check on failures SimpleTest_testQuickCreateAndDestroy
+        if: steps.SimpleTest_testQuickCreateAndDestroy.outputs.status != 'success'
+        exit 1
+      - name: Check on failures SimpleTest_testBytesMessageSendRecv
+        if: steps.SimpleTest_testBytesMessageSendRecv.outputs.status != 'success'
+        exit 1
+      - name: Check on failures SimpleTest_testBytesMessageSendRecvAsync
+        if: steps.SimpleTest_testBytesMessageSendRecvAsync.outputs.status != 'success'
+        exit 1
+      - name: Check on failures SimpleTest_testNewCloseDelete
+        if: steps.SimpleTest_testNewCloseDelete.outputs.status != 'success'
+        exit 1
+      - name: Check on failures SimpleTest_testDeleteDestinationWithSubscribersFails
+        if: steps.SimpleTest_testDeleteDestinationWithSubscribersFails.outputs.status != 'success'
+        exit 1
+      - name: Check on failures SimpleTest_testPublishFailsForDestoryedTempDestination
+        if: steps.SimpleTest_testPublishFailsForDestoryedTempDestination.outputs.status != 'success'
+        exit 1
+      - name: Check on failures SimpleTest_testDuplicateClientID
+        if: steps.SimpleTest_testDuplicateClientID.outputs.status != 'success'
+        exit 1
+      - name: Check on failures SimpleTest_testClientTimeToLive
+        if: steps.SimpleTest_testClientTimeToLive.outputs.status != 'success'
+        exit 1
+      - name: Check on failures SimpleTest_testServerTimeToLive
+        if: steps.SimpleTest_testServerTimeToLive.outputs.status != 'success'
+        exit 1
+      - name: Check on failures SimpleTest_testPriority
+        if: steps.SimpleTest_testPriority.outputs.status != 'success'
+        exit 1
+      - name: Check on failures SimpleTest_testRoundRobin
+        if: steps.SimpleTest_testRoundRobin.outputs.status != 'success'
+        exit 1
+      - name: Check on failures TextMessageTest_testSendRecvCloneTextMessage
+        if: steps.TextMessageTest_testSendRecvCloneTextMessage.outputs.status != 'success'
+        exit 1
+      - name: Check on failures TextMessageTest_testClearBody
+        if: steps.TextMessageTest_testClearBody.outputs.status != 'success'
+        exit 1
+      - name: Check on failures TransactionTest_testSendReceiveTransactedBatches
+        if: steps.TransactionTest_testSendReceiveTransactedBatches.outputs.status != 'success'
+        exit 1
+      - name: Check on failures TransactionTest_testSendRollback
+        if: steps.TransactionTest_testSendRollback.outputs.status != 'success'
+        exit 1
+      - name: Check on failures TransactionTest_testSendRollbackCommitRollback
+        if: steps.TransactionTest_testSendRollbackCommitRollback.outputs.status != 'success'
+        exit 1
+      - name: Check on failures TransactionTest_testSendSessionClose
+        if: steps.TransactionTest_testSendSessionClose.outputs.status != 'success'
+        exit 1
+      - name: Check on failures TransactionTest_testWithTTLSet
+        if: steps.TransactionTest_testWithTTLSet.outputs.status != 'success'
+        exit 1
+      - name: Check on failures TransactionTest_testSessionCommitAfterConsumerClosed
+        if: steps.TransactionTest_testSessionCommitAfterConsumerClosed.outputs.status != 'success'
+        exit 1
