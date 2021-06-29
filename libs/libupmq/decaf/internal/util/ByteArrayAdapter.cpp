@@ -19,8 +19,8 @@
 #include <decaf/lang/Double.h>
 #include <decaf/lang/Float.h>
 #include <decaf/lang/Math.h>
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 
 using namespace decaf;
 using namespace decaf::nio;

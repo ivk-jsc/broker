@@ -15,7 +15,7 @@
  */
 
 #include "ByteArrayBuffer.h"
-#include <string.h>
+#include <cstring>
 #include "decaf/lang/Double.h"
 #include "decaf/lang/Float.h"
 #include "decaf/lang/Integer.h"

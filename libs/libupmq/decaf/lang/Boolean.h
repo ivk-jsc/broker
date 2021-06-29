@@ -45,12 +45,12 @@ class DECAF_API Boolean : public Comparable<Boolean>, public Comparable<bool> {
   /**
    * @param value - primitive boolean to wrap.
    */
-  Boolean(bool value_);
+  explicit Boolean(bool value_);
 
   /**
    * @param value - String value to convert to a boolean.
    */
-  Boolean(const String &value);
+  explicit Boolean(const String &value);
 
   ~Boolean() override = default;
 

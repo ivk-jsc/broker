@@ -73,7 +73,7 @@ class DECAF_API ByteArrayAdapter {
    *
    * @throws IllegalArgumentException if size is negative.
    */
-  ByteArrayAdapter(int size_);
+  explicit ByteArrayAdapter(int size_);
 
   /**
    * Creates a byte array object that wraps the given array.  If the own flag

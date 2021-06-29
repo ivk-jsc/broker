@@ -21,7 +21,7 @@ jobs:
         run: ./bins/broker/broker &
       - name: Test
         id: test
-        run: ./tests/brokertest/brokertest && echo ::set-output name=status::success
+        run: ./external/gtest/gtest-parallel ./tests/brokertest/brokertest --workers=128 && echo ::set-output name=status::success
         continue-on-error: true
       - name: Upload log
         uses: actions/upload-artifact@v1

@@ -31,6 +31,8 @@ class DECAF_API Atomics {
   Atomics() = delete;
   Atomics(const Atomics &) = delete;
   Atomics &operator=(const Atomics &) = delete;
+  Atomics(Atomics &&) = delete;
+  Atomics &operator=(Atomics &&) = delete;
 
   template <typename T>
   static bool compareAndSwap(T *&target, T *expect, T *update) {

@@ -105,10 +105,10 @@ class DECAF_API ByteBuffer : public Buffer, public lang::Comparable<ByteBuffer> 
    *
    * @throws IllegalArgumentException if capacity is negative.
    */
-  ByteBuffer(int capacity);
+  explicit ByteBuffer(int capacity);
 
  public:
-  virtual ~ByteBuffer() {}
+  ~ByteBuffer() override {}
 
   /**
    * @return a std::string describing this object
@@ -233,7 +233,7 @@ class DECAF_API ByteBuffer : public Buffer, public lang::Comparable<ByteBuffer> 
    *
    * @return true if, and only if, this buffer is read-only
    */
-  virtual bool isReadOnly() const = 0;
+  bool isReadOnly() const override = 0;
 
   /**
    * Returns the byte array that backs this buffer
@@ -842,22 +842,22 @@ class DECAF_API ByteBuffer : public Buffer, public lang::Comparable<ByteBuffer> 
   /**
    * {@inheritDoc}
    */
-  virtual int compareTo(const ByteBuffer &value) const;
+  int compareTo(const ByteBuffer &value) const override;
 
   /**
    * {@inheritDoc}
    */
-  virtual bool equals(const ByteBuffer &value) const;
+  bool equals(const ByteBuffer &value) const override;
 
   /**
    * {@inheritDoc}
    */
-  virtual bool operator==(const ByteBuffer &value) const;
+  bool operator==(const ByteBuffer &value) const override;
 
   /**
    * {@inheritDoc}
    */
-  virtual bool operator<(const ByteBuffer &value) const;
+  bool operator<(const ByteBuffer &value) const override;
 
  public:
   /**

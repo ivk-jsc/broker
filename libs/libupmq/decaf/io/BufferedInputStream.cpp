@@ -181,7 +181,7 @@ int BufferedInputStream::doReadArrayBounded(unsigned char *pbuffer, int size, in
       this->pos += copylength;
 
       if (copylength == length || inStream->available() == 0) {
-        return (int)copylength;
+        return copylength;
       }
 
       offset += copylength;
@@ -198,12 +198,12 @@ int BufferedInputStream::doReadArrayBounded(unsigned char *pbuffer, int size, in
       if (this->markPos == -1 && required >= this->bufferSize) {
         read = inStream->read(pbuffer, size, offset, required);
         if (read == -1) {
-          return required == length ? -1 : (int)(length - required);
+          return required == length ? -1 : (length - required);
         }
 
       } else {
         if (bufferData(inStream, lbuffer) == -1) {
-          return required == length ? -1 : (int)(length - required);
+          return required == length ? -1 : (length - required);
         }
 
         // Stream might have closed while we were buffering.

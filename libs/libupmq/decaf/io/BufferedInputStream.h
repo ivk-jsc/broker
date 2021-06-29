@@ -56,7 +56,7 @@ class DECAF_API BufferedInputStream : public FilterInputStream {
    * @param own_
    *      Indicates if we own the stream object, defaults to false.
    */
-  BufferedInputStream(InputStream *stream, bool own_ = false);
+  explicit BufferedInputStream(InputStream *stream, bool own_ = false);
 
   /**
    * Constructor
@@ -72,42 +72,42 @@ class DECAF_API BufferedInputStream : public FilterInputStream {
    */
   BufferedInputStream(InputStream *stream, int bufferSize_, bool own_ = false);
 
-  virtual ~BufferedInputStream();
+  ~BufferedInputStream() override;
 
   /**
    * {@inheritDoc}
    */
-  virtual int available() const;
+  int available() const override;
 
   /**
    * {@inheritDoc}
    */
-  virtual void close();
+  void close() override;
 
   /**
    * {@inheritDoc}
    */
-  virtual long long skip(long long num);
+  long long skip(long long num) override;
 
   /**
    * {@inheritDoc}
    */
-  virtual void mark(int readLimit);
+  void mark(int readLimit) override;
 
   /**
    * {@inheritDoc}
    */
-  virtual void reset();
+  void reset() override;
 
   /**
    * {@inheritDoc}
    */
-  virtual bool markSupported() const { return true; }
+  bool markSupported() const override { return true; }
 
  protected:
-  virtual int doReadByte();
+  int doReadByte() override;
 
-  virtual int doReadArrayBounded(unsigned char *pbuffer, int size, int offset, int length);
+  int doReadArrayBounded(unsigned char *pbuffer, int size, int offset, int length) override;
 
  private:
   int bufferData(InputStream *inStream, unsigned char *&buffer);
