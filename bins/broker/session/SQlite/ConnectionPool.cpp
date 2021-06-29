@@ -180,7 +180,11 @@ void ConnectionPool::runSimple(Poco::Data::Session &dbSession, const std::string
   int result = sqlite3_exec(pSqlite3, cquery, nullptr, nullptr, nullptr);
   if (result != SQLITE_OK) {
     std::string errMsg = sqlite3_errmsg(pSqlite3);
+#if POCO_VERSION_MAJOR == 1 && POCO_VERSION_MINOR <= 8 && POCO_VERSION_PATCH < 1
+    Poco::Data::SQLite::Utility::throwException(result, errMsg);
+#else
     Poco::Data::SQLite::Utility::throwException(pSqlite3, result, errMsg);
+#endif
   }
 }
 }  // namespace sqlite
