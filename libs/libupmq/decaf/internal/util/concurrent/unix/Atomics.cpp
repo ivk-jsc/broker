@@ -78,7 +78,7 @@ bool Atomics::compareAndSet32(volatile int *target, int expect, int update) {
 ////////////////////////////////////////////////////////////////////////////////
 bool Atomics::compareAndSet(volatile void **target, void *expect, void *update) {
 #ifdef HAVE_ATOMIC_BUILTINS
-  return __sync_val_compare_and_swap(target, (void *)expect, (void *)update) == (void *)expect;
+  return __sync_val_compare_and_swap(target, expect, update) == expect;
 #elif defined(SOLARIS2) && SOLARIS2 >= 10
   return atomic_cas_ptr(target, expect, update) == expect;
 #else

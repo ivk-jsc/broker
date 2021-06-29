@@ -51,14 +51,14 @@ class DECAF_API TcpSocketOutputStream : public decaf::io::OutputStream {
    */
   TcpSocketOutputStream(TcpSocket *socket_);
 
-  virtual ~TcpSocketOutputStream();
+  ~TcpSocketOutputStream() override;
 
-  virtual void close();
+  void close() override;
 
  protected:
-  virtual void doWriteByte(unsigned char c);
+  void doWriteByte(unsigned char c) override;
 
-  virtual void doWriteArrayBounded(const unsigned char *pbuffer, int size, int offset, int length);
+  void doWriteArrayBounded(const unsigned char *pbuffer, int size, int offset, int length) override;
 };
 }  // namespace tcp
 }  // namespace net

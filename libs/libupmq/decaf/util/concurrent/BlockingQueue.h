@@ -162,7 +162,7 @@ namespace concurrent {
 template <typename E>
 class BlockingQueue : public AbstractQueue<E> {
  public:
-  virtual ~BlockingQueue() {}
+  virtual ~BlockingQueue() = default;
 
   using Queue<E>::offer;
   using Queue<E>::poll;

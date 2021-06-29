@@ -27,12 +27,13 @@ namespace concurrent {
 class Threading;
 
 class DECAF_API Atomics {
- private:
-  Atomics();
-  Atomics(const Atomics &);
-  Atomics &operator=(const Atomics &);
-
  public:
+  Atomics() = delete;
+  Atomics(const Atomics &) = delete;
+  Atomics &operator=(const Atomics &) = delete;
+  Atomics(Atomics &&) = delete;
+  Atomics &operator=(Atomics &&) = delete;
+
   template <typename T>
   static bool compareAndSwap(T *&target, T *expect, T *update) {
     return Atomics::compareAndSet((volatile void **)&target, (void *)expect, (void *)update);

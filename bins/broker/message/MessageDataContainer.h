@@ -19,6 +19,7 @@
 
 #include <Poco/AutoPtr.h>
 #include <Poco/FileStream.h>
+#include <Poco/Path.h>
 #include <map>
 #include <memory>
 #include <string>
@@ -35,6 +36,7 @@ class MessageDataContainer {
  public:
   MessageDataContainer();
   explicit MessageDataContainer(std::string path);
+  explicit MessageDataContainer(Poco::Path path);
   explicit MessageDataContainer(Proto::ProtoMessage *headerProtoMessage);
   MessageDataContainer(Proto::ProtoMessage *headerProtoMessage, Proto::Body *dataBody);
   MessageDataContainer(std::string path, std::string _header, std::string _data, bool useFileLink);
@@ -135,7 +137,7 @@ class MessageDataContainer {
   std::vector<char> getPartOfData(size_t offset, size_t size);
   void setData(const std::string &in);
   void flushData();
-  const std::string &path() const;
+  const Poco::Path &path() const;
   void removeLinkedFile();
   bool isDataExists() const;
   void initPersistentDataFileLink();
@@ -147,12 +149,12 @@ class MessageDataContainer {
   void setCreated(int64_t created);
 
  private:
-  std::string _path;
+  Poco::Path _path;
   mutable std::unique_ptr<Proto::ProtoMessage> _headerMessage;
   mutable std::unique_ptr<Proto::Body> _dataMessage;
   bool _withFile = false;
   std::unique_ptr<std::fstream> _dataFileStream;
-  int64_t _created;
+  int64_t _created = {0};
   void initHeader() const;
   void newMessage(const std::string &objectID);
   void initDataFileStream();

@@ -127,7 +127,7 @@ class DECAF_API ByteArrayBuffer : public decaf::nio::ByteBuffer {
    *
    * @throws IllegalArguementException if the capacity value is negative.
    */
-  ByteArrayBuffer(int capacity, bool readOnly_ = false);
+  explicit ByteArrayBuffer(int capacity, bool readOnly_ = false);
 
   /**
    * Creates a ByteArrayBuffer object that wraps the given array.
@@ -178,231 +178,231 @@ class DECAF_API ByteArrayBuffer : public decaf::nio::ByteBuffer {
    */
   ByteArrayBuffer(const ByteArrayBuffer &other);
 
-  virtual ~ByteArrayBuffer();
+  ~ByteArrayBuffer() override;
 
  public:
   /**
    * {@inheritDoc}
    */
-  virtual bool isReadOnly() const { return this->readOnly; }
+  bool isReadOnly() const override { return this->readOnly; }
 
   /**
    * {@inheritDoc}
    */
-  virtual unsigned char *array();
+  unsigned char *array() override;
 
   /**
    * {@inheritDoc}
    */
-  virtual int arrayOffset() const;
+  int arrayOffset() const override;
 
   /**
    * {@inheritDoc}
    */
-  virtual bool hasArray() const { return true; }
+  bool hasArray() const override { return true; }
 
  public:  // Abstract Methods
   /**
    * {@inheritDoc}
    */
-  virtual decaf::nio::CharBuffer *asCharBuffer() const {
+  decaf::nio::CharBuffer *asCharBuffer() const override {
     return nullptr;  // TODO
   }
 
   /**
    * {@inheritDoc}
    */
-  virtual decaf::nio::DoubleBuffer *asDoubleBuffer() const {
+  decaf::nio::DoubleBuffer *asDoubleBuffer() const override {
     return nullptr;  // TODO
   }
 
   /**
    * {@inheritDoc}
    */
-  virtual decaf::nio::FloatBuffer *asFloatBuffer() const {
+  decaf::nio::FloatBuffer *asFloatBuffer() const override {
     return nullptr;  // TODO
   }
 
   /**
    * {@inheritDoc}
    */
-  virtual decaf::nio::IntBuffer *asIntBuffer() const {
+  decaf::nio::IntBuffer *asIntBuffer() const override {
     return nullptr;  // TODO
   }
 
   /**
    * {@inheritDoc}
    */
-  virtual decaf::nio::LongBuffer *asLongBuffer() const {
+  decaf::nio::LongBuffer *asLongBuffer() const override {
     return nullptr;  // TODO
   }
 
   /**
    * {@inheritDoc}
    */
-  virtual decaf::nio::ShortBuffer *asShortBuffer() const {
+  decaf::nio::ShortBuffer *asShortBuffer() const override {
     return nullptr;  // TODO
   }
 
   /**
    * {@inheritDoc}
    */
-  virtual ByteArrayBuffer *asReadOnlyBuffer() const;
+  ByteArrayBuffer *asReadOnlyBuffer() const override;
 
   /**
    * {@inheritDoc}
    */
-  virtual ByteArrayBuffer &compact();
+  ByteArrayBuffer &compact() override;
 
   /**
    * {@inheritDoc}
    */
-  virtual ByteArrayBuffer *duplicate();
+  ByteArrayBuffer *duplicate() override;
 
   /**
    * {@inheritDoc}
    */
-  virtual unsigned char get() const;
+  unsigned char get() const override;
 
   /**
    * {@inheritDoc}
    */
-  virtual unsigned char get(int index) const;
+  unsigned char get(int index) const override;
 
   /**
    * {@inheritDoc}
    */
-  virtual char getChar() { return (char)this->get(); }
+  char getChar() override { return (char)this->get(); }
 
   /**
    * {@inheritDoc}
    */
-  virtual char getChar(int index) const { return (char)this->get(index); }
+  char getChar(int index) const override { return (char)this->get(index); }
 
   /**
    * {@inheritDoc}
    */
-  virtual double getDouble();
+  double getDouble() override;
 
   /**
    * {@inheritDoc}
    */
-  virtual double getDouble(int index) const;
+  double getDouble(int index) const override;
 
   /**
    * {@inheritDoc}
    */
-  virtual float getFloat();
+  float getFloat() override;
 
   /**
    * {@inheritDoc}
    */
-  virtual float getFloat(int index) const;
+  float getFloat(int index) const override;
 
   /**
    * {@inheritDoc}
    */
-  virtual long long getLong();
+  long long getLong() override;
 
   /**
    * {@inheritDoc}
    */
-  virtual long long getLong(int index) const;
+  long long getLong(int index) const override;
 
   /**
    * {@inheritDoc}
    */
-  virtual int getInt();
+  int getInt() override;
 
   /**
    * {@inheritDoc}
    */
-  virtual int getInt(int index) const;
+  int getInt(int index) const override;
 
   /**
    * {@inheritDoc}
    */
-  virtual short getShort();
+  short getShort() override;
 
   /**
    * {@inheritDoc}
    */
-  virtual short getShort(int index) const;
+  short getShort(int index) const override;
 
   /**
    * {@inheritDoc}
    */
-  virtual ByteArrayBuffer &put(unsigned char value);
+  ByteArrayBuffer &put(unsigned char value) override;
 
   /**
    * {@inheritDoc}
    */
-  virtual ByteArrayBuffer &put(int index, unsigned char value);
+  ByteArrayBuffer &put(int index, unsigned char value) override;
 
   /**
    * {@inheritDoc}
    */
-  virtual ByteArrayBuffer &putChar(char value);
+  ByteArrayBuffer &putChar(char value) override;
 
   /**
    * {@inheritDoc}
    */
-  virtual ByteArrayBuffer &putChar(int index, char value);
+  ByteArrayBuffer &putChar(int index, char value) override;
 
   /**
    * {@inheritDoc}
    */
-  virtual ByteArrayBuffer &putDouble(double value);
+  ByteArrayBuffer &putDouble(double value) override;
 
   /**
    * {@inheritDoc}
    */
-  virtual ByteArrayBuffer &putDouble(int index, double value);
+  ByteArrayBuffer &putDouble(int index, double value) override;
 
   /**
    * {@inheritDoc}
    */
-  virtual ByteArrayBuffer &putFloat(float value);
+  ByteArrayBuffer &putFloat(float value) override;
 
   /**
    * {@inheritDoc}
    */
-  virtual ByteArrayBuffer &putFloat(int index, float value);
+  ByteArrayBuffer &putFloat(int index, float value) override;
 
   /**
    * {@inheritDoc}
    */
-  virtual ByteArrayBuffer &putLong(long long value);
+  ByteArrayBuffer &putLong(long long value) override;
 
   /**
    * {@inheritDoc}
    */
-  virtual ByteArrayBuffer &putLong(int index, long long value);
+  ByteArrayBuffer &putLong(int index, long long value) override;
 
   /**
    * {@inheritDoc}
    */
-  virtual ByteArrayBuffer &putInt(int value);
+  ByteArrayBuffer &putInt(int value) override;
 
   /**
    * {@inheritDoc}
    */
-  virtual ByteArrayBuffer &putInt(int index, int value);
+  ByteArrayBuffer &putInt(int index, int value) override;
 
   /**
    * {@inheritDoc}
    */
-  virtual ByteArrayBuffer &putShort(short value);
+  ByteArrayBuffer &putShort(short value) override;
 
   /**
    * {@inheritDoc}
    */
-  virtual ByteArrayBuffer &putShort(int index, short value);
+  ByteArrayBuffer &putShort(int index, short value) override;
 
   /**
    * {@inheritDoc}
    */
-  virtual ByteArrayBuffer *slice() const;
+  ByteArrayBuffer *slice() const override;
 
  protected:
   /**

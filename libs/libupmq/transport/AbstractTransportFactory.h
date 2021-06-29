@@ -38,7 +38,7 @@ using decaf::lang::Pointer;
  */
 class UPMQCPP_API AbstractTransportFactory : public TransportFactory {
  public:
-  virtual ~AbstractTransportFactory();
+  ~AbstractTransportFactory() override;
 
  protected:
   /**

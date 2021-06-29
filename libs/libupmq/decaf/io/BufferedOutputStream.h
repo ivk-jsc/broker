@@ -62,7 +62,7 @@ class DECAF_API BufferedOutputStream : public FilterOutputStream {
    * @param own_
    *      Indicates if this class owns the stream pointer.
    */
-  BufferedOutputStream(OutputStream *stream, bool own_ = false);
+  explicit BufferedOutputStream(OutputStream *stream, bool own_ = false);
 
   /**
    * Constructor.
@@ -78,19 +78,19 @@ class DECAF_API BufferedOutputStream : public FilterOutputStream {
    */
   BufferedOutputStream(OutputStream *stream, int bufferSize, bool own_ = false);
 
-  virtual ~BufferedOutputStream();
+  ~BufferedOutputStream() override;
 
   /**
    * @{inheritDoc}
    */
-  virtual void flush();
+  void flush() override;
 
  protected:
-  virtual void doWriteByte(unsigned char c);
+  void doWriteByte(unsigned char c) override;
 
-  virtual void doWriteArray(const unsigned char *pbuffer, int size);
+  void doWriteArray(const unsigned char *pbuffer, int size) override;
 
-  virtual void doWriteArrayBounded(const unsigned char *pbuffer, int size, int offset, int length);
+  void doWriteArrayBounded(const unsigned char *pbuffer, int size, int offset, int length) override;
 
  private:
   /**

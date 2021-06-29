@@ -41,7 +41,7 @@ class DECAF_API System {
   static SystemData *sys;
 
  protected:
-  System();
+  System() = default;
 
  public:
   virtual ~System() {}

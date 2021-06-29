@@ -35,7 +35,7 @@ namespace cms {
  */
 class CMS_API AsyncCallback : public ExceptionListener {
  public:
-  virtual ~AsyncCallback(){};
+  ~AsyncCallback() override = default;
 
   /**
    * Called when the asynchronous operation has completed successfully.

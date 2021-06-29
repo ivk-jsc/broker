@@ -130,9 +130,9 @@ class DECAF_API Buffer {
   bool _markSet;
 
  public:
-  Buffer(int capactiy);
+  explicit Buffer(int capactiy);
   Buffer(const Buffer &other);
-  virtual ~Buffer() {}
+  virtual ~Buffer() = default;
 
  public:
   /**

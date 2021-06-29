@@ -69,7 +69,7 @@ Pointer<Command> SimplePriorityMessageDispatchChannel::dequeue(long long timeout
       if (timeout == -1) {
         mutex.wait();
       } else {
-        mutex.wait(static_cast<unsigned long>(timeout));
+        mutex.wait(timeout);
         break;
       }
     }

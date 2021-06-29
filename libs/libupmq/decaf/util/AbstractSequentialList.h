@@ -61,7 +61,7 @@ class AbstractSequentialList : public decaf::util::AbstractList<E> {
   using AbstractList<E>::addAll;
 
  public:
-  virtual ~AbstractSequentialList() {}
+  virtual ~AbstractSequentialList() = default;
 
   Iterator<E> *iterator() override { return this->listIterator(0); }
   Iterator<E> *iterator() const override { return this->listIterator(0); }

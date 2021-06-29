@@ -502,7 +502,7 @@ Subscription::ConsumersListType::iterator Subscription::eraseConsumer(ConsumersL
   onError.setError(Proto::ERROR_ON_UNSUBSCRIPTION).setInfo("can't remove consumer");
   std::stringstream sql;
   sql << "delete from " << _consumersT << " where object_id = \'" << it->second.objectID << "\';";
-  TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
+  TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(dbms::Instance().dbmsSession(), sql.str()); }), onError);
   _destination.remFromNotAck(it->second.objectID);
   return _consumers.erase(it);
 }

@@ -133,7 +133,7 @@ void Connection::addTcpConnection(size_t tcpConnectionNum) {
         << "," << tcpConnectionNum << ")"
         << ";";
     onError.setSql(sql.str()).setInfo("can't add tcp connection");
-    TRY_EXECUTE(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
+    TRY_EXECUTE(([&sql]() { dbms::Instance().doNow(dbms::Instance().dbmsSession(), sql.str()); }), onError);
     return;
   }
   throw EXCEPTION("connection already exists", _clientID + " : " + std::to_string(tcpConnectionNum), Proto::ERROR_CLIENT_ID_EXISTS);
@@ -150,7 +150,7 @@ void Connection::removeTcpConnection(size_t tcpConnectionNum) {
     std::stringstream sql;
     sql << "delete from " << _tcpT << " where tcp_id = " << tcpConnectionNum << ";";
     onError.setSql(sql.str()).setInfo("can't remove tcp connection");
-    TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
+    TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(dbms::Instance().dbmsSession(), sql.str()); }), onError);
   }
 }
 bool Connection::isTcpConnectionExists(size_t tcpConnectionNum) const {

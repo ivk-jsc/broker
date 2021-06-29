@@ -45,7 +45,7 @@ class DECAF_API Byte : public Number, public Comparable<Byte>, public Comparable
   /**
    * @param value - the primitive value to wrap
    */
-  Byte(unsigned char value);
+  explicit Byte(unsigned char value);
 
   /**
    * Creates a new Byte instance from the given string.
@@ -55,9 +55,9 @@ class DECAF_API Byte : public Number, public Comparable<Byte>, public Comparable
    *
    * @throws NumberFormatException if the string is not a valid byte.
    */
-  Byte(const String &value);
+  explicit Byte(const String &value);
 
-  virtual ~Byte() {}
+  ~Byte() override {}
 
   /**
    * Compares this Byte instance with another.
@@ -67,14 +67,14 @@ class DECAF_API Byte : public Number, public Comparable<Byte>, public Comparable
    * than the passed in value, and -1 if this object repesents a value
    * less than the passed in value.
    */
-  virtual int compareTo(const Byte &c) const { return this->value < c.value ? -1 : (this->value > c.value) ? 1 : 0; }
+  int compareTo(const Byte &c) const override { return this->value < c.value ? -1 : (this->value > c.value) ? 1 : 0; }
 
   /**
    * Compares equality between this object and the one passed.
    * @param c - the value to be compared to this one.
    * @return true if this object is equal to the one passed.
    */
-  virtual bool operator==(const Byte &c) const { return this->value == c.value; }
+  bool operator==(const Byte &c) const override { return this->value == c.value; }
 
   /**
    * Compares this object to another and returns true if this object
@@ -82,7 +82,7 @@ class DECAF_API Byte : public Number, public Comparable<Byte>, public Comparable
    * @param c - the value to be compared to this one.
    * @return true if this object is equal to the one passed.
    */
-  virtual bool operator<(const Byte &c) const { return this->value < c.value; }
+  bool operator<(const Byte &c) const override { return this->value < c.value; }
 
   /**
    * Compares this Byte instance with a char type.
@@ -92,14 +92,14 @@ class DECAF_API Byte : public Number, public Comparable<Byte>, public Comparable
    * than the passed in value, and -1 if this object repesents a value
    * less than the passed in value.
    */
-  virtual int compareTo(const unsigned char &c) const { return this->value < c ? -1 : (this->value > c) ? 1 : 0; }
+  int compareTo(const unsigned char &c) const override { return this->value < c ? -1 : (this->value > c) ? 1 : 0; }
 
   /**
    * Compares equality between this object and the one passed.
    * @param c - the value to be compared to this one.
    * @return true if this object is equal to the one passed.
    */
-  virtual bool operator==(const unsigned char &c) const { return this->value == c; }
+  bool operator==(const unsigned char &c) const override { return this->value == c; }
 
   /**
    * Compares this object to another and returns true if this object
@@ -107,17 +107,17 @@ class DECAF_API Byte : public Number, public Comparable<Byte>, public Comparable
    * @param c - the value to be compared to this one.
    * @return true if this object is equal to the one passed.
    */
-  virtual bool operator<(const unsigned char &c) const { return this->value < c; }
+  bool operator<(const unsigned char &c) const override { return this->value < c; }
 
   /**
    * @return true if the two Byte Objects have the same value.
    */
-  bool equals(const Byte &c) const { return this->value == c.value; }
+  bool equals(const Byte &c) const override { return this->value == c.value; }
 
   /**
    * @return true if the two Bytes have the same value.
    */
-  bool equals(const unsigned char &c) const { return this->value == c; }
+  bool equals(const unsigned char &c) const override { return this->value == c; }
 
   /**
    * @return this Byte Object as a String Representation
@@ -128,37 +128,37 @@ class DECAF_API Byte : public Number, public Comparable<Byte>, public Comparable
    * Answers the double value which the receiver represents
    * @return double the value of the receiver.
    */
-  virtual double doubleValue() const { return (double)this->value; }
+  double doubleValue() const override { return (double)this->value; }
 
   /**
    * Answers the float value which the receiver represents
    * @return float the value of the receiver.
    */
-  virtual float floatValue() const { return (float)this->value; }
+  float floatValue() const override { return (float)this->value; }
 
   /**
    * Answers the byte value which the receiver represents
    * @return byte the value of the receiver.
    */
-  virtual unsigned char byteValue() const { return this->value; }
+  unsigned char byteValue() const override { return this->value; }
 
   /**
    * Answers the short value which the receiver represents
    * @return short the value of the receiver.
    */
-  virtual short shortValue() const { return (short)this->value; }
+  short shortValue() const override { return (short)this->value; }
 
   /**
    * Answers the int value which the receiver represents
    * @return int the value of the receiver.
    */
-  virtual int intValue() const { return (int)this->value; }
+  int intValue() const override { return (int)this->value; }
 
   /**
    * Answers the long value which the receiver represents
    * @return long long the value of the receiver.
    */
-  virtual long long longValue() const { return (long long)this->value; }
+  long long longValue() const override { return (long long)this->value; }
 
  public:
   /**

@@ -56,12 +56,12 @@ class DECAF_API TcpSocketInputStream : public decaf::io::InputStream {
    */
   TcpSocketInputStream(TcpSocket *socket_);
 
-  virtual ~TcpSocketInputStream();
+  ~TcpSocketInputStream() override;
 
   /**
    * {@inheritDoc}
    */
-  virtual int available() const;
+  int available() const override;
 
   /**
    * Close - does nothing.  It is the responsibility of the owner
@@ -69,19 +69,19 @@ class DECAF_API TcpSocketInputStream : public decaf::io::InputStream {
    *
    * {@inheritDoc}
    */
-  virtual void close();
+  void close() override;
 
   /**
    * Not supported.
    *
    * {@inheritDoc}
    */
-  virtual long long skip(long long num);
+  long long skip(long long num) override;
 
  protected:
-  virtual int doReadByte();
+  int doReadByte() override;
 
-  virtual int doReadArrayBounded(unsigned char *pbuffer, int size, int offset, int length);
+  int doReadArrayBounded(unsigned char *pbuffer, int size, int offset, int length) override;
 };
 }  // namespace tcp
 }  // namespace net

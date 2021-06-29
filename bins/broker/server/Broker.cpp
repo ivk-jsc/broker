@@ -46,7 +46,7 @@ Broker::Broker(std::string id)
   OnError onError;
   onError.setError(Proto::ERROR_STORAGE).setInfo("broker initialization error").setSql(sql.str());
 
-  TRY_EXECUTE(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
+  TRY_EXECUTE(([&sql]() { dbms::Instance().doNow(dbms::Instance().dbmsSession(), sql.str()); }), onError);
 
   sql.str("");
   sql << "create table if not exists \"" << _id << "\" ("
@@ -56,7 +56,7 @@ Broker::Broker(std::string id)
       << ";";
   onError.setSql(sql.str());
 
-  TRY_EXECUTE(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
+  TRY_EXECUTE(([&sql]() { dbms::Instance().doNow(dbms::Instance().dbmsSession(), sql.str()); }), onError);
 }
 Broker::~Broker() {
   TRACE(log);

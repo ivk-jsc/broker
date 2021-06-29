@@ -73,11 +73,10 @@ class AbstractList : public decaf::util::List<E>, public decaf::util::AbstractCo
     int expectedModCount;
     int lastPosition;
 
-   private:
-    SimpleListIterator(const SimpleListIterator &);
-    SimpleListIterator operator=(const SimpleListIterator &);
-
    public:
+    SimpleListIterator(const SimpleListIterator &) = delete;
+    SimpleListIterator operator=(const SimpleListIterator &) = delete;
+
     SimpleListIterator(AbstractList<E> *parent_, int start) : ListIterator<E>(), parent(parent_), numLeft(0), expectedModCount(0), lastPosition(-1) {
       if (parent == nullptr) {
         throw decaf::lang::exceptions::NullPointerException(__FILE__, __LINE__, "List Iterator constructed with NULL parent");
@@ -92,7 +91,7 @@ class AbstractList : public decaf::util::List<E>, public decaf::util::AbstractCo
       this->expectedModCount = parent->modCount;
     }
 
-    virtual ~SimpleListIterator() {}
+    virtual ~SimpleListIterator() = default;
 
     bool hasNext() const override { return this->numLeft > 0; }
 
@@ -194,11 +193,10 @@ class AbstractList : public decaf::util::List<E>, public decaf::util::AbstractCo
     int expectedModCount;
     int lastPosition;
 
-   private:
-    ConstSimpleListIterator(const ConstSimpleListIterator &);
-    ConstSimpleListIterator operator=(const ConstSimpleListIterator &);
-
    public:
+    ConstSimpleListIterator(const ConstSimpleListIterator &) = delete;
+    ConstSimpleListIterator operator=(const ConstSimpleListIterator &) = delete;
+
     ConstSimpleListIterator(const AbstractList<E> *parent_, int start)
         : ListIterator<E>(), parent(parent_), numLeft(0), expectedModCount(0), lastPosition(-1) {
       if (parent == nullptr) {
@@ -214,7 +212,7 @@ class AbstractList : public decaf::util::List<E>, public decaf::util::AbstractCo
       this->expectedModCount = parent->modCount;
     }
 
-    virtual ~ConstSimpleListIterator() {}
+    virtual ~ConstSimpleListIterator() = default;
 
     bool hasNext() const override { return this->numLeft > 0; }
 
@@ -276,7 +274,7 @@ class AbstractList : public decaf::util::List<E>, public decaf::util::AbstractCo
  public:
   AbstractList() : modCount(0) {}
 
-  virtual ~AbstractList() {}
+  virtual ~AbstractList() = default;
 
   Iterator<E> *iterator() override { return new SimpleListIterator(this, 0); }
   Iterator<E> *iterator() const override { return new ConstSimpleListIterator(this, 0); }

@@ -30,6 +30,7 @@
 #include "Poco/Data/PostgreSQL/Connector.h"
 #include "Poco/Data/PostgreSQL/PostgreSQLException.h"
 #include "Poco/Data/PostgreSQL/Utility.h"
+#include "Poco/Data/PostgreSQL/PostgreSQLTypes.h"
 #endif
 #endif
 
@@ -77,10 +78,34 @@ void ConnectionPool::beginTX(Poco::Data::Session &dbSession, const std::string &
   } else {
     sql << " READ WRITE";
   }
-  dbSession << sql.str(), Poco::Data::Keywords::now;
+  runTXCommand(dbSession, sql.str().c_str());
+  // dbSession << sql.str(), Poco::Data::Keywords::now;
 }
-void ConnectionPool::commitTX(Poco::Data::Session &dbSession, const std::string &txName) { dbSession << "COMMIT;", Poco::Data::Keywords::now; }
-void ConnectionPool::rollbackTX(Poco::Data::Session &dbSession, const std::string &txName) { dbSession << "ROLLBACK;", Poco::Data::Keywords::now; }
+void ConnectionPool::commitTX(Poco::Data::Session &dbSession, const std::string &txName) {
+  runTXCommand(dbSession, "COMMIT;");
+  //  dbSession << "COMMIT;", Poco::Data::Keywords::now;
+}
+void ConnectionPool::rollbackTX(Poco::Data::Session &dbSession, const std::string &txName) {
+  runTXCommand(dbSession, "ROLLBACK;");
+  // dbSession << "ROLLBACK;", Poco::Data::Keywords::now;
+}
+void ConnectionPool::runTXCommand(Poco::Data::Session &dbSession, const char *command) {
+  Poco::Data::PostgreSQL::SessionHandle *sh = Poco::Data::PostgreSQL::Utility::handle(dbSession);
+  PGresult *pPQResult = PQexec(*sh, command);
+
+  Poco::Data::PostgreSQL::PQResultClear resultClearer(pPQResult);
+
+  if (PQresultStatus(pPQResult) != PGRES_COMMAND_OK) {
+    std::string lastErrorString(nullptr != *sh ? PQerrorMessage(*sh) : "not connected");
+    throw Poco::Data::PostgreSQL::StatementException(std::string(command).append(" statement failed:: ").append(lastErrorString));
+  }
+}
+void ConnectionPool::runSimple(Poco::Data::Session &dbSession, const std::string &sql) {
+  if (sql.empty()) {
+    throw Poco::Data::PostgreSQL::StatementException(std::string(sql).append(" statement failed:: ").append("empty statement"));
+  }
+  runTXCommand(dbSession, sql.c_str());
+}
 }  // namespace postgresql
 }  // namespace storage
 }  // namespace broker

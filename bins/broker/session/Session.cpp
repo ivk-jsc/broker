@@ -44,7 +44,7 @@ Session::Session(const Connection &connection, std::string id, Proto::Acknowledg
   OnError onError;
   onError.setError(Proto::ERROR_ON_SESSION).setInfo("can't create session").setSql(sql.str());
 
-  TRY_EXECUTE(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
+  TRY_EXECUTE(([&sql]() { dbms::Instance().doNow(dbms::Instance().dbmsSession(), sql.str()); }), onError);
 }
 Session::~Session() {
   TRACE(log);
@@ -86,7 +86,7 @@ void Session::deleteFromConnectionTable() const {
   std::stringstream sql;
   sql << "delete from " << _connection.sessionsT() << " where id = \'" << _id << "\';";
   onError.setError(Proto::ERROR_ON_UNSESSION).setInfo("can't delete from session table").setSql(sql.str());
-  TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(sql.str()); }), onError);
+  TRY_EXECUTE_NOEXCEPT(([&sql]() { dbms::Instance().doNow(dbms::Instance().dbmsSession(), sql.str()); }), onError);
 }
 std::string Session::acknowlegeName(Proto::Acknowledge acknowledgeType) {
   switch (acknowledgeType) {

@@ -50,11 +50,10 @@ template <typename T>
 class ArrayPointer {
  private:
   struct ArrayData {
-   private:
-    ArrayData(const ArrayData &);
-    ArrayData &operator=(const ArrayData &);
-
    public:
+    ArrayData(const ArrayData &) = delete;
+    ArrayData &operator=(const ArrayData &) = delete;
+
     T *value;
     int length;
     decaf::util::concurrent::atomic::AtomicInteger refs;
@@ -77,9 +76,9 @@ class ArrayPointer {
   ArrayData *array;
 
  public:
-  typedef T *PointerType;               // type returned by operator->
-  typedef T &ReferenceType;             // type returned by operator*
-  typedef const T &ConstReferenceType;  // type returned by const operator*
+  using PointerType = T *;               // type returned by operator->
+  using ReferenceType = T &;             // type returned by operator*
+  using ConstReferenceType = const T &;  // type returned by const operator*
 
  public:
   /**
@@ -361,7 +360,7 @@ inline bool operator!=(const U *left, const ArrayPointer<T> &right) {
 template <typename T>
 class ArrayPointerComparator : public decaf::util::Comparator<ArrayPointer<T> > {
  public:
-  virtual ~ArrayPointerComparator() {}
+  virtual ~ArrayPointerComparator() = default;
 
   // Allows for operator less on types that implement Comparable or provide
   // a workable operator <
@@ -384,9 +383,9 @@ namespace std {
  */
 template <typename T>
 struct less<decaf::lang::ArrayPointer<T> > {
-  typedef decaf::lang::ArrayPointer<T> first_argument_type;
-  typedef decaf::lang::ArrayPointer<T> second_argument_type;
-  typedef bool result_type;
+  using first_argument_type = decaf::lang::ArrayPointer<T>;
+  using second_argument_type = decaf::lang::ArrayPointer<T>;
+  using result_type = bool;
 
   bool operator()(const decaf::lang::ArrayPointer<T> &left, const decaf::lang::ArrayPointer<T> &right) const {
     return less<T *>()(left.get(), right.get());

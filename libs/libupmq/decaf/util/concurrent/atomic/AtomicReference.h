@@ -34,15 +34,14 @@ class AtomicReference {
  private:
   volatile void *value;
 
- private:
-  AtomicReference(const AtomicReference &);
-  AtomicReference &operator=(const AtomicReference &);
-
  public:
+  AtomicReference(const AtomicReference &) = delete;
+  AtomicReference &operator=(const AtomicReference &) = delete;
+
   AtomicReference() : value(nullptr) {}
   AtomicReference(T *value_) : value((void *)value_) {}
 
-  virtual ~AtomicReference() {}
+  virtual ~AtomicReference() = default;
 
   /**
    * Gets the Current Value.

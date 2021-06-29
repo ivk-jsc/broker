@@ -59,7 +59,7 @@ class AbstractCollection : public virtual decaf::util::Collection<E> {
   mutable util::concurrent::Mutex mutex;
 
  public:
-  AbstractCollection() {}
+  AbstractCollection() = default;
 
   /**
    * Copy Constructor, copy element from the source collection to this
@@ -77,7 +77,7 @@ class AbstractCollection : public virtual decaf::util::Collection<E> {
     }
   }
 
-  virtual ~AbstractCollection() {}
+  virtual ~AbstractCollection() = default;
 
   /**
    * Assignment Operator, copy element from the source collection to this

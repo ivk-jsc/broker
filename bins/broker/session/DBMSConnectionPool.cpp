@@ -84,29 +84,29 @@ void DBMSConnectionPool::rollbackTX(Poco::Data::Session &dbSession, const std::s
   TRACE(log);
   _impl->rollbackTX(dbSession, txName);
 }
-void DBMSConnectionPool::doNow(const std::string &sql, DBMSConnectionPool::TX tx) {
+void DBMSConnectionPool::doNow(const DBMSSession &dbmsSession, const std::string &sql, DBMSConnectionPool::TX tx) {
   TRACE(log);
-  storage::DBMSSession dbSession = dbms::Instance().dbmsSession();
   std::string txName;
   if (tx == TX::USE) {
     txName = std::to_string((size_t)(Poco::Thread::currentTid()));
   }
+  Poco::Data::Session &dbSession = dbmsSession();
   try {
     if (tx == TX::USE) {
-      dbSession.beginTX(txName);
+      beginTX(dbSession, txName);
     }
-    dbSession << sql, Poco::Data::Keywords::now;
+    _impl->runSimple(dbSession, sql);
     if (tx == TX::USE) {
-      dbSession.commitTX();
+      commitTX(dbSession, txName);
     }
   } catch (Poco::Exception &pex) {
     if (tx == TX::USE) {
-      dbSession.rollbackTX();
+      rollbackTX(dbSession, txName);
     }
     pex.rethrow();
   } catch (...) {
     if (tx == TX::USE) {
-      dbSession.rollbackTX();
+      rollbackTX(dbSession, txName);
     }
     throw;
   }
