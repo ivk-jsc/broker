@@ -153,6 +153,56 @@ void MessagePropertyInfo::setValueDouble(double value) { tuple.set<message::prop
 void MessagePropertyInfo::setValueNull(bool value) { tuple.set<message::property::value::IsNull::POSITION>(value); }
 void MessagePropertyInfo::setValueBytes(const Poco::Data::BLOB &value) { tuple.set<message::property::value::Bytes::POSITION>(value); }
 void MessagePropertyInfo::setValueObject(const Poco::Data::BLOB &value) { tuple.set<message::property::value::Object::POSITION>(value); }
+void MessagePropertyInfo::setValue(const Proto::Property &property) {
+  switch (property.PropertyValue_case()) {
+    case Proto::Property::kValueString: {
+      setValueString(property.value_string());
+    } break;
+
+    case Proto::Property::kValueChar: {
+      setValueChar(property.value_char());
+    } break;
+
+    case Proto::Property::kValueBool: {
+      setValueBool(property.value_bool());
+    } break;
+
+    case Proto::Property::kValueByte: {
+      setValueByte(property.value_byte());
+    } break;
+
+    case Proto::Property::kValueShort: {
+      setValueShort(property.value_short());
+    } break;
+
+    case Proto::Property::kValueInt: {
+      setValueInt(property.value_int());
+    } break;
+
+    case Proto::Property::kValueLong: {
+      setValueLong(property.value_long());
+    } break;
+
+    case Proto::Property::kValueFloat: {
+      setValueFloat(property.value_float());
+    } break;
+
+    case Proto::Property::kValueDouble: {
+      setValueDouble(property.value_double());
+    } break;
+
+    case Proto::Property::kValueBytes: {
+      setValueBytes(Poco::Data::BLOB((const unsigned char *)property.value_bytes().c_str(), property.value_bytes().size()));
+    } break;
+
+    case Proto::Property::kValueObject: {
+      setValueObject(Poco::Data::BLOB((const unsigned char *)property.value_object().c_str(), property.value_object().size()));
+    } break;
+
+    default:
+      break;
+  }
+}
 std::string MessagePropertyInfo::dump() const {
   std::stringstream ss;
   ss << "<" << messageID() << "|" << propertyName() << "|" << propertyType() << "|";

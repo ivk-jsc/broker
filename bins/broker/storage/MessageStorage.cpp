@@ -527,55 +527,7 @@ void Storage::saveMessageProperties(const upmq::broker::Session &session, const 
     messagePropertyInfo.setMessageID(message.message_id());
     messagePropertyInfo.setPropertyName(it->first);
     messagePropertyInfo.setPropertyType(it->second.PropertyValue_case());
-    switch (it->second.PropertyValue_case()) {
-      case Proto::Property::kValueString: {
-        messagePropertyInfo.setValueString(it->second.value_string());
-      } break;
-
-      case Proto::Property::kValueChar: {
-        messagePropertyInfo.setValueChar(it->second.value_char());
-      } break;
-
-      case Proto::Property::kValueBool: {
-        messagePropertyInfo.setValueBool(it->second.value_bool());
-      } break;
-
-      case Proto::Property::kValueByte: {
-        messagePropertyInfo.setValueByte(it->second.value_byte());
-      } break;
-
-      case Proto::Property::kValueShort: {
-        messagePropertyInfo.setValueShort(it->second.value_short());
-      } break;
-
-      case Proto::Property::kValueInt: {
-        messagePropertyInfo.setValueInt(it->second.value_int());
-      } break;
-
-      case Proto::Property::kValueLong: {
-        messagePropertyInfo.setValueLong(it->second.value_long());
-      } break;
-
-      case Proto::Property::kValueFloat: {
-        messagePropertyInfo.setValueFloat(it->second.value_float());
-      } break;
-
-      case Proto::Property::kValueDouble: {
-        messagePropertyInfo.setValueDouble(it->second.value_double());
-      } break;
-
-      case Proto::Property::kValueBytes: {
-        messagePropertyInfo.setValueBytes(Poco::Data::BLOB((const unsigned char *)it->second.value_bytes().c_str(), it->second.value_bytes().size()));
-      } break;
-
-      case Proto::Property::kValueObject: {
-        messagePropertyInfo.setValueObject(
-            Poco::Data::BLOB((const unsigned char *)it->second.value_object().c_str(), it->second.value_object().size()));
-      } break;
-
-      default:
-        break;
-    }
+    messagePropertyInfo.setValue(it->second);
     messageProperties[i] = std::move(messagePropertyInfo.tuple);
     i++;
   }

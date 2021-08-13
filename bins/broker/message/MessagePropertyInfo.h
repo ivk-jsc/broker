@@ -30,7 +30,7 @@ namespace Data = SQL;
 #include <string>
 #include "MessageDefines.h"
 #include "MessageInfo.h"
-
+#include "ProtoBuf.h"
 namespace upmq {
 namespace broker {
 
@@ -127,6 +127,7 @@ class MessagePropertyInfo {
   void setValueNull(bool value);
   void setValueBytes(const Poco::Data::BLOB &value);
   void setValueObject(const Poco::Data::BLOB &value);
+  void setValue(const Proto::Property &property);
   bool isNull() const;
   Field getNotNullValInfo() const;
   std::string dump() const;
