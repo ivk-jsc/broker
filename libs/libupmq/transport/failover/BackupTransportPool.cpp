@@ -49,11 +49,11 @@ class BackupTransportPoolImpl {
   BackupTransportPoolImpl &operator=(const BackupTransportPoolImpl &) = delete;
 
   LinkedList<Pointer<BackupTransport> > backups;
-  volatile bool pending;
-  volatile bool closed;
-  volatile int priorityBackups;
+  bool pending{false};
+  bool closed{false};
+  int priorityBackups{0};
 
-  BackupTransportPoolImpl() : backups(), pending(false), closed(false), priorityBackups(0) {}
+  BackupTransportPoolImpl() : backups() {}
 };
 }  // namespace failover
 }  // namespace transport

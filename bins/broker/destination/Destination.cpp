@@ -196,7 +196,7 @@ void Destination::subscribeOnNotify(Subscription &subscription) const {
   TRACE(log);
   {
     upmq::ScopedWriteRWLock writeRWLock(_routingLock);
-    _routing.insert(std::make_pair(subscription.routingKey(), std::make_unique<Poco::FIFOEvent<const MessageDataContainer *>>()));
+    _routing.insert(std::make_pair(subscription.routingKey(), std::make_unique<Poco::BasicEvent<const MessageDataContainer *>>()));
     *_routing[subscription.routingKey()] += Poco::delegate(&subscription, &Subscription::onEvent);
   }
   subscription.setHasNotify(true);

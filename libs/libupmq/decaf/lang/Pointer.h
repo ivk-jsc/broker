@@ -284,7 +284,7 @@ class Pointer : public REFCOUNTER {
 
   template <typename T1, typename R1>
   bool operator!=(const Pointer<T1, R1> &right) const {
-    return !(this->value == right.get());
+    return this->value != right.get();
   }
 
   template <typename T1>
@@ -377,9 +377,9 @@ template <typename T>
 struct less<decaf::lang::Pointer<T> > {  //: public binary_function<decaf::lang::Pointer<T>, decaf::lang::Pointer<T>,
   // bool> {
 
-  typedef decaf::lang::Pointer<T> first_argument_type;
-  typedef decaf::lang::Pointer<T> second_argument_type;
-  typedef bool result_type;
+  using first_argument_type = decaf::lang::Pointer<T>;
+  using second_argument_type = decaf::lang::Pointer<T>;
+  using result_type = bool;
 
   bool operator()(const decaf::lang::Pointer<T> &left, const decaf::lang::Pointer<T> &right) const { return less<T *>()(left.get(), right.get()); }
 };

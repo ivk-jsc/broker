@@ -38,7 +38,7 @@
 #include <sys/types.h>
 #endif
 #ifdef HAVE_SYS_SYSCTL_H
-#include <sys/sysctl.h>
+//#include <sys/sysctl.h>
 #endif
 #ifdef HAVE_STRING_H
 #include <cstring>

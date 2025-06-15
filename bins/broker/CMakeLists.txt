@@ -118,16 +118,7 @@ set(SOURCE_FILES
     s2s_proto/S2SProto.h
     session/DBMSSession.cpp
     session/DBMSSession.h
-    net/SocketReactor.cpp
-    net/SocketReactor.h
-    net/ParallelSocketReactor.h
-    net/ParallelSocketAcceptor.h
-    net/SocketNotifier.cpp
-    net/SocketNotifier.h
-    net/SocketNotification.cpp
-    net/SocketNotification.h
-    net/NotificationCenter.cpp
-    net/NotificationCenter.h)
+    )
 
 if (ENABLE_WEB_ADMIN)
   add_definitions(-DENABLE_WEB_ADMIN)
@@ -236,11 +227,11 @@ else ()
   endif ()
 endif ()
 
-target_link_libraries(broker PRIVATE upmq::protocol protobuf::libprotobuf ${CMAKE_DL_LIBS} ${POCO_LIBS})
+target_link_libraries(broker PRIVATE upmq::protocol ${CMAKE_DL_LIBS} ${POCO_LIBS})
 if (NOT WIN32)
-  target_link_libraries(broker PRIVATE Threads::Threads)
+  target_link_libraries(broker PRIVATE Threads::Threads -Wl,--copy-dt-needed-entries protobuf::libprotobuf)
 else ()
-  target_link_libraries(broker PRIVATE ws2_32 mswsock iphlpapi)
+  target_link_libraries(broker PRIVATE protobuf::libprotobuf ws2_32 mswsock iphlpapi)
 endif ()
 
 macro(copy_poco_lib APP DLL)

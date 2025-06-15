@@ -453,12 +453,13 @@ std::string UPMQCommand::toString() const { return _header->ShortDebugString(); 
 string UPMQCommand::toJsonString() const {
   std::string result = "{\"header\":";
   if (_header) {
-    google::protobuf::util::MessageToJsonString(*_header, &result);
+    auto status = google::protobuf::util::MessageToJsonString(*_header, &result);
+    DECAF_UNUSED_VAR(status);
   }
   if (_body) {
     std::string bodys;
-    google::protobuf::util::MessageToJsonString(*_body, &bodys);
-    if (!bodys.empty()) {
+    auto status = google::protobuf::util::MessageToJsonString(*_body, &bodys);
+    if (status.ok() && !bodys.empty()) {
       result.append(",\"body\":").append(bodys);
     }
   }
@@ -471,12 +472,13 @@ string UPMQCommand::toPrettyJsonString() const {
   jsonPrintOptions.add_whitespace = true;
   std::string result = "{\n\"header\" : ";
   if (_header) {
-    google::protobuf::util::MessageToJsonString(*_header, &result, jsonPrintOptions);
+    auto status = google::protobuf::util::MessageToJsonString(*_header, &result, jsonPrintOptions);
+    DECAF_UNUSED_VAR(status);
   }
   if (_body) {
     std::string bodys;
-    google::protobuf::util::MessageToJsonString(*_body, &bodys, jsonPrintOptions);
-    if (!bodys.empty()) {
+    auto status = google::protobuf::util::MessageToJsonString(*_body, &bodys, jsonPrintOptions);
+    if (status.ok() && !bodys.empty()) {
       result.append(",\n\"body\" : ").append(bodys);
     }
   }

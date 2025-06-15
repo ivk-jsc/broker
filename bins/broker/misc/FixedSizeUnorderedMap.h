@@ -274,7 +274,7 @@ class FSUnorderedMap {
  public:
   explicit FSUnorderedMap(size_t size) : _items(size), _size(size) {}
   FSUnorderedMap(FSUnorderedMap &&o) noexcept
-      : _items(std::move(o._items)), _size(std::move(o._size)), _realSize(o._realSize.load()), _validIndexes(o._validIndexes) {}
+      : _items(std::move(o._items)), _size(o._size), _realSize(o._realSize.load()), _validIndexes(o._validIndexes) {}
   FSReadLockedValue<Key, Value> find(const Key &key) const {
     size_t index = Poco::hash(key) % _size;
     return _items.at(index).find(key);
@@ -282,7 +282,7 @@ class FSUnorderedMap {
   FSUnorderedMap &operator=(FSUnorderedMap &&o) noexcept {
     upmq::ScopedWriteRWLock thisRWLock(_validIndexesLock);
     _items = std::move(o._items);
-    _size = std::move(o._size);
+    _size = o._size;
     _realSize = o._realSize.load();
     _validIndexes = o._validIndexes;
     return *this;

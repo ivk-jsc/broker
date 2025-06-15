@@ -285,7 +285,7 @@ class SHA1MessageDigestSpiImpl {
       memset(((unsigned char *)data) + index, 0, SHA_BLOCKSIZE - index);
       maybeReverseBytes(data, SHA_BLOCKSIZE);
       SHA1Transform(state, data);
-      memset((unsigned char *)data, 0, SHA_BLOCKSIZE - 8 - index);
+      memset((unsigned char *)data, 0, SHA_BLOCKSIZE - 8);
     } else {
       memset(((unsigned char *)data) + index, 0, SHA_BLOCKSIZE - 8 - index);
     }

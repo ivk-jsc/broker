@@ -5,7 +5,7 @@
 #ifndef UPMQ_BINS_BROKER_NET_REACTORHEADERS_H_
 #define UPMQ_BINS_BROKER_NET_REACTORHEADERS_H_
 
-#define UPMQ_REACTOR
+//#define UPMQ_REACTOR
 
 #ifdef UPMQ_REACTOR
 #include "SocketNotifier.h"

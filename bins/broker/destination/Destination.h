@@ -23,7 +23,7 @@
 #include <Poco/Data/Session.h>
 #endif
 
-#include <Poco/FIFOEvent.h>
+#include <Poco/BasicEvent.h>
 #include <Poco/Logger.h>
 #include <memory>
 #include <utility>
@@ -42,7 +42,7 @@ class Destination {
   /// @brief SubscriptionsList - map<subs-name, subs>
   using SubscriptionsList = FSUnorderedMap<std::string, Subscription>;
   /// @brief RoutingList - map<routingKey, message>
-  using RoutingList = std::unordered_map<std::string, std::unique_ptr<Poco::FIFOEvent<const MessageDataContainer *>>>;
+  using RoutingList = std::unordered_map<std::string, std::unique_ptr<Poco::BasicEvent<const MessageDataContainer *>>>;
   /// @brief NotAckConsumersInfoList - map<object_id, message_count>
   using NotAckConsumersInfoList = std::unordered_map<std::string, std::unique_ptr<std::atomic_int>>;
   /// @brief Session2SubscriptionMap - map<session_id, {subs-name}>
