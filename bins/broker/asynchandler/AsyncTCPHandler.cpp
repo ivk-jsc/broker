@@ -166,7 +166,7 @@ void AsyncTCPHandler::onError(const AutoPtr<PNet::ErrorNotification> &pNf) {
 
 AsyncTCPHandler::DataStatus AsyncTCPHandler::sendHeaderAndData(MessageDataContainer &sMessage) {
   TRACE(log);
-  uint32_t headerSize = static_cast<uint32_t>(sMessage.header.size());
+  auto headerSize = static_cast<uint32_t>(sMessage.header.size());
   uint64_t dataSize = sMessage.dataSize();
 
   std::string sSize;
@@ -180,7 +180,7 @@ AsyncTCPHandler::DataStatus AsyncTCPHandler::sendHeaderAndData(MessageDataContai
   }
   ptrdiff_t n = 0;
   ptrdiff_t sent = 0;
-  send_size_t allSize = static_cast<send_size_t>(sSize.size());
+  auto allSize = static_cast<send_size_t>(sSize.size());
 
   do {
     send_size_t tmpDataSize = (allSize < static_cast<send_size_t>(BUFFER_SIZE)) ? allSize : static_cast<send_size_t>(BUFFER_SIZE);
@@ -414,7 +414,7 @@ AsyncTCPHandler::DataStatus AsyncTCPHandler::fillBody(MessageDataContainer &sMes
   sMessage.flushData();
   return DataStatus::OK;
 }
-AsyncTCPHandler::DataStatus AsyncTCPHandler::tryMoveBodyByLink(MessageDataContainer &sMessage) {
+AsyncTCPHandler::DataStatus AsyncTCPHandler::tryMoveBodyByLink(MessageDataContainer &sMessage) const {
   TRACE(log);
   auto &message = sMessage.message();
   auto &property = message.property();

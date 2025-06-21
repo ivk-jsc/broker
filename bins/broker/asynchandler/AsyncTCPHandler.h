@@ -164,7 +164,7 @@ class AsyncTCPHandler {
   AsyncTCPHandler::DataStatus fillHeaderBodyLens();
   AsyncTCPHandler::DataStatus fillHeader(MessageDataContainer &sMessage);
   AsyncTCPHandler::DataStatus fillBody(MessageDataContainer &sMessage);
-  AsyncTCPHandler::DataStatus tryMoveBodyByLink(MessageDataContainer &sMessage);
+  AsyncTCPHandler::DataStatus tryMoveBodyByLink(MessageDataContainer &sMessage) const;
   void setReadComplete(bool readComplete);
   bool readComplete() const;
 };
