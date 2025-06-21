@@ -492,7 +492,7 @@ jobs:
         run: ./tests/brokertest/brokertest --gtest_filter=TransactionTest.testSessionCommitAfterConsumerClosed && echo ::set-output name=status::success
         continue-on-error: true
       - name: Upload log
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ format('{0}.{1}.log', matrix.os, matrix.compiler) }}
           path: broker.log
